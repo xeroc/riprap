@@ -1,0 +1,47 @@
+[package]
+name = "hanse"
+version = "0.1.0"
+description = "Hanse event mutual orchestrator — bounded-lifetime mutual on top of the pool primitive"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "hanse"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", "accord/idl-build"]
+no-log-ix-name = []
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = { version = "1.0.2", features = ["init-if-needed"] }
+anchor-spl = "1.0.2"
+# anchor-lang floor is 1.0.2 (house version, matches anchor-cli 1.0.2), but the
+# pinned accord rev only compiles against 1.1.x (`anchor_lang::__private` moved),
+# so the workspace lockfile unifies anchor-lang/anchor-spl to 1.1.2. Verified:
+# pool + hanse + accord all green on that lock.
+# Cross-repo pin: rev bumps are deliberate — each is a protocol decision, never
+# a floating branch. Local override for sibling-checkout workflows goes in
+# .cargo/config [patch] (e.g. patch accord to a path dependency).
+# Cargo.lock note: five8 1.0.0 must stay wired to five8_core 1.0.0 (not 0.1.2,
+# which ephemeral-rollups-sdk's five8 0.2.1 also pulls in) or solana-keypair
+# 3.1.x fails E0277. The lock pins that edge; a blind `cargo update` can regress it.
+accord = { git = "ssh://git@github.com/xeroc/accord.git", rev = "ba91bd8b8b374091c174909b115688ffb9b231ff", features = ["cpi"] }
+
+[dev-dependencies]
+litesvm = "0.10.0"
+spl-associated-token-account-interface = "2.0.0"
+spl-token-interface = "3.0.0"
+solana-message = "3.0.1"
+solana-program-pack = "3.1.0"
+solana-transaction = "3.0.2"
+solana-signer = "3.0.0"
+solana-keypair = "3.0.1"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
