@@ -1,7 +1,3 @@
-// Waitlist submit seam — POSTs { email, type, timestamp } to the n8n webhook
-// (VITE_N8N_WEBHOOK_URL), same contract as chainsquad.com and the Accord
-// landing (routes on `type`). Pure-ish so the status strings + reset contract
-// are testable.
 export interface WaitlistResult {
   ok: boolean;
   message: string;
@@ -15,7 +11,7 @@ export async function submitWaitlist(
   fetchImpl: typeof fetch,
 ): Promise<WaitlistResult> {
   if (!endpoint) {
-    return { ok: false, message: "Waitlist not wired yet — ping us on X.", reset: false };
+    return { ok: false, message: "Waitlist not wired yet. Ping us on X.", reset: false };
   }
   try {
     const res = await fetchImpl(endpoint, {
@@ -28,7 +24,7 @@ export async function submitWaitlist(
   } catch {
     return {
       ok: false,
-      message: "Couldn't reach the list — try again, or ping us on X.",
+      message: "Couldn't reach the list. Try again, or ping us on X.",
       reset: false,
     };
   }

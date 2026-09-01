@@ -1,17 +1,19 @@
 import type * as React from "react";
 
 import { cn } from "../../lib/utils";
+import { Card } from "../ui/card";
+import { PlateTicks } from "./PlateTicks";
 
 /**
- * `MechanismCard` — the wireframe diagram card (DESIGN.md § mechanism-card):
- * flat, drawn, not decorated. Card ground, 1px hairline, radius 0. The
- * diagram itself is a child slot — draw it with the primitives kit
- * (atoms/scenes per meta/primitives), never with gradient or glow chrome.
+ * `MechanismCard` — the diagram plate (DESIGN.md § mechanism-card): a shadcn
+ * Card carrying one drawing, registered at the corners by plate ticks —
+ * the section-drawing finish that marks "this is a drawing, not chrome".
+ * The diagram is a child slot; draw it with the kit's illustrations.
  */
 export interface MechanismCardProps extends React.ComponentProps<"figure"> {
-  /** mechanism label, e.g. "two doors" — mono uppercase */
+  /** plate label, e.g. "pool lifecycle" — mono uppercase */
   title: string;
-  /** the diagram — an SVG from the primitives kit */
+  /** the diagram — a glyph or SVG from the kit's illustrations */
   children?: React.ReactNode;
 }
 
@@ -19,13 +21,16 @@ export function MechanismCard({ title, children, className, ...props }: Mechanis
   return (
     <figure
       data-slot="mechanism-card"
-      className={cn("flex flex-col rounded-none border border-hairline bg-card", className)}
+      className={cn("relative m-0 flex flex-col", className)}
       {...props}
     >
-      <figcaption className="border-b border-hairline px-4 py-3 uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
-        {title}
-      </figcaption>
-      <div className="flex flex-1 items-center justify-center p-6">{children}</div>
+      <PlateTicks />
+      <Card className="flex-1 gap-0 py-0">
+        <figcaption className="border-b border-hairline px-4 py-3 uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
+          {title}
+        </figcaption>
+        <div className="flex flex-1 items-center justify-center p-6">{children}</div>
+      </Card>
     </figure>
   );
 }

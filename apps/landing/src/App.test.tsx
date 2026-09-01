@@ -12,11 +12,24 @@ describe("landing", () => {
     expect(h1.textContent).toBe("Any event. Any narrow peril. One finite pool.");
   });
 
-  it("carries the three structural guarantees", () => {
-    render(<App />);
-    for (const h of ["Two doors out.", "Fail-closed economics.", "Guaranteed death."]) {
-      expect(screen.getByRole("heading", { name: h })).toBeTruthy();
+  it("explains the six lifecycle steps in order — guarantees folded in", () => {
+    const { container } = render(<App />);
+    const steps = [
+      "One more member.",
+      "Money gathers.",
+      "Peers decide.",
+      "A claim is paid.",
+      "Liquidate.",
+      "The pool ends.",
+    ];
+    for (const h of steps) {
+      expect(screen.getAllByRole("heading", { name: h }).length).toBeGreaterThan(0);
     }
+    // order = strip order: join → gather → rule → claim → liquidate → end
+    const hs = [...container.querySelectorAll("section#mechanism h3")].map((h) => h.textContent);
+    expect(hs).toEqual(steps);
+    // §3 removed: the antagonist box died with the section
+    expect(screen.queryByText("The failure mode, named")).toBeNull();
   });
 
   it("states the lineage and the honest-scope box", () => {

@@ -34,7 +34,7 @@ describe("Logomark (the ring)", () => {
     const { container } = render(<Logomark />);
     const svg = container.querySelector("svg");
     expect(svg).not.toBeNull();
-    const inner = Array.from(svg!.querySelectorAll("g > g"));
+    const inner = Array.from(svg?.querySelectorAll("g > g") ?? []);
     expect(inner.length).toBe(7);
     const slotCoords = new Set(
       [...Array(8).keys()]
@@ -45,7 +45,8 @@ describe("Logomark (the ring)", () => {
       // the inner group carries the full slot position exactly once
       const m = g.getAttribute("transform")?.match(/translate\(([-\d.]+) ([-\d.]+)\)/);
       expect(m).not.toBeNull();
-      expect(slotCoords.has(`${Number(m![1]).toFixed(2)} ${Number(m![2]).toFixed(2)}`)).toBe(true);
+      const [, tx, ty] = m ?? [];
+      expect(slotCoords.has(`${Number(tx).toFixed(2)} ${Number(ty).toFixed(2)}`)).toBe(true);
       // ...and the motion wrapper must NOT add a second translate of the same
       // magnitude (the bug that pushed the ring to 2x coordinates, off-canvas)
       const wrapper = g.parentElement;

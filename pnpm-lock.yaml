@@ -222,6 +222,9 @@ importers:
       '@riprap/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      motion:
+        specifier: ^13.1.1
+        version: 13.1.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: ^19.2.8
         version: 19.2.8

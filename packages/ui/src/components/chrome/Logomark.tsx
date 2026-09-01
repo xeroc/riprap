@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from "motion/react";
+import { SETTLE, SETTLE_EASE, STAGGER } from "../../illustrations/Glyph";
 import { type Point, stonePoints, stoneRotation } from "../../lib/stone";
 
 /**
@@ -34,9 +35,6 @@ export const BLUE_INDEX = 2;
 const VIEWBOX = 96;
 const RADIUS = 32;
 const STONE_SCALE = 0.55; // stone family "S" (40px) scaled to ring pitch
-const SETTLE = 0.16; // --riprap-settle: 160ms
-const STAGGER = 0.04; // --riprap-stagger: 40ms
-const EASE = [0.215, 0.61, 0.355, 1] as const; // ease-out quart, matches tokens
 
 /** Pure layout — exported as the test seam. Center of slot i in the 96 viewBox. */
 export function slotPosition(index: number): Point {
@@ -87,7 +85,7 @@ export function Logomark({ size = 96, state = "settled" }: LogomarkProps) {
             key={slot}
             initial={still ? settled : from}
             animate={still ? settled : target}
-            transition={{ duration: SETTLE, delay: i * STAGGER, ease: EASE }}
+            transition={{ duration: SETTLE, delay: i * STAGGER, ease: SETTLE_EASE }}
           >
             <g
               transform={`translate(${p.x} ${p.y}) scale(${STONE_SCALE}) rotate(${stoneRotation(SEEDS[slot])})`}

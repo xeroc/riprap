@@ -7,17 +7,16 @@ export function Footer() {
   return (
     <FooterBand
       brand={
-        <a href="#top" className="flex items-center gap-2.5" aria-label="Riprap — home">
+        <a href="#top" className="flex items-center gap-2.5" aria-label="Riprap home">
           <LogoLockup size={22} />
         </a>
       }
-      tagline="Event mutuals on Solana. One pool, one peril, one event — then it's gone."
+      tagline="Event mutuals on Solana. One pool, one peril, one event. Then it.s gone."
       columns={[
         {
           heading: "page",
           links: [
             { href: "#mechanism", label: "How it works" },
-            { href: "#guarantees", label: "Guarantees" },
             { href: "#lineage", label: "Lineage" },
           ],
         },

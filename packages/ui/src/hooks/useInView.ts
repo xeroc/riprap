@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
  * Falls back to "in view" where IntersectionObserver is unavailable (jsdom),
  * so content never strands invisible.
  */
-export function useInView<T extends HTMLElement>(): {
+export function useInView<T extends Element>(): {
   ref: React.RefObject<T | null>;
   inView: boolean;
 } {

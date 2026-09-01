@@ -22,7 +22,7 @@ export function FinalCta() {
 
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
           <TextLink href={X_URL} external>
-            @riprapxyz on X
+            @riprapxyz
           </TextLink>
           <span className="text-muted-soft" aria-hidden="true">
             ·

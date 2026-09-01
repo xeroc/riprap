@@ -1,17 +1,42 @@
-import { MechanismCard, SectionBand, TextLink } from "@riprap/ui";
+// §2 — the lifecycle in six plates; the full design lives in the repo (copy doc §2).
+import { LifecycleStrip, SectionBand } from "@riprap/ui";
 
 import { Settle } from "../components/Settle";
-import { GITHUB_URL } from "./shared";
 
-// §2 — The mechanism, minimal: the lifecycle verbs only. The full design
-// (two governed exit doors, three-track stake primitive, swig treasury) lives
-// in the repo — linked, not summarized.
-const LIFECYCLE = [
-  { verb: "found", rest: "(peril, area, window, tiers) → pool" },
-  { verb: "join", rest: "(tier) → pool + right to claim" },
-  { verb: "claim", rest: "(evidence, fee) → dispute" },
-  { verb: "rule", rest: "() → approved: pay up to tier cap" },
-  { verb: "crank", rest: "() → refund what's left, pro-rata → dissolved" },
+// Steps mirror LifecycleStrip's order (join → gather → rule → claim →
+// liquidate → end). §3's guarantees folded in: two doors → liquidate,
+// fail-closed caps → a claim is paid, guaranteed death → the pool ends.
+const STEPS = [
+  {
+    n: "01",
+    h: "One more member.",
+    p: "Anyone joins while the window is open — the ring keeps an empty slot. Each member picks a tier; the tier writes the payout ceiling before anything happens.",
+  },
+  {
+    n: "02",
+    h: "Money gathers.",
+    p: "Members pay one fixed entry fee into one pool against one peril, for one event. A pool is a program, not a company — it holds USDC and nothing else.",
+  },
+  {
+    n: "03",
+    h: "Peers decide.",
+    p: "Jurors are staked members of the same pool, drawn at random when a claim needs them. Votes are commit-reveal; an appeal doubles the jury. Adjudication is run by Accord, a sister protocol that is honestly an arbitration oracle.",
+  },
+  {
+    n: "04",
+    h: "A claim is paid.",
+    p: "An incident inside the window, evidence attached, the jury rules. An approved claim pays up to the tier cap. Payouts are capped twice — by the tier and by the pool's balance — so the mutual can never pay more than it holds, because there is nothing else to hold.",
+  },
+  {
+    n: "05",
+    h: "Liquidate.",
+    p: "Money leaves a pool only by spending (governed by adjudication) or liquidation (governed by the ownership authority). No third path, no discretionary signer, nobody who can decide.",
+  },
+  {
+    n: "06",
+    h: "The pool ends.",
+    p: "When the claims window closes, a permissionless crank returns every unused cent to members, pro-rata, and the pool dissolves permanently. No treasury survives. Nothing to capture.",
+  },
 ];
 
 export function Mechanism() {
@@ -19,36 +44,27 @@ export function Mechanism() {
     <SectionBand id="mechanism" label="how it works" tone="soft">
       <Settle className="flex flex-col gap-(--riprap-space-xl)">
         <h2 className="max-w-2xl tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
-          Four verbs. One pool.
+          Six steps. One pool.
         </h2>
 
-        <MechanismCard title="pool lifecycle" className="max-w-2xl">
-          <pre className="w-full overflow-x-auto px-1 font-mono text-base leading-loose text-body">
-            <code>
-              {LIFECYCLE.map((line, i) => (
-                <span key={line.verb}>
-                  {i > 0 && "\n"}
-                  <span className="text-accent">{line.verb}</span>
-                  <span>{line.rest}</span>
-                </span>
-              ))}
-            </code>
-          </pre>
-        </MechanismCard>
+        <LifecycleStrip />
 
-        <p className="max-w-2xl leading-relaxed text-body [font:var(--riprap-body-md)]">
-          A pool is a program, not a company. It holds USDC behind exactly two governed exit doors —
-          spending by adjudication, liquidation at the end — with no discretionary signer. Claims
-          are adjudicated by Accord, a sister protocol that is honestly an arbitration oracle:
-          jurors drawn at random, commit-reveal votes, appeals that double the jury.
-        </p>
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The full mechanism — pool accounting, the three-track primitive, dissolution — lives in{" "}
-          <TextLink href={GITHUB_URL} external>
-            the repo
-          </TextLink>
-          .
-        </p>
+        <div className="border-t border-hairline">
+          {STEPS.map((s) => (
+            <div
+              key={s.n}
+              className="grid gap-4 border-b border-hairline py-8 sm:grid-cols-[3.5rem_1fr] sm:gap-10"
+            >
+              <p className="font-mono text-base text-accent">{s.n}</p>
+              <div>
+                <h3 className="tracking-tight text-ink [font:var(--riprap-display-sm)]">{s.h}</h3>
+                <p className="mt-3 max-w-2xl leading-relaxed text-body [font:var(--riprap-body-md)]">
+                  {s.p}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </Settle>
     </SectionBand>
   );

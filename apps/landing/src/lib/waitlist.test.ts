@@ -10,7 +10,7 @@ describe("submitWaitlist", () => {
   it("empty endpoint degrades to the X message", async () => {
     const res = await submitWaitlist("", "you@riprap.xyz", fetch);
     assert.equal(res.ok, false);
-    assert.equal(res.message, "Waitlist not wired yet — ping us on X.");
+    assert.equal(res.message, "Waitlist not wired yet. Ping us on X.");
     assert.equal(res.reset, false);
   });
 
@@ -22,7 +22,7 @@ describe("submitWaitlist", () => {
       fetchImpl,
     );
     assert.equal(res.ok, false);
-    assert.equal(res.message, "Couldn't reach the list — try again, or ping us on X.");
+    assert.equal(res.message, "Couldn't reach the list. Try again, or ping us on X.");
     assert.equal(res.reset, false);
   });
 
@@ -36,7 +36,7 @@ describe("submitWaitlist", () => {
       fetchImpl,
     );
     assert.equal(res.ok, false);
-    assert.equal(res.message, "Couldn't reach the list — try again, or ping us on X.");
+    assert.equal(res.message, "Couldn't reach the list. Try again, or ping us on X.");
     assert.equal(res.reset, false);
   });
 

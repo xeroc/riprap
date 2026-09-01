@@ -116,7 +116,7 @@ The system uses **tone steps + hairlines only**. No drop shadows, no glows, no g
 | Deep | `{colors.canvas-deep}` (#08090B) | Dissolution end-state band |
 
 ### Decorative Depth
-- **The ring** is the only decorative element: the open stone circle (7 grey stones, 1 empty slot, 1 harbor-blue newest member) as a corner anchor or section divider. It settles or dissolves; it never floats, rotates, or glows. Kit components: `Logomark`, `Wordmark`, `LogoLockup` (`@riprap/ui`); legacy assets: `meta/marketing/07-brand-assets/logo/` (regeneration pending).
+- **The ring** is the only decorative element: the open stone circle (7 grey stones, 1 empty slot, 1 harbor-blue newest member) as a corner anchor or section divider. It settles or dissolves; it never floats, rotates, or glows. Kit components: `Logomark`, `Wordmark`, `LogoLockup` (`@riprap/ui`); the wordmark asset lives at `meta/marketing/07-brand-assets/logo/wordmark.svg`.
 
 ## Shapes
 

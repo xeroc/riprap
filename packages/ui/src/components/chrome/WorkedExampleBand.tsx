@@ -1,7 +1,6 @@
-import { useReducedMotion } from "motion/react";
+import { useInView, useReducedMotion } from "motion/react";
 import type * as React from "react";
-import { useEffect, useState } from "react";
-import { useInView } from "../../hooks/useInView";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "../../lib/utils";
 
 /** --riprap-stagger: one figure settles every 40ms (DESIGN.md § Motion). */
@@ -29,7 +28,8 @@ export interface WorkedExampleBandProps extends React.ComponentProps<"section"> 
 
 export function WorkedExampleBand({ figures, label, className, ...props }: WorkedExampleBandProps) {
   const reduced = useReducedMotion();
-  const { ref, inView } = useInView<HTMLDivElement>();
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.2 });
   const [shown, setShown] = useState(() => (reduced ? figures.length : 0));
 
   useEffect(() => {

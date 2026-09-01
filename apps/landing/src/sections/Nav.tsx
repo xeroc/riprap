@@ -1,12 +1,11 @@
+// §0 — nav per DESIGN.md § top-nav (copy doc §0).
 import { LogoLockup, TopNav } from "@riprap/ui";
 
 import { GITHUB_URL, X_URL } from "./shared";
-
-// §0 — Edge-aligned nav (DESIGN.md § top-nav). Mark + wordmark + pre-launch
-// status chip left; mono links right. No CTA-right SaaS nav.
 export function Nav() {
   return (
     <TopNav
+      className="sticky top-0 z-40"
       links={[
         { href: "#mechanism", label: "How it works" },
         { href: X_URL, label: "X" },

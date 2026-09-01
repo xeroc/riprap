@@ -47,7 +47,7 @@ export function TopNav({ links, brand, signIn, cta, className, ...props }: TopNa
               <a
                 key={link.href}
                 href={link.href}
-                className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground transition-colors duration-[160ms] ease-out [font:var(--riprap-mono-label)] hover:text-ink focus-visible:text-ink"
+                className="relative inline-flex items-center py-4 uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground outline-none transition-colors duration-[160ms] ease-out [font:var(--riprap-mono-label)] before:absolute before:inset-y-0 before:-left-3 before:-right-3 hover:text-ink focus-visible:text-ink focus-visible:ring-3 focus-visible:ring-ring"
               >
                 {link.label}
               </a>
@@ -82,7 +82,7 @@ export function TopNav({ links, brand, signIn, cta, className, ...props }: TopNa
                     key={link.href}
                     href={link.href}
                     onClick={() => setOpen(false)}
-                    className="px-2 py-3 uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground transition-colors duration-[160ms] ease-out [font:var(--riprap-mono-label)] hover:text-ink"
+                    className="px-2 py-4 uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground transition-colors duration-[160ms] ease-out [font:var(--riprap-mono-label)] hover:text-ink"
                   >
                     {link.label}
                   </a>

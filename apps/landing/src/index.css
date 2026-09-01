@@ -9,6 +9,16 @@
 
 html {
   background: var(--riprap-canvas);
+  /* sticky nav overlays anchors — keep section heads clear of the 64px bar */
+  scroll-padding-top: calc(var(--riprap-nav-h) + 1px); /* + the 1px hairline */
+  /* anchors move continuously (native scroll), never teleport */
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {

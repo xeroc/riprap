@@ -63,7 +63,7 @@ export function FooterBand({
                   <li key={link.href}>
                     <a
                       href={link.href}
-                      className="text-muted-foreground transition-colors duration-[160ms] ease-out hover:text-ink"
+                      className="inline-flex items-center py-3 text-muted-foreground outline-none transition-colors duration-[160ms] ease-out hover:text-ink focus-visible:ring-3 focus-visible:ring-ring"
                     >
                       {link.label}
                     </a>

@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
  *    in avatar.tsx (the avatar disc is the only circle)
  *  - zero inline hex colors (colors live in tokens.css only)
  */
-const SANCTIONED_FULL_RADIUS: Record<string, true> = { "avatar.tsx": true };
+const SANCTIONED_FULL_RADIUS: Record<string, true> = {}; // avatar retired; no circles remain
 const ROOT = join(__dirname);
 
 function collect(dir: string): string[] {
@@ -51,10 +51,11 @@ describe("DESIGN.md law — chrome layer source", () => {
     }
   });
 
-  it("avatar keeps its disc — the only circle in the system", () => {
-    const avatar = files.find((f) => f.endsWith("avatar.tsx"));
-    expect(avatar).toBeDefined();
-    expect(readFileSync(avatar as string, "utf8")).toMatch(/rounded-full/);
+  it("no circles remain — sharp geometry only (avatar retired in the lean cut)", () => {
+    for (const file of files) {
+      const src = readFileSync(file, "utf8");
+      expect(src, file).not.toMatch(/rounded-full/);
+    }
   });
 
   it("no inline hex colors — tokens only", () => {

@@ -2,9 +2,8 @@ import { SectionBand } from "@riprap/ui";
 
 import { Settle } from "../components/Settle";
 
-// §4 — Lineage: credibility without traction claims (pre-launch integrity).
-// The mutual is centuries old; what's new is the two programs that replace
-// treasurer and judge.
+// §4 — lineage without traction claims.
+
 const lineage = [
   {
     when: "oldest",
@@ -17,7 +16,7 @@ const lineage = [
     body: (
       <>
         A mutual of strangers needs a treasurer everyone trusts and a judge for the subjective
-        claims. Off-chain, those two roles mean an institution — the fixed cost a{" "}
+        claims. Off-chain, those two roles mean an institution: the fixed cost a{" "}
         <span data-num className="font-mono text-ink">
           $20
         </span>{" "}
@@ -64,7 +63,7 @@ export function Heritage() {
             Protection without a protector.
           </p>
           <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
-            We claim the mechanism. We don't claim traction — the first pool is the build target.
+            We claim the mechanism. We don't claim traction. The first pool is the build target.
           </p>
         </div>
       </Settle>

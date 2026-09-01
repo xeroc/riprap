@@ -1,0 +1,47 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+          cache-dependency-path: ./pnpm-lock.yaml
+
+      - name: Build packages
+        run: pnpm run -r --filter "./packages/*" build
+
+      - name: Build
+        working-directory: ./apps/landing
+        run: pnpm run build
+        env:
+          # https://github.com/actions/runner-images/issues/70
+          VITE_VCS_REF: ${{ github.sha }}
+          NODE_ENV: production
+          VITE_N8N_WEBHOOK_URL: ${{ secrets.PUBLIC_N8N_WEBHOOK_URL }}
+
+      - name: Deploy to external repository
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./apps/landing/dist
+          cname: riprap.xyz

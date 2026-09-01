@@ -14,7 +14,7 @@ export function Audience() {
         <div className="flex max-w-2xl flex-col gap-4">
           <p className="leading-relaxed text-body [font:var(--riprap-body-md)]">
             The person going to the event, wallet in pocket. Twenty dollars caps the worst weekend
-            at a written peril, a written payout ceiling, and a written end date — and most of it
+            at a written peril, a written payout ceiling, and a written end date, and most of it
             comes back when the event is quiet.
           </p>
           <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
@@ -30,11 +30,11 @@ export function Audience() {
           </p>
           <p className="mt-2 leading-relaxed text-body [font:var(--riprap-body-md)]">
             Riprap is pre-launch. No pool has run, no members exist, no payouts to show. The first
-            pool — Blade Pool @ Breakpoint{" "}
+            pool, Blade Pool @ Breakpoint{" "}
             <span data-num className="font-mono text-ink">
               2026
             </span>{" "}
-            — is the worked example, not a track record. No traction numbers, because there is no
+            , is the worked example, not a track record. No traction numbers, because there is no
             traction. Read the policy. Follow the build.
           </p>
         </div>

@@ -85,7 +85,6 @@
   /* geometry — sharp section-drawing chrome */
   --riprap-radius: 0px; /* stamps, buttons, cards, badges */
   --riprap-radius-input: 2px;
-  --riprap-radius-avatar: 9999px; /* the avatar disc — the only circle */
 
   /* motion — settle, not slide. No bounce, no elastic, no glow, no parallax. */
   --riprap-settle: 160ms cubic-bezier(0.215, 0.61, 0.355, 1); /* ease-out quart */

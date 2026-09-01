@@ -28,7 +28,6 @@ export function Waitlist() {
   return (
     <form
       data-waitlist
-      data-endpoint={endpoint}
       className="flex w-full max-w-md flex-col gap-2"
       noValidate
       onSubmit={onSubmit}

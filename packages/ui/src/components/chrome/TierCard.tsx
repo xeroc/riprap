@@ -1,17 +1,18 @@
 import type * as React from "react";
 import { usd } from "../../lib/poolMath";
 import { cn } from "../../lib/utils";
+import { Card } from "../ui/card";
 
 /**
- * `TierCard` — coverage tier card (DESIGN.md § tier-card). Numbers are the
- * hero: entry fee and max payout in mono-number-lg, tier name in mono-label.
- * Card ground + 1px hairline, radius 0, 32px padding, no illustration inside.
+ * `TierCard` — coverage tier card (DESIGN.md § tier-card), on the shadcn Card
+ * shell. Numbers are the hero: entry fee and max payout in mono-number-lg,
+ * tier name in mono-label. No illustration inside — the card IS the plate.
  *
  * Data law: fee/cap arrive as props — provenance is the policy tier table
  * (only allowed prices: $10/$20/$40 fees, $1,000/$2,000/$4,000 caps). The cap
  * prints with its ceiling wording ("up to") per DESIGN.md § Don'ts.
  */
-export interface TierCardProps extends React.ComponentProps<"article"> {
+export interface TierCardProps extends React.ComponentProps<"div"> {
   /** tier name, e.g. "Standard" */
   name: string;
   /** entry fee in USDC (policy §5) */
@@ -24,14 +25,7 @@ export interface TierCardProps extends React.ComponentProps<"article"> {
 
 export function TierCard({ name, fee, cap, footnote, className, ...props }: TierCardProps) {
   return (
-    <article
-      data-slot="tier-card"
-      className={cn(
-        "flex flex-col gap-6 rounded-none border border-hairline bg-card p-8",
-        className,
-      )}
-      {...props}
-    >
+    <Card data-slot="tier-card" className={cn("gap-6 p-8", className)} {...props}>
       <h3 className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
         {name}
       </h3>
@@ -53,6 +47,6 @@ export function TierCard({ name, fee, cap, footnote, className, ...props }: Tier
         </span>
       </div>
       {footnote && <p className="text-muted-foreground [font:var(--riprap-body-sm)]">{footnote}</p>}
-    </article>
+    </Card>
   );
 }
