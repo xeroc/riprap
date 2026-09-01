@@ -1,0 +1,10 @@
+{
+  "idl": "../../target/idl/pool.json",
+  "before": [],
+  "scripts": {
+    "js": {
+      "from": "@codama/renderers-js",
+      "args": ["generated"]
+    }
+  }
+}

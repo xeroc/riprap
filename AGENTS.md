@@ -4,7 +4,7 @@ Instructions for coding agents working in this repository. Human-oriented docs l
 
 ## Project Overview
 
-Riprap is a platform for event-scoped mutual protection pools on Solana (first deployment: **Riprap: Blade Pool @ Breakpoint 2026**, 15–17 November 2026, Olympia Convention Centre, London). This repo is the **frontend monorepo**: a pnpm workspace containing `packages/ui` (`@riprap/ui` — data-bound React SVG illustration kit with Storybook 10) and `apps/landing` (`@riprap/landing` — static Vite + React site). TypeScript strict, React 19, Vite, Vitest, Biome. No backend, no database, no environment variables.
+Riprap is a platform for event-scoped mutual protection pools on Solana (first deployment: **Riprap: Blade Pool @ Breakpoint 2026**, 15–17 November 2026, Olympia Convention Centre, London). This repo is a pnpm monorepo with a frontend half and an on-chain half: `packages/ui` (`@riprap/ui` — data-bound React SVG illustration kit with Storybook 10), `apps/landing` (`@riprap/landing` — static Vite + React site), and `programs/pool` (Anchor program `pool` — generic three-track mutual-pool primitive, localnet/LiteSVM only in v1) with its generated Codama client `packages/pool` (`@riprap/pool`). TypeScript strict, React 19, Vite, Vitest, Biome; Rust 1.89, Anchor 1.0.2. No web2 backend, no database, no environment variables.
 
 - `DESIGN.md` — the committed visual identity and the law for every component: near-black ground, warm-white ink, one harbor-blue accent (links/stamps/crest only), Space Grotesk + JetBrains Mono (every numeral mono), 0px radius chrome, 1px hairlines, no gradients/shadows/glow, settle-not-slide motion (~160ms ease-out, 40ms stagger, no bounce).
 
@@ -22,22 +22,23 @@ pnpm dev:landing    # landing dev server → http://localhost:5173
 pnpm dev:ui         # Storybook → http://localhost:6006
 ```
 
-Node 26+, pnpm 11+.
+Node 26+, pnpm 11+. Rust 1.89.0 (pinned in `rust-toolchain.toml`, auto-installed by rustup) and Anchor CLI 1.0.2 (via `avm`) — both required by the completion gate.
 
 ## Completion Gate (REQUIRED)
 
 Work is not done until this passes from the repo root, exit 0:
 
 ```bash
-pnpm -r run build && pnpm lint && pnpm -r run test
+pnpm -r run build && pnpm lint && pnpm -r run test && anchor build && cargo test
 ```
 
-Or the shorthand: `pnpm verify`. Run it before declaring any task complete — no exceptions, no "pre-existing failures" excuses: if it was green before your change, your change broke it; if it was red before your change, fixing it is part of your task. If you touched Storybook stories or `.storybook/`, also run `pnpm --filter @riprap/ui run build-storybook` as a smoke check.
+Or the shorthand: `pnpm verify`. Run it before declaring any task complete — no exceptions, no "pre-existing failures" excuses: if it was green before your change, your change broke it; if it was red before your change, fixing it is part of your task. If you touched Storybook stories or `.storybook/`, also run `pnpm --filter @riprap/ui run build-storybook` as a smoke check. `anchor build` regenerates the gitignored `target/idl/pool.json`; after changing the program, re-run `pnpm --filter @riprap/pool codegen` and commit the regenerated client alongside the program change.
 
 ## Testing Instructions
 
 - Test runner: Vitest (jsdom) + @testing-library/react. `*.test.ts(x` colocated with the code.
 - Run all: `pnpm test`. One package: `pnpm --filter @riprap/ui test`. Watch: `cd packages/ui && pnpm exec vitest`. Focus: `pnpm --filter @riprap/ui exec vitest run -t "area = money"`.
+- Anchor program (`programs/pool`): `cargo test` — inline unit tests plus the LiteSVM full-lifecycle suite (no validator needed); single test: `cargo test <name>`.
 - New logic in `packages/ui/src/lib/` (math, geometry) gets pure unit tests first — the numbers must trace to the policy doc / worked example, and test names cite the source (`policy §7`, `composition.md`).
 - New atoms/scenes/stories get render tests asserting their data bindings (labels printed, fill heights, dashed-vs-solid) and composition invariants (both doors labeled, rejected branch present in any full claim flow).
 - `apps/landing` keeps at least a mount smoke test; visual checks happen in a browser via the dev server, not snapshots.
