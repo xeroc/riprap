@@ -1,0 +1,18 @@
+[toolchain]
+package_manager = "pnpm"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+pool = "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "cargo test"
+
+[hooks]

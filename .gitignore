@@ -23,3 +23,14 @@ target
 *storybook.log
 storybook-static
 **/node_modules/
+
+# Anchor
+.anchor
+test-ledger
+# The localnet program keypair is committed so declare_id stays stable
+# across worktrees; everything else under target/ stays ignored.
+!/target/
+/target/*
+!/target/deploy/
+/target/deploy/*
+!/target/deploy/pool-keypair.json
