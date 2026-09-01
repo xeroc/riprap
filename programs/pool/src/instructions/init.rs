@@ -21,9 +21,10 @@ pub struct InitParams {
 #[derive(Accounts)]
 #[instruction(params: InitParams)]
 pub struct InitPool<'info> {
-    /// Pays for the pool account and the treasury ATA.
+    /// Sponsors rent for the pool account and the treasury ATA — anyone can
+    /// pay (fee sponsoring); paying implies no authority.
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub rent_payer: Signer<'info>,
 
     /// The one token this pool accepts. No hardcoded mints (handoff §3).
     pub mint: Account<'info, Mint>,
@@ -31,7 +32,7 @@ pub struct InitPool<'info> {
     /// Pool PDA, seeds = ["pool", seed le u64] (handoff §2).
     #[account(
         init,
-        payer = payer,
+        payer = rent_payer,
         space = POOL_SPACE,
         seeds = [b"pool", params.seed.to_le_bytes().as_ref()],
         bump
@@ -41,7 +42,7 @@ pub struct InitPool<'info> {
     /// Treasury: the pool PDA's own ATA, both doors pay out of it (ADR-0001).
     #[account(
         init,
-        payer = payer,
+        payer = rent_payer,
         associated_token::mint = mint,
         associated_token::authority = pool,
     )]

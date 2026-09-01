@@ -26,6 +26,7 @@ const WASM: &[u8] = include_bytes!("../../../target/deploy/pool.so");
 struct Env {
     svm: LiteSVM,
     payer: Keypair,
+    sponsor: Keypair,
     mint: Pubkey,
     pool: Pubkey,
     treasury: Pubkey,
@@ -38,6 +39,7 @@ impl Env {
     fn setup(seed: u64) -> Self {
         let program_id = pool::id();
         let payer = Keypair::new();
+        let sponsor = Keypair::new();
         let mint_kp = Keypair::new();
         let ownership_authority = Keypair::new();
         let rights_authority = Keypair::new();
@@ -45,6 +47,9 @@ impl Env {
         let mut svm = LiteSVM::new();
         svm.add_program(program_id, WASM).unwrap();
         svm.airdrop(&payer.pubkey(), 50_000_000_000).unwrap();
+        // Rent sponsor: pays depositor rent + tx fees on deposits, never the
+        // owner (fee sponsoring).
+        svm.airdrop(&sponsor.pubkey(), 50_000_000_000).unwrap();
         // Authorities sign transactions; a signer account must exist.
         svm.airdrop(&ownership_authority.pubkey(), 1_000_000_000).unwrap();
         svm.airdrop(&rights_authority.pubkey(), 1_000_000_000).unwrap();
@@ -86,7 +91,7 @@ impl Env {
                 }
                 .data(),
                 pool::accounts::InitPool {
-                    payer: payer.pubkey(),
+                    rent_payer: payer.pubkey(),
                     mint: mint_kp.pubkey(),
                     pool,
                     treasury: get_associated_token_address(&pool, &mint_kp.pubkey()),
@@ -103,6 +108,7 @@ impl Env {
         Self {
             svm,
             payer,
+            sponsor,
             mint: mint_kp.pubkey(),
             pool,
             treasury: get_associated_token_address(&pool, &mint_kp.pubkey()),
@@ -168,13 +174,14 @@ impl Env {
                 .0,
                 owner: owner.pubkey(),
                 owner_ata: *ata,
+                rent_payer: self.sponsor.pubkey(),
                 treasury: self.treasury,
                 token_program: spl_token_interface::ID,
                 system_program: system_program::ID,
             }
             .to_account_metas(None),
         );
-        try_send(&mut self.svm, &[ix], &mut [owner])
+        try_send(&mut self.svm, &[ix], &mut [&self.sponsor, owner])
     }
 
     fn svm_airdrop_if_needed(&mut self, _owner: &Keypair) {}
@@ -260,9 +267,23 @@ fn lifecycle_deposit_spend_liquidate_crank() {
     let (o1, a1, _d1) = env.depositor(10_000_000);
     let (o2, a2, d2) = env.depositor(20_000_000);
     let (o3, a3, _d3) = env.depositor(40_000_000);
+
+    // Fee sponsoring: the sponsor pays depositor rent + tx fees; the owner's
+    // lamports must not move at all.
+    let o1_before = env.svm.get_account(&o1.pubkey()).unwrap().lamports;
+    let sponsor_before = env.svm.get_account(&env.sponsor.pubkey()).unwrap().lamports;
     env.deposit(&o1, &a1, pool::Track::Rights, 10_000_000).unwrap();
     env.deposit(&o2, &a2, pool::Track::Rights, 20_000_000).unwrap();
     env.deposit(&o3, &a3, pool::Track::Rights, 40_000_000).unwrap();
+    assert_eq!(
+        env.svm.get_account(&o1.pubkey()).unwrap().lamports,
+        o1_before,
+        "owner must pay nothing when a sponsor covers rent"
+    );
+    assert!(
+        env.svm.get_account(&env.sponsor.pubkey()).unwrap().lamports < sponsor_before,
+        "sponsor must have paid rent + fees"
+    );
 
     assert_eq!(env.treasury_balance(), 70_000_000);
     let p = env.pool_state();

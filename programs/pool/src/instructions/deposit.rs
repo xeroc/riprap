@@ -65,16 +65,19 @@ pub struct Deposit<'info> {
     /// One depositor position per pool per party (handoff §2 seeds).
     #[account(
         init_if_needed,
-        payer = owner,
+        payer = rent_payer,
         space = DEPOSITOR_SPACE,
         seeds = [b"depositor", pool.key().as_ref(), owner.key().as_ref()],
         bump,
         constraint = !depositor.settled @ PoolError::Settled
     )]
     pub depositor: Account<'info, Depositor>,
-
-    #[account(mut)]
     pub owner: Signer<'info>,
+
+    /// Sponsors rent for the depositor PDA on first deposit — anyone. Paying
+    /// grants no rights: seeds bind the position to the owner alone.
+    #[account(mut)]
+    pub rent_payer: Signer<'info>,
 
     /// Deposit source; must hold the pool's one token.
     #[account(

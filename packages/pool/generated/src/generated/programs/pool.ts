@@ -9,7 +9,6 @@
 import {
   type Address,
   assertIsInstructionWithAccounts,
-  type ClientWithPayer,
   type ClientWithRpc,
   type ClientWithTransactionPlanning,
   type ClientWithTransactionSending,
@@ -364,7 +363,7 @@ export type PoolPluginInstructions = {
     input: DepositAsyncInput,
   ) => ReturnType<typeof getDepositInstructionAsync> & SelfPlanAndSendFunctions;
   init: (
-    input: MakeOptional<InitAsyncInput, "payer">,
+    input: InitAsyncInput,
   ) => ReturnType<typeof getInitInstructionAsync> & SelfPlanAndSendFunctions;
   liquidate: (
     input: LiquidateInput,
@@ -378,7 +377,6 @@ export type PoolPluginInstructions = {
 export type PoolPluginPdas = { depositor: typeof findDepositorPda };
 
 export type PoolPluginRequirements = ClientWithRpc<GetAccountInfoApi & GetMultipleAccountsApi> &
-  ClientWithPayer &
   ClientWithTransactionPlanning &
   ClientWithTransactionSending;
 
@@ -394,14 +392,7 @@ export function poolProgram() {
           crank: (input) => addSelfPlanAndSendFunctions(client, getCrankInstructionAsync(input)),
           deposit: (input) =>
             addSelfPlanAndSendFunctions(client, getDepositInstructionAsync(input)),
-          init: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getInitInstructionAsync({
-                ...input,
-                payer: input.payer ?? client.payer,
-              }),
-            ),
+          init: (input) => addSelfPlanAndSendFunctions(client, getInitInstructionAsync(input)),
           liquidate: (input) => addSelfPlanAndSendFunctions(client, getLiquidateInstruction(input)),
           spend: (input) => addSelfPlanAndSendFunctions(client, getSpendInstruction(input)),
           updateAuthority: (input) =>
@@ -415,5 +406,3 @@ export function poolProgram() {
     });
   };
 }
-
-type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

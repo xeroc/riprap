@@ -26,6 +26,7 @@ import {
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
+  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
   SolanaError,
@@ -56,6 +57,7 @@ export type DepositInstruction<
   TAccountPool extends string | AccountMeta<string> = string,
   TAccountDepositor extends string | AccountMeta<string> = string,
   TAccountOwner extends string | AccountMeta<string> = string,
+  TAccountRentPayer extends string | AccountMeta<string> = string,
   TAccountOwnerAta extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
   TAccountTokenProgram extends
@@ -70,8 +72,11 @@ export type DepositInstruction<
       TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
       TAccountDepositor extends string ? WritableAccount<TAccountDepositor> : TAccountDepositor,
       TAccountOwner extends string
-        ? WritableSignerAccount<TAccountOwner> & AccountSignerMeta<TAccountOwner>
+        ? ReadonlySignerAccount<TAccountOwner> & AccountSignerMeta<TAccountOwner>
         : TAccountOwner,
+      TAccountRentPayer extends string
+        ? WritableSignerAccount<TAccountRentPayer> & AccountSignerMeta<TAccountRentPayer>
+        : TAccountRentPayer,
       TAccountOwnerAta extends string ? WritableAccount<TAccountOwnerAta> : TAccountOwnerAta,
       TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
       TAccountTokenProgram extends string
@@ -125,6 +130,7 @@ export type DepositAsyncInput<
   TAccountPool extends string = string,
   TAccountDepositor extends string = string,
   TAccountOwner extends string = string,
+  TAccountRentPayer extends string = string,
   TAccountOwnerAta extends string = string,
   TAccountTreasury extends string = string,
   TAccountTokenProgram extends string = string,
@@ -134,6 +140,11 @@ export type DepositAsyncInput<
   /** One depositor position per pool per party (handoff §2 seeds). */
   depositor?: Address<TAccountDepositor>;
   owner: TransactionSigner<TAccountOwner>;
+  /**
+   * Sponsors rent for the depositor PDA on first deposit — anyone. Paying
+   * grants no rights: seeds bind the position to the owner alone.
+   */
+  rentPayer: TransactionSigner<TAccountRentPayer>;
   /** Deposit source; must hold the pool's one token. */
   ownerAta: Address<TAccountOwnerAta>;
   /**
@@ -152,6 +163,7 @@ export async function getDepositInstructionAsync<
   TAccountPool extends string,
   TAccountDepositor extends string,
   TAccountOwner extends string,
+  TAccountRentPayer extends string,
   TAccountOwnerAta extends string,
   TAccountTreasury extends string,
   TAccountTokenProgram extends string,
@@ -162,6 +174,7 @@ export async function getDepositInstructionAsync<
     TAccountPool,
     TAccountDepositor,
     TAccountOwner,
+    TAccountRentPayer,
     TAccountOwnerAta,
     TAccountTreasury,
     TAccountTokenProgram,
@@ -174,6 +187,7 @@ export async function getDepositInstructionAsync<
     TAccountPool,
     TAccountDepositor,
     TAccountOwner,
+    TAccountRentPayer,
     TAccountOwnerAta,
     TAccountTreasury,
     TAccountTokenProgram,
@@ -187,7 +201,8 @@ export async function getDepositInstructionAsync<
   const originalAccounts = {
     pool: { value: input.pool ?? null, isWritable: true },
     depositor: { value: input.depositor ?? null, isWritable: true },
-    owner: { value: input.owner ?? null, isWritable: true },
+    owner: { value: input.owner ?? null, isWritable: false },
+    rentPayer: { value: input.rentPayer ?? null, isWritable: true },
     ownerAta: { value: input.ownerAta ?? null, isWritable: true },
     treasury: { value: input.treasury ?? null, isWritable: true },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
@@ -226,6 +241,7 @@ export async function getDepositInstructionAsync<
       getAccountMeta("pool", accounts.pool),
       getAccountMeta("depositor", accounts.depositor),
       getAccountMeta("owner", accounts.owner),
+      getAccountMeta("rentPayer", accounts.rentPayer),
       getAccountMeta("ownerAta", accounts.ownerAta),
       getAccountMeta("treasury", accounts.treasury),
       getAccountMeta("tokenProgram", accounts.tokenProgram),
@@ -238,6 +254,7 @@ export async function getDepositInstructionAsync<
     TAccountPool,
     TAccountDepositor,
     TAccountOwner,
+    TAccountRentPayer,
     TAccountOwnerAta,
     TAccountTreasury,
     TAccountTokenProgram,
@@ -249,6 +266,7 @@ export type DepositInput<
   TAccountPool extends string = string,
   TAccountDepositor extends string = string,
   TAccountOwner extends string = string,
+  TAccountRentPayer extends string = string,
   TAccountOwnerAta extends string = string,
   TAccountTreasury extends string = string,
   TAccountTokenProgram extends string = string,
@@ -258,6 +276,11 @@ export type DepositInput<
   /** One depositor position per pool per party (handoff §2 seeds). */
   depositor: Address<TAccountDepositor>;
   owner: TransactionSigner<TAccountOwner>;
+  /**
+   * Sponsors rent for the depositor PDA on first deposit — anyone. Paying
+   * grants no rights: seeds bind the position to the owner alone.
+   */
+  rentPayer: TransactionSigner<TAccountRentPayer>;
   /** Deposit source; must hold the pool's one token. */
   ownerAta: Address<TAccountOwnerAta>;
   /**
@@ -276,6 +299,7 @@ export function getDepositInstruction<
   TAccountPool extends string,
   TAccountDepositor extends string,
   TAccountOwner extends string,
+  TAccountRentPayer extends string,
   TAccountOwnerAta extends string,
   TAccountTreasury extends string,
   TAccountTokenProgram extends string,
@@ -286,6 +310,7 @@ export function getDepositInstruction<
     TAccountPool,
     TAccountDepositor,
     TAccountOwner,
+    TAccountRentPayer,
     TAccountOwnerAta,
     TAccountTreasury,
     TAccountTokenProgram,
@@ -297,6 +322,7 @@ export function getDepositInstruction<
   TAccountPool,
   TAccountDepositor,
   TAccountOwner,
+  TAccountRentPayer,
   TAccountOwnerAta,
   TAccountTreasury,
   TAccountTokenProgram,
@@ -309,7 +335,8 @@ export function getDepositInstruction<
   const originalAccounts = {
     pool: { value: input.pool ?? null, isWritable: true },
     depositor: { value: input.depositor ?? null, isWritable: true },
-    owner: { value: input.owner ?? null, isWritable: true },
+    owner: { value: input.owner ?? null, isWritable: false },
+    rentPayer: { value: input.rentPayer ?? null, isWritable: true },
     ownerAta: { value: input.ownerAta ?? null, isWritable: true },
     treasury: { value: input.treasury ?? null, isWritable: true },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
@@ -339,6 +366,7 @@ export function getDepositInstruction<
       getAccountMeta("pool", accounts.pool),
       getAccountMeta("depositor", accounts.depositor),
       getAccountMeta("owner", accounts.owner),
+      getAccountMeta("rentPayer", accounts.rentPayer),
       getAccountMeta("ownerAta", accounts.ownerAta),
       getAccountMeta("treasury", accounts.treasury),
       getAccountMeta("tokenProgram", accounts.tokenProgram),
@@ -351,6 +379,7 @@ export function getDepositInstruction<
     TAccountPool,
     TAccountDepositor,
     TAccountOwner,
+    TAccountRentPayer,
     TAccountOwnerAta,
     TAccountTreasury,
     TAccountTokenProgram,
@@ -368,16 +397,21 @@ export type ParsedDepositInstruction<
     /** One depositor position per pool per party (handoff §2 seeds). */
     depositor: TAccountMetas[1];
     owner: TAccountMetas[2];
+    /**
+     * Sponsors rent for the depositor PDA on first deposit — anyone. Paying
+     * grants no rights: seeds bind the position to the owner alone.
+     */
+    rentPayer: TAccountMetas[3];
     /** Deposit source; must hold the pool's one token. */
-    ownerAta: TAccountMetas[3];
+    ownerAta: TAccountMetas[4];
     /**
      * Treasury: pool PDA's ATA. Deposits were never swig-gated (ADR-0001).
      * Treasury: must be THIS pool's canonical ATA (mint + authority = pool),
      * so money can never land in or leave another pool's treasury.
      */
-    treasury: TAccountMetas[4];
-    tokenProgram: TAccountMetas[5];
-    systemProgram: TAccountMetas[6];
+    treasury: TAccountMetas[5];
+    tokenProgram: TAccountMetas[6];
+    systemProgram: TAccountMetas[7];
   };
   data: DepositInstructionData;
 };
@@ -390,10 +424,10 @@ export function parseDepositInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedDepositInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 7) {
+  if (instruction.accounts.length < 8) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 7,
+      expectedAccountMetas: 8,
     });
   }
   let accountIndex = 0;
@@ -408,6 +442,7 @@ export function parseDepositInstruction<
       pool: getNextAccount(),
       depositor: getNextAccount(),
       owner: getNextAccount(),
+      rentPayer: getNextAccount(),
       ownerAta: getNextAccount(),
       treasury: getNextAccount(),
       tokenProgram: getNextAccount(),

@@ -54,7 +54,7 @@ export function getInitDiscriminatorBytes(): ReadonlyUint8Array {
 
 export type InitInstruction<
   TProgram extends string = typeof POOL_PROGRAM_ADDRESS,
-  TAccountPayer extends string | AccountMeta<string> = string,
+  TAccountRentPayer extends string | AccountMeta<string> = string,
   TAccountMint extends string | AccountMeta<string> = string,
   TAccountPool extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
@@ -70,9 +70,9 @@ export type InitInstruction<
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
-      TAccountPayer extends string
-        ? WritableSignerAccount<TAccountPayer> & AccountSignerMeta<TAccountPayer>
-        : TAccountPayer,
+      TAccountRentPayer extends string
+        ? WritableSignerAccount<TAccountRentPayer> & AccountSignerMeta<TAccountRentPayer>
+        : TAccountRentPayer,
       TAccountMint extends string ? ReadonlyAccount<TAccountMint> : TAccountMint,
       TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
       TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
@@ -147,7 +147,7 @@ export function getInitInstructionDataCodec(): FixedSizeCodec<
 }
 
 export type InitAsyncInput<
-  TAccountPayer extends string = string,
+  TAccountRentPayer extends string = string,
   TAccountMint extends string = string,
   TAccountPool extends string = string,
   TAccountTreasury extends string = string,
@@ -155,8 +155,11 @@ export type InitAsyncInput<
   TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
-  /** Pays for the pool account and the treasury ATA. */
-  payer: TransactionSigner<TAccountPayer>;
+  /**
+   * Sponsors rent for the pool account and the treasury ATA — anyone can
+   * pay (fee sponsoring); paying implies no authority.
+   */
+  rentPayer: TransactionSigner<TAccountRentPayer>;
   /** The one token this pool accepts. No hardcoded mints (handoff §3). */
   mint: Address<TAccountMint>;
   /** Pool PDA, seeds = ["pool", seed le u64] (handoff §2). */
@@ -176,7 +179,7 @@ export type InitAsyncInput<
 };
 
 export async function getInitInstructionAsync<
-  TAccountPayer extends string,
+  TAccountRentPayer extends string,
   TAccountMint extends string,
   TAccountPool extends string,
   TAccountTreasury extends string,
@@ -186,7 +189,7 @@ export async function getInitInstructionAsync<
   TProgramAddress extends Address = typeof POOL_PROGRAM_ADDRESS,
 >(
   input: InitAsyncInput<
-    TAccountPayer,
+    TAccountRentPayer,
     TAccountMint,
     TAccountPool,
     TAccountTreasury,
@@ -198,7 +201,7 @@ export async function getInitInstructionAsync<
 ): Promise<
   InitInstruction<
     TProgramAddress,
-    TAccountPayer,
+    TAccountRentPayer,
     TAccountMint,
     TAccountPool,
     TAccountTreasury,
@@ -212,7 +215,7 @@ export async function getInitInstructionAsync<
 
   // Original accounts.
   const originalAccounts = {
-    payer: { value: input.payer ?? null, isWritable: true },
+    rentPayer: { value: input.rentPayer ?? null, isWritable: true },
     mint: { value: input.mint ?? null, isWritable: false },
     pool: { value: input.pool ?? null, isWritable: true },
     treasury: { value: input.treasury ?? null, isWritable: true },
@@ -268,7 +271,7 @@ export async function getInitInstructionAsync<
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
-      getAccountMeta("payer", accounts.payer),
+      getAccountMeta("rentPayer", accounts.rentPayer),
       getAccountMeta("mint", accounts.mint),
       getAccountMeta("pool", accounts.pool),
       getAccountMeta("treasury", accounts.treasury),
@@ -280,7 +283,7 @@ export async function getInitInstructionAsync<
     programAddress,
   } as InitInstruction<
     TProgramAddress,
-    TAccountPayer,
+    TAccountRentPayer,
     TAccountMint,
     TAccountPool,
     TAccountTreasury,
@@ -291,7 +294,7 @@ export async function getInitInstructionAsync<
 }
 
 export type InitInput<
-  TAccountPayer extends string = string,
+  TAccountRentPayer extends string = string,
   TAccountMint extends string = string,
   TAccountPool extends string = string,
   TAccountTreasury extends string = string,
@@ -299,8 +302,11 @@ export type InitInput<
   TAccountAssociatedTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
-  /** Pays for the pool account and the treasury ATA. */
-  payer: TransactionSigner<TAccountPayer>;
+  /**
+   * Sponsors rent for the pool account and the treasury ATA — anyone can
+   * pay (fee sponsoring); paying implies no authority.
+   */
+  rentPayer: TransactionSigner<TAccountRentPayer>;
   /** The one token this pool accepts. No hardcoded mints (handoff §3). */
   mint: Address<TAccountMint>;
   /** Pool PDA, seeds = ["pool", seed le u64] (handoff §2). */
@@ -320,7 +326,7 @@ export type InitInput<
 };
 
 export function getInitInstruction<
-  TAccountPayer extends string,
+  TAccountRentPayer extends string,
   TAccountMint extends string,
   TAccountPool extends string,
   TAccountTreasury extends string,
@@ -330,7 +336,7 @@ export function getInitInstruction<
   TProgramAddress extends Address = typeof POOL_PROGRAM_ADDRESS,
 >(
   input: InitInput<
-    TAccountPayer,
+    TAccountRentPayer,
     TAccountMint,
     TAccountPool,
     TAccountTreasury,
@@ -341,7 +347,7 @@ export function getInitInstruction<
   config?: { programAddress?: TProgramAddress },
 ): InitInstruction<
   TProgramAddress,
-  TAccountPayer,
+  TAccountRentPayer,
   TAccountMint,
   TAccountPool,
   TAccountTreasury,
@@ -354,7 +360,7 @@ export function getInitInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    payer: { value: input.payer ?? null, isWritable: true },
+    rentPayer: { value: input.rentPayer ?? null, isWritable: true },
     mint: { value: input.mint ?? null, isWritable: false },
     pool: { value: input.pool ?? null, isWritable: true },
     treasury: { value: input.treasury ?? null, isWritable: true },
@@ -390,7 +396,7 @@ export function getInitInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
-      getAccountMeta("payer", accounts.payer),
+      getAccountMeta("rentPayer", accounts.rentPayer),
       getAccountMeta("mint", accounts.mint),
       getAccountMeta("pool", accounts.pool),
       getAccountMeta("treasury", accounts.treasury),
@@ -402,7 +408,7 @@ export function getInitInstruction<
     programAddress,
   } as InitInstruction<
     TProgramAddress,
-    TAccountPayer,
+    TAccountRentPayer,
     TAccountMint,
     TAccountPool,
     TAccountTreasury,
@@ -418,8 +424,11 @@ export type ParsedInitInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
-    /** Pays for the pool account and the treasury ATA. */
-    payer: TAccountMetas[0];
+    /**
+     * Sponsors rent for the pool account and the treasury ATA — anyone can
+     * pay (fee sponsoring); paying implies no authority.
+     */
+    rentPayer: TAccountMetas[0];
     /** The one token this pool accepts. No hardcoded mints (handoff §3). */
     mint: TAccountMetas[1];
     /** Pool PDA, seeds = ["pool", seed le u64] (handoff §2). */
@@ -456,7 +465,7 @@ export function parseInitInstruction<
   return {
     programAddress: instruction.programAddress,
     accounts: {
-      payer: getNextAccount(),
+      rentPayer: getNextAccount(),
       mint: getNextAccount(),
       pool: getNextAccount(),
       treasury: getNextAccount(),
