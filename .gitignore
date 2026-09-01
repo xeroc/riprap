@@ -34,3 +34,6 @@ test-ledger
 !/target/deploy/
 /target/deploy/*
 !/target/deploy/pool-keypair.json
+
+# TypeScript incremental build state (ui predates this rule; pool stays untracked)
+tsconfig.tsbuildinfo
