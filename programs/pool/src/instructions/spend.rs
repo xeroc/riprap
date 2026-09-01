@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::token::{self, Token, TokenAccount};
 
 use crate::error::PoolError;
+use crate::events;
 use crate::state::*;
 
 /// Exit door one: the rights authority pushes treasury money out to a
@@ -31,4 +32,34 @@ pub struct Spend<'info> {
     pub destination: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
+}
+
+impl<'info> Spend<'info> {
+    /// Exit door one: the rights authority pushes treasury money to a
+    /// destination. Adjudicated claims are paid this way. No pool state
+    /// changes — the treasury balance is the record.
+    pub fn handler_spend(ctx: Context<Spend>, amount: u64) -> Result<()> {
+        let pool = &ctx.accounts.pool;
+        let seed_le = pool.seed.to_le_bytes();
+        let bump = [pool.bump];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"pool".as_ref(), seed_le.as_ref(), bump.as_ref()]];
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.key(),
+                token::Transfer {
+                    from: ctx.accounts.treasury.to_account_info(),
+                    to: ctx.accounts.destination.to_account_info(),
+                    authority: pool.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            amount,
+        )?;
+        emit!(events::Spent {
+            pool: ctx.accounts.pool.key(),
+            destination: ctx.accounts.destination.key(),
+            amount,
+        });
+        Ok(())
+    }
 }

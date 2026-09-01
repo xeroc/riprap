@@ -1,11 +1,11 @@
 ---
 # riprap-rueo
 title: Pool program v1 + @riprap/pool SDK
-status: todo
+status: completed
 type: milestone
 priority: high
 created_at: 2026-09-01T05:12:50Z
-updated_at: 2026-09-01T05:17:22Z
+updated_at: 2026-09-01T07:25:04Z
 ---
 
 Anchor program 'pool' (generic three-track mutual-pool primitive) + Codama TS SDK packages/pool @riprap/pool. Localnet/LiteSVM only. Full HANDOFF below.

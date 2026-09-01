@@ -1,8 +1,9 @@
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::token::{self, Token, TokenAccount};
 
 use crate::error::PoolError;
+use crate::events;
 use crate::state::*;
 
 /// Permissionless liquidation crank: pays one depositor its money-weighted
@@ -48,6 +49,42 @@ pub struct Crank<'info> {
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+}
+
+impl<'info> Crank<'info> {
+    /// Permissionless: pays one depositor its money-weighted share of the
+    /// remaining treasury and marks it settled. Exactly once per depositor.
+    pub fn handler_crank(ctx: Context<Crank>) -> Result<()> {
+        let depositor = &mut ctx.accounts.depositor;
+        let paid = payout(
+            ctx.accounts.pool.liquidation_balance,
+            depositor.total_amount,
+            ctx.accounts.pool.total_amount,
+        )?;
+        let pool = &ctx.accounts.pool;
+        let seed_le = pool.seed.to_le_bytes();
+        let bump = [pool.bump];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"pool".as_ref(), seed_le.as_ref(), bump.as_ref()]];
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.key(),
+                token::Transfer {
+                    from: ctx.accounts.treasury.to_account_info(),
+                    to: ctx.accounts.destination.to_account_info(),
+                    authority: pool.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            paid,
+        )?;
+        depositor.settled = true;
+        emit!(events::CrankPaid {
+            pool: pool.key(),
+            depositor: depositor.owner,
+            paid,
+        });
+        Ok(())
+    }
 }
 
 /// Money-weighted share of the remaining treasury: depositor total divided by

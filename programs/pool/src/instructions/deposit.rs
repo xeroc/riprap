@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::token::{self, Token, TokenAccount};
 
 use crate::error::PoolError;
+use crate::events;
 use crate::state::*;
 
 /// Pure deposit accounting — everything except the SPL transfer, so the
@@ -95,6 +96,37 @@ pub struct Deposit<'info> {
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+}
+
+impl<'info> Deposit<'info> {
+    /// Deposit into one track; mints stake at that track's rate and moves the
+    /// money into the treasury. The only way money enters.
+    pub fn handler_deposit(ctx: Context<Deposit>, track: Track, amount: u64) -> Result<()> {
+        // Stake math and bookkeeping before the transfer — no state changes if it reverts.
+        let stake = apply(&mut ctx.accounts.pool, &mut ctx.accounts.depositor, track, amount)?;
+        let owner = ctx.accounts.owner.key();
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.key(),
+                token::Transfer {
+                    from: ctx.accounts.owner_ata.to_account_info(),
+                    to: ctx.accounts.treasury.to_account_info(),
+                    authority: ctx.accounts.owner.to_account_info(),
+                },
+            ),
+            amount,
+        )?;
+        // init_if_needed: owner is only set meaningfully on first creation.
+        ctx.accounts.depositor.owner = owner;
+        emit!(events::Deposit {
+            pool: ctx.accounts.pool.key(),
+            depositor: owner,
+            track,
+            amount,
+            stake,
+        });
+        Ok(())
+    }
 }
 
 #[cfg(test)]
