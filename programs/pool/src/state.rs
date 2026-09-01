@@ -40,6 +40,10 @@ pub struct Pool {
     /// Sum of all depositor totals. Liquidation shares are money-weighted
     /// against this, never stake-weighted.
     pub total_amount: u128,
+    /// Restated from the PDA seeds: the pool PDA signs outbound treasury
+    /// transfers (spend, crank), which requires seeds and bump at spend time.
+    pub seed: u64,
+    pub bump: u8,
 }
 
 impl Pool {
@@ -95,14 +99,17 @@ mod tests {
             rights_authority: Pubkey::new_unique(),
             yield_authority: Pubkey::new_unique(),
             total_amount: 0,
+            seed: 0,
+            bump: 255,
         }
     }
 
-    /// Handoff §2: Pool = mint 32 + state 1 + rates 3×8 + authorities 3×32 + total 16.
+    /// Handoff §2: Pool = mint 32 + state 1 + rates 3×8 + authorities 3×32 +
+    /// total 16 + seed 8 + bump 1 (seed/bump restated so the PDA can sign).
     #[test]
     fn pool_space_matches_handoff_layout() {
-        assert_eq!(Pool::INIT_SPACE, 32 + 1 + 3 * 8 + 3 * 32 + 16);
-        assert_eq!(POOL_SPACE, 8 + 169);
+        assert_eq!(Pool::INIT_SPACE, 32 + 1 + 3 * 8 + 3 * 32 + 16 + 8 + 1);
+        assert_eq!(POOL_SPACE, 8 + 178);
     }
 
     /// Handoff §2: Depositor = owner 32 + total 8 + stakes 3×16 + settled 1.

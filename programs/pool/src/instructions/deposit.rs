@@ -84,10 +84,12 @@ pub struct Deposit<'info> {
     pub owner_ata: Account<'info, TokenAccount>,
 
     /// Treasury: pool PDA's ATA. Deposits were never swig-gated (ADR-0001).
+    /// Treasury: must be THIS pool's canonical ATA (mint + authority = pool),
+    /// so money can never land in or leave another pool's treasury.
     #[account(
         mut,
-        constraint = treasury.mint == pool.mint,
-        constraint = treasury.to_account_info().owner == &token_program.key()
+        associated_token::mint = pool.mint,
+        associated_token::authority = pool,
     )]
     pub treasury: Account<'info, TokenAccount>,
 
@@ -119,6 +121,8 @@ mod tests {
             rights_authority: Pubkey::new_unique(),
             yield_authority: Pubkey::new_unique(),
             total_amount: 0,
+            seed: 0,
+            bump: 255,
         }
     }
 

@@ -14,6 +14,7 @@ pub mod state;
 use anchor_lang::prelude::*;
 use anchor_spl::token;
 
+pub use error::PoolError;
 pub use instructions::*;
 pub use state::*;
 
@@ -36,7 +37,9 @@ pub mod pool {
         pool.rights_authority = params.rights_authority;
         pool.yield_authority = params.yield_authority;
         pool.total_amount = 0;
-        // seed lives in the PDA; it is not restated in state (handoff §2).
+        // Restated so the PDA can sign spend/crank transfers (see state.rs).
+        pool.seed = params.seed;
+        pool.bump = ctx.bumps.pool;
         Ok(())
     }
 
@@ -44,8 +47,12 @@ pub mod pool {
     /// money into the treasury. The only way money enters.
     pub fn deposit(ctx: Context<Deposit>, track: Track, amount: u64) -> Result<()> {
         // Stake math and bookkeeping before the transfer — no state changes if it reverts.
-        let stake =
-            instructions::deposit::apply(&mut ctx.accounts.pool, &mut ctx.accounts.depositor, track, amount)?;
+        let stake = instructions::deposit::apply(
+            &mut ctx.accounts.pool,
+            &mut ctx.accounts.depositor,
+            track,
+            amount,
+        )?;
         let owner = ctx.accounts.owner.key();
         token::transfer(
             CpiContext::new(
@@ -67,6 +74,44 @@ pub mod pool {
             amount,
             stake,
         });
+        Ok(())
+    }
+
+    /// Exit door one: the rights authority pushes treasury money to a
+    /// destination. Adjudicated claims are paid this way. No pool state
+    /// changes — the treasury balance is the record.
+    pub fn spend(ctx: Context<Spend>, amount: u64) -> Result<()> {
+        let pool = &ctx.accounts.pool;
+        let seed_le = pool.seed.to_le_bytes();
+        let bump = [pool.bump];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"pool".as_ref(), seed_le.as_ref(), bump.as_ref()]];
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.key(),
+                token::Transfer {
+                    from: ctx.accounts.treasury.to_account_info(),
+                    to: ctx.accounts.destination.to_account_info(),
+                    authority: pool.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            amount,
+        )?;
+        emit!(events::Spent {
+            pool: ctx.accounts.pool.key(),
+            destination: ctx.accounts.destination.key(),
+            amount,
+        });
+        Ok(())
+    }
+
+    /// Exit door two: the ownership authority permanently ends the pool.
+    /// After this only the crank can move money. Terminal.
+    pub fn liquidate(ctx: Context<Liquidate>) -> Result<()> {
+        let pool = &mut ctx.accounts.pool;
+        require!(pool.state == PoolState::Open, PoolError::PoolNotOpen);
+        pool.state = PoolState::Liquidated;
+        emit!(events::Liquidated { pool: pool.key() });
         Ok(())
     }
 }
