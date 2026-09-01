@@ -13,6 +13,8 @@ hordr:
   # Branch that worktrees branch from and PRs merge back into.
   primary_branch: develop
 
+  default_vcs: jj
+
   # Harness binary used for any agent that does not set its own `harness`.
   # Flip this ONE line to repoint every persona at a different tool.
   #   opencode  (default)
