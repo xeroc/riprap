@@ -41,7 +41,13 @@ export function Hero() {
             </Settle>
             <Settle delay={240}>
               <div className="flex flex-wrap items-center gap-3 pt-(--riprap-space-sm)">
-                <StampBadge pool="Blade Pool" event="Breakpoint" />
+                <a
+                  href="/breakpoint-2026"
+                  aria-label="Blade Pool at Breakpoint 2026 — policy and participation"
+                  className="outline-none transition-opacity duration-[160ms] ease-out hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring"
+                >
+                  <StampBadge pool="Blade Pool" event="Breakpoint" />
+                </a>
                 <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
                   First pool · Olympia Convention Centre, London · 15-17 November 2026
                 </p>

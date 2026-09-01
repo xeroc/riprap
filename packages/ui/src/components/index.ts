@@ -97,3 +97,4 @@ export {
   SheetTitle,
   SheetTrigger,
 } from "./ui/sheet";
+export { Slider } from "./ui/slider";

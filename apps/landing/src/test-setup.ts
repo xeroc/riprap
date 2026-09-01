@@ -33,3 +33,25 @@ if (typeof IntersectionObserver === "undefined") {
   globalThis.IntersectionObserver =
     IntersectionObserverStub as unknown as typeof IntersectionObserver;
 }
+
+/*
+ * jsdom ships no ResizeObserver; Radix's slider measures its root via
+ * @radix-ui/react-use-size at effect time. Minimal stub: reports the
+ * initial size once, then never fires — the slider is controlled here,
+ * so layout-driven updates are never needed under test.
+ */
+class ResizeObserverStub implements ResizeObserver {
+  callback: ResizeObserverCallback;
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback;
+  }
+  observe(target: Element): void {
+    this.callback([{ target } as ResizeObserverEntry], this as unknown as ResizeObserver);
+  }
+  unobserve(): void {}
+  disconnect(): void {}
+}
+
+if (typeof ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
+}

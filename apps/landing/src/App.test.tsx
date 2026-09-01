@@ -87,6 +87,7 @@ describe("landing", () => {
       expect(
         href?.startsWith("#") ||
           href === "/" ||
+          href === "/breakpoint-2026" ||
           href === "https://x.com/riprapxyz" ||
           href === "https://github.com/xeroc/riprap",
       ).toBe(true);
