@@ -2,7 +2,7 @@
   "name": "riprap",
   "version": "0.1.0",
   "private": true,
-  "description": "Riprap — event-scoped mutual protection pools on Solana. Frontend monorepo: @riprap/ui (illustration primitive kit) and @riprap/landing (static site).",
+  "description": "Riprap — event-scoped mutual protection pools on Solana. Frontend: @riprap/ui (illustration kit) + @riprap/landing (static site); on-chain: programs/pool (Anchor) + @riprap/pool (Codama client).",
   "type": "module",
   "scripts": {
     "build": "pnpm -r run build",
@@ -11,7 +11,7 @@
     "test": "pnpm -r run test",
     "dev:landing": "pnpm --filter @riprap/landing dev",
     "dev:ui": "pnpm --filter @riprap/ui storybook",
-    "verify": "pnpm -r run build && pnpm lint && pnpm -r run test"
+    "verify": "pnpm -r run build && pnpm lint && pnpm -r run test && anchor build && cargo test"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0"
