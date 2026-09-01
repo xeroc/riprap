@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
 
 use crate::error::PoolError;
 use crate::state::*;
@@ -16,4 +17,13 @@ pub struct Liquidate<'info> {
 
     #[account(constraint = ownership_authority.key() == pool.ownership_authority)]
     pub ownership_authority: Signer<'info>,
+
+    /// Read-only: snapshot the remaining treasury as the crank base.
+    #[account(
+        associated_token::mint = pool.mint,
+        associated_token::authority = pool,
+    )]
+    pub treasury: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
 }

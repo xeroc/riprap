@@ -123,6 +123,7 @@ mod tests {
             total_amount: 0,
             seed: 0,
             bump: 255,
+            liquidation_balance: 0,
         }
     }
 

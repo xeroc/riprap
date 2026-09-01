@@ -110,6 +110,9 @@ pub mod pool {
     pub fn liquidate(ctx: Context<Liquidate>) -> Result<()> {
         let pool = &mut ctx.accounts.pool;
         require!(pool.state == PoolState::Open, PoolError::PoolNotOpen);
+        // Freeze the remaining treasury as the base every crank pays against:
+        // payout order must never dilute a depositor's share.
+        pool.liquidation_balance = ctx.accounts.treasury.amount;
         pool.state = PoolState::Liquidated;
         emit!(events::Liquidated { pool: pool.key() });
         Ok(())
@@ -120,7 +123,7 @@ pub mod pool {
     pub fn crank(ctx: Context<Crank>) -> Result<()> {
         let depositor = &mut ctx.accounts.depositor;
         let paid = instructions::crank::payout(
-            ctx.accounts.treasury.amount,
+            ctx.accounts.pool.liquidation_balance,
             depositor.total_amount,
             ctx.accounts.pool.total_amount,
         )?;

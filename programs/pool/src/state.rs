@@ -44,6 +44,10 @@ pub struct Pool {
     /// transfers (spend, crank), which requires seeds and bump at spend time.
     pub seed: u64,
     pub bump: u8,
+    /// Treasury balance frozen at liquidation: every crank pays against this
+    /// base so payout order can never dilute a depositor's money-weighted
+    /// share (CONTEXT.md, Money-weighted share).
+    pub liquidation_balance: u64,
 }
 
 impl Pool {
@@ -110,15 +114,17 @@ mod tests {
             total_amount: 0,
             seed: 0,
             bump: 255,
+            liquidation_balance: 0,
         }
     }
 
     /// Handoff §2: Pool = mint 32 + state 1 + rates 3×8 + authorities 3×32 +
-    /// total 16 + seed 8 + bump 1 (seed/bump restated so the PDA can sign).
+    /// total 16 + seed 8 + bump 1 + liquidation_balance 8 (seed/bump restated
+    /// so the PDA can sign; balance frozen at liquidation).
     #[test]
     fn pool_space_matches_handoff_layout() {
-        assert_eq!(Pool::INIT_SPACE, 32 + 1 + 3 * 8 + 3 * 32 + 16 + 8 + 1);
-        assert_eq!(POOL_SPACE, 8 + 178);
+        assert_eq!(Pool::INIT_SPACE, 32 + 1 + 3 * 8 + 3 * 32 + 16 + 8 + 1 + 8);
+        assert_eq!(POOL_SPACE, 8 + 186);
     }
 
     /// Handoff §2: Depositor = owner 32 + total 8 + stakes 3×16 + settled 1.

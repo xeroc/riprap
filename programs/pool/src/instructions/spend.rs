@@ -27,7 +27,7 @@ pub struct Spend<'info> {
     pub treasury: Account<'info, TokenAccount>,
 
     /// Any token account of the pool's token receiving the money.
-    #[account(constraint = destination.mint == pool.mint)]
+    #[account(mut, constraint = destination.mint == pool.mint)]
     pub destination: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
