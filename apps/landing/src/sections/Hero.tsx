@@ -1,4 +1,4 @@
-import { MarkAssemble, SectionBand, StampBadge, SvgFrame } from "@riprap/ui";
+import { Logomark, SectionBand, StampBadge } from "@riprap/ui";
 
 import { Settle } from "../components/Settle";
 import { Waitlist } from "../components/Waitlist";
@@ -41,15 +41,8 @@ export function Hero() {
           </Settle>
         </div>
         <div className="hidden lg:block">
-          <SvgFrame
-            width={280}
-            height={210}
-            canvas={false}
-            title="The Riprap mark settles"
-            desc="Seven stone-grey stones drop-settle into the pile; the harbor-blue crest stone lands last."
-          >
-            <MarkAssemble x={140} y={190} scale={1.2} delay={0.25} />
-          </SvgFrame>
+          {/* the ring: 7 stones settle clockwise, the harbor-blue newest member last (DESIGN.md § Motion) */}
+          <Logomark size={208} state="assemble" />
         </div>
       </div>
     </SectionBand>

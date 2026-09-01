@@ -13,7 +13,7 @@ Motion law: **settle, not slide**. Elements drop and stop; nothing bounces, glow
 - Numbers are the hero — every numeral renders in JetBrains Mono and arrives on screen one at a time.
 - Display runs Space Grotesk 700, tightly tracked (-0.04em at wordmark scale). Never light weights on dark canvas.
 - Sharp geometry: 0px radius on stamps and CTAs; hairline borders instead of shadows.
-- The stone mark (7 grey stones + 1 blue crest stone) appears settled; it may assemble or dissolve, never float, spin, or glow.
+- The logomark — **the ring** — is an open circle of 7 grey stones around a protected middle, one slot deliberately empty (open membership), one harbor-blue stone settled beside the gap (the newest member). It appears settled; it may assemble or dissolve, never float, spin, or glow. Community, solidarity, communality: each stone is held in the ring by its neighbors.
 - 80px section rhythm with 1px stone rules between bands — the section-drawing grid.
 - Deadpan register everywhere: no fear imagery, no knives, no dramatized peril (messaging guide §Register Guardrails).
 
@@ -22,7 +22,7 @@ Motion law: **settle, not slide**. Elements drop and stop; nothing bounces, glow
 ### Brand & Accent
 - **Ink Primary** (`{colors.primary}` — #F2EFE8): The primary action color — warm-white block button on dark ground. Used scarcely.
 - **Ink Primary Active** (`{colors.primary-active}` — #FBF9F3): Press state.
-- **Accent Harbor-Blue** (`{colors.accent}` — #3E7CA6): The crest stone, text links, stamps. Accent only — never a fill for buttons or surfaces, never body text.
+- **Accent Harbor-Blue** (`{colors.accent}` — #3E7CA6): the newest-member stone in the ring, text links, stamps. Accent only — never a fill for buttons or surfaces, never body text.
 - **Accent Harbor-Blue Hover** (`{colors.accent-hover}` — #4E8FBA): Link hover.
 
 ### Surface (dark-first)
@@ -116,7 +116,7 @@ The system uses **tone steps + hairlines only**. No drop shadows, no glows, no g
 | Deep | `{colors.canvas-deep}` (#08090B) | Dissolution end-state band |
 
 ### Decorative Depth
-- **The stone mark** is the only decorative element: the settled pile (7 grey stones, 1 harbor-blue crest stone) as a corner anchor or section divider. It settles or dissolves; it never floats, rotates, or glows. Logo assets: `meta/marketing/07-brand-assets/logo/`.
+- **The ring** is the only decorative element: the open stone circle (7 grey stones, 1 empty slot, 1 harbor-blue newest member) as a corner anchor or section divider. It settles or dissolves; it never floats, rotates, or glows. Kit components: `Logomark`, `Wordmark`, `LogoLockup` (`@riprap/ui`); legacy assets: `meta/marketing/07-brand-assets/logo/` (regeneration pending).
 
 ## Shapes
 
@@ -148,7 +148,7 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 
 ### Hero & Brand
 
-**`hero-band`** — Background `{colors.canvas}`, left-aligned display headline in `{typography.display-mega}`, subhead in `{typography.body-md}`, two CTAs. The stone mark assembles bottom-right on load (see Motion). No orb, no gradient, no photo.
+**`hero-band`** — Background `{colors.canvas}`, left-aligned display headline in `{typography.display-mega}`, subhead in `{typography.body-md}`, two CTAs. The ring assembles bottom-right on load (see Motion). No orb, no gradient, no photo.
 
 **`stamp-badge`** — The instance lockup element: uppercase JetBrains Mono `{typography.mono-label}` in harbor-blue, 1px `{colors.hairline-strong}` border, radius `{rounded.none}`, padding 6px × 12px. Pattern: `: BLADE POOL @ BREAKPOINT`. Mirrors the logo's instance stamp (`logo/lockup-instance.svg`).
 
@@ -179,7 +179,7 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 ## Motion
 
 - **Law: settle, not slide.** Elements drop into place and stop. Ease-out, ~160ms. No bounce, no elastic, no glow, no parallax.
-- **Assemble (hero load, pool opens):** the mark's stones drop-settle in sequence, ~40ms stagger, crest stone last. Position only — no rotation, no scale.
+- **Assemble (hero load, pool opens):** the ring's stones drop-settle in clockwise sequence, ~40ms stagger, the harbor-blue newest member last. Position only — no rotation, no scale.
 - **Numbers arrive one at a time.** In worked-example bands each mono figure settles before the next appears.
 - **Dissolve (claims window close, dead-pool pages):** stones scatter off-frame and the composition dereferences. Favicon and print are always the settled state.
 - Reduced-motion: all settle/dissolve animation collapses to static states.
@@ -190,7 +190,7 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 - Reserve `{colors.primary}` (warm-white block) for primary CTAs.
 - Use Space Grotesk 700, tightly tracked, for every display headline.
 - Render every numeral in JetBrains Mono — inline in body text too.
-- Use harbor-blue for exactly three things: the crest stone, text links, stamps.
+- Use harbor-blue for exactly three things: the ring's newest-member stone, text links, stamps.
 - Use 1px hairlines and tone steps for all separation and depth.
 - Name the peril plainly in body copy ("knife assault"); keep names/headlines to the instance pattern ("Blade Pool").
 

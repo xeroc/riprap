@@ -50,12 +50,14 @@ describe("landing", () => {
     expect(container.textContent).not.toMatch(/knife assault/i);
   });
 
-  it("hero: the stone mark assembles — 7 grey stones + 1 harbor-blue crest", () => {
+  it("hero: the ring assembles — 7 stones, one slot open, one harbor-blue newest member", () => {
     const { container } = render(<App />);
     const hero = container.querySelector("section#top");
     expect(hero).not.toBeNull();
     const stones = hero?.querySelectorAll("polygon") ?? [];
-    expect(stones.length).toBe(8);
+    expect(stones.length).toBe(7); // 8 slots, one deliberately open
+    const blue = hero?.querySelectorAll('polygon[fill="var(--riprap-accent)"]') ?? [];
+    expect(blue.length).toBe(1); // the newest member, settled beside the gap
   });
 
   it("footer closes on the dissolution fact in mono", () => {

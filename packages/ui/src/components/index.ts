@@ -11,8 +11,6 @@
 
 // hooks
 export { useInView } from "../hooks/useInView";
-
-// chrome
 export { BadgeStamp } from "./chrome/BadgeStamp";
 export { Container } from "./chrome/Container";
 export type { CTABandProps } from "./chrome/CTABand";
@@ -23,6 +21,11 @@ export type { FeatureCardProps } from "./chrome/FeatureCard";
 export { FeatureCard } from "./chrome/FeatureCard";
 export type { FooterBandProps, FooterColumn, FooterLink } from "./chrome/FooterBand";
 export { FooterBand } from "./chrome/FooterBand";
+// brand
+export type { LogoLockupProps } from "./chrome/LogoLockup";
+export { LogoLockup } from "./chrome/LogoLockup";
+export type { LogomarkProps } from "./chrome/Logomark";
+export { BLUE_INDEX, GAP_INDEX, Logomark, RING_SEEDS, slotPosition } from "./chrome/Logomark";
 export type { MechanismCardProps } from "./chrome/MechanismCard";
 export { MechanismCard } from "./chrome/MechanismCard";
 export type { SectionBandProps } from "./chrome/SectionBand";
@@ -35,6 +38,8 @@ export type { TierCardProps } from "./chrome/TierCard";
 export { TierCard } from "./chrome/TierCard";
 export type { TopNavLink, TopNavProps } from "./chrome/TopNav";
 export { TopNav } from "./chrome/TopNav";
+export type { WordmarkProps } from "./chrome/Wordmark";
+export { Wordmark } from "./chrome/Wordmark";
 export type {
   WorkedExampleBandProps,
   WorkedExampleFigure,

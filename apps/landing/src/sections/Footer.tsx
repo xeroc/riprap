@@ -1,6 +1,5 @@
-import { FooterBand } from "@riprap/ui";
+import { FooterBand, LogoLockup } from "@riprap/ui";
 
-import { Mark } from "../components/Mark";
 import { GITHUB_URL, X_URL } from "./shared";
 
 // §7 — Footer. Facts only: handle, domain, repo. Closing line per DESIGN.md.
@@ -9,8 +8,7 @@ export function Footer() {
     <FooterBand
       brand={
         <a href="#top" className="flex items-center gap-2.5" aria-label="Riprap — home">
-          <Mark size={22} />
-          <span className="font-mono text-sm font-medium tracking-tight text-ink">riprap</span>
+          <LogoLockup size={22} />
         </a>
       }
       tagline="Event mutuals on Solana. One pool, one peril, one event — then it's gone."
