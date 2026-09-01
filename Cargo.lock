@@ -1654,6 +1654,7 @@ dependencies = [
  "accord",
  "anchor-lang",
  "anchor-spl",
+ "borsh 1.8.1",
  "litesvm",
  "solana-keypair",
  "solana-message 3.1.0",

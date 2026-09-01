@@ -25,6 +25,9 @@ pub mod events;
 pub mod instructions;
 pub mod state;
 
+pub use error::HanseError;
+pub use state::*;
+
 use anchor_lang::prelude::*;
 
 declare_id!("DTSwUuWC1SpZP8LcJ1EJ4HtUxAczqwrsgqNYnR1QXK3p");
