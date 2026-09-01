@@ -1,7 +1,59 @@
 use anchor_lang::prelude::*;
 
 use crate::error::PoolError;
+use crate::events;
 use crate::state::*;
+
+/// Exit from the residual split for a paid claimant: the track's authority
+/// burns stake after spending the payout (EVENT-MUTUAL §2.4). Moves no
+/// tokens — pure accounting (CONTEXT.md, Spending; spec §2.4).
+#[derive(Accounts)]
+#[instruction(track: Track)]
+pub struct Burn<'info> {
+    #[account(
+        mut,
+        constraint = pool.state == PoolState::Open @ PoolError::PoolNotOpen
+    )]
+    pub pool: Account<'info, Pool>,
+
+    /// The burning track's authority; key or program PDA (CONTEXT.md,
+    /// Authority). Same per-track gate as update_authority.
+    #[account(constraint = authority.key() == pool.authority(track))]
+    pub authority: Signer<'info>,
+
+    /// One depositor position of THIS pool; seeds bind pool and owner.
+    #[account(
+        mut,
+        seeds = [b"depositor", pool.key().as_ref(), owner.key().as_ref()],
+        bump,
+        constraint = depositor.owner == owner.key(),
+        constraint = !depositor.settled @ PoolError::Settled
+    )]
+    pub depositor: Account<'info, Depositor>,
+
+    /// The depositor's owner — the paid claimant. Not a signer: burn is
+    /// push accounting by the authority, not a depositor action.
+    /// CHECK: bound by the depositor PDA seeds and owner equality above.
+    pub owner: UncheckedAccount<'info>,
+}
+
+impl<'info> Burn<'info> {
+    /// Remove a paid claimant from the money-weighted residual split
+    /// (EVENT-MUTUAL §2.4/§8). No tokens move.
+    pub fn handler_burn(ctx: Context<Burn>, track: Track, amount: u64) -> Result<()> {
+        let stake_burned =
+            apply(&mut ctx.accounts.pool, &mut ctx.accounts.depositor, track, amount)?;
+        emit!(events::Burned {
+            pool: ctx.accounts.pool.key(),
+            depositor: ctx.accounts.depositor.owner,
+            track,
+            amount,
+            stake_burned,
+        });
+        Ok(())
+    }
+
+}
 
 /// Pure burn accounting — the deposit mirror for payouts (EVENT-MUTUAL §2.4:
 /// the authority composes spend + burn in one transaction; spend already
@@ -9,8 +61,6 @@ use crate::state::*;
 /// money-weighted residual split of §8). Moves NO tokens. Saturates at every
 /// balance instead of reverting (grill 2026-09-01 Q1). Returns the stake
 /// actually burned (checked math everywhere, handoff §3).
-// Not wired to an instruction yet — riprap-609b adds the handler; remove then.
-#[allow(dead_code)]
 pub(crate) fn apply(
     pool: &mut Pool,
     depositor: &mut Depositor,

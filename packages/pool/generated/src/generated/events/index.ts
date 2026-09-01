@@ -7,6 +7,7 @@
  */
 
 export * from "./authorityUpdated";
+export * from "./burned";
 export * from "./crankPaid";
 export * from "./deposit";
 export * from "./liquidated";

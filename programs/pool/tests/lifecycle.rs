@@ -201,6 +201,41 @@ impl Env {
         );
         try_send(&mut self.svm, &[ix], &mut [authority])
     }
+
+    fn burn(
+        &mut self,
+        authority: &Keypair,
+        owner: &Pubkey,
+        track: pool::Track,
+        amount: u64,
+    ) -> Result<(), String> {
+        let ix = Instruction::new_with_bytes(
+            pool::id(),
+            &pool::instruction::Burn { track, amount }.data(),
+            pool::accounts::Burn {
+                pool: self.pool,
+                authority: authority.pubkey(),
+                depositor: Pubkey::find_program_address(
+                    &[b"depositor", self.pool.as_ref(), owner.as_ref()],
+                    &pool::id(),
+                )
+                .0,
+                owner: *owner,
+            }
+            .to_account_metas(None),
+        );
+        try_send(&mut self.svm, &[ix], &mut [authority])
+    }
+
+    fn depositor_state(&self, owner: &Pubkey) -> pool::Depositor {
+        let pda = Pubkey::find_program_address(
+            &[b"depositor", self.pool.as_ref(), owner.as_ref()],
+            &pool::id(),
+        )
+        .0;
+        let acct = self.svm.get_account(&pda).unwrap();
+        pool::Depositor::try_deserialize(&mut &acct.data[..]).unwrap()
+    }
 }
 
 fn token_amount(svm: &LiteSVM, ata: &Pubkey) -> u64 {
@@ -537,4 +572,85 @@ fn spend_after_liquidation_reverts() {
     );
     let res = env.spend(&rights, &dest, 1);
     assert_custom_err(res, pool::error::PoolError::PoolNotOpen);
+}
+
+/// EVENT-MUTUAL §2.4: rights-authority burn at rate 1 zeroes the paid
+/// claimant's totals and moves NO tokens — spend already moved the money.
+#[test]
+fn burn_happy_path_rate_1_moves_no_tokens() {
+    let mut env = Env::setup(6);
+    let (o1, a1, _) = env.depositor(20_000_000);
+    env.deposit(&o1, &a1, pool::Track::Rights, 20_000_000).unwrap();
+
+    let rights = env.rights_authority.insecure_clone();
+    env.burn(&rights, &o1.pubkey(), pool::Track::Rights, 20_000_000)
+        .unwrap();
+
+    let d = env.depositor_state(&o1.pubkey());
+    assert_eq!(d.total_amount, 0);
+    assert_eq!(d.rights_stake, 0);
+    assert!(!d.settled, "burn never marks a depositor settled");
+    assert_eq!(env.pool_state().total_amount, 0);
+    assert_eq!(env.treasury_balance(), 20_000_000, "burn moves no tokens");
+}
+
+/// Matrix row 4 (burn): a signer that is not the track's authority cannot
+/// burn — the ownership authority has no power over the rights track.
+#[test]
+fn burn_wrong_authority_reverts() {
+    let mut env = Env::setup(7);
+    let (o1, a1, _) = env.depositor(5_000_000);
+    env.deposit(&o1, &a1, pool::Track::Rights, 5_000_000).unwrap();
+
+    let ownership = env.ownership_authority.insecure_clone();
+    let res = env.burn(&ownership, &o1.pubkey(), pool::Track::Rights, 1);
+    assert!(res.is_err(), "non-authority burn must revert");
+
+    assert_eq!(env.depositor_state(&o1.pubkey()).total_amount, 5_000_000);
+    assert_eq!(env.pool_state().total_amount, 5_000_000);
+}
+
+/// Spec §5: liquidate freezes burn — same door-closing as spend.
+#[test]
+fn burn_after_liquidate_reverts() {
+    let mut env = Env::setup(8);
+    let (o1, a1, _) = env.depositor(5_000_000);
+    env.deposit(&o1, &a1, pool::Track::Rights, 5_000_000).unwrap();
+    send(
+        &mut env.svm,
+        &[Instruction::new_with_bytes(
+            pool::id(),
+            &pool::instruction::Liquidate {}.data(),
+            pool::accounts::Liquidate {
+                pool: env.pool,
+                ownership_authority: env.ownership_authority.pubkey(),
+                treasury: env.treasury,
+                token_program: spl_token_interface::ID,
+            }
+            .to_account_metas(None),
+        )],
+        &mut [&env.ownership_authority],
+    );
+    let rights = env.rights_authority.insecure_clone();
+    let res = env.burn(&rights, &o1.pubkey(), pool::Track::Rights, 1);
+    assert_custom_err(res, pool::error::PoolError::PoolNotOpen);
+}
+
+/// Grill 2026-09-01 Q1: an over-burn is Ok and floors at the balances —
+/// burn saturates, never reverts, never underflows.
+#[test]
+fn burn_saturates_at_balance() {
+    let mut env = Env::setup(9);
+    let (o1, a1, _) = env.depositor(5_000_000);
+    env.deposit(&o1, &a1, pool::Track::Rights, 5_000_000).unwrap();
+
+    let rights = env.rights_authority.insecure_clone();
+    env.burn(&rights, &o1.pubkey(), pool::Track::Rights, 999_999_999)
+        .unwrap();
+
+    let d = env.depositor_state(&o1.pubkey());
+    assert_eq!(d.total_amount, 0);
+    assert_eq!(d.rights_stake, 0);
+    assert_eq!(env.pool_state().total_amount, 0);
+    assert_eq!(env.treasury_balance(), 5_000_000);
 }

@@ -6,6 +6,7 @@ pub mod liquidate;
 pub mod spend;
 pub mod update_authority;
 
+pub use burn::*;
 pub use crank::*;
 pub use deposit::*;
 pub use init::*;
