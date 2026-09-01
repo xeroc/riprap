@@ -1,3 +1,4 @@
+pub mod burn;
 pub mod crank;
 pub mod deposit;
 pub mod init;
