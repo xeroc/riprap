@@ -1,0 +1,56 @@
+/* Riprap design tokens — meta/primitives/composition.md § Color tokens, § Typography, § Canvas and grid.
+   One stroke width (3), one radius (12), 8px base grid. No gradients anywhere. */
+:root {
+  /* light mode (default) */
+  --riprap-canvas: #f8fafc;
+  --riprap-ink: #0f172a;
+  --riprap-muted: #64748b;
+  --riprap-line: #cbd5e1;
+  --riprap-stone: #cbd5e1;
+  --riprap-stone-edge: #475569;
+  --riprap-funds: #2775ca;
+  --riprap-deliberation: #0f766e;
+  --riprap-peril: #b91c1c;
+
+  /* type scale — nothing between the steps, nothing smaller than 13 */
+  --riprap-font-prose: Arial, Helvetica, sans-serif;
+  --riprap-font-mono: "Courier New", Courier, monospace;
+  --riprap-dur-slow: 560ms; /* stone is rigid material: 1.2x duration scale, 0% overshoot */
+  --riprap-text-display: 44px;
+  --riprap-text-title: 28px;
+  --riprap-text-panel: 18px;
+  --riprap-text-label: 16px;
+  --riprap-text-caption: 13px;
+
+  /* geometry */
+  --riprap-stroke: 3;
+  --riprap-radius: 12;
+  --riprap-grid: 8px;
+
+  /* motion — brand identity (motion-design skill: Premium/Corporate personality, rigid stone material) */
+  --riprap-ease: cubic-bezier(0.4, 0, 0.2, 1); /* signature curve, 80% of animations */
+  --riprap-ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1); /* MD3 emphasized — entrances */
+  --riprap-ease-exit: cubic-bezier(0.3, 0, 1, 1); /* MD3 accelerate — exits */
+  --riprap-dur-quick: 180ms;
+  --riprap-dur-standard: 320ms;
+}
+
+[data-mode="dark"] {
+  --riprap-canvas: #0b1220;
+  --riprap-ink: #f1f5f9;
+  --riprap-muted: #94a3b8;
+  --riprap-line: #334155;
+  --riprap-stone: #334155;
+  --riprap-stone-edge: #94a3b8;
+  --riprap-funds: #3b82f6;
+  --riprap-deliberation: #14b8a6;
+  --riprap-peril: #f87171;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --riprap-dur-quick: 1ms;
+    --riprap-dur-standard: 1ms;
+    --riprap-dur-slow: 1ms;
+  }
+}
