@@ -654,3 +654,125 @@ fn burn_saturates_at_balance() {
     assert_eq!(env.pool_state().total_amount, 0);
     assert_eq!(env.treasury_balance(), 5_000_000);
 }
+
+/// Spec §2.4 ("burn saturates at the member's remaining stake"): a second
+/// burn past the remaining balance is Ok and floors totals and stake at 0.
+/// No token ever moves.
+#[test]
+fn burn_2_4_double_burn_floors_at_zero() {
+    let mut env = Env::setup(10);
+    let (o1, a1, _) = env.depositor(1_000_000);
+    env.deposit(&o1, &a1, pool::Track::Rights, 1_000_000).unwrap();
+
+    let rights = env.rights_authority.insecure_clone();
+    env.burn(&rights, &o1.pubkey(), pool::Track::Rights, 400_000)
+        .unwrap();
+    let d = env.depositor_state(&o1.pubkey());
+    assert_eq!(d.total_amount, 600_000);
+    assert_eq!(d.rights_stake, 600_000);
+    assert_eq!(env.pool_state().total_amount, 600_000);
+
+    // Second burn past the remainder: Ok, floored at 0.
+    env.burn(&rights, &o1.pubkey(), pool::Track::Rights, 999_999_999)
+        .unwrap();
+    let d = env.depositor_state(&o1.pubkey());
+    assert_eq!(d.total_amount, 0);
+    assert_eq!(d.rights_stake, 0);
+    assert_eq!(env.pool_state().total_amount, 0);
+    assert_eq!(env.treasury_balance(), 1_000_000, "no token ever moves");
+}
+
+/// EVENT-MUTUAL §8, scaled to clean numbers: 6 members deposit equal rights;
+/// 2 are paid via the §2.4 pair (spend + burn of the full contribution);
+/// after liquidation the crank gives the paid claimants 0 and splits the
+/// whole remaining treasury exactly across the other 4 — the paid claimant
+/// exclusion from the residual, end to end.
+#[test]
+fn event_mutual_8_paid_claimants_get_zero_residual() {
+    const CONTRIBUTION: u64 = 1_000_000;
+    let mut env = Env::setup(11);
+    let mut members = Vec::new();
+    for _ in 0..6 {
+        let (o, a, _) = env.depositor(CONTRIBUTION);
+        env.deposit(&o, &a, pool::Track::Rights, CONTRIBUTION)
+            .unwrap();
+        members.push(o);
+    }
+    assert_eq!(env.treasury_balance(), 6_000_000);
+
+    // Two adjudicated payouts: spend 500_000 to each claimant, then burn
+    // the full contribution — one transaction in the real mutual (§2.4).
+    let rights = env.rights_authority.insecure_clone();
+    for claimant in &members[..2] {
+        let ata = get_associated_token_address(&claimant.pubkey(), &env.mint);
+        env.spend(&rights, &ata, 500_000).unwrap();
+        assert_eq!(token_amount(&env.svm, &ata), 500_000);
+        env.burn(&rights, &claimant.pubkey(), pool::Track::Rights, CONTRIBUTION)
+            .unwrap();
+    }
+    assert_eq!(env.treasury_balance(), 5_000_000);
+    assert_eq!(env.pool_state().total_amount, 4_000_000); // the 2 paid exited
+
+    // Terminal door: liquidate freezes liquidation_balance = 5_000_000.
+    send(
+        &mut env.svm,
+        &[Instruction::new_with_bytes(
+            pool::id(),
+            &pool::instruction::Liquidate {}.data(),
+            pool::accounts::Liquidate {
+                pool: env.pool,
+                ownership_authority: env.ownership_authority.pubkey(),
+                treasury: env.treasury,
+                token_program: spl_token_interface::ID,
+            }
+            .to_account_metas(None),
+        )],
+        &mut [&env.ownership_authority],
+    );
+    assert_eq!(env.pool_state().liquidation_balance, 5_000_000);
+
+    // Crank every depositor: paid claimants 0; each of the other 4 gets
+    // 1_000_000/4_000_000 x 5_000_000 = 1_250_000 — the treasury drains
+    // exactly, no dust (§8 money-weighted residual).
+    let crank = |env: &mut Env, owner: &Keypair| -> u64 {
+        let depositor = Pubkey::find_program_address(
+            &[b"depositor", env.pool.as_ref(), owner.pubkey().as_ref()],
+            &pool::id(),
+        )
+        .0;
+        let destination = get_associated_token_address(&owner.pubkey(), &env.mint);
+        let before = token_amount(&env.svm, &destination);
+        let ix = Instruction::new_with_bytes(
+            pool::id(),
+            &pool::instruction::Crank {}.data(),
+            pool::accounts::Crank {
+                pool: env.pool,
+                cranker: env.payer.pubkey(),
+                depositor,
+                owner: owner.pubkey(),
+                destination,
+                treasury: env.treasury,
+                token_program: spl_token_interface::ID,
+                associated_token_program: spl_associated_token_account_interface::program::ID,
+            }
+            .to_account_metas(None),
+        );
+        send(&mut env.svm, &[ix], &mut [&env.payer]);
+        token_amount(&env.svm, &destination) - before
+    };
+    for claimant in &members[..2] {
+        assert_eq!(
+            crank(&mut env, claimant),
+            0,
+            "paid claimant must receive 0 residual (§8 exclusion)"
+        );
+    }
+    for member in &members[2..] {
+        assert_eq!(crank(&mut env, member), 1_250_000);
+    }
+    assert_eq!(
+        env.treasury_balance(),
+        0,
+        "residual split drains the treasury exactly (§8)"
+    );
+}
