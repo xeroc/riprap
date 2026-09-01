@@ -51,18 +51,3 @@ pub struct InitPool<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
-
-pub fn handler(ctx: Context<InitPool>, params: InitParams) -> Result<()> {
-    let pool = &mut ctx.accounts.pool;
-    pool.mint = ctx.accounts.mint.key();
-    pool.state = PoolState::Open;
-    pool.ownership_rate = params.ownership_rate;
-    pool.rights_rate = params.rights_rate;
-    pool.yield_rate = params.yield_rate;
-    pool.ownership_authority = params.ownership_authority;
-    pool.rights_authority = params.rights_authority;
-    pool.yield_authority = params.yield_authority;
-    pool.total_amount = 0;
-    // seed lives in the PDA; it is not restated in state (handoff §2).
-    Ok(())
-}
