@@ -15,12 +15,5 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "^11.3.0",
-      "onFail": "download"
-    }
   }
 }
