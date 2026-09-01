@@ -56,6 +56,15 @@ impl Pool {
         }
     }
 
+    /// Hand one track's powers to a new controller.
+    pub fn set_authority(&mut self, track: Track, new: Pubkey) {
+        match track {
+            Track::Ownership => self.ownership_authority = new,
+            Track::Rights => self.rights_authority = new,
+            Track::Yield => self.yield_authority = new,
+        }
+    }
+
     /// The authority governing one track's powers.
     pub fn authority(&self, track: Track) -> Pubkey {
         match track {
@@ -126,6 +135,17 @@ mod tests {
         assert_eq!(p.rate(Track::Ownership), 0);
         assert_eq!(p.rate(Track::Rights), 1);
         assert_eq!(p.rate(Track::Yield), 2);
+    }
+
+    #[test]
+    fn set_authority_swaps_only_that_track() {
+        let mut p = pool();
+        let before = (p.ownership_authority, p.rights_authority, p.yield_authority);
+        let k = Pubkey::new_unique();
+        p.set_authority(Track::Rights, k);
+        assert_eq!(p.rights_authority, k);
+        assert_eq!(p.ownership_authority, before.0);
+        assert_eq!(p.yield_authority, before.2);
     }
 
     #[test]

@@ -114,4 +114,50 @@ pub mod pool {
         emit!(events::Liquidated { pool: pool.key() });
         Ok(())
     }
+
+    /// Permissionless: pays one depositor its money-weighted share of the
+    /// remaining treasury and marks it settled. Exactly once per depositor.
+    pub fn crank(ctx: Context<Crank>) -> Result<()> {
+        let depositor = &mut ctx.accounts.depositor;
+        let paid = instructions::crank::payout(
+            ctx.accounts.treasury.amount,
+            depositor.total_amount,
+            ctx.accounts.pool.total_amount,
+        )?;
+        let pool = &ctx.accounts.pool;
+        let seed_le = pool.seed.to_le_bytes();
+        let bump = [pool.bump];
+        let signer_seeds: &[&[&[u8]]] = &[&[b"pool".as_ref(), seed_le.as_ref(), bump.as_ref()]];
+        token::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.key(),
+                token::Transfer {
+                    from: ctx.accounts.treasury.to_account_info(),
+                    to: ctx.accounts.destination.to_account_info(),
+                    authority: pool.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            paid,
+        )?;
+        depositor.settled = true;
+        emit!(events::CrankPaid {
+            pool: pool.key(),
+            depositor: depositor.owner,
+            paid,
+        });
+        Ok(())
+    }
+
+    /// Hand one track's powers to a new controller. The current authority of
+    /// that track must sign; any pubkey or program PDA is acceptable.
+    pub fn update_authority(ctx: Context<UpdateAuthority>, track: Track, new: Pubkey) -> Result<()> {
+        ctx.accounts.pool.set_authority(track, new);
+        emit!(events::AuthorityUpdated {
+            pool: ctx.accounts.pool.key(),
+            track,
+            new_authority: new,
+        });
+        Ok(())
+    }
 }

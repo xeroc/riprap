@@ -25,3 +25,19 @@ pub struct Spent {
 pub struct Liquidated {
     pub pool: Pubkey,
 }
+
+/// Emitted once per depositor when the crank pays its money-weighted share.
+#[event]
+pub struct CrankPaid {
+    pub pool: Pubkey,
+    pub depositor: Pubkey,
+    pub paid: u64,
+}
+
+/// Emitted when a track's authority changes hands.
+#[event]
+pub struct AuthorityUpdated {
+    pub pool: Pubkey,
+    pub track: Track,
+    pub new_authority: Pubkey,
+}
