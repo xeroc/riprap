@@ -9,13 +9,22 @@ import { SvgText } from "../atoms/SvgFrame";
 export function SceneTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <g>
-      <SvgText x={40} y={64} size={28} fill="var(--riprap-ink)" bold>
-        {title}
-      </SvgText>
+      <MonoLine
+        x={40}
+        y={64}
+        size={28}
+        fill="var(--riprap-diagram-ink)"
+        bold
+        segments={numeralSegments(title)}
+      />
       {subtitle ? (
-        <SvgText x={40} y={88} size={13} fill="var(--riprap-muted)">
-          {subtitle}
-        </SvgText>
+        <MonoLine
+          x={40}
+          y={88}
+          size={13}
+          fill="var(--riprap-diagram-muted)"
+          segments={numeralSegments(subtitle)}
+        />
       ) : null}
     </g>
   );
@@ -26,7 +35,7 @@ export interface PanelProps {
   y: number;
   width: number;
   height: number;
-  /** numbered panel title, e.g. `1 · claim filed` */
+  /** numbered panel title, e.g. `1 · claim filed` — the numeral renders mono */
   title?: string;
   /** dashed panel = non-taken branch (the rejected box) */
   dashed?: boolean;
@@ -41,15 +50,20 @@ export function Panel({ x, y, width, height, title, dashed = false }: PanelProps
         width={width}
         height={height}
         rx={12}
-        fill="var(--riprap-canvas)"
-        stroke={dashed ? "var(--riprap-muted)" : "var(--riprap-line)"}
+        fill="var(--riprap-diagram-canvas)"
+        stroke={dashed ? "var(--riprap-diagram-muted)" : "var(--riprap-diagram-line)"}
         strokeWidth={3}
         strokeDasharray={dashed ? "10 8" : undefined}
       />
       {title ? (
-        <SvgText x={x + 16} y={y + 32} size={18} fill="var(--riprap-ink)" bold>
-          {title}
-        </SvgText>
+        <MonoLine
+          x={x + 16}
+          y={y + 32}
+          size={18}
+          fill="var(--riprap-diagram-ink)"
+          bold
+          segments={numeralSegments(title)}
+        />
       ) : null}
     </g>
   );
@@ -60,13 +74,26 @@ export interface MonoSegment {
   mono: boolean;
 }
 
+/**
+ * Split a mixed line into prose/mono segments so every numeral —
+ * `$12,000`, `1:100`, `42` — renders in JetBrains Mono, inline in prose
+ * too (DESIGN.md type law). Idempotent for digit-free lines.
+ */
+export function numeralSegments(text: string): MonoSegment[] {
+  return text
+    .split(/(\$?\d[\d,]*(?:\.\d+)?)/)
+    .filter(Boolean)
+    .map((part) => ({ text: part, mono: /\d/.test(part) }));
+}
+
 const segmentAdvance = (s: MonoSegment, size: number) =>
   Math.round((s.text.length * size * (s.mono ? 0.62 : 0.55)) / 4) * 4;
 
 /**
  * Mixed-font line compositor — the type law's answer to "numbers are
- * monospace" inside running prose. Advance ≈ 0.62em mono / 0.55em Arial,
- * grid-rounded; exactness is not the point, separation is.
+ * monospace" inside running prose. Advance ≈ 0.62em mono / 0.55em prose,
+ * grid-rounded; exactness is not the point, separation is. `bold` sets the
+ * display treatment on the prose segments (Space Grotesk 700, −0.03em).
  */
 export function MonoLine({
   x,
@@ -74,6 +101,7 @@ export function MonoLine({
   size,
   fill,
   segments,
+  bold = false,
   anchor = "start",
 }: {
   x: number;
@@ -81,6 +109,7 @@ export function MonoLine({
   size: 44 | 28 | 18 | 16 | 13;
   fill: string;
   segments: MonoSegment[];
+  bold?: boolean;
   anchor?: "start" | "middle" | "end";
 }) {
   const width = segments.reduce((acc, s) => acc + segmentAdvance(s, size), 0);
@@ -89,7 +118,15 @@ export function MonoLine({
     <g>
       {segments.map((s, i) => {
         const el = (
-          <SvgText key={i} x={Math.round(cx)} y={y} size={size} fill={fill} mono={s.mono}>
+          <SvgText
+            key={i}
+            x={Math.round(cx)}
+            y={y}
+            size={size}
+            fill={fill}
+            mono={s.mono}
+            bold={bold}
+          >
             {s.text}
           </SvgText>
         );

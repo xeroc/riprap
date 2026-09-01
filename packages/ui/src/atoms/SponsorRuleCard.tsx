@@ -59,8 +59,8 @@ export function SponsorRuleCard({
         width={cardW}
         height={cardH}
         rx={12}
-        fill="var(--riprap-canvas)"
-        stroke="var(--riprap-line)"
+        fill="var(--riprap-diagram-canvas)"
+        stroke="var(--riprap-diagram-line)"
         strokeWidth={3}
       />
       {rows.map((row, i) => {
@@ -70,14 +70,14 @@ export function SponsorRuleCard({
             <path
               d={`M ${x + 16} ${ry - 8} l 8 8 l 14 -16`}
               fill="none"
-              stroke="var(--riprap-ink)"
+              stroke="var(--riprap-diagram-ink)"
               strokeWidth={3}
             />
-            <SvgText x={x + 52} y={ry} size={13} fill="var(--riprap-ink)">
+            <SvgText x={x + 52} y={ry} size={13} fill="var(--riprap-diagram-ink)">
               {row.label}
             </SvgText>
             {row.mono ? (
-              <SvgText x={x + 172} y={ry} size={13} fill="var(--riprap-ink)" mono>
+              <SvgText x={x + 172} y={ry} size={13} fill="var(--riprap-diagram-ink)" mono>
                 {row.mono}
               </SvgText>
             ) : null}
@@ -90,7 +90,13 @@ export function SponsorRuleCard({
 
       {/* sponsor stone outside the rim — the sponsor is not the insurer */}
       <MemberStone size="S" seed={7} x={basinX} y={basinY - 28} />
-      <SvgText x={basinX} y={basinY - 48} size={13} fill="var(--riprap-muted)" anchor="middle">
+      <SvgText
+        x={basinX}
+        y={basinY - 48}
+        size={13}
+        fill="var(--riprap-diagram-muted)"
+        anchor="middle"
+      >
         sponsor
       </SvgText>
     </g>

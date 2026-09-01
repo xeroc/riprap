@@ -116,10 +116,10 @@ export function JurorDraw({ x, y, jurorCount, drawnSizes = ["M", "S", "L"] }: Ju
         y2={y + 76}
         color="var(--riprap-deliberation)"
       />
-      <SvgText x={x + 16} y={y + 56} size={13} fill="var(--riprap-muted)" mono>
+      <SvgText x={x + 16} y={y + 56} size={13} fill="var(--riprap-diagram-muted)" mono>
         {`N = ${nLabel}`}
       </SvgText>
-      <SvgText x={x + 16} y={y + 212} size={13} fill="var(--riprap-muted)">
+      <SvgText x={x + 16} y={y + 212} size={13} fill="var(--riprap-diagram-muted)">
         selection weighted by stake
       </SvgText>
     </g>

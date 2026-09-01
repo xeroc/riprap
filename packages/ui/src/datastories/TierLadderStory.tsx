@@ -42,24 +42,24 @@ export function TierLadderStory({ highlight = "Standard" }: TierLadderStoryProps
         x={40}
         y={424}
         size={18}
-        fill="var(--riprap-ink)"
+        fill="var(--riprap-diagram-ink)"
         segments={[{ text: "the worst case, printed beside the ratio", mono: false }]}
       />
       <g>
         <MemberStone size="M" seed={31} x={176} y={496} feeTag="$20" />
-        <SvgText x={176} y={560} size={16} fill="var(--riprap-peril)" mono anchor="middle">
+        <SvgText x={176} y={560} size={16} fill="var(--riprap-peril-ink)" mono anchor="middle">
           $20 gone
         </SvgText>
-        <SvgText x={176} y={584} size={13} fill="var(--riprap-muted)" anchor="middle">
+        <SvgText x={176} y={584} size={13} fill="var(--riprap-diagram-muted)" anchor="middle">
           worst case, member — the fee is the maximum contribution
         </SvgText>
       </g>
       <g>
         <VesselOutline x={824} y={452} width={144} height={104} />
-        <SvgText x={896} y={508} size={16} fill="var(--riprap-muted)" mono anchor="middle">
+        <SvgText x={896} y={508} size={16} fill="var(--riprap-diagram-muted)" mono anchor="middle">
           $0
         </SvgText>
-        <SvgText x={896} y={584} size={13} fill="var(--riprap-muted)" anchor="middle">
+        <SvgText x={896} y={584} size={13} fill="var(--riprap-diagram-muted)" anchor="middle">
           worst case, pool — empty
         </SvgText>
       </g>

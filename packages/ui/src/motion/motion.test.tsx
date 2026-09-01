@@ -20,14 +20,16 @@ describe("StoneSettle", () => {
     expect(container.querySelectorAll("polygon")).toHaveLength(1);
   });
 
-  it("rigid material: enters on the signature curve, zero bounce config", () => {
-    render(
+  it("rigid material: settles on the token curve — no bounce, no overshoot", () => {
+    const { container } = render(
       <SvgFrame width={200} height={200} title="settle frame">
         <StoneSettle size="M" seed={3} x={100} y={120} />
       </SvgFrame>,
     );
-    // the animated group exists — 560ms = 1.2× the 320ms standard (stone law)
-    expect(document.querySelector("g")).not.toBeNull();
+    // the wrapper never moves the settled geometry: the stone lands where the
+    // static atom puts it (position only, settle.ts timing — no bounce config)
+    const stone = container.querySelector("polygon");
+    expect(stone?.parentElement?.getAttribute("transform")).toMatch(/^translate\(100 120\)/);
   });
 });
 
@@ -87,7 +89,7 @@ describe("DissolutionScatter", () => {
     );
     expect(container.querySelector('path[stroke-dasharray="8 8"]')).not.toBeNull();
     expect(container.querySelectorAll("polygon").length).toBeGreaterThanOrEqual(6);
-    const ticks = container.querySelectorAll('line[stroke="var(--riprap-muted)"]');
+    const ticks = container.querySelectorAll('line[stroke="var(--riprap-diagram-muted)"]');
     expect(ticks.length).toBeGreaterThanOrEqual(12);
   });
 

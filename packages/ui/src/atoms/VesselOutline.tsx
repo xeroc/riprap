@@ -51,7 +51,7 @@ export function VesselOutline({
       <path
         d={walls}
         fill="none"
-        stroke="var(--riprap-ink)"
+        stroke="var(--riprap-diagram-ink)"
         strokeWidth={3}
         strokeOpacity={strokeOpacity}
         strokeDasharray={dash}
@@ -62,7 +62,7 @@ export function VesselOutline({
           y1={spendTop + doorW}
           x2={wallR}
           y2={bottom}
-          stroke="var(--riprap-ink)"
+          stroke="var(--riprap-diagram-ink)"
           strokeWidth={3}
           strokeOpacity={strokeOpacity}
           strokeDasharray={dash}

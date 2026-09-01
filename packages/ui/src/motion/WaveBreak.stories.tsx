@@ -9,7 +9,7 @@ const WaveBreakStory = (args: WaveBreakStoryProps) => (
     width={360}
     height={240}
     title="WaveBreak"
-    desc="Motion wrapper over the static atom — honors prefers-reduced-motion by rendering the final state."
+    desc="One wave arrival that settles — the claims are the storm, the stones hold, then it clears. Honors prefers-reduced-motion by rendering the settled pile."
   >
     <WaveBreak {...args} />
   </SvgFrame>
@@ -23,9 +23,19 @@ const meta = {
 
 export default meta;
 
+/** the law: ONE arrival, no loop (DESIGN.md — no oscillating loops by default) */
 export const Default: StoryObj<typeof meta> = {
   args: {
     x: 80,
     y: 140,
+  },
+};
+
+/** opt-in repeating hero */
+export const Loop: StoryObj<typeof meta> = {
+  args: {
+    x: 80,
+    y: 140,
+    loop: true,
   },
 };

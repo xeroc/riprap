@@ -3,15 +3,14 @@ import { Dissolution, StoneTicks } from "../atoms/Dissolution";
 import { MemberStone } from "../atoms/MemberStone";
 import { VesselOutline } from "../atoms/VesselOutline";
 import type { StoneSize } from "../lib/stone";
+import { SETTLE, SETTLE_EASE, STAGGER } from "./settle";
 
 /**
- * Motion: DissolutionScatter — stones accelerate outward with their motion
- * ticks while the vessel fades to its dashed past tense.
- *
- * Exits accelerate (ease-in family — MD3 accelerate); rigid stones get no
- * overshoot; stagger 50ms within the budget. Geometry comes from the
- * static atom's own scatter table (same stones, same directions); reduced
- * motion renders the static Dissolution atom — its final state.
+ * Motion: DissolutionScatter — the pile disperses: stones exit off-frame
+ * with their motion ticks (the only place ticks appear) while the vessel
+ * dereferences to its dashed past tense. One pass, ease-out, then still —
+ * no loop. Reduced motion renders the static Dissolution atom, the settled
+ * end state.
  */
 export interface DissolutionScatterProps {
   x: number;
@@ -28,6 +27,10 @@ const SCATTER: { dx: number; dy: number; size: StoneSize }[] = [
   { dx: -1.2, dy: 0.2, size: "S" },
   { dx: 1.2, dy: 0.3, size: "S" },
 ];
+
+/** exit travel in scatter radii — far enough to cross the frame edge;
+ *  anything past the viewBox is clipped by the svg element (off-frame) */
+const EXIT = 2;
 
 export function DissolutionScatter({
   x,
@@ -47,30 +50,30 @@ export function DissolutionScatter({
 
   return (
     <g>
-      {/* the vessel fading to dashed — dash is the past tense */}
+      {/* the vessel dereferences to dashed — dash is the past tense */}
       <motion.g
         initial={{ opacity: 1 }}
         animate={{ opacity: 0.5 }}
-        transition={{ duration: 0.56, ease: [0.4, 0, 0.2, 1] }}
+        transition={{ duration: SETTLE, ease: SETTLE_EASE }}
       >
         <VesselOutline x={x} y={y} width={interiorWidth} height={wallHeight} dashed doors />
       </motion.g>
 
-      {/* stones accelerate outward — each with its ticks */}
+      {/* stones exit off-frame — each with its ticks, one settle per stone */}
       {SCATTER.map((s, i) => {
         const norm = Math.hypot(s.dx, s.dy) || 1;
         const ux = s.dx / norm;
         const uy = s.dy / norm;
         const startX = cx + s.dx * radius * 0.3;
         const startY = cy + s.dy * radius * 0.3;
-        const endX = cx + s.dx * radius;
-        const endY = cy + s.dy * radius * 0.8;
+        const endX = cx + s.dx * radius * EXIT;
+        const endY = cy + s.dy * radius * 0.8 * EXIT;
         return (
           <motion.g
             key={i}
             initial={{ x: 0, y: 0, opacity: 0.8 }}
             animate={{ x: endX - startX, y: endY - startY, opacity: 1 }}
-            transition={{ duration: 0.48, delay: i * 0.05, ease: [0.3, 0, 1, 1] }}
+            transition={{ duration: SETTLE, delay: i * STAGGER, ease: SETTLE_EASE }}
           >
             <StoneTicks x={startX} y={startY} dx={ux} dy={uy} />
             <MemberStone size={s.size} seed={42 + i} x={startX} y={startY} />

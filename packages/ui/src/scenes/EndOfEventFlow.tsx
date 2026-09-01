@@ -46,7 +46,7 @@ export function EndOfEventFlow({
         x={40}
         y={88}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[
           { text: "claims window closes → crank → dissolve · ", mono: false },
           { text: `${members.toLocaleString("en-US")}`, mono: true },
@@ -59,7 +59,8 @@ export function EndOfEventFlow({
         x={40}
         y={120}
         size={28}
-        fill="var(--riprap-funds)"
+        fill="var(--riprap-funds-ink)"
+        bold
         segments={[
           { text: usd(remainder), mono: true },
           { text: " returned — ", mono: false },

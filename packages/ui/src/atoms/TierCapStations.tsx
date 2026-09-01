@@ -83,13 +83,19 @@ export function TierCapStations({
               x={colX + 16}
               y={base - colH - 12}
               size={16}
-              fill="var(--riprap-funds)"
+              fill="var(--riprap-funds-ink)"
               mono
               anchor="middle"
             >
               {usd(tier.cap)}
             </SvgText>
-            <SvgText x={sx + 60} y={base + 24} size={13} fill="var(--riprap-ink)" anchor="middle">
+            <SvgText
+              x={sx + 60}
+              y={base + 24}
+              size={13}
+              fill="var(--riprap-diagram-ink)"
+              anchor="middle"
+            >
               {tier.name}
             </SvgText>
           </g>
@@ -100,7 +106,7 @@ export function TierCapStations({
         x={x + (STATION_W * 3 + STATION_GAP * 2) / 2}
         y={base + 52}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         mono
         anchor="middle"
       >

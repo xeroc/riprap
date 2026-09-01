@@ -1,5 +1,5 @@
 import type { Preview } from "@storybook/react-vite";
-import "../src/tokens.css";
+import "../src/main.css";
 
 const preview: Preview = {
   parameters: {
@@ -11,20 +11,20 @@ const preview: Preview = {
     },
     backgrounds: {
       options: {
-        light: { name: "light", value: "#f8fafc" },
-        dark: { name: "dark", value: "#0b1220" },
+        ground: { name: "ground (dark)", value: "#0c0e10" },
+        paper: { name: "paper (light)", value: "#f2efe8" },
       },
+      default: "ground",
     },
   },
   globalTypes: {
     mode: {
-      description:
-        "Palette mode — same hues, two canvases (composition.md: never mix within a scene)",
+      description: "Palette mode — dark ground (default) or paper inversion (DESIGN.md)",
       toolbar: {
         icon: "mirror",
         items: [
-          { value: "light", title: "light" },
-          { value: "dark", title: "dark" },
+          { value: "ground", title: "ground" },
+          { value: "paper", title: "paper" },
         ],
         dynamicTitle: true,
       },
@@ -32,9 +32,9 @@ const preview: Preview = {
   },
   decorators: [
     (Story, context) => {
-      const mode = context.globals.mode === "dark" ? "dark" : "light";
+      const mode = context.globals.mode === "paper" ? "paper" : "ground";
       return (
-        <div data-mode={mode}>
+        <div data-mode={mode === "paper" ? "paper" : undefined}>
           <Story />
         </div>
       );

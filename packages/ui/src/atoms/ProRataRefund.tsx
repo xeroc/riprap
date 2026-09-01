@@ -72,7 +72,7 @@ export function ProRataRefund({
               y1={fillY}
               x2={x + 3 + Math.round(sliceW * (i + 1))}
               y2={bottom}
-              stroke="var(--riprap-canvas)"
+              stroke="var(--riprap-diagram-canvas)"
               strokeWidth={1}
             />
           ))}
@@ -81,11 +81,11 @@ export function ProRataRefund({
               x={x + interiorWidth / 2}
               y={fillY + 24}
               size={16}
-              fill="var(--riprap-canvas)"
+              fill="var(--riprap-diagram-canvas)"
               mono
               anchor="middle"
             >
-              {"×" + memberCount.toLocaleString("en-US")}
+              {`×${memberCount.toLocaleString("en-US")}`}
             </SvgText>
           ) : null}
         </g>
@@ -117,7 +117,7 @@ export function ProRataRefund({
             x={x + interiorWidth + 28}
             y={fillY + 5}
             size={16}
-            fill="var(--riprap-funds)"
+            fill="var(--riprap-funds-ink)"
             mono
           >
             {usd(remainder)}
@@ -128,7 +128,7 @@ export function ProRataRefund({
           x={x + interiorWidth / 2}
           y={y + wallHeight / 2}
           size={16}
-          fill="var(--riprap-muted)"
+          fill="var(--riprap-diagram-muted)"
           mono
           anchor="middle"
         >
@@ -143,7 +143,7 @@ export function ProRataRefund({
           cy={bottom - 8}
           r={10}
           fill="none"
-          stroke="var(--riprap-muted)"
+          stroke="var(--riprap-diagram-muted)"
           strokeWidth={3}
         />
         {Array.from({ length: 8 }, (_, i) => {
@@ -155,7 +155,7 @@ export function ProRataRefund({
               y1={bottom - 8 + Math.sin(a) * 10}
               x2={x - 24 + Math.cos(a) * 15}
               y2={bottom - 8 + Math.sin(a) * 15}
-              stroke="var(--riprap-muted)"
+              stroke="var(--riprap-diagram-muted)"
               strokeWidth={3}
             />
           );
@@ -184,7 +184,7 @@ export function ProRataRefund({
           x={x + interiorWidth / 2}
           y={bottom + tail.each}
           size={16}
-          fill="var(--riprap-funds)"
+          fill="var(--riprap-funds-ink)"
           mono
           anchor="middle"
         >
@@ -195,12 +195,18 @@ export function ProRataRefund({
       {/* Wide captions run RIGHT from the atom's left edge (crank column),
           never centered on a sub-element — a centered 236px caption on a
           thumbnail vessel spills past any frame's left edge. */}
-      <SvgText x={x - 24} y={bottom + tail.crank} size={13} fill="var(--riprap-muted)">
+      <SvgText x={x - 24} y={bottom + tail.crank} size={13} fill="var(--riprap-diagram-muted)">
         permissionless crank — anyone may turn it
       </SvgText>
 
       {/* the formula — printed in every depiction */}
-      <SvgText x={x - 24} y={bottom + tail.formula} size={13} fill="var(--riprap-muted)" mono>
+      <SvgText
+        x={x - 24}
+        y={bottom + tail.formula}
+        size={13}
+        fill="var(--riprap-diagram-muted)"
+        mono
+      >
         share = user_stake / total_stake × treasury
       </SvgText>
     </g>

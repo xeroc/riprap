@@ -9,7 +9,7 @@ const PoolFillStory = (args: PoolFillStoryProps) => (
     width={560}
     height={360}
     title="PoolFill"
-    desc="Motion wrapper over the static atom — honors prefers-reduced-motion by rendering the final state."
+    desc="Motion wrapper over the static atom — the level rises with ease-out on the settle token and stops. Honors prefers-reduced-motion by rendering the final state."
   >
     <PoolFill {...args} />
   </SvgFrame>
@@ -30,6 +30,5 @@ export const Default: StoryObj<typeof meta> = {
     x: 40,
     y: 40,
     surfaceStones: 3,
-    duration: 0.9,
   },
 };

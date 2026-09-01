@@ -54,7 +54,7 @@ export function JoinFlow({
         x={40}
         y={88}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[
           { text: "sponsor founds · members pile in · ", mono: false },
           { text: event, mono: true },
@@ -81,7 +81,7 @@ export function JoinFlow({
             feeTag={s.feeTag}
           />
           <Arrow x1={s.sx} y1={s.sy + 36} x2={s.sx} y2={vesselY - 6} color="var(--riprap-funds)" />
-          <SvgText x={s.sx + 8} y={s.sy + 52} size={13} fill="var(--riprap-funds)" mono>
+          <SvgText x={s.sx + 8} y={s.sy + 52} size={13} fill="var(--riprap-funds-ink)" mono>
             {s.feeTag}
           </SvgText>
         </g>
@@ -101,7 +101,7 @@ export function JoinFlow({
         x={40}
         y={316}
         size={16}
-        fill="var(--riprap-ink)"
+        fill="var(--riprap-diagram-ink)"
         segments={[
           { text: members.toLocaleString("en-US"), mono: true },
           { text: " members × ", mono: false },

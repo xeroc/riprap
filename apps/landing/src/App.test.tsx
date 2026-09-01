@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+
 import { App } from "./App";
 
 afterEach(cleanup);
@@ -11,52 +12,69 @@ describe("landing", () => {
     expect(h1.textContent).toBe("Any event. Any narrow peril. One finite pool.");
   });
 
-  it("prices all three tiers exactly as the policy tier table", () => {
+  it("carries the three structural guarantees", () => {
     render(<App />);
-    for (const price of ["$10", "$20", "$40", "$1,000", "$2,000", "$4,000"]) {
-      expect(screen.getAllByText(price).length).toBeGreaterThan(0);
+    for (const h of ["Two doors out.", "Fail-closed economics.", "Guaranteed death."]) {
+      expect(screen.getByRole("heading", { name: h })).toBeTruthy();
     }
   });
 
-  it("labels both governed doors on the pool vessel", () => {
+  it("states the lineage and the honest-scope box", () => {
     render(<App />);
-    expect(screen.getAllByText("spending — adjudicated").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("liquidation").length).toBeGreaterThan(0);
+    expect(screen.getByText("The mutual is old. The Solana primitive is new.")).toBeTruthy();
+    expect(screen.getByText("Honest scope")).toBeTruthy();
+    expect(screen.getByText(/No traction numbers, because there is no traction/)).toBeTruthy();
   });
 
-  it("asks the three FAQ teaser questions", () => {
-    render(<App />);
-    for (const q of [
-      "Is this insurance?",
-      "What if claims exceed the pool?",
-      "Who are the jurors?",
-    ]) {
-      expect(screen.getByRole("heading", { name: q })).toBeTruthy();
+  it("renders the waitlist form exactly once per capture point (hero + final CTA)", () => {
+    const { container } = render(<App />);
+    expect(container.querySelectorAll("form[data-waitlist]").length).toBe(2);
+    expect(screen.getAllByPlaceholderText("you@riprap.xyz").length).toBe(2);
+  });
+
+  it("names the arbitration oracle honestly, never a trustless court", () => {
+    const { container } = render(<App />);
+    expect(container.textContent).toContain("arbitration oracle");
+    expect(container.textContent).not.toContain("trustless court");
+    expect(container.textContent).not.toContain("decentralized court");
+  });
+
+  it("stamps the first instance and never names the peril on the page", () => {
+    const { container } = render(<App />);
+    expect(screen.getByText(": BLADE POOL @ BREAKPOINT")).toBeTruthy();
+    for (const heading of screen.getAllByRole("heading")) {
+      expect(heading.textContent).not.toMatch(/knife|assault/i);
     }
+    // the lean platform page never names the peril — it lives in the policy
+    // in the repo, per the naming lock (messaging guide)
+    expect(container.textContent).not.toMatch(/knife assault/i);
   });
 
-  it("carries the open-parameters footnote", () => {
+  it("hero: the stone mark assembles — 7 grey stones + 1 harbor-blue crest", () => {
+    const { container } = render(<App />);
+    const hero = container.querySelector("section#top");
+    expect(hero).not.toBeNull();
+    const stones = hero?.querySelectorAll("polygon") ?? [];
+    expect(stones.length).toBe(8);
+  });
+
+  it("footer closes on the dissolution fact in mono", () => {
     render(<App />);
-    expect(
-      screen.getByText(
-        /Still open: round-1 juror count N, round-1 juror fee size, claims-window length, join link/,
-      ),
-    ).toBeTruthy();
+    const closing = screen.getByText(/dead on schedule/);
+    expect(closing.className).toContain("font-mono");
   });
 
-  it("renders unresolved parameters as visible chips, not endpoints", () => {
-    render(<App />);
-    for (const param of ["{{MAILING_LIST}}", "{{CONTACT_EMAIL}}", "{{EXCLUSIONS}}"]) {
-      expect(screen.getAllByText(param).length).toBeGreaterThan(0);
-    }
-  });
-
-  it("links only to section anchors and the live X account — no fake endpoints", () => {
+  it("links only to section anchors and the live accounts — no fake endpoints", () => {
     const { container } = render(<App />);
     const hrefs = Array.from(container.querySelectorAll("a[href]"), (a) => a.getAttribute("href"));
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {
-      expect(href?.startsWith("#") || href === "https://x.com/riprapxyz").toBe(true);
+      expect(
+        href?.startsWith("#") ||
+          href === "/" ||
+          href === "https://x.com/riprapxyz" ||
+          href === "https://github.com/xeroc/riprap",
+      ).toBe(true);
     }
     expect(container.textContent).not.toContain("mailto:");
   });

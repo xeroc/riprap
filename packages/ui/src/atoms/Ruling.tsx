@@ -57,7 +57,7 @@ export function Ruling({ x, y, outcome = "pay", tally = [2, 1], appealRound = 0 
         width={150}
         height={48}
         rx={12}
-        fill="var(--riprap-canvas)"
+        fill="var(--riprap-diagram-canvas)"
         stroke="var(--riprap-deliberation)"
         strokeWidth={3}
       />
@@ -75,7 +75,7 @@ export function Ruling({ x, y, outcome = "pay", tally = [2, 1], appealRound = 0 
         x={chipX + 75}
         y={chipY + 16}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         mono
         anchor="middle"
       >
@@ -83,7 +83,7 @@ export function Ruling({ x, y, outcome = "pay", tally = [2, 1], appealRound = 0 
       </SvgText>
 
       {/* settlement pair — coherent earn fees, incoherent lose a fraction */}
-      <SvgText x={dotX + 8} y={y + 48} size={13} fill="var(--riprap-funds)">
+      <SvgText x={dotX + 8} y={y + 48} size={13} fill="var(--riprap-funds-ink)">
         + fees
       </SvgText>
       <Arrow
@@ -93,7 +93,7 @@ export function Ruling({ x, y, outcome = "pay", tally = [2, 1], appealRound = 0 
         y2={y + 52}
         color="var(--riprap-funds)"
       />
-      <SvgText x={x + 16} y={y + 188} size={13} fill="var(--riprap-peril)" mono>
+      <SvgText x={x + 16} y={y + 188} size={13} fill="var(--riprap-peril-ink)" mono>
         {"\u2212 stake \u00d7 {{SLASH_FRACTION}}"}
       </SvgText>
       <Arrow
@@ -105,7 +105,14 @@ export function Ruling({ x, y, outcome = "pay", tally = [2, 1], appealRound = 0 
       />
 
       {/* appeal ladder — doubling is the anti-bribery mechanism */}
-      <SvgText x={x + 328} y={y + 56} size={13} fill="var(--riprap-muted)" anchor="end">
+      <SvgText
+        x={x + 328}
+        y={y + 56}
+        size={13}
+        fill="var(--riprap-diagram-muted)"
+        mono
+        anchor="end"
+      >
         appeal: 2N+1
       </SvgText>
       <line
@@ -113,7 +120,7 @@ export function Ruling({ x, y, outcome = "pay", tally = [2, 1], appealRound = 0 
         y1={y + 72}
         x2={x + 328}
         y2={y + 48}
-        stroke="var(--riprap-muted)"
+        stroke="var(--riprap-diagram-muted)"
         strokeWidth={3}
         strokeDasharray="8 6"
       />
@@ -127,7 +134,7 @@ export function Ruling({ x, y, outcome = "pay", tally = [2, 1], appealRound = 0 
                 x={rungX - 14}
                 y={y + 204}
                 size={13}
-                fill="var(--riprap-muted)"
+                fill="var(--riprap-diagram-muted)"
                 anchor="middle"
               >
                 →
@@ -137,7 +144,7 @@ export function Ruling({ x, y, outcome = "pay", tally = [2, 1], appealRound = 0 
               x={rungX}
               y={y + 204}
               size={13}
-              fill={active ? "var(--riprap-ink)" : "var(--riprap-muted)"}
+              fill={active ? "var(--riprap-diagram-ink)" : "var(--riprap-diagram-muted)"}
               bold={active}
               mono
               anchor="middle"

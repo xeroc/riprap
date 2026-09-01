@@ -83,7 +83,7 @@ export function TreasuryPayout({
         width={180}
         height={44}
         rx={12}
-        fill="var(--riprap-canvas)"
+        fill="var(--riprap-diagram-canvas)"
         stroke="var(--riprap-deliberation)"
         strokeWidth={3}
       />
@@ -117,7 +117,7 @@ export function TreasuryPayout({
             x={wallR + 12}
             y={doorY - 80}
             size={13}
-            fill="var(--riprap-peril)"
+            fill="var(--riprap-peril-ink)"
             mono
             anchor="end"
           >
@@ -128,14 +128,14 @@ export function TreasuryPayout({
 
       {/* shortfall ratio annotated at the stream origin */}
       {ratioTag ? (
-        <SvgText x={wallR + 8} y={doorY - 24} size={13} fill="var(--riprap-funds)" mono>
+        <SvgText x={wallR + 8} y={doorY - 24} size={13} fill="var(--riprap-funds-ink)" mono>
           {ratioTag}
         </SvgText>
       ) : null}
 
       {/* payout stream out the open door, up to the member */}
       <Arrow x1={wallR} y1={doorY} x2={stoneX - 46} y2={stoneY + 12} color="var(--riprap-funds)" />
-      <SvgText x={wallR + 60} y={doorY - 4} size={16} fill="var(--riprap-funds)" mono>
+      <SvgText x={wallR + 60} y={doorY - 4} size={16} fill="var(--riprap-funds-ink)" mono>
         {usd(amount)}
       </SvgText>
 
@@ -152,7 +152,14 @@ export function TreasuryPayout({
             strokeWidth={3}
             strokeDasharray="8 6"
           />
-          <SvgText x={x - 8} y={fillY + 4} size={16} fill="var(--riprap-funds)" mono anchor="end">
+          <SvgText
+            x={x - 8}
+            y={fillY + 4}
+            size={16}
+            fill="var(--riprap-funds-ink)"
+            mono
+            anchor="end"
+          >
             {usd(balance)}
           </SvgText>
         </g>
@@ -160,7 +167,13 @@ export function TreasuryPayout({
 
       {/* the receiving member — funds await claim, they are not pushed */}
       <MemberStone size={receivingTier} seed={17} x={stoneX} y={stoneY} />
-      <SvgText x={stoneX} y={doorY + 12} size={13} fill="var(--riprap-muted)" anchor="middle">
+      <SvgText
+        x={stoneX}
+        y={doorY + 12}
+        size={13}
+        fill="var(--riprap-diagram-muted)"
+        anchor="middle"
+      >
         member claims
       </SvgText>
     </g>

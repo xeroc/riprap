@@ -50,11 +50,11 @@ export function CommitRevealVote({
         width={CELL_W}
         height={CELL_H}
         rx={12}
-        fill="var(--riprap-canvas)"
-        stroke="var(--riprap-line)"
+        fill="var(--riprap-diagram-canvas)"
+        stroke="var(--riprap-diagram-line)"
         strokeWidth={3}
       />
-      <SvgText x={commitX + 12} y={y + 64} size={13} fill="var(--riprap-muted)" mono>
+      <SvgText x={commitX + 12} y={y + 64} size={13} fill="var(--riprap-diagram-muted)" mono>
         commit
       </SvgText>
       {Array.from({ length: rows }, (_, i) => {
@@ -66,17 +66,17 @@ export function CommitRevealVote({
               y={ry}
               width={26}
               height={18}
-              fill="var(--riprap-canvas)"
-              stroke="var(--riprap-ink)"
+              fill="var(--riprap-diagram-canvas)"
+              stroke="var(--riprap-diagram-ink)"
               strokeWidth={3}
             />
             <polyline
               points={`${commitX + 16},${ry} ${commitX + 29},${ry + 12} ${commitX + 42},${ry}`}
               fill="none"
-              stroke="var(--riprap-ink)"
+              stroke="var(--riprap-diagram-ink)"
               strokeWidth={3}
             />
-            <SvgText x={commitX + 52} y={ry + 14} size={13} fill="var(--riprap-muted)" mono>
+            <SvgText x={commitX + 52} y={ry + 14} size={13} fill="var(--riprap-diagram-muted)" mono>
               {compact ? `×${n}` : HASHES[i % HASHES.length]}
             </SvgText>
           </g>
@@ -91,7 +91,7 @@ export function CommitRevealVote({
         y2={y + 125}
         color="var(--riprap-deliberation)"
       />
-      <SvgText x={x + 172} y={y + 212} size={13} fill="var(--riprap-muted)" anchor="middle">
+      <SvgText x={x + 172} y={y + 212} size={13} fill="var(--riprap-diagram-muted)" anchor="middle">
         after all commits
       </SvgText>
 
@@ -102,11 +102,11 @@ export function CommitRevealVote({
         width={CELL_W}
         height={CELL_H}
         rx={12}
-        fill="var(--riprap-canvas)"
-        stroke="var(--riprap-line)"
+        fill="var(--riprap-diagram-canvas)"
+        stroke="var(--riprap-diagram-line)"
         strokeWidth={3}
       />
-      <SvgText x={revealX + 12} y={y + 64} size={13} fill="var(--riprap-muted)" mono>
+      <SvgText x={revealX + 12} y={y + 64} size={13} fill="var(--riprap-diagram-muted)" mono>
         reveal
       </SvgText>
       {Array.from({ length: rows }, (_, i) => {
@@ -117,7 +117,7 @@ export function CommitRevealVote({
             <polyline
               points={`${revealX + 16},${ry} ${revealX + 29},${ry - 12} ${revealX + 42},${ry}`}
               fill="none"
-              stroke="var(--riprap-ink)"
+              stroke="var(--riprap-diagram-ink)"
               strokeWidth={3}
             />
             {/* the two options side-by-side: a choice pair, not a stack —
@@ -133,14 +133,14 @@ export function CommitRevealVote({
                     height={20}
                     rx={12}
                     fill={filled ? "var(--riprap-deliberation)" : "none"}
-                    stroke="var(--riprap-ink)"
+                    stroke="var(--riprap-diagram-ink)"
                     strokeWidth={3}
                   />
                   <SvgText
                     x={revealX + 72 + oi * 44}
                     y={ry + 3}
                     size={13}
-                    fill={filled ? "var(--riprap-canvas)" : "var(--riprap-ink)"}
+                    fill={filled ? "var(--riprap-diagram-canvas)" : "var(--riprap-diagram-ink)"}
                     anchor="middle"
                   >
                     {opt}
@@ -148,7 +148,7 @@ export function CommitRevealVote({
                 </g>
               );
             })}
-            <SvgText x={revealX + 52} y={ry + 20} size={13} fill="var(--riprap-muted)" mono>
+            <SvgText x={revealX + 52} y={ry + 20} size={13} fill="var(--riprap-diagram-muted)" mono>
               {`salt: ${SALTS[i % SALTS.length]}`}
             </SvgText>
           </g>

@@ -1,0 +1,60 @@
+@import "tailwindcss";
+@import "./theme.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * shadcn semantic layer mapped 1:1 onto DESIGN.md tokens (src/theme.css).
+ * Dark-first: the page IS dark ground; [data-mode="paper"] flips every token.
+ * There is no .dark class mode and no second palette.
+ */
+
+@theme inline {
+  --font-sans: var(--riprap-font-prose);
+  --font-heading: var(--riprap-font-prose);
+  --font-mono: var(--riprap-font-mono);
+  --color-background: var(--riprap-canvas);
+  --color-foreground: var(--riprap-ink);
+  --color-card: var(--riprap-surface-card);
+  --color-card-foreground: var(--riprap-ink);
+  --color-popover: var(--riprap-surface-card);
+  --color-popover-foreground: var(--riprap-ink);
+  --color-primary: var(--riprap-primary);
+  --color-primary-foreground: var(--riprap-on-primary);
+  --color-secondary: var(--riprap-surface-strong);
+  --color-secondary-foreground: var(--riprap-ink);
+  --color-muted: var(--riprap-surface-strong);
+  --color-muted-foreground: var(--riprap-muted);
+  --color-accent: var(--riprap-surface-strong);
+  --color-accent-foreground: var(--riprap-ink);
+  --color-destructive: var(--riprap-error);
+  --color-border: var(--riprap-hairline);
+  --color-input: var(--riprap-hairline-strong);
+  --color-ring: var(--riprap-stone);
+  --color-chart-1: var(--riprap-stone);
+  --color-chart-2: var(--riprap-muted);
+  --color-chart-3: var(--riprap-accent);
+  --color-chart-4: var(--riprap-deliberation);
+  --color-chart-5: var(--riprap-funds);
+  --color-sidebar: var(--riprap-canvas-soft);
+  --color-sidebar-foreground: var(--riprap-ink);
+  --color-sidebar-primary: var(--riprap-primary);
+  --color-sidebar-primary-foreground: var(--riprap-on-primary);
+  --color-sidebar-accent: var(--riprap-surface-strong);
+  --color-sidebar-accent-foreground: var(--riprap-ink);
+  --color-sidebar-border: var(--riprap-hairline);
+  --color-sidebar-ring: var(--riprap-stone);
+  --radius: 0rem; /* DESIGN.md: sharp section-drawing geometry */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

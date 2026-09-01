@@ -60,7 +60,7 @@ export function ClaimFlow({
         x={40}
         y={88}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[
           {
             text: "filed → drawn → sealed → revealed → ruled → paid, or closed with nothing moving",
@@ -107,19 +107,19 @@ export function ClaimFlow({
 
       {/* the rejected box — drawn every time the claim flow is drawn */}
       <Panel x={40} y={410} width={344} height={190} dashed title="rejected" />
-      <SvgText x={56} y={470} size={13} fill="var(--riprap-muted)">
+      <SvgText x={56} y={470} size={13} fill="var(--riprap-diagram-muted)">
         claim closed — nothing moves
       </SvgText>
       <polygon
         points="90,518 102,530 90,542 78,530"
         fill="none"
-        stroke="var(--riprap-muted)"
+        stroke="var(--riprap-diagram-muted)"
         strokeWidth={3}
       />
-      <SvgText x={120} y={535} size={13} fill="var(--riprap-muted)">
+      <SvgText x={120} y={535} size={13} fill="var(--riprap-diagram-muted)">
         no payout
       </SvgText>
-      <SvgText x={56} y={572} size={13} fill="var(--riprap-muted)">
+      <SvgText x={56} y={572} size={13} fill="var(--riprap-diagram-muted)">
         the pool is unchanged
       </SvgText>
 
@@ -128,7 +128,7 @@ export function ClaimFlow({
       <Arrow x1={772} y1={230} x2={812} y2={230} color="var(--riprap-deliberation)" />
       <Arrow x1={988} y1={350} x2={988} y2={406} color="var(--riprap-deliberation)" />
       <Arrow x1={816} y1={520} x2={776} y2={520} color="var(--riprap-funds)" />
-      <SvgText x={796} y={508} size={13} fill="var(--riprap-funds)" anchor="middle">
+      <SvgText x={796} y={508} size={13} fill="var(--riprap-funds-ink)" anchor="middle">
         approved
       </SvgText>
       <Arrow
@@ -143,7 +143,7 @@ export function ClaimFlow({
           { x: 212, y: 654 },
         ]}
       />
-      <SvgText x={600} y={648} size={13} fill="var(--riprap-muted)" anchor="middle">
+      <SvgText x={600} y={648} size={13} fill="var(--riprap-diagram-muted)" anchor="middle">
         rejected
       </SvgText>
 
@@ -152,7 +152,7 @@ export function ClaimFlow({
         x={452}
         y={624}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[
           { text: "pool after payout ", mono: false },
           { text: usd(balance), mono: true },

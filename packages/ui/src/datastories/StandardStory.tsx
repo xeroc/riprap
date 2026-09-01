@@ -72,7 +72,7 @@ export function StandardStory({
         x={56}
         y={360}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[
           { text: members.toLocaleString("en-US"), mono: true },
           { text: " members × ", mono: false },
@@ -84,7 +84,7 @@ export function StandardStory({
       {/* frame 2 — absorb */}
       <Panel x={640} y={120} width={560} height={260} title="2 — Absorb" />
       <polygon points="672,226 686,240 672,254 658,240" fill="var(--riprap-peril)" />
-      <SvgText x={672} y={216} size={13} fill="var(--riprap-peril)" anchor="middle">
+      <SvgText x={672} y={216} size={13} fill="var(--riprap-peril-ink)" anchor="middle">
         incident
       </SvgText>
       <TreasuryPayout
@@ -100,7 +100,7 @@ export function StandardStory({
         x={656}
         y={184}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[
           { text: String(claims), mono: true },
           { text: " claims · ", mono: false },
@@ -121,13 +121,13 @@ export function StandardStory({
         interiorWidth={88}
         wallHeight={64}
       />
-      <SvgText x={380} y={500} size={44} fill="var(--riprap-funds)" mono anchor="middle">
+      <SvgText x={380} y={500} size={44} fill="var(--riprap-funds-ink)" mono anchor="middle">
         {usd(perMember)}
       </SvgText>
-      <SvgText x={380} y={532} size={18} fill="var(--riprap-ink)" anchor="middle">
+      <SvgText x={380} y={532} size={18} fill="var(--riprap-diagram-ink)" anchor="middle">
         per member
       </SvgText>
-      <SvgText x={380} y={556} size={13} fill="var(--riprap-muted)" anchor="middle">
+      <SvgText x={380} y={556} size={13} fill="var(--riprap-diagram-muted)" anchor="middle">
         the unused fee comes home
       </SvgText>
 

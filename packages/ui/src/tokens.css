@@ -1,56 +1,159 @@
-/* Riprap design tokens — meta/primitives/composition.md § Color tokens, § Typography, § Canvas and grid.
-   One stroke width (3), one radius (12), 8px base grid. No gradients anywhere. */
+/*
+ * Riprap design tokens v2 — DESIGN.md is the law.
+ * Engineering section drawing: near-black ground, warm-white ink, stone-grey
+ * hairlines, one harbor-blue accent. No gradients, no glow, no shadows, no
+ * bounce. Numbers are the hero (JetBrains Mono everywhere a numeral appears).
+ *
+ * Two systems live here:
+ *  1. UI chrome tokens (this block) — radius 0 geometry, hairline depth,
+ *     settle-not-slide motion.
+ *  2. Diagram tokens (bottom block) — for illustration atoms, which follow
+ *     meta/primitives/composition.md (stroke 3, radius 12) retuned to this
+ *     brand world.
+ */
+
+/* ---------- fonts (self-hosted, SIL OFL) ---------- */
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/jetbrains-mono";
+
 :root {
-  /* light mode (default) */
-  --riprap-canvas: #f8fafc;
-  --riprap-ink: #0f172a;
-  --riprap-muted: #64748b;
-  --riprap-line: #cbd5e1;
-  --riprap-stone: #cbd5e1;
-  --riprap-stone-edge: #475569;
-  --riprap-funds: #2775ca;
-  --riprap-deliberation: #0f766e;
-  --riprap-peril: #b91c1c;
+  /* dark-first ground — never pure black */
+  --riprap-canvas: #0c0e10;
+  --riprap-canvas-soft: #101317;
+  --riprap-canvas-deep: #08090b;
+  --riprap-surface-card: #17191d;
+  --riprap-surface-strong: #1e2126;
 
-  /* type scale — nothing between the steps, nothing smaller than 13 */
-  --riprap-font-prose: Arial, Helvetica, sans-serif;
-  --riprap-font-mono: "Courier New", Courier, monospace;
-  --riprap-dur-slow: 560ms; /* stone is rigid material: 1.2x duration scale, 0% overshoot */
-  --riprap-text-display: 44px;
-  --riprap-text-title: 28px;
-  --riprap-text-panel: 18px;
-  --riprap-text-label: 16px;
-  --riprap-text-caption: 13px;
+  /* ink & text */
+  --riprap-ink: #f2efe8; /* warm white — display, primary */
+  --riprap-body: #c9cdd1;
+  --riprap-muted: #8a9096;
+  --riprap-muted-soft: #6e747a;
+  --riprap-stone: #a7adb3; /* the mark's stones, midtone labels */
+  --riprap-on-primary: #0c0e10;
 
-  /* geometry */
-  --riprap-stroke: 3;
-  --riprap-radius: 12;
-  --riprap-grid: 8px;
+  /* the one accent — harbor-blue: crest stone, links, stamps ONLY */
+  --riprap-accent: #3e7ca6;
+  --riprap-accent-hover: #4e8fba;
+  --riprap-primary: #f2efe8; /* warm-white block button */
+  --riprap-primary-active: #fbf9f3;
 
-  /* motion — brand identity (motion-design skill: Premium/Corporate personality, rigid stone material) */
-  --riprap-ease: cubic-bezier(0.4, 0, 0.2, 1); /* signature curve, 80% of animations */
-  --riprap-ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1); /* MD3 emphasized — entrances */
-  --riprap-ease-exit: cubic-bezier(0.3, 0, 1, 1); /* MD3 accelerate — exits */
-  --riprap-dur-quick: 180ms;
-  --riprap-dur-standard: 320ms;
+  /* hairlines — 1px rules are the only separator */
+  --riprap-hairline: #2a2e33;
+  --riprap-hairline-soft: #22262b;
+  --riprap-hairline-strong: #3a3f45;
+
+  /* semantic (DESIGN.md: provisional) */
+  --riprap-success: #5b8c6a;
+  --riprap-error: #c0533e;
+
+  /* type — Space Grotesk display/body, JetBrains Mono numbers & stamps */
+  --riprap-font-prose: "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  /* ramp: size/line-height/tracking per DESIGN.md typography table */
+  --riprap-display-mega: 700 64px / 1.05 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-display-xl: 700 48px / 1.08 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-display-lg: 700 36px / 1.15 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-display-md: 700 32px / 1.2 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-display-sm: 700 24px / 1.25 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-title-md: 500 20px / 1.35 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-title-sm: 500 18px / 1.44 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-body-md: 400 16px / 1.55 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-body-strong: 500 16px / 1.55 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-body-sm: 400 15px / 1.5 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-mono-label:
+    600 12px / 1.4 "JetBrains Mono Variable", ui-monospace, monospace; /* uppercase stamps */
+  --riprap-mono-number: 600 20px / 1.2 "JetBrains Mono Variable", ui-monospace, monospace;
+  --riprap-mono-number-lg: 600 32px / 1.1 "JetBrains Mono Variable", ui-monospace, monospace;
+  --riprap-button-type: 500 15px / 1 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-nav-link: 500 14px / 1.4 "Space Grotesk Variable", system-ui, sans-serif;
+  --riprap-tracking-mega: -0.04em; /* wordmark kiss — display inherits */
+  --riprap-tracking-display: -0.032em;
+  --riprap-tracking-stamp: 0.067em; /* +0.8px at 12px */
+
+  /* spacing — 4px base, 80px section rhythm */
+  --riprap-space-xxs: 4px;
+  --riprap-space-xs: 8px;
+  --riprap-space-sm: 12px;
+  --riprap-space-base: 16px;
+  --riprap-space-md: 20px;
+  --riprap-space-lg: 24px;
+  --riprap-space-xl: 32px;
+  --riprap-space-xxl: 48px;
+  --riprap-space-section: 80px;
+
+  /* geometry — sharp section-drawing chrome */
+  --riprap-radius: 0px; /* stamps, buttons, cards, badges */
+  --riprap-radius-input: 2px;
+  --riprap-radius-avatar: 9999px; /* the avatar disc — the only circle */
+
+  /* motion — settle, not slide. No bounce, no elastic, no glow, no parallax. */
+  --riprap-settle: 160ms cubic-bezier(0.215, 0.61, 0.355, 1); /* ease-out quart */
+  --riprap-settle-fast: 120ms cubic-bezier(0.215, 0.61, 0.355, 1);
+  --riprap-stagger: 40ms; /* mark assembly / number arrival cadence */
+
+  /* layout */
+  --riprap-content-max: 1200px;
+  --riprap-nav-h: 64px;
 }
 
-[data-mode="dark"] {
-  --riprap-canvas: #0b1220;
-  --riprap-ink: #f1f5f9;
-  --riprap-muted: #94a3b8;
-  --riprap-line: #334155;
-  --riprap-stone: #334155;
-  --riprap-stone-edge: #94a3b8;
-  --riprap-funds: #3b82f6;
-  --riprap-deliberation: #14b8a6;
-  --riprap-peril: #f87171;
+/* light inversion (paper) — secondary: print, docs, email */
+[data-mode="paper"] {
+  --riprap-canvas: #f2efe8;
+  --riprap-canvas-soft: #f7f5f0;
+  --riprap-canvas-deep: #e9e5dc;
+  --riprap-surface-card: #f7f5f0;
+  --riprap-surface-strong: #e9e6dd;
+  --riprap-ink: #14171a;
+  --riprap-body: #33383d;
+  --riprap-muted: #5d646b;
+  --riprap-muted-soft: #7c8288;
+  --riprap-stone: #5f666d;
+  --riprap-on-primary: #f2efe8;
+  --riprap-accent: #2e6488;
+  --riprap-accent-hover: #2a5b7c;
+  --riprap-primary: #14171a;
+  --riprap-primary-active: #22262b;
+  --riprap-hairline: #d9d4cb;
+  --riprap-hairline-soft: #e2ddd4;
+  --riprap-hairline-strong: #c4beb3;
+}
+
+/* ---------- diagram tokens (illustration atoms — meta/primitives) ----------
+ * Same brand world; semantic hues stay three (money / deliberation / peril)
+ * because they encode MEANING in drawings, not decoration. Dark-ground first.
+ */
+:root {
+  --riprap-diagram-canvas: #0c0e10;
+  --riprap-diagram-ink: #f2efe8;
+  --riprap-diagram-muted: #8a9096;
+  --riprap-diagram-line: #3a3f45;
+  --riprap-diagram-stone: #1e2126; /* stone fill on dark ground */
+  --riprap-diagram-stone-edge: #5f666d;
+  --riprap-funds: #3e7ca6; /* money = the accent. Harbor-blue carries funds. */
+  --riprap-funds-ink: #9cc3e0; /* light variant for text-on-dark legibility */
+  --riprap-deliberation: #7d9a94; /* desaturated slate-teal: adjudication */
+  --riprap-peril: #c0533e; /* incidents — sparing, matches semantic error */
+  --riprap-peril-ink: #e08a76; /* peril-colored TEXT on dark ground (≥4.5:1) */
+}
+
+[data-mode="paper"] {
+  --riprap-diagram-canvas: #f2efe8;
+  --riprap-diagram-ink: #14171a;
+  --riprap-diagram-muted: #5d646b;
+  --riprap-diagram-line: #c4beb3;
+  --riprap-diagram-stone: #d9d4cb;
+  --riprap-diagram-stone-edge: #7c8288;
+  --riprap-funds: #2e6488;
+  --riprap-funds-ink: #2e6488;
+  --riprap-deliberation: #5b7a74;
+  --riprap-peril: #a8442f;
+  --riprap-peril-ink: #a8442f;
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --riprap-dur-quick: 1ms;
-    --riprap-dur-standard: 1ms;
-    --riprap-dur-slow: 1ms;
+    --riprap-settle: 1ms;
+    --riprap-settle-fast: 1ms;
   }
 }

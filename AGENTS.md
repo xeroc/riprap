@@ -6,7 +6,7 @@ Instructions for coding agents working in this repository. Human-oriented docs l
 
 Riprap is a platform for event-scoped mutual protection pools on Solana (first deployment: **Riprap: Blade Pool @ Breakpoint 2026**, 15–17 November 2026, Olympia Convention Centre, London). This repo is the **frontend monorepo**: a pnpm workspace containing `packages/ui` (`@riprap/ui` — data-bound React SVG illustration kit with Storybook 10) and `apps/landing` (`@riprap/landing` — static Vite + React site). TypeScript strict, React 19, Vite, Vitest, Biome. No backend, no database, no environment variables.
 
-## Source-of-Truth Map (read before touching code)
+- `DESIGN.md` — the committed visual identity and the law for every component: near-black ground, warm-white ink, one harbor-blue accent (links/stamps/crest only), Space Grotesk + JetBrains Mono (every numeral mono), 0px radius chrome, 1px hairlines, no gradients/shadows/glow, settle-not-slide motion (~160ms ease-out, 40ms stagger, no bounce).
 
 - `meta/PROJECT.md` — why/what of the product; the 8-step pool lifecycle.
 - `meta/primitives/` — **the spec `packages/ui` implements**: `atoms/*.md` (12 atom specs), `composition.md` (tokens, grid, anchors, scene templates, finish checklist), `data-stories.md` (5 money narratives + number provenance). If code and spec disagree, the spec wins — fix the code.
@@ -46,16 +46,11 @@ Or the shorthand: `pnpm verify`. Run it before declaring any task complete — n
 
 - **Lint is law**: Biome from the root (`pnpm lint`, autofix `pnpm lint:fix`). Zero errors before you finish; warnings only with a one-line justification in the PR body.
 - Formatting: 2-space indent, double quotes, semicolons, trailing commas, 100-col lines — enforced by Biome; never hand-format.
-- **Colors never appear as hex outside `packages/ui/src/tokens.css`.** Use `var(--riprap-*)` tokens. Semantic law: `funds` = money, `deliberation` = adjudication, `peril` = incidents only. One stroke width (3), one radius (12), 4px grid, no gradients, no filters, no emoji in SVG.
 - **Data law**: components render props, never invented numbers. Unknown values render as monospace `{{PARAM}}` placeholders. Never hardcode the tier prices outside `lib/poolMath.ts`'s `TIERS`.
-- **Motion law** (`src/motion/`): use the CSS motion tokens / `var(--riprap-ease)` family; stone is rigid material (no bounce); every animated component must render its final state under `prefers-reduced-motion` (`useReducedMotion`).
-- Import the kit via `@riprap/ui` (workspace source, no build step needed between packages). Named exports only; extend `packages/ui/src/index.ts` when adding public components.
-- New packages/apps: add to `pnpm-workspace.yaml` globs (`packages/*`, `apps/*` already covered), name `@riprap/<name>`, and wire `build`/`lint`/`test` scripts so the completion gate covers them.
-
-## Monorepo Navigation
-
-- `pnpm -r ls --depth -1` — list workspace packages.
-- `pnpm --filter @riprap/ui <script>` — run a script in one package.
+- **Colors never appear as hex outside `packages/ui/src/tokens.css`.** Use Tailwind theme utilities (`bg-ground`, `text-ink`, `border-hairline`, `text-accent`…) or `var(--riprap-*)` tokens — both resolve to the same tokens.css values. Diagram atoms use the `--riprap-diagram-*` / `funds` / `deliberation` / `peril` set; UI chrome uses the ground/surface/hairline/accent set; never cross them. Semantic law: `funds`/harbor-blue = money, `deliberation` = adjudication, `peril` = incidents only. Money-colored TEXT on dark uses `--riprap-funds-ink`. Geometry: 0px radius on all chrome, 2px on inputs; illustrations keep their own spec (stroke 3, radius 12) per `meta/primitives/composition.md`.
+- **Type law**: Space Grotesk display/body, JetBrains Mono for EVERY numeral, parameter, stamp, and address — inline in body text too (wrap numerals: the kit exports `numeralSegments`; chrome marks numbers with `data-num`). Uppercase is mono-only.
+- **Component law**: interactive UI comes from the kit's chrome layer (`@riprap/ui` — shadcn/Radix primitives already restyled to DESIGN.md; add new shadcn components via `pnpm dlx shadcn@latest add <name>` from `packages/ui`, then restyle: relative imports only — `@/` aliases leak into consumers and break `apps/landing` builds). Never ship a shadcn component in default state.
+- **Motion law**: settle, not slide — `--riprap-settle` (160ms ease-out), `--riprap-settle-fast` (120ms), `--riprap-stagger` (40ms). No bounce, no overshoot, no oscillating loops, no scale/rotation on stones. Every animated component renders its final state under `prefers-reduced-motion` (`useReducedMotion`).
 - Changes to `@riprap/ui`'s public API (`src/index.ts`) propagate instantly to the landing (source imports) — after renames run `pnpm -r run build` to let every package's `tsc` catch stale usage.
 - Do not edit files under `meta/` as a side effect of code work; docs change in their own commits/PRs (exceptions: parameter tables in `meta/marketing/**/README.md` when a parameter resolves).
 

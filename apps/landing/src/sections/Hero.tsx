@@ -1,43 +1,57 @@
-// Copy: meta/marketing/03-website-copy/landing-page.md § HERO (verbatim).
-import { SvgFrame, WaveBreak } from "@riprap/ui";
-import { ParamChip, Viz } from "./shared";
+import { MarkAssemble, SectionBand, StampBadge, SvgFrame } from "@riprap/ui";
 
+import { Settle } from "../components/Settle";
+import { Waitlist } from "../components/Waitlist";
+
+// §1 — Settled hero. Platform one-liner + the waitlist; the first pool rides
+// along as a stamp, not the headline (platform leads, instance second).
+// Left-biased editorial: copy column + the mark assembling bottom-right.
 export function Hero() {
   return (
-    <section id="top" className="wrap hero" aria-labelledby="hero-heading">
-      <div className="hero-copy">
-        <p className="kicker">Event mutuals on Solana.</p>
-        <h1 id="hero-heading">Any event. Any narrow peril. One finite pool.</h1>
-        <p className="subhead">
-          Riprap is the event-scoped mutual primitive on Solana. A sponsor scopes a pool — one
-          peril, one covered area, one event window — members pay a fixed entry fee, peer jurors
-          adjudicate claims, unused funds return pro-rata, and the pool dissolves. First pool:
-          Riprap: Blade Pool @ Breakpoint 2026 — 15–17 November 2026, Olympia Convention Centre +
-          designated event area, London; peril defined in the policy.
-        </p>
-        <div className="cta-row">
-          <a className="btn btn-primary" href="#how-it-works">
-            See how a pool works
-          </a>
-          <a className="btn btn-secondary" href="#join">
-            Join Riprap: Blade Pool @ Breakpoint 2026
-          </a>
+    <SectionBand id="top" tone="ground" className="pt-(--riprap-space-section)">
+      <div className="grid items-end gap-(--riprap-space-xl) lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div className="flex flex-col gap-(--riprap-space-lg)">
+          <Settle>
+            <p className="uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
+              Event mutuals on Solana
+            </p>
+          </Settle>
+          <Settle delay={60}>
+            <h1 className="max-w-3xl tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-md)] sm:[font:var(--riprap-display-xl)] lg:[font:var(--riprap-display-mega)]">
+              Any event. Any narrow peril. One finite pool.
+            </h1>
+          </Settle>
+          <Settle delay={120}>
+            <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
+              Members pay a fixed entry fee into one pool against one peril, for one event. Peer
+              jurors adjudicate claims, unused funds return pro-rata, the pool dissolves. Your worst
+              case is the entry fee. The pool's worst case is empty.
+            </p>
+          </Settle>
+          <Settle delay={180} className="pt-(--riprap-space-sm)">
+            <Waitlist />
+          </Settle>
+          <Settle delay={240}>
+            <div className="flex flex-wrap items-center gap-3 pt-(--riprap-space-sm)">
+              <StampBadge pool="Blade Pool" event="Breakpoint" />
+              <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
+                First pool · Olympia Convention Centre, London · 15–17 November 2026
+              </p>
+            </div>
+          </Settle>
         </div>
-        <p className="param-note">
-          Policy and exclusions: <ParamChip name="{{EXCLUSIONS}}" /> — published with the pool
-          terms.
-        </p>
+        <div className="hidden lg:block">
+          <SvgFrame
+            width={280}
+            height={210}
+            canvas={false}
+            title="The Riprap mark settles"
+            desc="Seven stone-grey stones drop-settle into the pile; the harbor-blue crest stone lands last."
+          >
+            <MarkAssemble x={140} y={190} scale={1.2} delay={0.25} />
+          </SvgFrame>
+        </div>
       </div>
-      <Viz caption="The riprap cross-section: stones settle, the wave breaks, the stones remain.">
-        <SvgFrame
-          width={360}
-          height={240}
-          title="A wave breaks on a pile of loose stones; the stones hold"
-          desc="The peril arrives as a wave mass from one side, breaks apart on impact, and the stone pile remains in place."
-        >
-          <WaveBreak x={140} y={150} />
-        </SvgFrame>
-      </Viz>
-    </section>
+    </SectionBand>
   );
 }

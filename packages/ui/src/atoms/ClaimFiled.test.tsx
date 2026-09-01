@@ -48,6 +48,15 @@ describe("ClaimFiled", () => {
     expect(dashed[0].getAttribute("stroke-dasharray")).toBe("8 6");
   });
 
+  it("peril TEXT reads via peril-ink on the dark ground; the diamond keeps the fill", () => {
+    const { container } = render(filed());
+    expect(screen.getByText("incident").getAttribute("fill")).toBe("var(--riprap-peril-ink)");
+    expect(screen.getByText("tier cap $2,000").getAttribute("fill")).toBe(
+      "var(--riprap-peril-ink)",
+    );
+    expect(container.querySelector('polygon[fill="var(--riprap-peril)"]')).not.toBeNull();
+  });
+
   it("the claimant pre-pays the round-1 juror fees", () => {
     render(filed());
     expect(screen.getByText("round-1 juror fees prepaid")).toBeTruthy();
@@ -57,7 +66,7 @@ describe("ClaimFiled", () => {
     const { container } = render(filed(5));
     expect(screen.getByText("evidence")).toBeTruthy();
     expect(screen.getByText("+2")).toBeTruthy();
-    const docs = container.querySelectorAll('rect[stroke="var(--riprap-ink)"]');
+    const docs = container.querySelectorAll('rect[stroke="var(--riprap-diagram-ink)"]');
     expect(docs).toHaveLength(3);
   });
 });

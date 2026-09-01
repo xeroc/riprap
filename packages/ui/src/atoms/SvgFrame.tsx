@@ -31,14 +31,20 @@ export function SvgFrame({ width, height, title, desc, canvas = true, children }
       <title id={`${id}-title`}>{title}</title>
       {desc ? <desc id={`${id}-desc`}>{desc}</desc> : null}
       {canvas ? (
-        <rect x={0} y={0} width={width} height={height} fill="var(--riprap-canvas)" />
+        <rect x={0} y={0} width={width} height={height} fill="var(--riprap-diagram-canvas)" />
       ) : null}
       {children}
     </svg>
   );
 }
 
-/** Shared text helper — explicit size + fill on every text (skill rule). */
+/** Shared text helper — explicit size + fill on every text (skill rule).
+ *
+ * Font law (DESIGN.md / composition.md): every numeral, hash, formula, and
+ * parameter renders in JetBrains Mono 600 (`mono`); prose labels render in
+ * Space Grotesk. Uppercase mono stamps track +0.067em; display/title prose
+ * (`bold`) runs 700 tightly tracked at −0.03em (−0.8px at 28px).
+ */
 export function SvgText({
   x,
   y,
@@ -58,14 +64,23 @@ export function SvgText({
   anchor?: "start" | "middle" | "end";
   children: string;
 }) {
+  const stamp = mono && /[A-Z]/.test(children) && children === children.toUpperCase();
+  const tracking = mono
+    ? stamp
+      ? Math.round(size * 0.067 * 10) / 10
+      : undefined
+    : bold
+      ? Math.round(size * -0.03 * 10) / 10
+      : undefined;
   return (
     <text
       x={x}
       y={y}
       fontSize={size}
       fill={fill}
-      fontWeight={bold ? "bold" : "normal"}
+      fontWeight={mono ? 600 : bold ? 700 : 400}
       fontFamily={mono ? "var(--riprap-font-mono)" : "var(--riprap-font-prose)"}
+      letterSpacing={tracking}
       textAnchor={anchor}
     >
       {children}

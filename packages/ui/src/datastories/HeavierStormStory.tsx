@@ -5,7 +5,7 @@ import { ProRataRefund } from "../atoms/ProRataRefund";
 import { SvgText } from "../atoms/SvgFrame";
 import { TreasuryPayout } from "../atoms/TreasuryPayout";
 import { usd } from "../lib/poolMath";
-import { MonoLine, Panel } from "../scenes/Panel";
+import { MonoLine, numeralSegments, Panel } from "../scenes/Panel";
 import { StoryFrame } from "./StoryFrame";
 
 /**
@@ -52,13 +52,10 @@ export function HeavierStormStory({
         x={56}
         y={188}
         size={13}
-        fill="var(--riprap-muted)"
-        segments={[
-          {
-            text: "identical frame 1 to the standard story — same scale, so the later drop reads louder",
-            mono: false,
-          },
-        ]}
+        fill="var(--riprap-diagram-muted)"
+        segments={numeralSegments(
+          "identical frame 1 to the standard story — same scale, so the later drop reads louder",
+        )}
       />
       <PoolVessel
         balance={poolBalance}
@@ -85,7 +82,7 @@ export function HeavierStormStory({
         x={656}
         y={184}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[
           { text: "approved claims ", mono: false },
           { text: usd(approvedTotal), mono: true },
@@ -105,17 +102,20 @@ export function HeavierStormStory({
         interiorWidth={88}
         wallHeight={64}
       />
-      <SvgText x={380} y={500} size={44} fill="var(--riprap-funds)" mono anchor="middle">
+      <SvgText x={380} y={500} size={44} fill="var(--riprap-funds-ink)" mono anchor="middle">
         {usd(perMember)}
       </SvgText>
-      <SvgText x={380} y={532} size={18} fill="var(--riprap-ink)" anchor="middle">
+      <SvgText x={380} y={532} size={18} fill="var(--riprap-diagram-ink)" anchor="middle">
         per member
       </SvgText>
-      <SvgText x={380} y={556} size={13} fill="var(--riprap-muted)" anchor="middle">
-        derived: $8,000 ÷ 1,000 members
-      </SvgText>
-
-      {/* frame 4 — dissolve */}
+      <MonoLine
+        x={380}
+        y={556}
+        size={13}
+        fill="var(--riprap-diagram-muted)"
+        anchor="middle"
+        segments={numeralSegments("derived: $8,000 ÷ 1,000 members")}
+      />
       <Panel x={640} y={400} width={560} height={260} title="4 — Dissolve" />
       <Dissolution x={780} y={460} interiorWidth={160} wallHeight={116} />
 

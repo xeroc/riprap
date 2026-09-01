@@ -1,16 +1,14 @@
-@import "@riprap/ui/tokens.css";
+@import "tailwindcss";
+@import "@riprap/ui/theme.css";
+@source "../../../packages/ui/src";
 
-/* Global page styles — deadpan engineering register, no gradients, no glow.
-   Colors only via --riprap-* tokens (AGENTS.md). 8px base rhythm. */
-
+/* Global page styles — DESIGN.md: engineering section drawing, dark-first. */
 * {
   box-sizing: border-box;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
+html {
+  background: var(--riprap-canvas);
 }
 
 body {
@@ -18,312 +16,45 @@ body {
   background: var(--riprap-canvas);
   color: var(--riprap-ink);
   font-family: var(--riprap-font-prose);
-  font-size: var(--riprap-text-label);
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
-.wrap {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-h1,
-h2,
-h3 {
-  line-height: 1.2;
-  margin: 0 0 16px;
-}
-
-h1 {
-  font-size: var(--riprap-text-display);
-}
-
-h2 {
-  font-size: var(--riprap-text-title);
-}
-
-h3 {
-  font-size: var(--riprap-text-panel);
-}
-
-p {
-  margin: 0 0 16px;
-  max-width: 72ch;
-}
-
-a {
-  color: var(--riprap-ink);
-}
-
-a:focus-visible {
-  outline: 3px solid var(--riprap-funds);
-  outline-offset: 2px;
-}
-
-/* header */
-
-.site-header {
-  border-bottom: 1px solid var(--riprap-line);
-}
-
-.header-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 32px;
-  align-items: baseline;
-  justify-content: space-between;
-  padding-top: 16px;
-  padding-bottom: 16px;
-}
-
-.wordmark {
-  font-weight: bold;
-  font-size: var(--riprap-text-panel);
-}
-
-.header-row nav a {
-  margin-left: 24px;
-  text-decoration: none;
-}
-
-.header-row nav a:hover {
-  text-decoration: underline;
-}
-
-/* sections */
-
-main > section {
-  border-top: 1px solid var(--riprap-line);
-  padding: 96px 24px;
-}
-
-main > section.wrap {
-  padding-left: 24px;
-  padding-right: 24px;
-}
-
-main > section:first-of-type {
-  border-top: none;
-  padding-top: 64px;
-}
-
-section[id] {
-  scroll-margin-top: 24px;
-}
-
-/* hero */
-
-.hero {
-  display: grid;
-  gap: 48px;
-}
-
-.kicker {
+/* every numeral renders in JetBrains Mono — inline in body text too */
+.font-mono,
+code,
+kbd,
+samp {
   font-family: var(--riprap-font-mono);
-  font-size: var(--riprap-text-caption);
-  color: var(--riprap-muted);
-  margin-bottom: 8px;
 }
 
-.subhead {
-  font-size: var(--riprap-text-panel);
-  line-height: 1.5;
+/*
+ * Motion law (DESIGN.md § Motion): settle, not slide. Elements drop and
+ * stop — opacity + transform only, one strong ease-out curve, no bounce.
+ * Reduced motion collapses to an opacity fade with no displacement.
+ */
+:root {
+  --ease-settle: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.cta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin: 32px 0 16px;
+.settle {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 160ms var(--ease-settle),
+    transform 160ms var(--ease-settle);
+  transition-delay: var(--settle-delay, 0ms);
 }
 
-.btn {
-  display: inline-block;
-  padding: 12px 24px;
-  border: 3px solid var(--riprap-ink);
-  border-radius: var(--riprap-radius);
-  font-size: var(--riprap-text-label);
-  text-decoration: none;
+.settle[data-settled="true"] {
+  opacity: 1;
+  transform: none;
 }
 
-.btn:hover {
-  text-decoration: underline;
-}
-
-.btn-primary {
-  background: var(--riprap-ink);
-  color: var(--riprap-canvas);
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--riprap-ink);
-}
-
-@media (min-width: 900px) {
-  .hero {
-    grid-template-columns: 3fr 2fr;
-    align-items: center;
+@media (prefers-reduced-motion: reduce) {
+  .settle {
+    transform: none;
+    transition: opacity 200ms ease;
   }
-}
-
-/* visuals */
-
-.viz {
-  margin: 48px 0 0;
-}
-
-.viz svg {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
-.viz figcaption {
-  margin-top: 16px;
-  font-size: var(--riprap-text-caption);
-  color: var(--riprap-muted);
-  max-width: 72ch;
-}
-
-/* problem */
-
-.pull-quote {
-  margin: 48px 0 0;
-  padding-left: 24px;
-  border-left: 3px solid var(--riprap-stone-edge);
-}
-
-.pull-quote p {
-  margin: 0;
-  font-size: var(--riprap-text-title);
-  line-height: 1.3;
-  max-width: 34ch;
-}
-
-/* how it works */
-
-.steps {
-  display: grid;
-  gap: 32px;
-}
-
-@media (min-width: 900px) {
-  .steps {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 48px;
-  }
-}
-
-/* tables */
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 32px 0;
-}
-
-th,
-td {
-  text-align: left;
-  padding: 12px 16px 12px 0;
-  border-bottom: 1px solid var(--riprap-line);
-}
-
-th {
-  font-size: var(--riprap-text-caption);
-  font-weight: normal;
-  color: var(--riprap-muted);
-}
-
-td.num {
-  font-family: var(--riprap-font-mono);
-}
-
-/* trust block */
-
-.not-list {
-  margin: 0;
-  padding-left: 24px;
-}
-
-.not-list li {
-  margin-bottom: 16px;
-  max-width: 72ch;
-}
-
-/* parameters */
-
-.cta-line {
-  margin-top: 32px;
-  margin-bottom: 8px;
-  font-size: var(--riprap-text-panel);
-}
-
-.param-chip {
-  font-family: var(--riprap-font-mono);
-  font-size: var(--riprap-text-caption);
-  color: var(--riprap-ink);
-  background: var(--riprap-canvas);
-  border: 1px dashed var(--riprap-muted);
-  border-radius: 4px;
-  padding: 2px 8px;
-  white-space: nowrap;
-}
-
-.param-note {
-  font-size: var(--riprap-text-caption);
-  color: var(--riprap-muted);
-}
-
-.param-note a {
-  color: var(--riprap-ink);
-}
-
-/* faq */
-
-.faq {
-  display: grid;
-  gap: 32px;
-}
-
-/* final cta */
-
-.join h2 {
-  font-size: var(--riprap-text-display);
-}
-
-.footnote {
-  margin-top: 48px;
-  padding-top: 16px;
-  border-top: 1px solid var(--riprap-line);
-  font-size: var(--riprap-text-caption);
-  color: var(--riprap-muted);
-}
-
-/* footer */
-
-.site-footer {
-  border-top: 1px solid var(--riprap-line);
-  padding: 32px 0;
-}
-
-.footer-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 32px;
-  align-items: baseline;
-  font-size: var(--riprap-text-caption);
-  color: var(--riprap-muted);
-}
-
-.footer-row .wordmark {
-  font-size: var(--riprap-text-label);
-  color: var(--riprap-ink);
-}
-
-.footer-row a {
-  color: var(--riprap-ink);
 }

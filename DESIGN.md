@@ -1,125 +1,122 @@
 ## Overview
 
-ElevenLabs reads like a quietly editorial print magazine that happens to be a voice-AI product. The base canvas is off-white `{colors.canvas}` (#f5f5f5) holding warm near-black ink `{colors.ink}` (#0c0a09). The brand voltage is **photographic, not chromatic**: soft pastel atmospheric gradient orbs (mint, peach, lavender, sky, rose) drift through the page as the only "color" moments. There is no neon accent, no saturated CTA color, no dark-canvas dev-tools atmosphere.
+Riprap reads like an engineering section drawing that happens to be a website. The base canvas is near-black ground `{colors.canvas}` (#0C0E10) holding warm-white ink `{colors.ink}` (#F2EFE8). The brand voltage is **structural, not chromatic**: stone-grey hairlines, one harbor-blue accent, and monospaced numbers as the hero of every surface. There are no gradients, no glow, no shadows, no pastel atmosphere — depth comes from tone steps and 1px rules, the way a blueprint reads.
 
-Type pairs **Waldenburg Light** (custom serif at weight 300) for display with **Inter** for body, navigation, captions. The display weight at 300 is the editorial signature — never bold, never heavy.
+Type pairs **Space Grotesk** (700 display, 400/500 body) with **JetBrains Mono** for every number, label, stamp, and parameter. Display is bold and tightly tracked — the wordmark's letters nearly touch, and display type inherits that kiss. Uppercase belongs to mono only (stamps, badges); grotesque headlines stay lowercase or sentence case.
 
-CTAs are subtle: a near-black ink pill (`{component.button-primary}`) is the primary, a transparent outline (`{component.button-outline}`) is the secondary. The brand trusts atmospheric photography and modest type weights to carry brand work.
+CTAs are structural: a warm-white block button (`{component.button-primary}`) is the primary, a 1px stone-bordered outline (`{component.button-outline}`) is the secondary, a harbor-blue text link is the tertiary. Harbor-blue is an accent (the crest stone, links, stamps) — never a button fill, never a background, never body text.
+
+Motion law: **settle, not slide**. Elements drop and stop; nothing bounces, glows, or slides. The mark assembles on load and can dissolve on pool-close pages — the only brand in the room whose logo's end state is its product promise.
 
 **Key Characteristics:**
-- Off-white canvas, warm near-black ink. No saturated CTA color.
-- Single primary action: ink pill at `{rounded.pill}`. Atmospheric gradients carry visual brand voltage.
-- Display runs Waldenburg Light at weight 300 — editorial magazine voice.
-- Body runs Inter at 400 with subtle letter-spacing (+0.15-0.18px).
-- Pastel gradient orbs (5 tokens: mint, peach, lavender, sky, rose) used as atmospheric brand decoration only.
-- Soft pill geometry (`{rounded.pill}` for CTAs, `{rounded.xl}` for cards).
-- 96px section rhythm.
+- Near-black ground, warm-white ink, stone-grey hairlines. One accent: harbor-blue.
+- Numbers are the hero — every numeral renders in JetBrains Mono and arrives on screen one at a time.
+- Display runs Space Grotesk 700, tightly tracked (-0.04em at wordmark scale). Never light weights on dark canvas.
+- Sharp geometry: 0px radius on stamps and CTAs; hairline borders instead of shadows.
+- The stone mark (7 grey stones + 1 blue crest stone) appears settled; it may assemble or dissolve, never float, spin, or glow.
+- 80px section rhythm with 1px stone rules between bands — the section-drawing grid.
+- Deadpan register everywhere: no fear imagery, no knives, no dramatized peril (messaging guide §Register Guardrails).
 
 ## Colors
 
 ### Brand & Accent
-- **Ink Primary** (`{colors.primary}` — #292524): The primary action color — warm near-black pill. Used scarcely.
-- **Ink Primary Active** (`{colors.primary-active}` — #0c0a09): Press state.
+- **Ink Primary** (`{colors.primary}` — #F2EFE8): The primary action color — warm-white block button on dark ground. Used scarcely.
+- **Ink Primary Active** (`{colors.primary-active}` — #FBF9F3): Press state.
+- **Accent Harbor-Blue** (`{colors.accent}` — #3E7CA6): The crest stone, text links, stamps. Accent only — never a fill for buttons or surfaces, never body text.
+- **Accent Harbor-Blue Hover** (`{colors.accent-hover}` — #4E8FBA): Link hover.
 
-### Surface
-- **Canvas** (`{colors.canvas}` — #f5f5f5): Off-white page floor.
-- **Canvas Soft** (`{colors.canvas-soft}` — #fafafa): Lighter band for subtle alternating sections.
-- **Canvas Deep** (`{colors.canvas-deep}` — #0c0a09): Same as ink — used for the rare dark-mode hero (Agents page).
-- **Surface Card** (`{colors.surface-card}` — #ffffff): Pure white card.
-- **Surface Strong** (`{colors.surface-strong}` — #f0efed): Badges, voice-icon plates.
-- **Surface Dark** (`{colors.surface-dark}` — #0c0a09): Dark hero/CTA band canvas.
-- **Surface Dark Elevated** (`{colors.surface-dark-elevated}` — #1c1917): Cards on dark canvas.
+### Surface (dark-first)
+- **Ground** (`{colors.canvas}` — #0C0E10): Page floor — near-black, never pure black.
+- **Ground Soft** (`{colors.canvas-soft}` — #101317): Subtle alternating band.
+- **Ground Deep** (`{colors.canvas-deep}` — #08090B): Rare emphasis band (dissolution end-state).
+- **Surface Card** (`{colors.surface-card}` — #17191D): Card on dark canvas.
+- **Surface Strong** (`{colors.surface-strong}` — #1E2126): Badges, number plates, diagram fills.
+
+### Light Inversion (secondary — print, docs, email)
+- **Paper** (`{colors.paper}` — #F2EFE8): Light page floor.
+- **Paper Soft** (`{colors.paper-soft}` — #F7F5F0): Alternating light band.
+- **Ink Dark** (`{colors.ink-dark}` — #14171A): Text and primary button fill on light.
+- **Harbor-Blue Deep** (`{colors.accent-deep}` — #2E6488): Accent on light ground.
 
 ### Hairlines
-- **Hairline** (`{colors.hairline}` — #e7e5e4): Default 1px divider.
-- **Hairline Soft** (`{colors.hairline-soft}` — #f0efed): Lighter divider.
-- **Hairline Strong** (`{colors.hairline-strong}` — #d6d3d1): Stronger panel outline.
+- **Hairline** (`{colors.hairline}` — #2A2E33): Default 1px divider on dark.
+- **Hairline Soft** (`{colors.hairline-soft}` — #22262B): Lighter rule.
+- **Hairline Strong** (`{colors.hairline-strong}` — #3A3F45): Stamp and panel outlines on dark.
+- **Hairline Light** (`{colors.hairline-light}` — #D9D4CB): Default divider on paper.
 
 ### Text
-- **Ink** (`{colors.ink}` — #0c0a09): Display, primary text.
-- **Body** (`{colors.body}` — #4e4e4e): Default running-text.
-- **Body Strong** (`{colors.body-strong}` — #292524): Same as primary — emphasis.
-- **Muted** (`{colors.muted}` — #777169): Sub-titles.
-- **Muted Soft** (`{colors.muted-soft}` — #a8a29e): Disabled text.
-- **On Primary** (`{colors.on-primary}` — #ffffff): White text on ink pill.
-- **On Dark** (`{colors.on-dark}` — #ffffff): White text on dark hero.
-- **On Dark Soft** (`{colors.on-dark-soft}` — #a8a29e): Muted off-white on dark.
+- **Ink** (`{colors.ink}` — #F2EFE8): Display, primary text. Warm, never pure white.
+- **Body** (`{colors.body}` — #C9CDD1): Running text on dark.
+- **Muted** (`{colors.muted}` — #8A9096): Sub-titles, secondary labels.
+- **Muted Soft** (`{colors.muted-soft}` — #6E747A): Disabled text.
+- **Stone** (`{colors.stone}` — #A7ADB3): The mark's stones, midtone labels.
+- **On Primary** (`{colors.on-primary}` — #0C0E10): Text on the warm-white button.
 
-### Atmospheric Gradient Stops (signature)
-- **Gradient Mint** (`{colors.gradient-mint}` — #a7e5d3): Mint green orb.
-- **Gradient Peach** (`{colors.gradient-peach}` — #f4c5a8): Peach orb.
-- **Gradient Lavender** (`{colors.gradient-lavender}` — #c8b8e0): Lavender orb.
-- **Gradient Sky** (`{colors.gradient-sky}` — #a8c8e8): Sky-blue orb.
-- **Gradient Rose** (`{colors.gradient-rose}` — #e8b8c4): Rose orb.
-
-These appear ONLY as soft radial-gradient atmospheric orbs inside `{component.gradient-orb-card}` and as background atmospheric blooms behind hero copy. Never as button fills, never as text colors.
-
-### Semantic
-- **Success** (`{colors.semantic-success}` — #16a34a): Confirmation.
-- **Error** (`{colors.semantic-error}` — #dc2626): Validation errors.
+### Semantic (provisional — see Known Gaps)
+- **Success** (`{colors.semantic-success}` — #5B8C6A): Confirmation, settled states.
+- **Error** (`{colors.semantic-error}` — #C0533E): Validation errors.
 
 ## Typography
 
 ### Font Family
-**Waldenburg Light** is the licensed display serif at weight 300. **Inter** carries body, navigation, captions, and buttons. Fallback: `'Times New Roman', serif` for Waldenburg, `sans-serif` for Inter.
+**Space Grotesk** (SIL OFL — self-host) at 700 for display, 400/500 for body, navigation, buttons. **JetBrains Mono** (SIL OFL) at 500/600 for every number, mechanism label, parameter (`{{EVENT}}`-style), stamp, and address. Fallback: `system-ui, sans-serif` for Space Grotesk; `ui-monospace, monospace` for JetBrains Mono.
 
 ### Hierarchy
 
 | Token | Size | Weight | Line Height | Letter Spacing | Use |
 |---|---|---|---|---|---|
-| `{typography.display-mega}` | 64px | 300 | 1.05 | -1.92px | Homepage hero h1 |
-| `{typography.display-xl}` | 48px | 300 | 1.08 | -0.96px | Subsidiary heroes |
-| `{typography.display-lg}` | 36px | 300 | 1.17 | -0.36px | Section heads |
-| `{typography.display-md}` | 32px | 300 | 1.13 | -0.32px | Sub-section heads |
-| `{typography.display-sm}` | 24px | 300 | 1.2 | 0 | Card group titles |
-| `{typography.title-md}` | 20px | 500 | 1.35 | 0 | Component titles — Inter |
-| `{typography.title-sm}` | 18px | 500 | 1.44 | 0.18px | List labels |
-| `{typography.body-md}` | 16px | 400 | 1.5 | 0.16px | Default body — Inter |
-| `{typography.body-strong}` | 16px | 500 | 1.5 | 0.16px | Emphasized body |
-| `{typography.body-sm}` | 15px | 400 | 1.47 | 0.15px | Footer body |
-| `{typography.caption}` | 14px | 400 | 1.5 | 0 | Photo captions |
-| `{typography.caption-uppercase}` | 12px | 600 | 1.4 | 0.96px | Section labels, badges |
-| `{typography.button}` | 15px | 500 | 1.0 | 0 | CTA pill |
-| `{typography.nav-link}` | 15px | 500 | 1.4 | 0 | Top-nav menu |
+| `{typography.display-mega}` | 64px | 700 | 1.05 | -2.56px | Homepage hero h1 |
+| `{typography.display-xl}` | 48px | 700 | 1.08 | -1.44px | Subsidiary heroes |
+| `{typography.display-lg}` | 36px | 700 | 1.15 | -0.72px | Section heads |
+| `{typography.display-md}` | 32px | 700 | 1.2 | -0.64px | Sub-section heads |
+| `{typography.display-sm}` | 24px | 700 | 1.25 | -0.24px | Card group titles |
+| `{typography.title-md}` | 20px | 500 | 1.35 | 0 | Component titles |
+| `{typography.title-sm}` | 18px | 500 | 1.44 | 0 | List labels |
+| `{typography.body-md}` | 16px | 400 | 1.55 | 0 | Default body |
+| `{typography.body-strong}` | 16px | 500 | 1.55 | 0 | Emphasized body |
+| `{typography.body-sm}` | 15px | 400 | 1.5 | 0 | Footer body |
+| `{typography.mono-label}` | 12px | 600 | 1.4 | +0.8px | Uppercase stamps, section labels, badges — JetBrains Mono |
+| `{typography.mono-number}` | 20px | 600 | 1.2 | 0 | Numbers as hero — JetBrains Mono |
+| `{typography.mono-number-lg}` | 32px | 600 | 1.1 | -0.32px | Tier prices/caps, pool math — JetBrains Mono |
+| `{typography.button}` | 15px | 500 | 1.0 | 0 | CTA block |
+| `{typography.nav-link}` | 14px | 500 | 1.4 | +0.2px | Top-nav menu |
 
 ### Principles
-- **Display weight stays at 300.** Waldenburg Light is the editorial signature. Never bold display copy.
-- **Subtle letter-spacing on body.** Inter at +0.15-0.18px tracking — slightly looser than default Inter for a more editorial feel.
-- **Negative letter-spacing on display.** Waldenburg pulls -0.32px to -1.92px tighter on display sizes.
-
-### Note on Font Substitutes
-Waldenburg is licensed. Open-source substitute: **EB Garamond** at weight 300 (slightly more humanist) or **GT Sectra** (closer to Waldenburg's modernity). Use Inter directly for body — it's the same family ElevenLabs uses.
+- **Every numeral renders in JetBrains Mono** — inline in body text too. Numbers are the hero (messaging guide: numbers over adjectives).
+- **Display stays 700 and tightly tracked.** The wordmark sets tight enough for letters to nearly touch (-0.04em); display type inherits the tension. Never light display weights on the dark canvas.
+- **Uppercase is mono-only.** Stamps, badges, and section labels are uppercase JetBrains Mono; grotesque headlines are lowercase or sentence case.
+- **No second decorative face.** Two families, both OFL, both self-hosted.
 
 ## Layout
 
 ### Spacing System
 - **Base unit:** 4px.
-- **Tokens:** `{spacing.xxs}` 4px · `{spacing.xs}` 8px · `{spacing.sm}` 12px · `{spacing.base}` 16px · `{spacing.md}` 20px · `{spacing.lg}` 24px · `{spacing.xl}` 32px · `{spacing.xxl}` 48px · `{spacing.section}` 96px.
-- **Section padding:** 96px.
+- **Tokens:** `{spacing.xxs}` 4px · `{spacing.xs}` 8px · `{spacing.sm}` 12px · `{spacing.base}` 16px · `{spacing.md}` 20px · `{spacing.lg}` 24px · `{spacing.xl}` 32px · `{spacing.xxl}` 48px · `{spacing.section}` 80px.
+- **Section padding:** 80px with a 1px `{colors.hairline}` rule between bands.
 
 ### Grid & Container
 - Max content width: ~1200px.
-- Editorial body: 12-column grid.
-- Feature card grids: 2-up at desktop for hero splits, 3-up for benefit grids.
-- Footer: 5-column at desktop.
+- 12-column grid; mechanism diagrams align to the same column grid as copy.
+- Tier and feature grids: 3-up at desktop ($10/$20/$40 tiers).
+- Footer: 4-column link list + dissolution line.
 
 ### Whitespace Philosophy
-Generous editorial pacing — print-magazine feel. 96px between bands; cards inside bands sit close (16-24px gap). The atmospheric gradient orbs occupy generous breathing space without competing with copy.
+Engineering-drawing pacing — generous bands separated by hairline rules, not shadows or fills. Numbers get the largest fields: a worked-example band is mostly empty ground with one mono figure at a time arriving into it.
 
 ## Elevation & Depth
 
-The system uses **hairline + soft drop**. Cards float above the off-white canvas via 1px hairlines and a single subtle shadow tier. Atmospheric depth comes from gradient orbs.
+The system uses **tone steps + hairlines only**. No drop shadows, no glows, no gradients — banned outright (visual identity §02). A card is visible because it is a lighter tone than the ground and carries a 1px rule, the way a section drawing separates fill from hatch.
 
 | Level | Treatment | Use |
 |---|---|---|
-| Flat (canvas) | `{colors.canvas}` (#f5f5f5) | Body bands, footer |
-| Card | `{colors.surface-card}` (#ffffff) | Content cards |
-| Hairline border | 1px `{colors.hairline}` | Card outlines |
-| Soft drop | `0 4px 16px rgba(0, 0, 0, 0.04)` | Hovered cards (single shadow tier) |
-| Gradient orb | Radial gradient with one of `{colors.gradient-*}` | Atmospheric depth — never a card surface |
+| Flat (ground) | `{colors.canvas}` (#0C0E10) | Body bands, footer |
+| Band | `{colors.canvas-soft}` (#101317) | Alternating sections |
+| Card | `{colors.surface-card}` (#17191D) + 1px `{colors.hairline}` | Content cards |
+| Plate | `{colors.surface-strong}` (#1E2126) | Number plates, diagram fills |
+| Deep | `{colors.canvas-deep}` (#08090B) | Dissolution end-state band |
 
 ### Decorative Depth
-- **Pastel gradient orbs** are the brand's strongest atmospheric pattern. Soft radial blooms in mint, peach, lavender, sky, or rose drift through hero bands and feature sections without containing any content — they are pure atmosphere.
+- **The stone mark** is the only decorative element: the settled pile (7 grey stones, 1 harbor-blue crest stone) as a corner anchor or section divider. It settles or dissolves; it never floats, rotates, or glows. Logo assets: `meta/marketing/07-brand-assets/logo/`.
 
 ## Shapes
 
@@ -127,90 +124,84 @@ The system uses **hairline + soft drop**. Cards float above the off-white canvas
 
 | Token | Value | Use |
 |---|---|---|
-| `{rounded.none}` | 0px | Reserved |
-| `{rounded.xs}` | 4px | Inline tags |
-| `{rounded.sm}` | 6px | Compact rows |
-| `{rounded.md}` | 8px | Form inputs |
-| `{rounded.lg}` | 12px | Compact cards |
-| `{rounded.xl}` | 16px | Feature cards, pricing tiers |
-| `{rounded.xxl}` | 24px | Gradient orb cards (extra-soft) |
-| `{rounded.pill}` | 9999px | All CTA buttons, badges |
-| `{rounded.full}` | 9999px | Voice icon circles, avatars |
+| `{rounded.none}` | 0px | **Default**: stamps, buttons, cards, badges — sharp section-drawing geometry |
+| `{rounded.xs}` | 2px | Form inputs (optical relief only) |
+| `{rounded.full}` | 9999px | The avatar disc — the only circle |
+
+Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives spec (`meta/primitives/composition.md`: stroke 3, radius 12) — that system is for drawings, not UI chrome.
 
 ## Components
 
 ### Top Navigation
 
-**`top-nav`** — Background `{colors.canvas}`, text `{colors.ink}`, height 64px. Layout: ElevenLabs wordmark left, primary horizontal menu (Creative / Agents / Video / Pricing / Enterprise / Docs), Sign In + "Try free" primary CTA right.
+**`top-nav`** — Background `{colors.canvas}`, text `{colors.ink}`, height 64px, 1px `{colors.hairline}` bottom rule. Layout: `lockup-horizontal` (mark + riprap wordmark) left, mono nav links (`Platform / How it works / Blade Pool / FAQ`), Sign In + "Join the pool" primary CTA right.
 
 ### Buttons
 
-**`button-primary`** — Near-black ink pill. Background `{colors.primary}`, text `{colors.on-primary}`, type `{typography.button}` (15px / 500), padding 10px × 20px, height 40px, rounded `{rounded.pill}`.
+**`button-primary`** — Warm-white block. Background `{colors.primary}`, text `{colors.on-primary}`, type `{typography.button}`, padding 10px × 20px, height 40px, radius `{rounded.none}`.
 
 **`button-primary-active`** — Press state. Background `{colors.primary-active}`.
 
-**`button-outline`** — Transparent pill with 1px ink border. Background transparent, text `{colors.ink}`, 1px `{colors.hairline-strong}` border.
+**`button-outline`** — Transparent block with 1px stone border. Background transparent, text `{colors.ink}`, 1px `{colors.hairline-strong}` border, radius `{rounded.none}`.
 
-**`button-tertiary-text`** — Inline ink text link.
+**`button-tertiary-text`** — Inline harbor-blue text link (`{colors.accent}`, hover `{colors.accent-hover}`).
 
-### Hero & Atmospheric
+### Hero & Brand
 
-**`hero-band`** — Background `{colors.canvas}`, full-width display headline in `{typography.display-mega}` (64px / 300 / -1.92px), subhead in `{typography.body-md}`, two CTAs, and an atmospheric gradient orb behind the centered headline.
+**`hero-band`** — Background `{colors.canvas}`, left-aligned display headline in `{typography.display-mega}`, subhead in `{typography.body-md}`, two CTAs. The stone mark assembles bottom-right on load (see Motion). No orb, no gradient, no photo.
 
-**`gradient-orb-card`** — A large card with a soft radial-gradient orb behind centered display copy. Background `{colors.canvas-soft}`, rounded `{rounded.xxl}` (24px), padding 32px. Each variant uses one of the five gradient tokens (`gradient-mint`, `gradient-peach`, `gradient-lavender`, `gradient-sky`, `gradient-rose`).
+**`stamp-badge`** — The instance lockup element: uppercase JetBrains Mono `{typography.mono-label}` in harbor-blue, 1px `{colors.hairline-strong}` border, radius `{rounded.none}`, padding 6px × 12px. Pattern: `: BLADE POOL @ BREAKPOINT`. Mirrors the logo's instance stamp (`logo/lockup-instance.svg`).
 
-**`audio-waveform-card`** — A waveform visualization card. Background `{colors.surface-card}`, rounded `{rounded.xl}`, padding 24px. Holds a play button + waveform glyph + voice metadata.
+**`mechanism-card`** — Flat wireframe diagram card (two-doors vault, juror state machine, appeal ladder). Background `{colors.surface-card}`, 1px hairline, radius `{rounded.none}`. Drawn, not decorated — if an icon needs a gradient to read, it's wrong.
 
 ### Cards
 
-**`feature-card`** — 2-up or 3-up grids. Background `{colors.surface-card}`, text `{colors.ink}`, rounded `{rounded.xl}`, padding 24px, 1px hairline border.
+**`tier-card`** — Coverage tier card. Background `{colors.surface-card}`, 1px hairline, radius `{rounded.none}`, padding 32px. Entry fee in `{typography.mono-number-lg}`, max payout in `{typography.mono-number-lg}`, tier name in `{typography.mono-label}`. Numbers are the hero; no illustration inside the card.
 
-**`product-card-stack`** — Stacked product preview cards. Background `{colors.surface-card}`, rounded `{rounded.xl}`, no padding (children fill the card edge-to-edge).
+**`feature-card`** — 3-up grids. Background `{colors.surface-card}`, text `{colors.ink}`, radius `{rounded.none}`, padding 24px, 1px hairline border.
 
-**`testimonial-card`** — Quote card. Background `{colors.surface-card}`, text `{colors.body}`, rounded `{rounded.xl}`, padding 32px.
-
-### Voice Library
-
-**`voice-row`** — Horizontal row in voice list. Background transparent, 1px hairline divider. Layout: 32px circular voice icon (`{component.voice-icon-circular}`) left, voice name + accent stack, optional preview button right.
-
-**`voice-icon-circular`** — Background `{colors.surface-strong}`, rounded `{rounded.full}`, 32px diameter. Holds initials or voice glyph.
-
-### Pricing
-
-**`pricing-tier-card`** — Background `{colors.surface-card}`, rounded `{rounded.xl}`, padding 32px, 1px hairline border.
-
-**`pricing-tier-featured`** — Featured tier inverts. Background `{colors.surface-dark}`, text `{colors.on-dark}`. Same shape, dark inversion.
+**`worked-example-band`** — The pool math narrative: `1,000 × $20 = $20,000 → 4 × $2,000 paid → $12 back each → dissolved`, each figure a `{typography.mono-number-lg}` arriving one at a time on scroll. Mostly empty ground.
 
 ### Forms & Tags
 
-**`text-input`** — Background `{colors.surface-card}`, text `{colors.ink}`, rounded `{rounded.md}` (8px), padding 12px × 16px, height 44px, 1px `{colors.hairline-strong}` border. On focus, border thickens to 2px ink.
+**`text-input`** — Background `{colors.surface-card}`, text `{colors.ink}`, radius `{rounded.xs}` (2px), padding 12px × 16px, height 44px, 1px `{colors.hairline-strong}` border. On focus, border thickens to 2px `{colors.stone}`.
 
-**`badge-pill`** — Background `{colors.surface-strong}`, text `{colors.ink}`, type `{typography.caption-uppercase}`, rounded `{rounded.pill}`, padding 4px × 10px.
+**`badge-pill`** → **`badge-stamp`** — Background transparent, text `{colors.stone}`, type `{typography.mono-label}`, 1px `{colors.hairline}` border, radius `{rounded.none}`, padding 4px × 10px. Stamps, never pills.
 
 ### CTA / Footer
 
-**`cta-band`** — Pre-footer. Background `{colors.canvas}`, centered display headline in `{typography.display-lg}`, single ink pill CTA. 96px padding.
+**`cta-band`** — Pre-footer. Background `{colors.canvas-soft}`, centered display headline in `{typography.display-lg}`, single warm-white CTA. 80px padding, hairline rules above and below.
 
-**`footer`** — Closing footer. Background `{colors.canvas}`, text `{colors.body}`. 5-column link list. 64×48px padding.
+**`footer`** — Background `{colors.canvas}`, text `{colors.muted}`. 4-column link list, wordmark + "Event mutuals on Solana." line, and the closing fact in mono: `dead on schedule`. 64×48px padding.
 
-**`footer-link`** — Background transparent, text `{colors.body}`, type `{typography.body-sm}`.
+**`dissolution-band`** — Post-pool end-state only. Background `{colors.canvas-deep}`, the mark in scattered state, `{typography.mono-number}` `$0 remaining`, dissolution line in `{typography.body-sm}`. Used on dead-pool pages — the brand's signature moment; never on evergreen pages.
+
+## Motion
+
+- **Law: settle, not slide.** Elements drop into place and stop. Ease-out, ~160ms. No bounce, no elastic, no glow, no parallax.
+- **Assemble (hero load, pool opens):** the mark's stones drop-settle in sequence, ~40ms stagger, crest stone last. Position only — no rotation, no scale.
+- **Numbers arrive one at a time.** In worked-example bands each mono figure settles before the next appears.
+- **Dissolve (claims window close, dead-pool pages):** stones scatter off-frame and the composition dereferences. Favicon and print are always the settled state.
+- Reduced-motion: all settle/dissolve animation collapses to static states.
 
 ## Do's and Don'ts
 
 ### Do
-- Reserve `{colors.primary}` (ink pill) for primary CTAs.
-- Use Waldenburg Light at weight 300 for every display headline. Never bold.
-- Use Inter at +0.15-0.18px tracking for body — the editorial dialect.
-- Use atmospheric gradient orbs (mint/peach/lavender/sky/rose) as decoration only.
-- Use the pill shape for every CTA and badge.
+- Reserve `{colors.primary}` (warm-white block) for primary CTAs.
+- Use Space Grotesk 700, tightly tracked, for every display headline.
+- Render every numeral in JetBrains Mono — inline in body text too.
+- Use harbor-blue for exactly three things: the crest stone, text links, stamps.
+- Use 1px hairlines and tone steps for all separation and depth.
+- Name the peril plainly in body copy ("knife assault"); keep names/headlines to the instance pattern ("Blade Pool").
 
 ### Don't
-- Don't introduce a saturated brand action color. Ink pill is the only CTA color.
-- Don't bold display copy. Display sits at weight 300 — bolding shifts the brand voice from editorial to consumer-marketing.
-- Don't use gradient orbs as button fills, text colors, or component backgrounds. They are pure atmosphere.
-- Don't use sharp `{rounded.none}` (0px) on CTAs. Pill geometry is the brand button.
-- Don't drop body Inter to weight 300 to match Waldenburg — body stays at 400/500 for legibility.
-- Don't extract a CTA color from a third-party widget (cookie consent, OneTrust). The brand's CTA color is what appears on actual product CTAs.
+- Don't introduce a second accent, a gradient, a glow, a shadow, or Solana purple/green. Harbor-blue on near-black is the committed palette.
+- Don't use harbor-blue as a button fill, surface fill, or body text — accent only (visual identity §03).
+- Don't use pill radii, soft shadows, or bounce easings. Sharp geometry; settle, not slide.
+- Don't set grotesque type in uppercase — uppercase belongs to mono stamps only.
+- Don't show knives, blades, injuries, or storm drama in any visual. Type, stones, water, diagrams only.
+- Don't dramatize or joke about the peril anywhere in the UI (messaging guide §Register Guardrails).
+- Don't imply coverage the policy doesn't grant: payout ceilings are stated with caps ("up to $2,000"), the pool's mortality is stated, "insurance" is never used to describe Riprap.
 
 ## Responsive Behavior
 
@@ -218,34 +209,34 @@ The system uses **hairline + soft drop**. Cards float above the off-white canvas
 
 | Name | Width | Key Changes |
 |---|---|---|
-| Mobile | < 640px | Hero h1 64→32px; feature cards 1-up; nav hamburger; gradient orbs shrink. |
-| Tablet | 640–1024px | Hero h1 48px; feature cards 2-up. |
-| Desktop | 1024–1280px | Full hero h1 64px; feature cards 3-up. |
+| Mobile | < 640px | Hero h1 64→32px; tier cards 1-up; nav hamburger; mark anchors hide. |
+| Tablet | 640–1024px | Hero h1 48px; tier cards 2-up. |
+| Desktop | 1024–1280px | Full hero h1 64px; tier cards 3-up. |
 | Wide | > 1280px | Content caps at 1200px. |
 
 ### Touch Targets
-- Primary pill at 40px height — at WCAG AA, padded for AAA.
-- Voice icon circles 32px — padded row creates effective 48px tap zone.
+- Primary block button at 40px height — at WCAG AA, padded for AAA.
+- Stamps and mono labels padded to effective 44px tap zones when interactive.
 
 ### Collapsing Strategy
-- Top nav switches to hamburger below 768px.
-- Feature grid: 3-up → 2-up → 1-up.
-- Gradient orbs reduce diameter at every breakpoint but never disappear.
+- Top nav switches to hamburger below 768px; nav links stay mono.
+- Tier grid: 3-up → 2-up → 1-up.
+- Worked-example band figures stack vertically; arrival order preserved.
 
 ## Iteration Guide
 
 1. Focus on a single component at a time.
-2. CTAs default to `{rounded.pill}`. Cards use `{rounded.xl}` (16px).
+2. CTAs default to `{rounded.none}`. Cards use `{rounded.none}` + hairline.
 3. Variants live as separate entries.
 4. Use `{token.refs}` everywhere — never inline hex.
-5. Hover state never documented.
-6. Waldenburg 300 for display, Inter 400/500 for body.
-7. Gradient orbs scoped to atmospheric decoration.
+5. Hover states: border-tone shift or `{colors.accent-hover}` only — never a new shadow.
+6. Space Grotesk 700 for display, 400/500 body; JetBrains Mono for anything numeric or stamped.
+7. When a surface needs a diagram, draw it per `meta/primitives/` (atoms + composition grammar) — don't improvise a new illustration style.
 
 ## Known Gaps
 
-- Waldenburg is a licensed typeface; EB Garamond / GT Sectra are documented substitutes.
-- Animation timings (orb drift, waveform pulse, hero entrance) out of scope.
-- In-product surfaces (voice library editor, agent playground) only partially captured via marketing mockups.
-- Form validation states beyond focus not visible on captured surfaces.
-
+- No product UI exists yet — this system covers the marketing site and print/elective surfaces; join/claim/juror screens get added when the app ships (screenshot placeholders in `meta/marketing/README.md`).
+- Semantic success/error tones are provisional desaturated values, not brand-reviewed.
+- Light-mode (paper) inversions are tokenized but untested on a real page.
+- The wordmark skew (-3.5°) and r→a kiss are concept-stage values (`visual-identity.md` open item 1); UI uses the logo SVGs as-is, never re-typesets the wordmark.
+- Exact motion curves beyond "ease-out ~160ms, settle not slide" are unspecified.

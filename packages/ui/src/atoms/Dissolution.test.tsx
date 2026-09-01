@@ -35,7 +35,7 @@ describe("Dissolution", () => {
     );
     const stones = container.querySelectorAll("polygon");
     expect(stones.length).toBeGreaterThanOrEqual(6);
-    const ticks = container.querySelectorAll('line[stroke="var(--riprap-muted)"]');
+    const ticks = container.querySelectorAll('line[stroke="var(--riprap-diagram-muted)"]');
     expect(ticks.length).toBeGreaterThanOrEqual(6 * 2);
   });
 

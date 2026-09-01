@@ -78,7 +78,7 @@ export function PoolVessel({
       <path
         d={`M ${wallL} ${y} V ${bottom} H ${liqStart} M ${liqEnd} ${bottom} H ${wallR} V ${spendTop}`}
         fill="none"
-        stroke="var(--riprap-ink)"
+        stroke="var(--riprap-diagram-ink)"
         strokeWidth={STROKE}
       />
       {/* right wall below the spending gap */}
@@ -87,7 +87,7 @@ export function PoolVessel({
         y1={spendTop + doorW}
         x2={wallR}
         y2={bottom}
-        stroke="var(--riprap-ink)"
+        stroke="var(--riprap-diagram-ink)"
         strokeWidth={STROKE}
       />
 
@@ -143,13 +143,13 @@ export function PoolVessel({
             strokeDasharray="8 6"
           />
           {interiorWidth >= 360 ? (
-            <SvgText x={wallR + 68} y={fillY + 5} size={16} fill="var(--riprap-funds)" mono>
+            <SvgText x={wallR + 68} y={fillY + 5} size={16} fill="var(--riprap-funds-ink)" mono>
               {usd(balance)}
             </SvgText>
           ) : (
             /* thumbnails: start-anchored past the line end — a right-aligned
                label lands under the surface stones */
-            <SvgText x={wallR + 36} y={fillY + 4} size={16} fill="var(--riprap-funds)" mono>
+            <SvgText x={wallR + 36} y={fillY + 4} size={16} fill="var(--riprap-funds-ink)" mono>
               {usd(balance)}
             </SvgText>
           )}

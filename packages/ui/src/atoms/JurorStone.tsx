@@ -61,7 +61,7 @@ export function JurorStone({
         width={64}
         height={28}
         rx={12}
-        fill="var(--riprap-canvas)"
+        fill="var(--riprap-diagram-canvas)"
         stroke="var(--riprap-deliberation)"
         strokeWidth={3}
       />
@@ -82,10 +82,16 @@ export function JurorStone({
         y1={y + ringR + 32}
         x2={x + ringR + 24}
         y2={y + ringR + 32}
-        color="var(--riprap-muted)"
+        color="var(--riprap-diagram-muted)"
         both
       />
-      <SvgText x={x} y={y + ringR + 60} size={13} fill="var(--riprap-muted)" anchor="middle">
+      <SvgText
+        x={x}
+        y={y + ringR + 60}
+        size={13}
+        fill="var(--riprap-diagram-muted)"
+        anchor="middle"
+      >
         unstake anytime
       </SvgText>
 
@@ -104,7 +110,7 @@ export function JurorStone({
             x={x - ringR - 64}
             y={y - ringR - 26}
             size={13}
-            fill="var(--riprap-funds)"
+            fill="var(--riprap-funds-ink)"
             anchor="middle"
           >
             juror fees

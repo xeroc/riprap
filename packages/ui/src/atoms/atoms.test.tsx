@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { MemberStone } from "./MemberStone";
 import { PoolVessel } from "./PoolVessel";
-import { SvgFrame } from "./SvgFrame";
+import { SvgFrame, SvgText } from "./SvgFrame";
 
 afterEach(cleanup);
 
@@ -86,5 +86,55 @@ describe("PoolVessel", () => {
     );
     expect(screen.getByText("spending — adjudicated")).toBeTruthy();
     expect(screen.getByText("liquidation")).toBeTruthy();
+  });
+});
+
+describe("font law (DESIGN.md / composition.md)", () => {
+  it("every numeral renders in JetBrains Mono 600 — and money text reads via funds-ink", () => {
+    render(
+      <SvgFrame width={560} height={340} title="type law">
+        <PoolVessel balance={20000} maxBalance={20000} x={40} y={40} />
+      </SvgFrame>,
+    );
+    const label = screen.getByText("$20,000");
+    expect(label.getAttribute("font-family")).toBe("var(--riprap-font-mono)");
+    expect(label.getAttribute("font-weight")).toBe("600");
+    expect(label.getAttribute("fill")).toBe("var(--riprap-funds-ink)");
+  });
+
+  it("prose labels render in Space Grotesk", () => {
+    render(
+      <SvgFrame width={560} height={340} title="type law 2">
+        <PoolVessel balance={12000} maxBalance={20000} x={40} y={40} />
+      </SvgFrame>,
+    );
+    const label = screen.getByText("liquidation");
+    expect(label.getAttribute("font-family")).toBe("var(--riprap-font-prose)");
+    expect(label.getAttribute("font-weight")).toBe("400");
+  });
+
+  it("display/title prose: Space Grotesk 700, tightly tracked (−0.03em = −0.8px at 28)", () => {
+    render(
+      <SvgFrame width={400} height={120} title="type law 3">
+        <SvgText x={40} y={64} size={28} fill="var(--riprap-diagram-ink)" bold>
+          Join flow
+        </SvgText>
+      </SvgFrame>,
+    );
+    const title = screen.getByText("Join flow");
+    expect(title.getAttribute("font-family")).toBe("var(--riprap-font-prose)");
+    expect(title.getAttribute("font-weight")).toBe("700");
+    expect(title.getAttribute("letter-spacing")).toBe("-0.8");
+  });
+
+  it("uppercase mono stamps track +0.067em (composition.md)", () => {
+    render(
+      <SvgFrame width={400} height={120} title="type law 4">
+        <SvgText x={40} y={64} size={13} fill="var(--riprap-diagram-muted)" mono>
+          BLADE POOL @ BREAKPOINT
+        </SvgText>
+      </SvgFrame>,
+    );
+    expect(screen.getByText("BLADE POOL @ BREAKPOINT").getAttribute("letter-spacing")).toBe("0.9");
   });
 });

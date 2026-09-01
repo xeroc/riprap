@@ -41,7 +41,7 @@ describe("ProRataRefund", () => {
 
   it("equal stakes, equal slices: 12 drawn, true count printed beside", () => {
     const { container } = render(refund());
-    const partings = container.querySelectorAll('line[stroke="var(--riprap-canvas)"]');
+    const partings = container.querySelectorAll('line[stroke="var(--riprap-diagram-canvas)"]');
     expect(partings).toHaveLength(11);
     expect(screen.getByText("×1,000")).toBeTruthy();
   });

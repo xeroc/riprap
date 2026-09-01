@@ -1,0 +1,34 @@
+@import "./tokens.css";
+
+/*
+ * Tailwind v4 theme mapped 1:1 onto DESIGN.md tokens — never inline hex in
+ * components; utilities reference these theme keys. Imported AFTER
+ * `@import "tailwindcss"` by consumers (see main.css here and apps/landing).
+ */
+@theme inline {
+  --color-ground: var(--riprap-canvas);
+  --color-ground-soft: var(--riprap-canvas-soft);
+  --color-ground-deep: var(--riprap-canvas-deep);
+  --color-card: var(--riprap-surface-card);
+  --color-strong: var(--riprap-surface-strong);
+  --color-ink: var(--riprap-ink);
+  --color-body: var(--riprap-body);
+  --color-muted: var(--riprap-muted);
+  --color-muted-soft: var(--riprap-muted-soft);
+  --color-stone: var(--riprap-stone);
+  --color-accent: var(--riprap-accent);
+  --color-accent-hover: var(--riprap-accent-hover);
+  --color-primary: var(--riprap-primary);
+  --color-primary-active: var(--riprap-primary-active);
+  --color-on-primary: var(--riprap-on-primary);
+  --color-hairline: var(--riprap-hairline);
+  --color-hairline-soft: var(--riprap-hairline-soft);
+  --color-hairline-strong: var(--riprap-hairline-strong);
+  --color-success: var(--riprap-success);
+  --color-error: var(--riprap-error);
+  --font-prose: var(--riprap-font-prose);
+  --font-mono: var(--riprap-font-mono);
+  --radius-none: 0px;
+  --radius-input: 2px;
+  --default-font-family: var(--riprap-font-prose);
+}

@@ -1,15 +1,16 @@
 import { animate, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { PoolVessel } from "../atoms/PoolVessel";
+import { SETTLE, SETTLE_EASE } from "./settle";
 
 /**
- * Motion: PoolFill — the level rises to the recruited balance.
+ * Motion: PoolFill — the level rises with ease-out and stops.
  *
- * Entrances decelerate (ease-out on the signature curve); the dashed level
- * line tracks the fill automatically — it is part of the static atom. The
- * fill stays the atom's: area = money at every intermediate frame (the
- * balance is interpolated, the scale is not). Reduced motion renders the
- * final state.
+ * DESIGN.md motion law: settle, not slide — no bounce, no loop; the level
+ * arrives at the balance and stays. Area = money at every intermediate frame
+ * (the balance is interpolated on the fixed scale). The dashed level line
+ * tracks the fill automatically — it is part of the static atom. Reduced
+ * motion renders the final state.
  */
 export interface PoolFillProps {
   balance: number;
@@ -30,7 +31,7 @@ export function PoolFill({
   interiorWidth = 360,
   wallHeight = 260,
   surfaceStones = 0,
-  duration = 0.9,
+  duration = SETTLE,
 }: PoolFillProps) {
   const reduced = useReducedMotion();
   const [progress, setProgress] = useState(reduced ? 1 : 0);
@@ -42,7 +43,7 @@ export function PoolFill({
     }
     const controls = animate(0, 1, {
       duration,
-      ease: [0.05, 0.7, 0.1, 1], // MD3 emphasized — entrance deceleration
+      ease: SETTLE_EASE,
       onUpdate: setProgress,
     });
     return () => controls.stop();

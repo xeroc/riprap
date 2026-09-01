@@ -2,15 +2,16 @@ import { motion, useReducedMotion } from "motion/react";
 import { SvgText } from "../atoms/SvgFrame";
 import { usd } from "../lib/poolMath";
 import { moneyY, steppedPath } from "../lib/trace";
+import { SETTLE, SETTLE_EASE, SETTLE_FAST, STAGGER } from "./settle";
 
 /**
- * Motion: BalanceTrace — the stepped balance line draws itself through the
- * worked-example points ($20,000 → $12,000 → $0); the labeled points land
- * staggered after their segment.
+ * Motion: BalanceTrace — the stepped balance line draws itself once and
+ * settles; each labeled figure arrives after its segment on the 40ms
+ * stagger cadence (DESIGN.md: numbers arrive one at a time).
  *
  * Same binding as the lifecycle overview's trace (lib/trace): pool-with-
- * level flattened into a line. Primary = the line draw (pathLength,
- * decelerating); secondary = points popping in on the signature curve.
+ * level flattened into a line. No loop, no bounce. Reduced motion renders
+ * the finished trace.
  */
 export interface BalanceTraceProps {
   /** stepped balances over time, starting at the first change point */
@@ -59,7 +60,7 @@ export function BalanceTrace({
         y1={yBase + y}
         x2={x + width}
         y2={yBase + y}
-        stroke="var(--riprap-line)"
+        stroke="var(--riprap-diagram-line)"
         strokeWidth={3}
       />
       <motion.path
@@ -69,21 +70,25 @@ export function BalanceTrace({
         strokeWidth={3}
         initial={reduced ? undefined : { pathLength: 0 }}
         animate={{ pathLength: 1 }}
-        transition={reduced ? { duration: 0 } : { duration: 0.9, ease: [0.05, 0.7, 0.1, 1] }}
+        transition={reduced ? { duration: 0 } : { duration: SETTLE, ease: SETTLE_EASE }}
       />
       {points.map((p, i) => (
         <motion.g
           key={p.label}
           initial={reduced ? undefined : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={reduced ? { duration: 0 } : { duration: 0.18, delay: 0.3 + i * 0.1 }}
+          transition={
+            reduced
+              ? { duration: 0 }
+              : { duration: SETTLE_FAST, delay: SETTLE + i * STAGGER, ease: SETTLE_EASE }
+          }
         >
           <circle cx={p.x} cy={p.y} r={5} fill="var(--riprap-funds)" />
           <SvgText
             x={p.x}
             y={p.y === yBase + y ? p.y + 24 : p.y - 14}
             size={16}
-            fill="var(--riprap-funds)"
+            fill="var(--riprap-funds-ink)"
             mono
             anchor="middle"
           >

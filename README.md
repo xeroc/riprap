@@ -17,24 +17,21 @@ Riprap is a platform for **event-scoped mutual protection pools** on Solana: one
 - [Architecture](#architecture)
 - [The Illustration Language](#the-illustration-language)
 - [Environment Variables](#environment-variables)
-- [Available Scripts](#available-scripts)
-- [Testing](#testing)
-- [Storybook](#storybook)
-- [Deployment](#deployment)
-- [Troubleshooting](#troubleshooting)
-- [Repository Map](#repository-map)
-
 ## Tech Stack
 
 - **Runtime**: Node.js 26+
 - **Package manager**: pnpm 11+ (workspace protocol, `onlyBuiltDependencies` pinned in `pnpm-workspace.yaml`)
 - **Language**: TypeScript (strict, `verbatimModuleSyntax`, noEmit via `tsc -b`)
 - **UI**: React 19
-- **Motion**: [`motion`](https://motion.dev) (framer-motion's engine) — with `prefers-reduced-motion` honored everywhere
-- **Build**: Vite (app build for the landing, lib build for the ui package)
-- **Docs**: Storybook 10.5 (`@storybook/react-vite` + a11y, docs, vitest, chromatic, mcp addons)
+- **Design law**: [`DESIGN.md`](DESIGN.md) — engineering section drawing: near-black ground, warm-white ink, one harbor-blue accent, sharp geometry, settle-not-slide motion
+- **Component foundation**: shadcn/ui (Radix base, CLI-scaffolded into `packages/ui/src/components/ui`, restyled to DESIGN.md — never shipped in default state) + `sonner` toasts + `lucide-react` icons
+- **Styling**: Tailwind CSS v4 (`@tailwindcss/vite`); every color/font/radius/motion value resolves through `packages/ui/src/tokens.css` → `src/theme.css` (`@theme inline`) — never inline hex
+- **Type**: Space Grotesk + JetBrains Mono, self-hosted via `@fontsource-variable/*`; every numeral renders in JetBrains Mono (DESIGN.md)
+- **Motion**: `motion` — settle-only (160/120ms ease-out, 40ms stagger); no bounce, no loops; `prefers-reduced-motion` collapses to static
+- **Docs**: Storybook 10 (`@storybook/react-vite` + a11y, docs, vitest, chromatic, mcp addons)
 - **Test**: Vitest + @testing-library/react (jsdom)
-- **Lint/format**: Biome 2.x (single root config, zero per-package configs)
+- **Lint/format**: Biome 2.x (single root config, CSS parser with Tailwind directives enabled)
+- **Build**: Vite (app build for the landing, lib build for the ui package)
 
 ## Prerequisites
 

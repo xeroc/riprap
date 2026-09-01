@@ -24,6 +24,8 @@ export { SvgFrame, SvgText } from "./atoms/SvgFrame";
 export { TierCapStations } from "./atoms/TierCapStations";
 export { TreasuryPayout } from "./atoms/TreasuryPayout";
 export { VesselOutline } from "./atoms/VesselOutline";
+// UI chrome layer (shadcn primitives restyled to DESIGN.md + brand bands)
+export * from "./components";
 // data stories
 export { HeavierStormStory } from "./datastories/HeavierStormStory";
 export { JurorStory } from "./datastories/JurorStory";
@@ -41,7 +43,7 @@ export { moneyY, steppedPath } from "./lib/trace";
 // motion
 export { BalanceTrace } from "./motion/BalanceTrace";
 export { DissolutionScatter } from "./motion/DissolutionScatter";
-export { PoolFill } from "./motion/PoolFill";
+export { MarkAssemble } from "./motion/MarkAssemble";
 export { StoneSettle } from "./motion/StoneSettle";
 export { WaveBreak } from "./motion/WaveBreak";
 // scenes
@@ -50,4 +52,4 @@ export { EndOfEventFlow } from "./scenes/EndOfEventFlow";
 export { JoinFlow } from "./scenes/JoinFlow";
 export { LifecycleOverview } from "./scenes/LifecycleOverview";
 export type { MonoSegment } from "./scenes/Panel";
-export { MonoLine, Panel, SceneTitle } from "./scenes/Panel";
+export { MonoLine, numeralSegments, Panel, SceneTitle } from "./scenes/Panel";

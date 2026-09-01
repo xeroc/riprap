@@ -58,7 +58,7 @@ export function ClaimFiled({
         y1={bracketY}
         x2={bracketR}
         y2={bracketY}
-        stroke="var(--riprap-ink)"
+        stroke="var(--riprap-diagram-ink)"
         strokeWidth={3}
       />
       <line
@@ -66,7 +66,7 @@ export function ClaimFiled({
         y1={bracketY - 8}
         x2={bracketL}
         y2={bracketY + 8}
-        stroke="var(--riprap-ink)"
+        stroke="var(--riprap-diagram-ink)"
         strokeWidth={3}
       />
       <line
@@ -74,13 +74,19 @@ export function ClaimFiled({
         y1={bracketY - 8}
         x2={bracketR}
         y2={bracketY + 8}
-        stroke="var(--riprap-ink)"
+        stroke="var(--riprap-diagram-ink)"
         strokeWidth={3}
       />
-      <SvgText x={bracketL} y={bracketY + 28} size={13} fill="var(--riprap-muted)">
+      <SvgText x={bracketL} y={bracketY + 28} size={13} fill="var(--riprap-diagram-muted)">
         {"coverage window ·"}
       </SvgText>
-      <SvgText x={bracketL + 132} y={bracketY + 28} size={13} fill="var(--riprap-muted)" mono>
+      <SvgText
+        x={bracketL + 132}
+        y={bracketY + 28}
+        size={13}
+        fill="var(--riprap-diagram-muted)"
+        mono
+      >
         {event}
       </SvgText>
 
@@ -89,7 +95,13 @@ export function ClaimFiled({
         points={`${incidentX},${bracketY - 14} ${incidentX + 14},${bracketY} ${incidentX},${bracketY + 14} ${incidentX - 14},${bracketY}`}
         fill="var(--riprap-peril)"
       />
-      <SvgText x={incidentX} y={bracketY - 24} size={13} fill="var(--riprap-peril)" anchor="middle">
+      <SvgText
+        x={incidentX}
+        y={bracketY - 24}
+        size={13}
+        fill="var(--riprap-peril-ink)"
+        anchor="middle"
+      >
         incident
       </SvgText>
 
@@ -101,10 +113,10 @@ export function ClaimFiled({
             <path
               d={`M ${cx} ${bracketY + 48} l 6 6 l 10 -12`}
               fill="none"
-              stroke="var(--riprap-muted)"
+              stroke="var(--riprap-diagram-muted)"
               strokeWidth={3}
             />
-            <SvgText x={cx + 24} y={bracketY + 52} size={13} fill="var(--riprap-muted)">
+            <SvgText x={cx + 24} y={bracketY + 52} size={13} fill="var(--riprap-diagram-muted)">
               {c}
             </SvgText>
           </g>
@@ -123,7 +135,7 @@ export function ClaimFiled({
                 y1={bracketY + 8}
                 x2={dx + 4}
                 y2={dy - 4}
-                stroke="var(--riprap-muted)"
+                stroke="var(--riprap-diagram-muted)"
                 strokeWidth={3}
               />
             ) : null}
@@ -133,8 +145,8 @@ export function ClaimFiled({
               width={48}
               height={56}
               rx={12}
-              fill="var(--riprap-canvas)"
-              stroke="var(--riprap-ink)"
+              fill="var(--riprap-diagram-canvas)"
+              stroke="var(--riprap-diagram-ink)"
               strokeWidth={3}
             />
             <line
@@ -142,7 +154,7 @@ export function ClaimFiled({
               y1={dy + 20}
               x2={dx + 40}
               y2={dy + 20}
-              stroke="var(--riprap-muted)"
+              stroke="var(--riprap-diagram-muted)"
               strokeWidth={3}
             />
             <line
@@ -150,7 +162,7 @@ export function ClaimFiled({
               y1={dy + 30}
               x2={dx + 40}
               y2={dy + 30}
-              stroke="var(--riprap-muted)"
+              stroke="var(--riprap-diagram-muted)"
               strokeWidth={3}
             />
             <line
@@ -158,7 +170,7 @@ export function ClaimFiled({
               y1={dy + 40}
               x2={dx + 32}
               y2={dy + 40}
-              stroke="var(--riprap-muted)"
+              stroke="var(--riprap-diagram-muted)"
               strokeWidth={3}
             />
           </g>
@@ -169,13 +181,19 @@ export function ClaimFiled({
           x={x + width - 64 - docs * 20 - 12}
           y={y + 120}
           size={16}
-          fill="var(--riprap-muted)"
+          fill="var(--riprap-diagram-muted)"
           mono
         >
           {`+${extra}`}
         </SvgText>
       ) : null}
-      <SvgText x={x + width - 40} y={y + 164} size={13} fill="var(--riprap-muted)" anchor="middle">
+      <SvgText
+        x={x + width - 40}
+        y={y + 164}
+        size={13}
+        fill="var(--riprap-diagram-muted)"
+        anchor="middle"
+      >
         evidence
       </SvgText>
 
@@ -189,7 +207,7 @@ export function ClaimFiled({
         strokeWidth={3}
         strokeDasharray="8 6"
       />
-      <SvgText x={x + 24} y={arrowY - 24} size={13} fill="var(--riprap-peril)" mono>
+      <SvgText x={x + 24} y={arrowY - 24} size={13} fill="var(--riprap-peril-ink)" mono>
         {`tier cap ${usd(tierCap)}`}
       </SvgText>
 
@@ -199,7 +217,7 @@ export function ClaimFiled({
         x={(x + 24 + arrowX2) / 2}
         y={arrowY - 4}
         size={16}
-        fill="var(--riprap-funds)"
+        fill="var(--riprap-funds-ink)"
         mono
         anchor="middle"
       >

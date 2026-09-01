@@ -10,12 +10,13 @@ afterEach(cleanup);
 
 describe("StandardStory", () => {
   it("headlines the number and frames the canonical narrative", () => {
-    render(<StandardStory />);
+    const { container } = render(<StandardStory />);
     expect(
       screen.getAllByText("A member's worst case is $20; the pool's worst case is empty.").length,
     ).toBeGreaterThanOrEqual(1);
+    const text = container.textContent ?? ""; // frame titles are mixed-font segments
     for (const frame of ["1 — Collect", "2 — Absorb", "3 — Return", "4 — Dissolve"]) {
-      expect(screen.getByText(frame)).toBeTruthy();
+      expect(text).toContain(frame);
     }
   });
 
@@ -44,12 +45,14 @@ describe("HeavierStormStory", () => {
       ).length,
     ).toBeGreaterThanOrEqual(1);
   });
-
   it("the derived per-member figure is labeled derived", () => {
     render(<HeavierStormStory />);
     expect(screen.getByText("$8")).toBeTruthy();
     expect(screen.getByText("per member")).toBeTruthy();
-    expect(screen.getAllByText("derived: $8,000 ÷ 1,000 members").length).toBeGreaterThanOrEqual(1);
+    // the derivation caption renders as mixed-font segments (numeral law)
+    expect(screen.getByText("derived:")).toBeTruthy();
+    expect(screen.getAllByText("$8,000").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("1,000").length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -70,14 +73,13 @@ describe("WorstCaseWallStory", () => {
     expect(screen.getByText(/illustrative\)/)).toBeTruthy();
     expect(screen.getByText(/derived/)).toBeTruthy();
   });
-
   it("never a negative fill: the pool draws $20,000 max and empties honestly", () => {
     const { container } = render(<WorstCaseWallStory />);
     const fills = Array.from(container.querySelectorAll('rect[fill="var(--riprap-funds)"]')).map(
       (r) => Number(r.getAttribute("height")),
     );
     for (const h of fills) expect(h).toBeGreaterThanOrEqual(0);
-    expect(screen.getByText("no refund slice to draw — $0 returned")).toBeTruthy();
+    expect(screen.getAllByText("$0").length).toBeGreaterThanOrEqual(1); // incl. "$0 returned"
   });
 });
 
@@ -101,16 +103,17 @@ describe("TierLadderStory", () => {
 
 describe("JurorStory", () => {
   it("frames opt-in, drawn, paid-or-slashed with the $10 stake headline", () => {
-    render(<JurorStory />);
+    const { container } = render(<JurorStory />);
     expect(
       screen.getAllByText(
         "Members judge members — a $10 stake buys juror duty, fees, and slash exposure.",
       ).length,
     ).toBeGreaterThanOrEqual(1);
+    const text = container.textContent ?? ""; // frame titles are mixed-font segments
     for (const frame of ["1 — Opt in", "2 — Drawn", "3 — Paid or slashed"]) {
-      expect(screen.getByText(frame)).toBeTruthy();
+      expect(text).toContain(frame);
     }
-    expect(screen.getByText("$10")).toBeTruthy();
+    expect(screen.getAllByText("$10").length).toBeGreaterThanOrEqual(2); // headline + stake chip
     expect(screen.getByText("VRF draw")).toBeTruthy();
     expect(screen.getByText("− stake × {{SLASH_FRACTION}}")).toBeTruthy();
   });

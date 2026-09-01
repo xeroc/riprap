@@ -72,7 +72,7 @@ export function LifecycleOverview({
         x={40}
         y={88}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[
           {
             text: "one pool, one peril, one event — collect, adjudicate, disburse, dissolve",
@@ -92,25 +92,31 @@ export function LifecycleOverview({
               width={CHIP_W}
               height={CHIP_H}
               rx={12}
-              fill="var(--riprap-canvas)"
-              stroke={s.optional ? "var(--riprap-muted)" : "var(--riprap-line)"}
+              fill="var(--riprap-diagram-canvas)"
+              stroke={s.optional ? "var(--riprap-diagram-muted)" : "var(--riprap-diagram-line)"}
               strokeWidth={3}
               strokeDasharray={s.optional ? "8 6" : undefined}
             />
-            <SvgText x={cx + 12} y={136} size={16} fill="var(--riprap-ink)" bold mono>
+            <SvgText x={cx + 12} y={136} size={16} fill="var(--riprap-diagram-ink)" bold mono>
               {String(s.n)}
             </SvgText>
             <SvgText
               x={cx + 62}
               y={s.second ? 142 : 148}
               size={13}
-              fill="var(--riprap-ink)"
+              fill="var(--riprap-diagram-ink)"
               anchor="middle"
             >
               {s.label}
             </SvgText>
             {s.second ? (
-              <SvgText x={cx + 62} y={158} size={13} fill="var(--riprap-muted)" anchor="middle">
+              <SvgText
+                x={cx + 62}
+                y={158}
+                size={13}
+                fill="var(--riprap-diagram-muted)"
+                anchor="middle"
+              >
                 {s.second}
               </SvgText>
             ) : null}
@@ -120,7 +126,7 @@ export function LifecycleOverview({
                 y1={142}
                 x2={cx + CHIP_W + CHIP_GAP - 4}
                 y2={142}
-                color="var(--riprap-ink)"
+                color="var(--riprap-diagram-ink)"
               />
             ) : null}
             {/* step 5 carries the mini commit-reveal glyph */}
@@ -133,7 +139,7 @@ export function LifecycleOverview({
                   height={16}
                   rx={4}
                   fill="none"
-                  stroke="var(--riprap-ink)"
+                  stroke="var(--riprap-diagram-ink)"
                   strokeWidth={3}
                 />
                 <rect
@@ -143,7 +149,7 @@ export function LifecycleOverview({
                   height={16}
                   rx={4}
                   fill="none"
-                  stroke="var(--riprap-ink)"
+                  stroke="var(--riprap-diagram-ink)"
                   strokeWidth={3}
                 />
                 <Arrow
@@ -165,7 +171,7 @@ export function LifecycleOverview({
         y1={TRACE_BASE}
         x2={1160}
         y2={TRACE_BASE}
-        stroke="var(--riprap-line)"
+        stroke="var(--riprap-diagram-line)"
         strokeWidth={3}
       />
       <path d={trace} fill="none" stroke="var(--riprap-funds)" strokeWidth={3} />
@@ -176,7 +182,7 @@ export function LifecycleOverview({
             x={p.x}
             y={p.y === TRACE_BASE ? p.y + 24 : p.y - 14}
             size={16}
-            fill="var(--riprap-funds)"
+            fill="var(--riprap-funds-ink)"
             mono
             anchor="middle"
           >
@@ -188,7 +194,7 @@ export function LifecycleOverview({
         x={40}
         y={404}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[
           { text: "balance trace — worked example: ", mono: false },
           { text: "1,000", mono: true },

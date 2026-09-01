@@ -29,7 +29,7 @@ export function StoryFrame({
     >
       <SceneTitle title={headline} subtitle={context} />
       {children}
-      <MonoLine x={40} y={648} size={13} fill="var(--riprap-muted)" segments={resolution} />
+      <MonoLine x={40} y={648} size={13} fill="var(--riprap-diagram-muted)" segments={resolution} />
     </SvgFrame>
   );
 }

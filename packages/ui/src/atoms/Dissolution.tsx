@@ -53,7 +53,7 @@ export function StoneTicks({ x, y, dx, dy }: { x: number; y: number; dx: number;
             y1={cy - perp.y}
             x2={cx + perp.x}
             y2={cy + perp.y}
-            stroke="var(--riprap-muted)"
+            stroke="var(--riprap-diagram-muted)"
             strokeWidth={3}
           />
         );
@@ -92,7 +92,7 @@ export function Dissolution({
         x={x + interiorWidth / 2}
         y={y + wallHeight / 2}
         size={16}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         mono
         anchor="middle"
       >
@@ -117,7 +117,7 @@ export function Dissolution({
         x={x + interiorWidth / 2}
         y={bottom + 32}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         anchor="middle"
       >
         dissolved — nothing survives

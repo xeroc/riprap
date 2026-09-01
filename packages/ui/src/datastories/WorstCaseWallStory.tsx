@@ -4,7 +4,7 @@ import { SvgText } from "../atoms/SvgFrame";
 import { TreasuryPayout } from "../atoms/TreasuryPayout";
 import { VesselOutline } from "../atoms/VesselOutline";
 import { fillHeight, usd } from "../lib/poolMath";
-import { MonoLine, Panel } from "../scenes/Panel";
+import { MonoLine, numeralSegments, Panel } from "../scenes/Panel";
 import { StoryFrame } from "./StoryFrame";
 
 /**
@@ -69,7 +69,7 @@ export function WorstCaseWallStory({
         x={56}
         y={176}
         size={13}
-        fill="var(--riprap-peril)"
+        fill="var(--riprap-peril-ink)"
         segments={[
           { text: "approved claims ", mono: false },
           { text: "{{A}}", mono: true },
@@ -80,7 +80,7 @@ export function WorstCaseWallStory({
         x={vesselX + vesselW / 2}
         y={vesselY - 12}
         size={13}
-        fill="var(--riprap-peril)"
+        fill="var(--riprap-peril-ink)"
         mono
         anchor="middle"
       >
@@ -104,14 +104,14 @@ export function WorstCaseWallStory({
         x={444}
         y={428}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[{ text: "payout = min(tier cap, amount) × P / A", mono: true }]}
       />
       <MonoLine
         x={444}
         y={452}
         size={13}
-        fill="var(--riprap-muted)"
+        fill="var(--riprap-diagram-muted)"
         segments={[
           { text: `${claims}`, mono: true },
           { text: " claims × ", mono: false },
@@ -126,7 +126,7 @@ export function WorstCaseWallStory({
         x={444}
         y={476}
         size={13}
-        fill="var(--riprap-funds)"
+        fill="var(--riprap-funds-ink)"
         segments={[
           { text: `${usd(claimCap)} × 20/24 = `, mono: true },
           { text: usd(scaled), mono: true },
@@ -136,9 +136,13 @@ export function WorstCaseWallStory({
 
       {/* frame 3 — empty and done */}
       <Panel x={816} y={120} width={344} height={440} title="3 — Empty and done" />
-      <SvgText x={832} y={176} size={13} fill="var(--riprap-muted)">
-        no refund slice to draw — $0 returned
-      </SvgText>
+      <MonoLine
+        x={832}
+        y={176}
+        size={13}
+        fill="var(--riprap-diagram-muted)"
+        segments={numeralSegments("no refund slice to draw — $0 returned")}
+      />
       <Dissolution x={980} y={240} interiorWidth={112} wallHeight={80} stoneCount={5} />
       <ProRataRefund
         x={856}
@@ -214,7 +218,7 @@ function PoolAtWall({
         x={x + w / 2}
         y={y + h - 72}
         size={16}
-        fill="var(--riprap-canvas)"
+        fill="var(--riprap-diagram-canvas)"
         mono
         anchor="middle"
       >

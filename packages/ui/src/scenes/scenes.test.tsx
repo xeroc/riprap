@@ -38,12 +38,18 @@ describe("JoinFlow", () => {
 
 describe("ClaimFlow", () => {
   it("composes the five panels in the Z", () => {
-    render(<ClaimFlow />);
-    expect(screen.getByText("1 · claim filed")).toBeTruthy();
-    expect(screen.getByText("2 · juror draw")).toBeTruthy();
-    expect(screen.getByText("3 · commit → reveal")).toBeTruthy();
-    expect(screen.getByText("4 · ruling")).toBeTruthy();
-    expect(screen.getByText("5 · payout")).toBeTruthy();
+    const { container } = render(<ClaimFlow />);
+    // panel titles render as mixed prose+mono segments (numeral law) — match on text
+    const text = container.textContent ?? "";
+    for (const title of [
+      "1 · claim filed",
+      "2 · juror draw",
+      "3 · commit → reveal",
+      "4 · ruling",
+      "5 · payout",
+    ]) {
+      expect(text).toContain(title);
+    }
   });
 
   it("the rejected branch is drawn — every time the claim flow is drawn", () => {
@@ -57,7 +63,7 @@ describe("ClaimFlow", () => {
   it("the rejected panel is dashed — the non-taken branch", () => {
     const { container } = render(<ClaimFlow />);
     const dashed = container.querySelector('rect[stroke-dasharray="10 8"]');
-    expect(dashed?.getAttribute("stroke")).toBe("var(--riprap-muted)");
+    expect(dashed?.getAttribute("stroke")).toBe("var(--riprap-diagram-muted)");
   });
 
   it("numbers visible: claim ≤ cap, tally, payout, and the fork labels", () => {

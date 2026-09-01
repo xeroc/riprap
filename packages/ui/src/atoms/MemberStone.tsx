@@ -33,7 +33,7 @@ export function MemberStone({
   y,
   feeTag,
   rightsTick = false,
-  fillColor = "var(--riprap-stone)",
+  fillColor = "var(--riprap-diagram-stone)",
   opacity = 1,
 }: MemberStoneProps) {
   const pts = stonePoints(size, seed)
@@ -43,10 +43,15 @@ export function MemberStone({
   const w = STONE_SIZES[size];
   return (
     <g transform={`translate(${x} ${y}) rotate(${rotation})`} opacity={opacity}>
-      <polygon points={pts} fill={fillColor} stroke="var(--riprap-stone-edge)" strokeWidth={3} />
+      <polygon
+        points={pts}
+        fill={fillColor}
+        stroke="var(--riprap-diagram-stone-edge)"
+        strokeWidth={3}
+      />
       {/* rotation applies to the tag too — read it as written on the stone */}
       {feeTag ? (
-        <SvgText x={0} y={5} size={13} fill="var(--riprap-funds)" mono anchor="middle">
+        <SvgText x={0} y={5} size={13} fill="var(--riprap-funds-ink)" mono anchor="middle">
           {feeTag}
         </SvgText>
       ) : null}
@@ -55,10 +60,10 @@ export function MemberStone({
           <path
             d={`M ${w / 2 - 4} ${-w / 2 + 8} h 8 v 8`}
             fill="none"
-            stroke="var(--riprap-stone-edge)"
+            stroke="var(--riprap-diagram-stone-edge)"
             strokeWidth={3}
           />
-          <SvgText x={w / 2 - 2} y={-w / 2 - 4} size={13} fill="var(--riprap-muted)" mono>
+          <SvgText x={w / 2 - 2} y={-w / 2 - 4} size={13} fill="var(--riprap-diagram-muted)" mono>
             rights = 1
           </SvgText>
         </g>
