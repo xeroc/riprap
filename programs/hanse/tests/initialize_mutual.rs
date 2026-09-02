@@ -10,45 +10,10 @@ use {
     solana_signer::Signer,
 };
 
-const NOW: i64 = 1_700_000_000;
+use common::INIT_TEST_NOW as NOW;
 
 fn config(seed: u64) -> hanse::instructions::InitializeMutualConfig {
-    use hanse::instructions::*;
-    InitializeMutualConfig {
-        seed,
-        tiers: [
-            hanse::Tier {
-                contribution: 10_000_000,
-                max_payout: 1_000_000_000,
-            },
-            hanse::Tier {
-                contribution: 20_000_000,
-                max_payout: 2_000_000_000,
-            },
-            hanse::Tier {
-                contribution: 40_000_000,
-                max_payout: 4_000_000_000,
-            },
-        ],
-        policy_hash: [7u8; 32],
-        deposits_close_at: NOW + 86_400,
-        claims_close_at: NOW + 2 * 86_400,
-        pull_window: 7 * 86_400,
-        subaccord: SubaccordConfig {
-            fee_per_juror: 1_000_000,
-            min_stake: 10_000_000,
-            alpha_bps: 5_000,
-            review_window: 3_600,
-            commit_window: 3_600,
-            reveal_window: 3_600,
-            appeal_window: 3_600,
-            max_appeals: 1,
-            min_jury_size: 3,
-            reveal_threshold_bps: 6_666,
-            max_draw_attempts: 3,
-            evidence_operator: Pubkey::new_unique(),
-        },
-    }
+    default_config(seed)
 }
 
 fn init_tx(env: &mut Env, cfg: &hanse::instructions::InitializeMutualConfig) -> Result<(), String> {

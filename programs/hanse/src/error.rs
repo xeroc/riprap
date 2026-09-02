@@ -15,6 +15,10 @@ pub enum HanseError {
     TierInvalid,
     #[msg("Jury shape invalid: min_jury_size must be odd and its appeal ladder must fit accord's MAX_JURORS")]
     InvalidJurySize,
+    #[msg("Wrong pool: not the pool this mutual owns")]
+    WrongPool,
+    #[msg("Wrong mint: not this mutual's deposit mint")]
+    WrongMint,
 
     // ── file_claim ───────────────────────────────────────────────────────
     #[msg("Claims are closed: the reporting lag has ended (claims_close_at)")]

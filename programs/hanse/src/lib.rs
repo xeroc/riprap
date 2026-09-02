@@ -46,4 +46,10 @@ pub mod hanse {
     ) -> Result<()> {
         InitializeMutual::handler_initialize_mutual(ctx, config)
     }
+
+    /// Member-signed entry: one contribution before deposits close, one tier,
+    /// one rights stake (§7). The Member PDA init IS the anti-stacking gate.
+    pub fn join(ctx: Context<Join>, tier: u8) -> Result<()> {
+        Join::handler_join(ctx, tier)
+    }
 }

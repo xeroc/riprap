@@ -369,3 +369,99 @@ pub fn assert_custom_err(res: Result<(), String>, expected: hanse::HanseError) {
         "expected {expected:?} (code {code}), got: {err}"
     );
 }
+
+// ── shared initialize_mutual wiring (used by every instruction suite) ───────
+
+pub const INIT_TEST_NOW: i64 = 1_700_000_000;
+
+pub fn default_config(seed: u64) -> hanse::instructions::InitializeMutualConfig {
+    use hanse::instructions::*;
+    InitializeMutualConfig {
+        seed,
+        tiers: [
+            hanse::Tier {
+                contribution: 10_000_000,
+                max_payout: 1_000_000_000,
+            },
+            hanse::Tier {
+                contribution: 20_000_000,
+                max_payout: 2_000_000_000,
+            },
+            hanse::Tier {
+                contribution: 40_000_000,
+                max_payout: 4_000_000_000,
+            },
+        ],
+        policy_hash: [7u8; 32],
+        deposits_close_at: INIT_TEST_NOW + 86_400,
+        claims_close_at: INIT_TEST_NOW + 2 * 86_400,
+        pull_window: 7 * 86_400,
+        subaccord: SubaccordConfig {
+            fee_per_juror: 1_000_000,
+            min_stake: 10_000_000,
+            alpha_bps: 5_000,
+            review_window: 3_600,
+            commit_window: 3_600,
+            reveal_window: 3_600,
+            appeal_window: 3_600,
+            max_appeals: 1,
+            min_jury_size: 3,
+            reveal_threshold_bps: 6_666,
+            max_draw_attempts: 3,
+            evidence_operator: Pubkey::new_unique(),
+        },
+    }
+}
+
+pub fn init_mutual(
+    env: &mut Env,
+    cfg: &hanse::instructions::InitializeMutualConfig,
+) -> Result<(), String> {
+    use anchor_lang::solana_program::instruction::Instruction;
+    use anchor_lang::{InstructionData, ToAccountMetas};
+    let mutual = mutual_pda(cfg.seed);
+    let pool = pool_pda(cfg.seed);
+    let domain_ref = hanse::instructions::subaccord_domain_ref(cfg.seed, &cfg.policy_hash);
+    let subaccord = Pubkey::find_program_address(
+        &[
+            b"subaccord",
+            env.payer.pubkey().as_ref(),
+            domain_ref.as_ref(),
+        ],
+        &accord::id(),
+    )
+    .0;
+    let ix = Instruction::new_with_bytes(
+        hanse::id(),
+        &hanse::instruction::InitializeMutual {
+            config: cfg.clone(),
+        }
+        .data(),
+        hanse::accounts::InitializeMutual {
+            authority: env.payer.pubkey(),
+            mutual,
+            pool,
+            treasury: pool_treasury(&pool, &env.mint),
+            subaccord,
+            deposit_mint: env.mint,
+            fee_mint: env.mint,
+            fee_float: ata(&mutual, &env.mint),
+            token_program: spl_token_interface::ID,
+            associated_token_program: spl_associated_token_account_interface::program::ID,
+            system_program: anchor_lang::solana_program::system_program::ID,
+            pool_program: pool::id(),
+            accord_program: accord::id(),
+        }
+        .to_account_metas(None),
+    );
+    try_send(&mut env.svm, &[ix], &mut [&env.payer])
+}
+
+/// Boot the env, pin the clock at INIT_TEST_NOW, and initialize mutual #seed.
+pub fn setup_with_mutual(seed: u64) -> (Env, hanse::instructions::InitializeMutualConfig) {
+    let mut env = Env::setup().unwrap();
+    warp_clock(&mut env.svm, INIT_TEST_NOW);
+    let cfg = default_config(seed);
+    init_mutual(&mut env, &cfg).unwrap();
+    (env, cfg)
+}
