@@ -20,6 +20,17 @@ pub struct Spent {
     pub amount: u64,
 }
 
+/// Emitted on every burn: a paid claimant exits the residual split
+/// (EVENT-MUTUAL §2.4). No tokens move.
+#[event]
+pub struct Burned {
+    pub pool: Pubkey,
+    pub depositor: Pubkey,
+    pub track: Track,
+    pub amount: u64,
+    pub stake_burned: u128,
+}
+
 /// Emitted once, when the pool is permanently ended. Door two (handoff DoD).
 #[event]
 pub struct Liquidated {

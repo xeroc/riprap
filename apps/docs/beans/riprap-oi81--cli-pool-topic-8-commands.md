@@ -1,7 +1,7 @@
 ---
 # riprap-oi81
 title: CLI pool topic (8 commands)
-status: todo
+status: completed
 type: task
 tags:
     - ts
@@ -28,5 +28,14 @@ All chain commands honor --dry-run (build + print ix), --json, --quiet.
 Tests: --dry-run instruction snapshots (accounts + args) per command, PDA derivations via SDK helpers, read commands against decoded fixtures (vitest; no validator dependency).
 
 Checklist:
-- [ ] 8 commands + tests green
-- [ ] help output shows pool topic complete
+- [x] 8 commands + tests green
+- [x] help output shows pool topic complete
+
+## Summary of Changes
+
+- `src/commands/pool/` — nine commands over @riprap/pool (post-burn regen), one file each on ChainCommand: `init` (seed/mint/three rates/three authorities, all required — no hidden defaults), `deposit` (wallet = depositor, optional `--rent-payer` second keypair), `spend`, `burn`, `liquidate`, `crank`, `update-authority`, `show`, `depositor`. All honor `--dry-run`/`--json`/`--quiet`.
+- Treasury ATA derived per command via the CLI's ATA helper; commands that need the mint accept an optional `--mint` override to skip the pool-account fetch (documented as the offline `--dry-run` path) — `lib/pool-resolve.ts`.
+- `lib/pool-args.ts` (u64/u128 integer parsing with named errors, track-name→enum mapping), `lib/pool-math.ts` (`moneyWeightedPayout` = floor(base × depositor ÷ pool total), exact port of crank.rs `payout()`).
+- Read commands: `pool:show` (decoded account + live treasury balance + payout base), `pool:depositor` (position + frozen stakes + money-weighted payout preview; base = live balance while Open, frozen `liquidationBalance` after Liquidation, per crank constraint). View builders exported and tested against SDK-encoded fixtures through a structural rpc mock.
+- Tests (54 total in @riprap/cli, +22 this bean): dry-run instruction snapshots per write command via `bun bin/dev.js` (program id, account order/roles asserted against SDK PDA helpers with a fixed-seed keypair, args decoded with the SDK data decoders); topic-help completeness; reads fixtures; math red-first.
+- Verified: `pnpm verify` exit 0; biome zero errors (13 warnings all pre-existing in generated pool code + ui).
