@@ -33,6 +33,8 @@ pub enum HanseError {
     WrongTreasury,
     #[msg("Wrong dispute: not the Dispute PDA this filing creates")]
     WrongDispute,
+    #[msg("Only the claim's own member can pull its payout")]
+    NotClaimant,
     #[msg("The dispute's final ruling is not one of the filed options")]
     UnexpectedRuling,
     #[msg("Wrong pending-update: not the PendingUpdate PDA this proposal creates")]
