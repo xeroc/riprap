@@ -69,6 +69,8 @@ pub enum HanseError {
     NotSettled,
     #[msg("The pull window is closed: unpaid amounts have reverted to the residual")]
     PullWindowClosed,
+    #[msg("The pull window is still open: dissolve waits until pull_close_at")]
+    PullWindowOpen,
     #[msg("Only approved claims pay out")]
     ClaimNotApproved,
     #[msg("This claim is already paid — payouts are once")]

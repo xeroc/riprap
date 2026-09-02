@@ -94,4 +94,11 @@ pub mod hanse {
     pub fn claim_payout(ctx: Context<ClaimPayout>) -> Result<()> {
         ClaimPayout::handler_claim_payout(ctx)
     }
+
+    /// Permissionless, terminal: after the pull window, liquidate the pool
+    /// from the mutual_own PDA — the residual belongs to the pool crank
+    /// directly (§7).
+    pub fn dissolve(ctx: Context<Dissolve>) -> Result<()> {
+        Dissolve::handler_dissolve(ctx)
+    }
 }
