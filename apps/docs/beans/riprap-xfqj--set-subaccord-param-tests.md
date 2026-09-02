@@ -1,13 +1,13 @@
 ---
 # riprap-xfqj
 title: set_subaccord_param + tests
-status: todo
+status: completed
 type: task
 tags:
     - rust
     - tdd
 created_at: 2026-09-01T17:39:27Z
-updated_at: 2026-09-01T17:39:27Z
+updated_at: 2026-09-02T06:10:00Z
 parent: riprap-ggsd
 blocked_by:
     - riprap-dh7g
@@ -20,4 +20,11 @@ Authority == Mutual.authority (initializer) only. Wraps accord propose_subaccord
 Tests: admin gate reverts for anyone else, proposal lands (PendingUpdate PDA exists with exact payload), accord bounds still enforced, timelocked execute succeeds after warp.
 
 Checklist:
-- [ ] red then green incl. timelock warp
+- [x] red then green incl. timelock warp
+
+## Summary of Changes
+
+- `instructions/set_subaccord_param.rs`: admin gate (authority == Mutual.authority, typed Unauthorized), PendingUpdate PDA verified in handler, CPI `accord::propose_subaccord_update` with the mutual PDA signing as the subaccord authority (invoke_signed, seeds from persisted `mutual.seed`) and the admin wallet as data-free rent payer (ADR-0028); SubaccordParamSet emitted.
+- Lever set chosen and documented (bean left it to implementation): `SubaccordParam` = MinStake, FeePerJuror, AlphaBps, Review/Commit/Reveal/AppealWindow — the economics + windows. Deliberately excluded: Authority (not a demo knob), EvidenceOperator (§9 pipeline key), MaxAppeals/RevealThresholdBps/MaxDrawAttempts (sortition machinery). Maps 1:1 onto accord's UpdatePayload.
+- Tests: proposal lands with exact payload + proposed_by = mutual PDA + execute_after = slot + 432_000; non-admin (Unauthorized); accord floor rejected at propose (MinStake 0); timelock holds then permissionless execute lands after a 432_001-slot warp and the subaccord shows the new min_stake. 4/4.
+- clippy 0; pnpm verify 0.

@@ -35,6 +35,8 @@ pub enum HanseError {
     WrongDispute,
     #[msg("The dispute's final ruling is not one of the filed options")]
     UnexpectedRuling,
+    #[msg("Wrong pending-update: not the PendingUpdate PDA this proposal creates")]
+    WrongPendingUpdate,
 
     // ── file_claim ───────────────────────────────────────────────────────
     #[msg("Claims are closed: the reporting lag has ended (claims_close_at)")]

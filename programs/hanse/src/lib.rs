@@ -77,4 +77,15 @@ pub mod hanse {
     pub fn settle_pool(ctx: Context<SettlePool>) -> Result<()> {
         SettlePool::handler_settle_pool(ctx)
     }
+
+    /// Demo admin lever: propose a subaccord parameter change through the
+    /// accord 48h timelock (§7). The mutual PDA signs as the subaccord's
+    /// authority; the admin wallet pays rent.
+    pub fn set_subaccord_param(
+        ctx: Context<SetSubaccordParam>,
+        nonce: u64,
+        param: SubaccordParam,
+    ) -> Result<()> {
+        SetSubaccordParam::handler_set_subaccord_param(ctx, nonce, param)
+    }
 }

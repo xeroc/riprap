@@ -3,6 +3,7 @@
 //! one-line delegates.
 pub mod file_claim;
 pub mod join;
+pub mod set_subaccord_param;
 pub mod settle_claim;
 pub mod settle_pool;
 
@@ -11,5 +12,6 @@ pub mod initialize_mutual;
 pub use file_claim::*;
 pub use initialize_mutual::*;
 pub use join::*;
+pub use set_subaccord_param::*;
 pub use settle_claim::*;
 pub use settle_pool::*;

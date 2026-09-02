@@ -71,3 +71,12 @@ pub struct PayoutClaimed {
 pub struct MutualDissolved {
     pub mutual: Pubkey,
 }
+
+/// Emitted on every admin param proposal (§7; 48h timelock is accord-side).
+#[event]
+pub struct SubaccordParamSet {
+    pub mutual: Pubkey,
+    pub subaccord: Pubkey,
+    pub nonce: u64,
+    pub payload: accord::state::UpdatePayload,
+}
