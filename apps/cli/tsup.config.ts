@@ -18,7 +18,7 @@ function commandEntries(): Record<string, string> {
       const abs = `${dir}/${name}`;
       if (statSync(abs).isDirectory()) {
         walk(abs);
-      } else if (name.endsWith(".ts") && !name.endsWith(".d.ts")) {
+      } else if (name.endsWith(".ts") && !name.endsWith(".d.ts") && !name.endsWith(".test.ts")) {
         const key = relative("src", abs).replace(/\.ts$/, "");
         entries[key] = abs;
       }
@@ -47,7 +47,6 @@ export default defineConfig({
   outDir: "dist",
   splitting: true,
   sourcemap: true,
-  clean: true,
+  external: ["@oclif/core", "@oclif/plugin-help", "@solana/kit"],
   keepNames: true,
-  external: ["@oclif/core", "@oclif/plugin-help", "@solana/kit", "@riprap/pool"],
 });
