@@ -70,4 +70,11 @@ pub mod hanse {
     pub fn settle_claim(ctx: Context<SettleClaim>) -> Result<()> {
         SettleClaim::handler_settle_claim(ctx)
     }
+
+    /// Permissionless: after the window AND the last dispute, freezes the
+    /// pro-rata ratio and opens the pull window (§2.5). Every payout reads
+    /// the frozen ratio.
+    pub fn settle_pool(ctx: Context<SettlePool>) -> Result<()> {
+        SettlePool::handler_settle_pool(ctx)
+    }
 }

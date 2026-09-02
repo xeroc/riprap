@@ -589,3 +589,107 @@ pub fn arm_subaccord(
         )
         .unwrap();
 }
+
+/// File a claim for `member` at the mutual's current nonce (real path).
+pub fn file_claim_raw(
+    env: &mut Env,
+    cfg: &hanse::instructions::InitializeMutualConfig,
+    member: &Keypair,
+    requested: u64,
+) -> Result<(), String> {
+    use anchor_lang::solana_program::instruction::Instruction;
+    use anchor_lang::{InstructionData, ToAccountMetas};
+    let mutual = mutual_pda(cfg.seed);
+    let m: hanse::Mutual = anchor_lang::AccountDeserialize::try_deserialize(
+        &mut &env.svm.get_account(&mutual).unwrap().data[..],
+    )
+    .unwrap();
+    let nonce = m.claim_nonce;
+    let pool = pool_pda(cfg.seed);
+    let domain_ref = hanse::instructions::subaccord_domain_ref(cfg.seed, &cfg.policy_hash);
+    let subaccord = Pubkey::find_program_address(
+        &[
+            b"subaccord",
+            env.payer.pubkey().as_ref(),
+            domain_ref.as_ref(),
+        ],
+        &accord::id(),
+    )
+    .0;
+    let dispute = Pubkey::find_program_address(
+        &[b"dispute", mutual.as_ref(), nonce.to_le_bytes().as_ref()],
+        &accord::id(),
+    )
+    .0;
+    let ix = Instruction::new_with_bytes(
+        hanse::id(),
+        &hanse::instruction::FileClaim {
+            requested,
+            evidence_hash: [1; 32],
+            nonce,
+        }
+        .data(),
+        hanse::accounts::FileClaim {
+            claimant: member.pubkey(),
+            mutual,
+            member_account: member_pda(&mutual, &member.pubkey()),
+            claim: claim_pda(&mutual, nonce),
+            depositor: pool_depositor(&pool, &member.pubkey()),
+            subaccord,
+            member_fee_ata: ata(&member.pubkey(), &env.mint),
+            fee_float: ata(&mutual, &env.mint),
+            fee_mint: env.mint,
+            treasury: pool_treasury(&pool, &env.mint),
+            dispute,
+            fee_vault: ata(&subaccord, &env.mint),
+            accord_state: Pubkey::find_program_address(&[b"state"], &accord::id()).0,
+            token_program: spl_token_interface::ID,
+            associated_token_program: spl_associated_token_account_interface::program::ID,
+            system_program: anchor_lang::solana_program::system_program::ID,
+            accord_program: accord::id(),
+        }
+        .to_account_metas(None),
+    );
+    try_send(&mut env.svm, &[ix], &mut [member])
+}
+
+/// Settle claim `nonce` through the real settle_claim instruction.
+pub fn settle_claim_raw(
+    env: &mut Env,
+    cfg: &hanse::instructions::InitializeMutualConfig,
+    cranker: &Keypair,
+    claim_nonce: u64,
+) -> Result<(), String> {
+    use anchor_lang::solana_program::instruction::Instruction;
+    use anchor_lang::{InstructionData, ToAccountMetas};
+    let mutual = mutual_pda(cfg.seed);
+    let claim = claim_pda(&mutual, claim_nonce);
+    let c: hanse::Claim = anchor_lang::AccountDeserialize::try_deserialize(
+        &mut &env.svm.get_account(&claim).unwrap().data[..],
+    )
+    .unwrap();
+    let ix = Instruction::new_with_bytes(
+        hanse::id(),
+        &hanse::instruction::SettleClaim {}.data(),
+        hanse::accounts::SettleClaim {
+            cranker: cranker.pubkey(),
+            mutual,
+            claim,
+            member_account: member_pda(&mutual, &c.member),
+            dispute: c.dispute,
+            fee_float: ata(&mutual, &env.mint),
+            claimant_ata: ata(&c.member, &env.mint),
+            fee_mint: env.mint,
+            token_program: spl_token_interface::ID,
+        }
+        .to_account_metas(None),
+    );
+    try_send(&mut env.svm, &[ix], &mut [cranker])
+}
+
+/// A funded, rent-paying nobody for permissionless cranks.
+pub fn cranker(env: &mut Env) -> Keypair {
+    let k = Keypair::new();
+    env.svm.airdrop(&k.pubkey(), 1_000_000_000).unwrap();
+    k
+}
