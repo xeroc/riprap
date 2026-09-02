@@ -1,0 +1,56 @@
+{
+  "name": "@riprap/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Riprap operator CLI — thin wrapper over @riprap/pool and @riprap/hanse",
+  "type": "module",
+  "bin": {
+    "riprap": "./bin/run.js"
+  },
+  "scripts": {
+    "build": "tsc --noEmit && tsup",
+    "dev": "bun bin/dev.js",
+    "start": "bun bin/run.js",
+    "lint": "biome check src bin tsup.config.ts",
+    "lint:fix": "biome check --write src bin tsup.config.ts",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@oclif/core": "^4.2.0",
+    "@oclif/plugin-help": "^6.2.0",
+    "@riprap/pool": "workspace:*",
+    "@solana/kit": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.3.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  },
+  "oclif": {
+    "bin": "riprap",
+    "dirname": "riprap",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help"
+    ],
+    "topicSeparator": ":",
+    "topics": {
+      "config": {
+        "description": "Cluster, wallet and resolved config shared by pool and hanse"
+      },
+      "pool": {
+        "description": "Pool program operations (@riprap/pool)"
+      },
+      "hanse": {
+        "description": "Hanse event-mutual operations (@riprap/hanse)"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "bin"
+  ]
+}
