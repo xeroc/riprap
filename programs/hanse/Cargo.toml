@@ -31,6 +31,8 @@ anchor-spl = "1.0.2"
 # Cargo.lock note: five8 1.0.0 must stay wired to five8_core 1.0.0 (not 0.1.2,
 # which ephemeral-rollups-sdk's five8 0.2.1 also pulls in) or solana-keypair
 # 3.1.x fails E0277. The lock pins that edge; a blind `cargo update` can regress it.
+pool = { path = "../pool", features = ["cpi"] }
+solana-program = "3"
 accord = { git = "ssh://git@github.com/xeroc/accord.git", rev = "ba91bd8b8b374091c174909b115688ffb9b231ff", features = ["cpi"] }
 
 [dev-dependencies]
@@ -45,7 +47,6 @@ solana-program-pack = "3.1.0"
 solana-transaction = "3.0.2"
 solana-signer = "3.0.0"
 solana-keypair = "3.0.1"
-pool = { path = "../pool", features = ["no-entrypoint"] }
 hanse = { path = ".", features = ["no-entrypoint"] }
 
 [lints.rust]

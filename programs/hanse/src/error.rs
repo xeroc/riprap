@@ -13,6 +13,8 @@ pub enum HanseError {
     DepositsClosed,
     #[msg("Tier index out of range: this mutual has exactly three tiers")]
     TierInvalid,
+    #[msg("Jury shape invalid: min_jury_size must be odd and its appeal ladder must fit accord's MAX_JURORS")]
+    InvalidJurySize,
 
     // ── file_claim ───────────────────────────────────────────────────────
     #[msg("Claims are closed: the reporting lag has ended (claims_close_at)")]

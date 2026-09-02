@@ -18,7 +18,6 @@
 //! Layout: one file per instruction in `instructions/*` — the accounts
 //! struct plus its `handler_*` impl holding all logic. The `#[program]`
 //! bodies are one-line delegates (house style, see `programs/pool`).
-//! State/errors/events per §6; instruction set and lifecycle per §7.
 
 pub mod error;
 pub mod events;
@@ -26,6 +25,7 @@ pub mod instructions;
 pub mod state;
 
 pub use error::HanseError;
+pub use instructions::*;
 pub use state::*;
 
 use anchor_lang::prelude::*;
@@ -33,4 +33,17 @@ use anchor_lang::prelude::*;
 declare_id!("DTSwUuWC1SpZP8LcJ1EJ4HtUxAczqwrsgqNYnR1QXK3p");
 
 #[program]
-pub mod hanse {}
+pub mod hanse {
+    use super::*;
+
+    /// Create the mutual: wires pool (rights 1:1 under mutual_auth, ownership
+    /// disabled under mutual_own), subaccord (Plurality, mutual PDA as
+    /// authority), and the fee float (§7). Permissionless; the initializer is
+    /// recorded as the demo admin.
+    pub fn initialize_mutual(
+        ctx: Context<InitializeMutual>,
+        config: InitializeMutualConfig,
+    ) -> Result<()> {
+        InitializeMutual::handler_initialize_mutual(ctx, config)
+    }
+}
