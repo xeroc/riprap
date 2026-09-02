@@ -33,6 +33,8 @@ pub enum HanseError {
     WrongTreasury,
     #[msg("Wrong dispute: not the Dispute PDA this filing creates")]
     WrongDispute,
+    #[msg("The dispute's final ruling is not one of the filed options")]
+    UnexpectedRuling,
 
     // ── file_claim ───────────────────────────────────────────────────────
     #[msg("Claims are closed: the reporting lag has ended (claims_close_at)")]

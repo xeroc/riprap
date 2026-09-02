@@ -63,4 +63,11 @@ pub mod hanse {
     ) -> Result<()> {
         FileClaim::handler_file_claim(ctx, requested, evidence_hash, nonce)
     }
+
+    /// Permissionless: reads the Dispute ruling directly and books the claim
+    /// Approved / Denied / Failed (§7). Moves no pool funds except the
+    /// Failed fee refund.
+    pub fn settle_claim(ctx: Context<SettleClaim>) -> Result<()> {
+        SettleClaim::handler_settle_claim(ctx)
+    }
 }
