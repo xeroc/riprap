@@ -43,6 +43,13 @@ pub mod pool {
         Spend::handler_spend(ctx, amount)
     }
 
+    /// Track-authority accounting exit: removes a paid claimant from the
+    /// money-weighted residual split (EVENT-MUTUAL §2.4). Moves no tokens —
+    /// pair it with spend, which already paid the claimant.
+    pub fn burn(ctx: Context<Burn>, track: Track, amount: u64) -> Result<()> {
+        Burn::handler_burn(ctx, track, amount)
+    }
+
     /// Exit door two: the ownership authority permanently ends the pool.
     /// After this only the crank can move money. Terminal.
     pub fn liquidate(ctx: Context<Liquidate>) -> Result<()> {

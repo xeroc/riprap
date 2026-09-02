@@ -42,8 +42,10 @@ import {
   type PoolArgs,
 } from "../accounts";
 import {
+  type BurnAsyncInput,
   type CrankAsyncInput,
   type DepositAsyncInput,
+  getBurnInstructionAsync,
   getCrankInstructionAsync,
   getDepositInstructionAsync,
   getInitInstructionAsync,
@@ -52,12 +54,14 @@ import {
   getUpdateAuthorityInstruction,
   type InitAsyncInput,
   type LiquidateInput,
+  type ParsedBurnInstruction,
   type ParsedCrankInstruction,
   type ParsedDepositInstruction,
   type ParsedInitInstruction,
   type ParsedLiquidateInstruction,
   type ParsedSpendInstruction,
   type ParsedUpdateAuthorityInstruction,
+  parseBurnInstruction,
   parseCrankInstruction,
   parseDepositInstruction,
   parseInitInstruction,
@@ -111,6 +115,7 @@ export function identifyPoolAccount(
 
 export enum PoolEvent {
   AuthorityUpdated,
+  Burned,
   CrankPaid,
   Deposit,
   Liquidated,
@@ -131,6 +136,17 @@ export function identifyPoolEvent(
     )
   ) {
     return PoolEvent.AuthorityUpdated;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([207, 37, 251, 154, 239, 229, 14, 67]),
+      ),
+      0,
+    )
+  ) {
+    return PoolEvent.Burned;
   }
   if (
     containsBytes(
@@ -180,6 +196,7 @@ export function identifyPoolEvent(
 }
 
 export enum PoolInstruction {
+  Burn,
   Crank,
   Deposit,
   Init,
@@ -192,6 +209,17 @@ export function identifyPoolInstruction(
   instruction: { data: ReadonlyUint8Array } | ReadonlyUint8Array,
 ): PoolInstruction {
   const data = "data" in instruction ? instruction.data : instruction;
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([116, 110, 29, 56, 107, 219, 42, 93]),
+      ),
+      0,
+    )
+  ) {
+    return PoolInstruction.Burn;
+  }
   if (
     containsBytes(
       data,
@@ -268,6 +296,9 @@ export type ParsedPoolInstruction<
   TProgram extends string = "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1",
 > =
   | ({
+      instructionType: PoolInstruction.Burn;
+    } & ParsedBurnInstruction<TProgram>)
+  | ({
       instructionType: PoolInstruction.Crank;
     } & ParsedCrankInstruction<TProgram>)
   | ({
@@ -291,6 +322,13 @@ export function parsePoolInstruction<TProgram extends string>(
 ): ParsedPoolInstruction<TProgram> {
   const instructionType = identifyPoolInstruction(instruction);
   switch (instructionType) {
+    case PoolInstruction.Burn: {
+      assertIsInstructionWithAccounts(instruction);
+      return {
+        instructionType: PoolInstruction.Burn,
+        ...parseBurnInstruction(instruction),
+      };
+    }
     case PoolInstruction.Crank: {
       assertIsInstructionWithAccounts(instruction);
       return {
@@ -356,6 +394,9 @@ export type PoolPluginAccounts = {
 };
 
 export type PoolPluginInstructions = {
+  burn: (
+    input: BurnAsyncInput,
+  ) => ReturnType<typeof getBurnInstructionAsync> & SelfPlanAndSendFunctions;
   crank: (
     input: CrankAsyncInput,
   ) => ReturnType<typeof getCrankInstructionAsync> & SelfPlanAndSendFunctions;
@@ -389,6 +430,7 @@ export function poolProgram() {
           pool: addSelfFetchFunctions(client, getPoolCodec()),
         },
         instructions: {
+          burn: (input) => addSelfPlanAndSendFunctions(client, getBurnInstructionAsync(input)),
           crank: (input) => addSelfPlanAndSendFunctions(client, getCrankInstructionAsync(input)),
           deposit: (input) =>
             addSelfPlanAndSendFunctions(client, getDepositInstructionAsync(input)),

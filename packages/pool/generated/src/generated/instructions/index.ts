@@ -6,6 +6,7 @@
  * @see https://github.com/codama-idl/codama
  */
 
+export * from "./burn";
 export * from "./crank";
 export * from "./deposit";
 export * from "./init";
