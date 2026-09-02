@@ -52,4 +52,15 @@ pub mod hanse {
     pub fn join(ctx: Context<Join>, tier: u8) -> Result<()> {
         Join::handler_join(ctx, tier)
     }
+
+    /// Member-signed filing: one claim at a time, clamped at the tier cap,
+    /// fee claimant-funded, dispute opened by the mutual PDA (§7).
+    pub fn file_claim(
+        ctx: Context<FileClaim>,
+        requested: u64,
+        evidence_hash: [u8; 32],
+        nonce: u64,
+    ) -> Result<()> {
+        FileClaim::handler_file_claim(ctx, requested, evidence_hash, nonce)
+    }
 }

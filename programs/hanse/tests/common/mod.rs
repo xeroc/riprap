@@ -465,3 +465,127 @@ pub fn setup_with_mutual(seed: u64) -> (Env, hanse::instructions::InitializeMutu
     init_mutual(&mut env, &cfg).unwrap();
     (env, cfg)
 }
+
+/// Fund a wallet with `balance` deposit-mint tokens (its ATA created).
+/// Returns (keypair, ata).
+pub fn member_with(env: &mut Env, balance: u64) -> (Keypair, anchor_lang::prelude::Pubkey) {
+    use spl_associated_token_account_interface::instruction as ata_ix;
+    use spl_token_interface::instruction as token_ix;
+    let kp = Keypair::new();
+    let ata_addr = ata(&kp.pubkey(), &env.mint);
+    env.svm.airdrop(&kp.pubkey(), 1_000_000_000).unwrap();
+    send(
+        &mut env.svm,
+        &[
+            ata_ix::create_associated_token_account_idempotent(
+                &env.payer.pubkey(),
+                &kp.pubkey(),
+                &env.mint,
+                &spl_token_interface::ID,
+            ),
+            token_ix::mint_to(
+                &spl_token_interface::ID,
+                &env.mint,
+                &ata_addr,
+                &env.payer.pubkey(),
+                &[],
+                balance,
+            )
+            .unwrap(),
+        ],
+        &mut [&env.payer],
+    );
+    (kp, ata_addr)
+}
+
+/// Join `member` at `tier` via the real join instruction.
+pub fn join_member(
+    env: &mut Env,
+    cfg: &hanse::instructions::InitializeMutualConfig,
+    member: &Keypair,
+    member_ata: &anchor_lang::prelude::Pubkey,
+    tier: u8,
+) -> Result<(), String> {
+    use anchor_lang::solana_program::instruction::Instruction;
+    use anchor_lang::{InstructionData, ToAccountMetas};
+    let mutual = mutual_pda(cfg.seed);
+    let pool = pool_pda(cfg.seed);
+    let ix = Instruction::new_with_bytes(
+        hanse::id(),
+        &hanse::instruction::Join { tier }.data(),
+        hanse::accounts::Join {
+            member: member.pubkey(),
+            member_account: member_pda(&mutual, &member.pubkey()),
+            mutual,
+            pool,
+            depositor: pool_depositor(&pool, &member.pubkey()),
+            owner_ata: *member_ata,
+            rent_payer: member.pubkey(),
+            treasury: pool_treasury(&pool, &env.mint),
+            deposit_mint: env.mint,
+            token_program: spl_token_interface::ID,
+            system_program: anchor_lang::solana_program::system_program::ID,
+            pool_program: pool::id(),
+        }
+        .to_account_metas(None),
+    );
+    try_send(&mut env.svm, &[ix], &mut [member])
+}
+
+/// Initialize accord's global state account (["state"] PDA) — required
+/// before any create_dispute CPI.
+pub fn init_accord_state(env: &mut Env) {
+    use anchor_lang::solana_program::instruction::Instruction;
+    use anchor_lang::{InstructionData, ToAccountMetas};
+    let accord_state = Pubkey::find_program_address(&[b"state"], &accord::id()).0;
+    let ix = Instruction::new_with_bytes(
+        accord::id(),
+        &accord::instruction::InitializePause {}.data(),
+        accord::accounts::InitializePause {
+            authority: env.payer.pubkey(),
+            accord_state,
+            system_program: anchor_lang::solana_program::system_program::ID,
+        }
+        .to_account_metas(None),
+    );
+    send(&mut env.svm, &[ix], &mut [&env.payer]);
+}
+
+/// Fabricate juror availability on the subaccord (staker_count >=
+/// min_jury_size) — the LiteSVM suites never run voting/staking flows
+/// (those live in the TS e2e); accord's create_dispute gate needs the count.
+pub fn arm_subaccord(
+    env: &mut Env,
+    cfg: &hanse::instructions::InitializeMutualConfig,
+    stakers: u32,
+) {
+    let domain_ref = hanse::instructions::subaccord_domain_ref(cfg.seed, &cfg.policy_hash);
+    let subaccord = Pubkey::find_program_address(
+        &[
+            b"subaccord",
+            env.payer.pubkey().as_ref(),
+            domain_ref.as_ref(),
+        ],
+        &accord::id(),
+    )
+    .0;
+    let acc = env.svm.get_account(&subaccord).unwrap();
+    let mut s: accord::state::Subaccord =
+        anchor_lang::AccountDeserialize::try_deserialize(&mut &acc.data[..]).unwrap();
+    s.staker_count = stakers;
+    s.total_stake = 1_000_000_000;
+    let mut data = acc.data[..8].to_vec();
+    ::borsh::BorshSerialize::serialize(&s, &mut data).unwrap();
+    env.svm
+        .set_account(
+            subaccord,
+            Account {
+                lamports: acc.lamports,
+                data,
+                owner: accord::id(),
+                executable: false,
+                rent_epoch: 0,
+            },
+        )
+        .unwrap();
+}

@@ -19,6 +19,20 @@ pub enum HanseError {
     WrongPool,
     #[msg("Wrong mint: not this mutual's deposit mint")]
     WrongMint,
+    #[msg("The mutual is not Active: filing closed with its window")]
+    MutualNotActive,
+    #[msg("Claim nonce mismatch: the Claim PDA seed must be the mutual's next claim_nonce")]
+    NonceMismatch,
+    #[msg("Claim amount must be positive")]
+    InvalidClaimAmount,
+    #[msg("Wrong subaccord: not the one this mutual owns")]
+    WrongSubaccord,
+    #[msg("Wrong depositor: not this member's pool position")]
+    WrongDepositor,
+    #[msg("Wrong treasury: not the pool's canonical ATA")]
+    WrongTreasury,
+    #[msg("Wrong dispute: not the Dispute PDA this filing creates")]
+    WrongDispute,
 
     // ── file_claim ───────────────────────────────────────────────────────
     #[msg("Claims are closed: the reporting lag has ended (claims_close_at)")]

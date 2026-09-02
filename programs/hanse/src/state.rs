@@ -62,6 +62,10 @@ pub struct Mutual {
     pub claims_close_at: i64,
     /// Duration after settlement; unpaid amounts revert to the residual (§2.5).
     pub pull_window: i64,
+    /// Restated from the PDA seeds — the mutual PDA signs the create_dispute
+    /// CPI (and later pool CPIs), which requires seeds and bump at signing
+    /// time (pool `seed` precedent).
+    pub seed: u64,
     // ── Settlement, frozen by settle_pool (§2.5) ────────────────────────
     pub phase: Phase,
     /// Set by settle_pool = settled_at + pull_window.
@@ -131,14 +135,14 @@ mod tests {
     /// EVENT-MUTUAL §6: Mutual = immutable block (5 pubkeys + policy_hash 32 +
     /// tiers 3×16 + three i64 timestamps) + settlement block (phase 1 +
     /// pull_close_at 8 + ratio 8 + obligations 8 + fee_refunds 8 +
-    /// claims_filed 4 + claims_resolved 4 + claim_nonce 8) + bump 1.
+    /// claims_filed 4 + claims_resolved 4 + claim_nonce 8 + seed 8) + bump 1.
     #[test]
     fn mutual_space_matches_spec_layout() {
         assert_eq!(
             Mutual::INIT_SPACE,
-            5 * 32 + 32 + 3 * 16 + 3 * 8 + 1 + 8 + 8 + 8 + 8 + 4 + 4 + 8 + 1
+            5 * 32 + 32 + 3 * 16 + 3 * 8 + 8 + 1 + 8 + 8 + 8 + 8 + 4 + 4 + 8 + 1
         );
-        assert_eq!(MUTUAL_SPACE, 8 + 314);
+        assert_eq!(MUTUAL_SPACE, 8 + 322);
     }
 
     /// EVENT-MUTUAL §6: Member = mutual 32 + member 32 + tier 1 +

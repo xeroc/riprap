@@ -239,6 +239,7 @@ impl<'info> InitializeMutual<'info> {
             m.deposits_close_at = config.deposits_close_at;
             m.claims_close_at = config.claims_close_at;
             m.pull_window = config.pull_window;
+            m.seed = config.seed;
             m.phase = Phase::Active;
             m.pull_close_at = 0;
             m.ratio_1e9 = 0;
