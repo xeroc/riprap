@@ -117,7 +117,7 @@ export type HanseError =
   | typeof HANSE_ERROR__WRONG_TREASURY;
 
 let hanseErrorMessages: Record<HanseError, string> | undefined;
-if (process.env.NODE_ENV !== "production") {
+if (process.env["NODE_ENV"] !== "production") {
   hanseErrorMessages = {
     [HANSE_ERROR__ALREADY_SETTLED]: `The pool is already settled or dissolved`,
     [HANSE_ERROR__ATTESTATION_RESERVED]: `The attestation field is reserved: v1 ships stake-only (SAS integration pending)`,
@@ -156,7 +156,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export function getHanseErrorMessage(code: HanseError): string {
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env["NODE_ENV"] !== "production") {
     return (hanseErrorMessages as Record<HanseError, string>)[code];
   }
 

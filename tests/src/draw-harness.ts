@@ -52,6 +52,7 @@ import {
 } from "@useaccord/sdk";
 import { fetchDecoded } from "./setup/assertions.js";
 import { readClock, warpForwardSeconds } from "./setup/cheats.js";
+import { ensureAccordProgram } from "./setup/deploy.js";
 import { createTestEnv, fundSigner, type TestEnv } from "./setup/env.js";
 import { pilotSubaccordArgs, randomBytes32, TIER_CONTRIBUTIONS } from "./setup/fixtures.js";
 import { ataOf, createMint, setTokenBalance } from "./setup/tokens.js";
@@ -291,9 +292,65 @@ export async function armSubaccordAndJurors(
 export async function setupDrawFixture(): Promise<DrawFixture> {
   const env = await createTestEnv();
   if (!env.up) return offlineFixture(env);
+  // Jest's cold-cache file order may run this before harness.spec deployed
+  // the sibling build — every accord consumer ensures it (idempotent).
+  await ensureAccordProgram(env);
   const accordState = await ensurePause(env);
   const core = await armSubaccordAndJurors(env, accordState);
   return { env, up: true, ...core };
+}
+
+/**
+ * Mutual variant of `armSubaccordAndJurors`: stake the given member signers
+ * into an **already-existing** Subaccord — the one `initialize_mutual` CPI'd
+ * into existence (authority = the mutual PDA). Same accumulator/stake
+ * plumbing; the Subaccord PDA + mint + depth come from the caller. `depth`
+ * MUST be 20 (hanse SUBACCORD_DEPTH) so the Merkle paths line up with the
+ * on-chain root.
+ */
+export async function armMutualJurors(
+  env: TestEnv,
+  accordState: Address,
+  subaccord: Address,
+  mint: Address,
+  depth: number,
+  signers: KeyPairSigner[],
+  stakeAmount: bigint,
+): Promise<Omit<DrawFixture, "env" | "up">> {
+  const vault = await ataOf(mint, subaccord);
+  const tree = await new TreeTracker(depth).init();
+
+  const jurors: JurorCtx[] = [];
+  const jurorPdaByHex = new Map<string, Address>();
+  for (let i = 0; i < signers.length; i++) {
+    const signer = signers[i]!;
+    await setTokenBalance(env, signer.address, mint, stakeAmount);
+    const jurorAccord = roleAccord(env, signer);
+    const jurorAta = await ataOf(mint, signer.address);
+    const [stakePda] = await findJurorStakePda({ subaccord, juror: signer.address });
+    const path = await tree.pathFor(i);
+    await env.sendIx(
+      stake(
+        jurorAccord.adapter,
+        env.accordProgramId,
+        {
+          juror: signer.address,
+          subaccord,
+          accordState,
+          jurorStake: stakePda,
+          stakingToken: mint,
+          jurorTokenAccount: jurorAta,
+          stakeVault: vault,
+        },
+        stakeAmount,
+        path,
+      ),
+    );
+    await tree.setLeaf(i, signer.address, stakeAmount);
+    jurors.push({ signer, stakePda, jurorAta, accord: jurorAccord });
+    jurorPdaByHex.set(toHex(addressBytes(signer.address)), stakePda);
+  }
+  return { mint, vault, subaccord, accordState, jurors, tree, jurorPdaByHex };
 }
 
 // ---------------------------------------------------------------------------

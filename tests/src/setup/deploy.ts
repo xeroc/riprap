@@ -22,6 +22,8 @@ import {
   getAddressEncoder,
   getProgramDerivedAddress,
   type Instruction,
+  type KeyPairSigner,
+  lamports,
 } from "@solana/kit";
 import { ACCORD_PROGRAM_ID } from "@useaccord/sdk";
 import type { TestEnv } from "./env.js";
@@ -117,7 +119,7 @@ function createAccountIx(params: {
     encodeLe([[0, 4]]),
     encodeLe([[params.lamports, 8]]),
     encodeLe([[params.space, 8]]),
-    getAddressEncoder().encode(params.owner),
+    new Uint8Array(getAddressEncoder().encode(params.owner)),
   );
   return rawInstruction(
     SYSTEM_PROGRAM_ADDRESS,
@@ -214,9 +216,9 @@ export async function deployProgram(
   const bufferSpace = BUFFER_META_LEN + elf.length;
   const programDataSpace = PROGRAMDATA_META_LEN + elf.length;
   const [bufferRent, programDataRent, programRent] = await Promise.all([
-    env.rpc.getMinimumBalanceForRentExemption(bufferSpace).send(),
-    env.rpc.getMinimumBalanceForRentExemption(programDataSpace).send(),
-    env.rpc.getMinimumBalanceForRentExemption(PROGRAM_LEN).send(),
+    env.rpc.getMinimumBalanceForRentExemption(BigInt(bufferSpace)).send(),
+    env.rpc.getMinimumBalanceForRentExemption(BigInt(programDataSpace)).send(),
+    env.rpc.getMinimumBalanceForRentExemption(BigInt(PROGRAM_LEN)).send(),
   ]);
 
   // Rent minimums arrive as bare JSON numbers; balance wraps in { value } —
@@ -228,9 +230,10 @@ export async function deployProgram(
   const needed = bufferRentLamports + programDataRentLamports + programRentLamports + fees + 1n;
   const balance = await env.rpc.getBalance(env.payer.address).send();
   if (BigInt(balance.value) < needed) {
-    await env.rpc.requestAirdrop(env.payer.address, needed - BigInt(balance.value)).send();
+    await env.rpc
+      .requestAirdrop(env.payer.address, lamports(needed - BigInt(balance.value)))
+      .send();
   }
-
   await env.sendIxs([
     createAccountIx({
       payer: env.payer.address,

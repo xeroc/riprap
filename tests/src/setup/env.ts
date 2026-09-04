@@ -18,7 +18,7 @@ import {
   type Address,
   appendTransactionMessageInstructions,
   assertIsTransactionWithBlockhashLifetime,
-  type BlockhashWithExpiryBlockHeight,
+  type Blockhash,
   createKeyPairSignerFromBytes,
   createSolanaRpc,
   createSolanaRpcSubscriptions,
@@ -60,8 +60,9 @@ export interface TestEnv {
 }
 
 export interface SendIxsOptions {
-  /** Reuse a caller-fetched blockhash (deploy write batches). */
-  blockhash?: BlockhashWithExpiryBlockHeight;
+  /** Reuse a caller-fetched blockhash (deploy write batches). Structural —
+   * kit 7.1.1 does not re-export BlockhashWithExpiryBlockHeight. */
+  blockhash?: { blockhash: Blockhash; lastValidBlockHeight: bigint };
   /** Fire-and-forget: send without per-tx confirmation; the caller confirms
    * out-of-band (setup/deploy.ts polls the buffer length, Deploy verifies the
    * ELF). Cuts a 790-tx program deploy from minutes to seconds. */
@@ -240,6 +241,16 @@ function extractLogs(e: unknown): string[] | undefined {
       const candidate = cur.logs;
       if (Array.isArray(candidate)) {
         return candidate.filter((v): v is string => typeof v === "string");
+      }
+    }
+    // kit's SolanaError nests them under `context.logs` — narrow, no casts
+    if ("context" in cur) {
+      const ctx = cur.context;
+      if (ctx !== null && typeof ctx === "object" && "logs" in ctx) {
+        const candidate = ctx.logs;
+        if (Array.isArray(candidate)) {
+          return candidate.filter((v): v is string => typeof v === "string");
+        }
       }
     }
     cur = "cause" in cur ? cur.cause : null;

@@ -29,7 +29,7 @@ import {
 /**
  * Full subaccord economics forwarded verbatim to `accord::create_subaccord`
  * (EVENT-MUTUAL §7). Fixed in code, NOT config: aggregation = Plurality
- * (binary Approve/Deny claims), shortfall = Redraw, depth = 20 (accumulator
+ * (binary Approve/Deny claims), shortfall = Redraw, depth = 12 (tx-budget
  * default), juror_credential/juror_schema = Pubkey::default (stake-only —
  * SAS binding is bean riprap-7wa9), authority = the mutual PDA.
  */
