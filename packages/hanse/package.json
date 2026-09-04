@@ -1,0 +1,32 @@
+{
+  "name": "@riprap/hanse",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generated Codama client for the Riprap hanse program — bounded-lifetime event mutual orchestrator on top of the pool primitive.",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "riprap": "codama",
+    "codegen": "codama run js && biome check --write generated",
+    "build": "tsc -b",
+    "lint": "biome check src",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@solana/kit": "^7.0.0",
+    "@solana/program-client-core": "^7.1.1"
+  },
+  "devDependencies": {
+    "@codama/nodes-from-anchor": "^1.5.5",
+    "@codama/renderers-js": "^2.4.0",
+    "@types/node": "^24.13.3",
+    "codama": "latest",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}
