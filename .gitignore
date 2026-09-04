@@ -26,7 +26,7 @@ storybook-static
 
 # Anchor
 .anchor
-test-ledger
+.surfpool
 # The localnet program keypair is committed so declare_id stays stable
 # across worktrees; everything else under target/ stays ignored.
 !/target/

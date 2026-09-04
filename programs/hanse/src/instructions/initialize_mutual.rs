@@ -8,7 +8,7 @@ use crate::ID;
 
 /// Full subaccord economics forwarded verbatim to `accord::create_subaccord`
 /// (EVENT-MUTUAL §7). Fixed in code, NOT config: aggregation = Plurality
-/// (binary Approve/Deny claims), shortfall = Redraw, depth = 20 (accumulator
+/// (binary Approve/Deny claims), shortfall = Redraw, depth = 12 (tx-budget
 /// default), juror_credential/juror_schema = Pubkey::default (stake-only —
 /// SAS binding is bean riprap-7wa9), authority = the mutual PDA.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
@@ -59,9 +59,13 @@ fn evidence_spec() -> [u8; 32] {
     ::solana_program::hash::hashv(&[b"hanse:evidence:v1"]).to_bytes()
 }
 
-/// Accumulator depth for the mutual's subaccord — accord's common default
-/// (2^20 leaves ≫ pilot membership).
-const SUBACCORD_DEPTH: u8 = 20;
+/// Accumulator depth for the mutual's subaccord — 2^12 = 4096 leaves covers
+/// the pilot's < 3,000 members (§12). NOT accord's raw default of 20: a
+/// depth-20 Merkle path is 20 × 40 B = 800 B of instruction data, which
+/// pushes `stake`/`draw_seat` transactions past the 1232-B packet budget —
+/// discovered by the Surfpool e2e (bean riprap-efdw). 12 keeps every
+/// proof-carrying instruction ≈ 500 B with margin.
+const SUBACCORD_DEPTH: u8 = 12;
 
 /// Account context for `initialize_mutual` — permissionless (EVENT-MUTUAL §7).
 #[derive(Accounts)]
