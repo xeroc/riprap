@@ -116,7 +116,9 @@ export async function setupMutualCohort(
   const pullWindow = 3_600n;
 
   const { mint } = await createMint(env, 6);
-  const seed = BigInt(Date.now()) * 1000n + BigInt(Math.floor(Math.random() * 1000));
+  // Nanosecond clock + entropy: mutual/pool PDAs collide across back-to-back
+  // runs when the seed is only ms-unique (observed once as a suite flake).
+  const seed = BigInt(Date.now()) * 1_000_000n + BigInt(process.hrtime.bigint() % 1_000_000n);
   const policyHash = randomBytes32();
   const [mutual] = await findMutualPda({ seed });
   const [poolPda] = await findPoolPda({ seed });
