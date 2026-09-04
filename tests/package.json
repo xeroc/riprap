@@ -1,0 +1,26 @@
+{
+  "name": "@riprap/tests",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Riprap e2e integration suite — jest against a Surfpool surfnet (harness ported from the accord tests/src/setup)",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch"
+  },
+  "dependencies": {
+    "@riprap/hanse": "workspace:*",
+    "@riprap/pool": "workspace:*",
+    "@solana/kit": "^7.0.0",
+    "@solana/spl-token": "^0.4.0",
+    "@useaccord/sdk": "0.1.0",
+    "bn.js": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.6",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^24.13.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.5.0"
+  }
+}
