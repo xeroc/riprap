@@ -271,6 +271,9 @@ importers:
 
   packages/hanse:
     dependencies:
+      '@riprap/pool':
+        specifier: workspace:*
+        version: link:../pool
       '@solana/kit':
         specifier: ^7.0.0
         version: 7.1.1(typescript@7.0.2)

@@ -33,7 +33,7 @@ export type PoolError =
   | typeof POOL_ERROR__TRACK_CLOSED;
 
 let poolErrorMessages: Record<PoolError, string> | undefined;
-if (process.env["NODE_ENV"] !== "production") {
+if (process.env.NODE_ENV !== "production") {
   poolErrorMessages = {
     [POOL_ERROR__MATH_OVERFLOW]: `Checked math overflowed — the amounts do not fit the accounting`,
     [POOL_ERROR__POOL_NOT_LIQUIDATED]: `The crank only runs after liquidation`,
@@ -44,7 +44,7 @@ if (process.env["NODE_ENV"] !== "production") {
 }
 
 export function getPoolErrorMessage(code: PoolError): string {
-  if (process.env["NODE_ENV"] !== "production") {
+  if (process.env.NODE_ENV !== "production") {
     return (poolErrorMessages as Record<PoolError, string>)[code];
   }
 

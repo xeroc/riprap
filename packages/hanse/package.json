@@ -15,9 +15,10 @@
     "codegen": "codama run js && biome check --write generated",
     "build": "tsc -b",
     "lint": "biome check src",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run"
   },
   "dependencies": {
+    "@riprap/pool": "workspace:*",
     "@solana/kit": "^7.0.0",
     "@solana/program-client-core": "^7.1.1"
   },
