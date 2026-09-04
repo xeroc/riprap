@@ -43,6 +43,7 @@ import {
   initializePause,
   type MerkleAccumulator,
   type MSTNode,
+  panelSizeForRound,
   proofFor,
   requiredFee,
   resolveSeat,
@@ -417,22 +418,24 @@ export function randomNonce(): bigint {
 // ---------------------------------------------------------------------------
 
 /**
- * Resolve the full N-seat panel using deterministic collision re-roll.
- * Returns SeatMembership[] with the correct `retries` embedded per seat.
+ * Resolve the full N-seat panel for `roundIdx` using deterministic collision
+ * re-roll. Returns SeatMembership[] with the correct `retries` per seat.
  */
 export async function resolveDistinctPanel(
   fx: DrawFixture,
   armed: ArmedDispute,
+  roundIdx = 0,
+  seats: number = panelSizeForRound(roundIdx) ?? PANEL_SIZE,
 ): Promise<SeatMembership[]> {
   const { tree, jurorPdaByHex } = fx;
   const memberships: SeatMembership[] = [];
   const drawnJurors: Uint8Array[] = [];
 
-  for (let seat = 0; seat < PANEL_SIZE; seat++) {
+  for (let seat = 0; seat < seats; seat++) {
     const resolved = await resolveSeat(
       COMMITTED_VRF,
       armed.disputeBytes,
-      0,
+      roundIdx,
       seat,
       tree.tree,
       drawnJurors,
@@ -463,14 +466,15 @@ export async function submitDraw(
   fx: DrawFixture,
   armed: ArmedDispute,
   memberships: SeatMembership[],
+  roundIdx = 0,
 ): Promise<Address> {
   const { env } = fx;
   const [roundPda] = await findRoundPda({
     dispute: armed.dispute,
-    roundIdx: 0,
+    roundIdx,
   });
-  const payerSdk = payerAccord(env);
 
+  const payerSdk = payerAccord(env);
   for (let seat = 0; seat < memberships.length; seat++) {
     const m = memberships[seat]!;
     const ix = drawSeat(
@@ -594,6 +598,7 @@ export async function finalizeDisputeAfterAppealWindow(
   roundPda: Address,
   jurorStakeAccounts: Address[],
   appealWindowSecs: bigint,
+  extraRemainingAccounts: Address[] = [],
 ): Promise<void> {
   const { env, subaccord } = fx;
   const round = await readRound(env, roundPda);
@@ -608,16 +613,52 @@ export async function finalizeDisputeAfterAppealWindow(
         dispute: armed.dispute,
         round: roundPda,
       },
-      jurorStakeAccounts, // remaining_accounts: the drawn JurorStake PDAs (0 appeals)
+      [...jurorStakeAccounts, ...extraRemainingAccounts],
     ),
   );
 }
 
+export interface DrivenRound {
+  roundPda: Address;
+  jurorStakeAccounts: Address[];
+  memberships: SeatMembership[];
+}
+
 /**
- * Drive one dispute all the way to Final: draw → commit → reveal →
- * finalize_round → (no appeal) warp appeal window → finalize_dispute.
- * Returns the round PDA. `appealWindowSecs` should match the subaccord's
- * `appeal_window`.
+ * Draw + commit + reveal + finalize_round for ONE round (`roundIdx`): the
+ * granular composite the appeal ladder drives per round. Panel size follows
+ * `panelSizeForRound(roundIdx)` (round 0 = 3, first appeal = 7, …).
+ */
+export async function driveRound(
+  fx: DrawFixture,
+  armed: ArmedDispute,
+  votes: bigint[],
+  roundIdx = 0,
+): Promise<DrivenRound> {
+  // Every round's draw_seat selects against the once-frozen root; re-injecting
+  // the same (VRF, root, total) before each round is idempotent.
+  await injectCommittedVrf(
+    fx.env,
+    armed.dispute,
+    COMMITTED_VRF,
+    fx.tree.rootHash,
+    fx.tree.totalStake,
+  );
+  const memberships = await resolveDistinctPanel(fx, armed, roundIdx);
+  const jurorStakeAccounts = jurorStakeAccountsFor(fx, memberships);
+  const roundPda = await submitDraw(fx, armed, memberships, roundIdx);
+  const drawnJurors = drawnJurorsFor(fx, memberships);
+  const salts = memberships.map(() => crypto.getRandomValues(new Uint8Array(32)));
+  await commitAll(fx, armed, roundPda, drawnJurors, votes, salts);
+  await revealAll(fx, armed, roundPda, drawnJurors, votes, salts);
+  await finalizeRoundOnly(fx, armed, roundPda, jurorStakeAccounts);
+  return { roundPda, jurorStakeAccounts, memberships };
+}
+
+/**
+ * Drive one dispute all the way to Final with NO appeal: round 0 →
+ * appeal-window warp → finalize_dispute. Returns the round PDA.
+ * `appealWindowSecs` should match the subaccord's `appeal_window`.
  */
 export async function driveDisputeToFinal(
   fx: DrawFixture,
@@ -625,17 +666,15 @@ export async function driveDisputeToFinal(
   votes: bigint[],
   appealWindowSecs: bigint,
 ): Promise<Address> {
-  const memberships = await resolveDistinctPanel(fx, armed);
-  const jurorStakeAccounts = jurorStakeAccountsFor(fx, memberships);
-  const roundPda = await submitDraw(fx, armed, memberships);
-  const drawnJurors = drawnJurorsFor(fx, memberships);
-  const salts = memberships.map(() => crypto.getRandomValues(new Uint8Array(32)));
-
-  await commitAll(fx, armed, roundPda, drawnJurors, votes, salts);
-  await revealAll(fx, armed, roundPda, drawnJurors, votes, salts);
-  await finalizeRoundOnly(fx, armed, roundPda, jurorStakeAccounts);
-  await finalizeDisputeAfterAppealWindow(fx, armed, roundPda, jurorStakeAccounts, appealWindowSecs);
-  return roundPda;
+  const r0 = await driveRound(fx, armed, votes);
+  await finalizeDisputeAfterAppealWindow(
+    fx,
+    armed,
+    r0.roundPda,
+    r0.jurorStakeAccounts,
+    appealWindowSecs,
+  );
+  return r0.roundPda;
 }
 
 // ---------------------------------------------------------------------------

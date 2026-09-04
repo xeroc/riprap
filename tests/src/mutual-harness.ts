@@ -26,23 +26,15 @@ import {
   type ArmedDispute,
   addressBytes,
   armMutualJurors,
-  COMMITTED_VRF,
-  commitAll,
   type DrawFixture,
-  drawnJurorsFor,
+  driveRound,
   ensurePause,
   finalizeDisputeAfterAppealWindow,
-  finalizeRoundOnly,
-  jurorStakeAccountsFor,
-  resolveDistinctPanel,
-  revealAll,
-  submitDraw,
 } from "./draw-harness.js";
 import { readClock } from "./setup/cheats.js";
 import { fundSigner, type TestEnv } from "./setup/env.js";
 import { randomBytes32 } from "./setup/fixtures.js";
 import { ataOf, createMint, setTokenBalance } from "./setup/tokens.js";
-import { injectCommittedVrf } from "./setup/vrf.js";
 
 /** hanse SUBACCORD_DEPTH (initialize_mutual.rs) — 2^12 leaves; depth-20
  * proofs bust the 1232-B tx budget (see the program comment). */
@@ -59,6 +51,9 @@ export interface MutualCohortOptions {
   /** Tier index for every member (uniform cohort keeps the residual math
    * cleanly dividing). Default 1 = Standard. */
   tier?: number;
+  /** Members staked as jurors (the LAST n of the cohort). Spec d's appeal
+   * ladder needs 7 seats on round 1 — stake 8 for margin. Default 3. */
+  nJurors?: number;
 }
 
 export interface MutualFixture {
@@ -192,9 +187,8 @@ export async function setupMutualCohort(
     members.push(signer);
     memberAtas.push(ownerAta);
   }
-
+  const jurorSigners = members.slice(-(opts.nJurors ?? 3));
   const accordState = await ensurePause(env);
-  const jurorSigners = members.slice(-3);
   const core = await armMutualJurors(
     env,
     accordState,
@@ -309,26 +303,12 @@ export async function driveDispute(
   filed: FiledClaim,
   votes: bigint[],
 ): Promise<void> {
-  await injectCommittedVrf(
-    fx.env,
-    filed.dispute,
-    COMMITTED_VRF,
-    fx.fx.tree.rootHash,
-    fx.fx.tree.totalStake,
-  );
-  const memberships = await resolveDistinctPanel(fx.fx, filed);
-  const jurorStakeAccounts = jurorStakeAccountsFor(fx.fx, memberships);
-  const roundPda = await submitDraw(fx.fx, filed, memberships);
-  const drawn = drawnJurorsFor(fx.fx, memberships);
-  const salts = memberships.map(() => crypto.getRandomValues(new Uint8Array(32)));
-  await commitAll(fx.fx, filed, roundPda, drawn, votes, salts);
-  await revealAll(fx.fx, filed, roundPda, drawn, votes, salts);
-  await finalizeRoundOnly(fx.fx, filed, roundPda, jurorStakeAccounts);
+  const r0 = await driveRound(fx.fx, filed, votes); // injects the VRF, draws, votes
   await finalizeDisputeAfterAppealWindow(
     fx.fx,
     filed,
-    roundPda,
-    jurorStakeAccounts,
+    r0.roundPda,
+    r0.jurorStakeAccounts,
     3_600n, // appeal_window configured by setupMutualCohort
   );
 }
