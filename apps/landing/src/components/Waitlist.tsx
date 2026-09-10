@@ -46,7 +46,7 @@ export function Waitlist() {
           className="w-full flex-1 font-mono"
         />
         <Button type="submit" disabled={sending} className="shrink-0">
-          Join the waitlist
+          Count me in
         </Button>
       </div>
       <p

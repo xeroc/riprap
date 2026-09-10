@@ -3,9 +3,11 @@ import { HexBackdrop, Logomark, SectionBand, StampBadge } from "@riprap/ui";
 import { Settle } from "../components/Settle";
 import { Waitlist } from "../components/Waitlist";
 
-// §1 — Settled hero. Platform one-liner + the waitlist; the first pool rides
-// along as a stamp, not the headline (platform leads, instance second).
-// Left-biased editorial: copy column + the mark assembling beside it, centered.
+// §1 — Settled hero, the chip-in (2026-09-05): the family ritual carries the
+// mechanism — everybody chips in, whoever gets hurt gets taken care of, the
+// rest comes back. "Mutual" is retired from headline duty (messaging guide);
+// the first pool rides along as a stamp, not the headline. Left-biased
+// editorial: copy column + the mark assembling beside it, centered.
 export function Hero() {
   return (
     <div className="relative">
@@ -21,19 +23,20 @@ export function Hero() {
           <div className="flex flex-col gap-(--riprap-space-lg)">
             <Settle>
               <p className="uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
-                Event mutuals on Solana
+                Peer-to-peer risk pools on Solana
               </p>
             </Settle>
             <Settle delay={60}>
               <h1 className="max-w-3xl tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-md)] sm:[font:var(--riprap-display-xl)] lg:[font:var(--riprap-display-mega)]">
-                Any event. Any narrow peril. One finite pool.
+                Communication went peer-to-peer. Risk can too.
               </h1>
             </Settle>
             <Settle delay={120}>
               <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                Members pay a fixed entry fee into one pool against one peril, for one event. Peer
-                jurors adjudicate claims, unused funds return pro-rata, the pool dissolves. Your
-                worst case is the entry fee. The pool's worst case is empty.
+                Riprap pools risk the way the internet moved messages: members chip in, drawn peers
+                adjudicate claims, payouts come straight from the shared pot. Whatever goes
+                unclaimed comes back, and when the pool's job is done it dissolves — nothing left
+                for anyone to capture.
               </p>
             </Settle>
             <Settle delay={180} className="pt-(--riprap-space-sm)">
@@ -42,7 +45,7 @@ export function Hero() {
             <Settle delay={240}>
               <div className="flex flex-wrap items-center gap-3 pt-(--riprap-space-sm)">
                 <a
-                  href="/breakpoint-2026"
+                  href="/2026-breakpoint-blade-pool"
                   aria-label="Blade Pool at Breakpoint 2026 — policy and participation"
                   className="outline-none transition-opacity duration-[160ms] ease-out hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring"
                 >

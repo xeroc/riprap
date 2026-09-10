@@ -1,4 +1,4 @@
-// /breakpoint-2026 — the pool page: offer hero + the full policy fineprint.
+// /2026-breakpoint-blade-pool — the pool page: offer hero + the full policy fineprint.
 // Slim nav (back to the platform page) and the standard footer for wayfinding.
 import { LogoLockup, TopNav } from "@riprap/ui";
 import { RouteHead } from "../components/RouteHead";
@@ -12,21 +12,21 @@ import { PoolHero } from "../sections/pool/PoolHero";
 const BREAKPOINT_HEAD = {
   title: "Riprap: Blade Pool @ Breakpoint 2026",
   description:
-    "A one-time mutual for Breakpoint 2026, Olympia, London, 15-17 November. Entry $10/$20/$40; payouts capped at $1,000/$2,000/$4,000; unused funds return pro-rata.",
-  path: "/breakpoint-2026",
+    "A one-shot pool for Breakpoint 2026, Olympia, London, 15-17 November. Entry $10/$20/$40; payouts capped at $1,000/$2,000/$4,000; unused funds return pro-rata.",
+  path: "/2026-breakpoint-blade-pool",
   jsonLd: [
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "@id": "https://riprap.xyz/breakpoint-2026#webpage",
-      url: "https://riprap.xyz/breakpoint-2026",
+      "@id": "https://riprap.xyz/2026-breakpoint-blade-pool#webpage",
+      url: "https://riprap.xyz/2026-breakpoint-blade-pool",
       name: "Riprap: Blade Pool @ Breakpoint 2026",
-      about: { "@id": "https://riprap.xyz/breakpoint-2026#event" },
+      about: { "@id": "https://riprap.xyz/2026-breakpoint-blade-pool#event" },
     },
     {
       "@context": "https://schema.org",
       "@type": "Event",
-      "@id": "https://riprap.xyz/breakpoint-2026#event",
+      "@id": "https://riprap.xyz/2026-breakpoint-blade-pool#event",
       name: "Breakpoint 2026",
       startDate: "2026-11-15",
       endDate: "2026-11-17",

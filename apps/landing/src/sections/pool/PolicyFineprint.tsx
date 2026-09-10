@@ -1,4 +1,4 @@
-// /breakpoint-2026 — the policy, in full, as the page's fineprint: every
+// /2026-breakpoint-blade-pool — the policy, in full, as the page's fineprint: every
 // category of "Micro Mutual — Knife Assault - Policy.md" rendered clearly in
 // small type below the offer. Copy is verbatim or lightly compressed from the
 // doc; numbers keep their § provenance in comments. The tier table is bound
@@ -234,6 +234,9 @@ export function PolicyFineprint() {
         <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
           The fineprint, in full.
         </h2>
+        <p className="text-muted-soft [font:var(--riprap-mono-label)]">
+          The comedy stops here. The policy is real.
+        </p>
         <div className="grid gap-4 md:grid-cols-2" data-slot="policy-sections">
           {SECTIONS.map((s) => (
             <Card key={s.n} data-slot="policy-section" className="gap-3 p-6">

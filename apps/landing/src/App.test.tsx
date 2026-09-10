@@ -9,7 +9,7 @@ describe("landing", () => {
   it("renders the approved hero headline as the single h1", () => {
     render(<App />);
     const h1 = screen.getByRole("heading", { level: 1 });
-    expect(h1.textContent).toBe("Any event. Any narrow peril. One finite pool.");
+    expect(h1.textContent).toBe("Communication went peer-to-peer. Risk can too.");
   });
 
   it("explains the six lifecycle steps in order — guarantees folded in", () => {
@@ -87,7 +87,7 @@ describe("landing", () => {
       expect(
         href?.startsWith("#") ||
           href === "/" ||
-          href === "/breakpoint-2026" ||
+          href === "/2026-breakpoint-blade-pool" ||
           href === "https://x.com/riprapxyz" ||
           href === "https://github.com/xeroc/riprap",
       ).toBe(true);
