@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "golden-circle-purpose": {
+      "source": "mike-coulbourn/claude-vibes",
+      "sourceType": "github",
+      "skillPath": "plugins/vibes/skills/golden-circle-purpose/SKILL.md",
+      "computedHash": "62d693fe109b0ff216c13b4b6e06e4f742af2745f9084e96f03949376160ce05"
+    }
+  }
+}
