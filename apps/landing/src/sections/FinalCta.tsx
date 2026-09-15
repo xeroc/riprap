@@ -11,7 +11,7 @@ export function FinalCta() {
       <Settle className="mx-auto flex max-w-2xl flex-col items-center gap-(--riprap-space-xl)">
         <div className="flex flex-col gap-4">
           <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-xl)]">
-            Cap your worst weekend.
+            Cap your worst case.
           </h2>
           <p className="text-muted-foreground [font:var(--riprap-body-md)]">
             One email when the first pool opens. That's the whole list.

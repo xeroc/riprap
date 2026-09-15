@@ -5,11 +5,11 @@ import { HexBackdrop, Logomark, SectionBand } from "@riprap/ui";
 import { Settle } from "../components/Settle";
 import { Waitlist } from "../components/Waitlist";
 
-// §1 — Settled hero, the chip-in (2026-09-05): the family ritual carries the
-// mechanism — everybody chips in, whoever gets hurt gets taken care of, the
-// rest comes back. "Mutual" is retired from headline duty (messaging guide);
-// the first pool rides along as a stamp, not the headline. Left-biased
-// editorial: copy column + the mark assembling beside it, centered.
+// §1 — Settled hero (2026-09-15 line set, messaging guide): the thesis names
+// the category shift, the subhead opens with the member one-liner, then the
+// mechanism sentence. Plain-words law: no "mutual" in the hero or taglines;
+// the lineage section keeps the historical word. Left-biased editorial:
+// copy column + the mark assembling beside it, centered.
 export function Hero() {
   return (
     <div className="relative">
@@ -31,14 +31,14 @@ export function Hero() {
             <Settle delay={60}>
               <h1 className="max-w-3xl tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-md)] sm:[font:var(--riprap-display-xl)] lg:[font:var(--riprap-display-mega)]">
                 Finance went P2P. <br />
-                Mutuals can too.
+                Risk Cover can too.
               </h1>
             </Settle>
             <Settle delay={120}>
               <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                Riprap is peer-to-peer risk pooling on Solana: members chip in, drawn peers
-                adjudicate claims, payouts come from the shared pool, and whatever goes unclaimed
-                comes back before the pool dissolves.
+                Your group's got you covered. Riprap is peer-to-peer cover on Solana: any group can
+                start a pool — chip in, define what's covered, drawn peers settle claims, the money
+                stays the group's.
               </p>
             </Settle>
             <Settle delay={180} className="pt-(--riprap-space-sm)">

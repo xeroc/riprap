@@ -26,7 +26,7 @@ describe("/2026-breakpoint-blade-pool — the pool page", () => {
   it("the platform landing still renders at / (naming lock intact)", () => {
     render(<App />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
-      "Finance went P2P. Mutuals can too.",
+      "Finance went P2P. Risk Cover can too.",
     );
     expect(document.body.textContent).not.toMatch(/knife assault/i);
   });

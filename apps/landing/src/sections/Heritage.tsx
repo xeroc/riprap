@@ -16,11 +16,8 @@ const lineage = [
     body: (
       <>
         A mutual of strangers needs a treasurer everyone trusts and a judge for the subjective
-        claims. Off-chain, those two roles mean an institution: the fixed cost a{" "}
-        <span data-num className="font-mono text-ink">
-          $20
-        </span>{" "}
-        entry fee can't carry.
+        claims. Off-chain, those two roles mean an institution: the fixed cost a small pooled
+        contribution can't carry.
       </>
     ),
   },

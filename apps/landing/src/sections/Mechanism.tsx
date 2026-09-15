@@ -10,12 +10,12 @@ const STEPS = [
   {
     n: "01",
     h: "One more member.",
-    p: "Anyone joins while the window is open — the ring keeps an empty slot. Each member picks a tier; the tier writes the payout ceiling before anything happens.",
+    p: "Anyone joins while membership is open — the ring keeps an empty slot. The pool's terms — what's covered, what it pays — are written at founding, before anything happens.",
   },
   {
     n: "02",
     h: "Money gathers.",
-    p: "Members pay one fixed entry fee into one pool against one peril, for one event. A pool is a program, not a company — it holds USDC and nothing else.",
+    p: "Members pay in on the pool's own terms — one pool, one defined risk. A pool is a program, not a company — it holds USDC and nothing else.",
   },
   {
     n: "03",
@@ -25,7 +25,7 @@ const STEPS = [
   {
     n: "04",
     h: "A claim is paid.",
-    p: "An incident inside the window, evidence attached, the jury rules. An approved claim pays up to the tier cap. Payouts are capped twice — by the tier and by the pool's balance — so the mutual can never pay more than it holds, because there is nothing else to hold.",
+    p: "An incident covered by the terms, evidence attached, the jury rules. An approved claim pays what the terms promise — never more than the pool holds, because there is nothing else to hold.",
   },
   {
     n: "05",
