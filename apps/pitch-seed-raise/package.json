@@ -1,0 +1,28 @@
+{
+  "name": "@riprap/pitch-seed-raise",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Seed-raise deck (meta/PITCH.md) \u2014 10 slides on the shared HexBackdrop, @riprap/ui tokens throughout.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "biome check src"
+  },
+  "dependencies": {
+    "@riprap/ui": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2",
+    "@types/node": "^24.13.3"
+  }
+}

@@ -1,0 +1,144 @@
+/*
+ * @riprap/pitch-seed-raise — deck styles.
+ *
+ * Tokens, fonts, theme: @riprap/ui. This file owns the Tailwind wiring and
+ * the deck's own motion — every entrance on the settle curve (DESIGN.md:
+ * settle, not slide; no bounce), paced for presentation rather than hover:
+ * 360ms slide entrances, 280ms content rises, 40ms staggers.
+ */
+
+@import "tailwindcss";
+@import "@riprap/ui/theme.css";
+
+/* Utilities living in packages/ui source must be discovered by the app build. */
+@source "../../../packages/ui/src";
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--riprap-canvas);
+  color: var(--riprap-body);
+  font-family: var(--riprap-font-prose);
+  overflow: hidden;
+}
+
+::selection {
+  background-color: var(--riprap-accent);
+  color: var(--riprap-canvas);
+}
+
+/* ---- slide transitions (settle curve, deck pacing) ---------------------- */
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.slide {
+  animation: slide-in 360ms var(--riprap-settle-easing, cubic-bezier(0.215, 0.61, 0.355, 1)) both;
+}
+
+/* staggered content: each direct child of [data-rise] settles in turn */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+[data-rise] > * {
+  animation: rise-in 280ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+}
+
+[data-rise] > *:nth-child(1) {
+  animation-delay: 80ms;
+}
+
+[data-rise] > *:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+[data-rise] > *:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+[data-rise] > *:nth-child(4) {
+  animation-delay: 200ms;
+}
+
+[data-rise] > *:nth-child(5) {
+  animation-delay: 240ms;
+}
+
+[data-rise] > *:nth-child(6) {
+  animation-delay: 280ms;
+}
+
+/* the leaving slide fades out under the entering one */
+@keyframes slide-out {
+  to {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+
+.slide-exit {
+  animation: slide-out 200ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+}
+
+/* ---- the team achievement wall ------------------------------------------- */
+
+/* two stacked copies translate up by exactly one copy (50%) — seamless loop */
+@keyframes kudos-scroll {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.kudos-track {
+  animation: kudos-scroll 60s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html .slide,
+  html .slide-exit,
+  html [data-rise] > *,
+  html .kudos-track {
+    animation: none;
+  }
+}
+
+/* ---- field mistakes carousel --------------------------------------------- */
+
+/* the 2020–22 autopsy on the field slide: two copies of the card row
+ * translate left by exactly one copy (50%) for a seamless loop — cards
+ * carry their spacing as margin-right so the half is exact */
+@keyframes mistakes-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.mistakes-track {
+  animation: mistakes-scroll 38s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide,
+  .slide-exit,
+  [data-rise] > *,
+  .kudos-track,
+  .mistakes-track {
+    animation: none !important;
+  }
+}
