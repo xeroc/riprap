@@ -1,6 +1,6 @@
-# Riprap — Frontend Monorepo
+# Riprap — Monorepo
 
-Riprap is a platform for **event-scoped mutual protection pools** on Solana: one pool, one narrowly defined peril, one finite event. Members pay a fixed entry fee, peer jurors adjudicate claims, unused funds return pro-rata, and the pool dissolves. This monorepo holds the frontend assets: the illustration primitive kit (`@riprap/ui`) and the static landing page (`@riprap/landing`). Project rationale lives in [`meta/PROJECT.md`](meta/PROJECT.md); the first deployment is **Riprap: Blade Pool @ Breakpoint 2026** (15–17 November 2026, Olympia Convention Centre, London).
+Riprap is a protocol for **mutuals on Solana** — permissionless protection pools: anyone can create one, on any terms and for any lifetime. Members fund a pool, peer jurors adjudicate claims, and the money stays the group's; a mutual may be finite (a defined window, then settlement) or ongoing (members liquidate or withdraw when they choose). Events are the pilot's shape, not the protocol's: the first deployment is **Riprap: Blade Pool @ Breakpoint 2026** (15–17 November 2026, Olympia Convention Centre, London). This monorepo holds the illustration primitive kit (`@riprap/ui`), the static landing page (`@riprap/landing`), and the on-chain pool program (`programs/pool` + its generated client `@riprap/pool`). Project rationale lives in [`meta/PROJECT.md`](meta/PROJECT.md).
 
 ## Key Features
 

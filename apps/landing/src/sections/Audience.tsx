@@ -13,14 +13,14 @@ export function Audience() {
 
         <div className="flex max-w-2xl flex-col gap-4">
           <p className="leading-relaxed text-body [font:var(--riprap-body-md)]">
-            The person going to the event, wallet in pocket. Twenty dollars caps the worst weekend
-            at a written peril, a written payout ceiling, and a written end date, and most of it
-            comes back when the event is quiet.
+            Any group with a risk the fixed-cost sector won't sell — farmers, fishers, crews, clubs,
+            a cohort at an event. The terms are written at founding: what's covered, what it pays,
+            when it ends. The money stays the group's.
           </p>
           <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
-            Behind them: the <span className="text-ink">Sponsor</span> (founds a pool at their
-            event) and the <span className="text-ink">Jurors</span> (staked members who adjudicate
-            and earn by being honest).
+            Behind them: the <span className="text-ink">Sponsor</span> (founds the pool) and the{" "}
+            <span className="text-ink">Jurors</span> (staked members who adjudicate and earn by
+            being honest).
           </p>
         </div>
       </Settle>

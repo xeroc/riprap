@@ -68,7 +68,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
   <text class="mono" x="96" y="208" font-size="21" letter-spacing="4.5" fill="#3e7ca6">RISK POOLS ON SOLANA</text>
   <text x="94" y="330" font-size="122" font-weight="600" fill="#f2efe8">Riprap</text>
   <text x="96" y="396" font-size="30" fill="#c9cdd1">Finance went P2P.</text>
-  <text x="96" y="438" font-size="30" fill="#c9cdd1">Mutuals can too.</text>
+  <text x="96" y="438" font-size="30" fill="#c9cdd1">Risk Cover can too.</text>
   <text class="mono" x="96" y="530" font-size="20" fill="#8a9096">riprap.xyz</text>
 ${stones.join("\n")}
 </svg>

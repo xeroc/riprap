@@ -9,7 +9,7 @@ describe("landing", () => {
   it("renders the approved hero headline as the single h1", () => {
     render(<App />);
     const h1 = screen.getByRole("heading", { level: 1 });
-    expect(h1.textContent).toBe("Finance went P2P. Mutuals can too.");
+    expect(h1.textContent).toBe("Finance went P2P. Risk Cover can too.");
   });
 
   it("explains the five lifecycle steps in order — guarantees folded in", () => {

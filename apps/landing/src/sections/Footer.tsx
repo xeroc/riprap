@@ -11,7 +11,7 @@ export function Footer() {
           <LogoLockup size={22} />
         </a>
       }
-      tagline="Event mutuals on Solana. One pool, one peril, one event. Then it's gone."
+      tagline="Mutuals as a protocol on Solana. Any group, any terms, any lifetime."
       columns={[
         {
           heading: "page",
