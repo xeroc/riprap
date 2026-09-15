@@ -120,8 +120,6 @@ export function HexBackdrop({
     }
   }
 
-  const maxBand = Math.max(...bands.keys());
-
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
@@ -140,7 +138,7 @@ export function HexBackdrop({
             fill="none"
             stroke="var(--riprap-hairline-soft)"
             strokeWidth={1}
-            opacity={0.7 * (b / maxBand > 0.82 ? 0.4 : 1)}
+            opacity={0.3}
           />
         ))}
       {/* 2 — breathers: slow in/out, desynchronized from a random phase;
@@ -157,12 +155,12 @@ export function HexBackdrop({
             reduced
               ? { duration: 0 }
               : {
-                  duration: c.duration,
-                  delay: -c.phase,
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  ease: "easeInOut",
-                }
+                duration: c.duration,
+                delay: -c.phase,
+                repeat: Infinity,
+                repeatType: "loop",
+                ease: "easeInOut",
+              }
           }
         />
       ))}
