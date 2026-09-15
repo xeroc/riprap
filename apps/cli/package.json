@@ -19,11 +19,13 @@
   "dependencies": {
     "@oclif/core": "^4.2.0",
     "@oclif/plugin-help": "^6.2.0",
-    "@solana/kit": "^7.0.0"
+    "@solana/kit": "^7.0.0",
+    "@useaccord/sdk": "0.1.0"
   },
   "devDependencies": {
     "@noble/curves": "^1.9.7",
     "@riprap/pool": "workspace:*",
+    "@riprap/hanse": "workspace:*",
     "@types/node": "^24.13.3",
     "ts-node": "^10.9.2",
     "tsup": "^8.3.0",

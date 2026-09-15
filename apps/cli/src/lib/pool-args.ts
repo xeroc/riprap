@@ -18,8 +18,8 @@ export function trackFromName(name: string): Track {
   return track;
 }
 
-/** Parse a non-negative decimal integer that must fit `maxBits` (u64/u128). */
-export function toBigInt(label: string, raw: string, maxBits: 64 | 128): bigint {
+/** Parse a non-negative decimal integer that must fit `maxBits` (u16/u64/u128). */
+export function toBigInt(label: string, raw: string, maxBits: 16 | 64 | 128): bigint {
   let value: bigint;
   try {
     value = BigInt(raw);

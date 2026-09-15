@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { findPoolPda as poolFindPoolPda } from "@riprap/pool";
 import {
   type Address,
@@ -14,9 +16,11 @@ import {
   findFeeFloatPda,
   findMemberAccountPda,
   findMutualPda,
+  findMutualSubaccordPda,
   findOwnershipAuthorityPda,
   findPoolPda,
   findRightsAuthorityPda,
+  subaccordDomainRef,
 } from "./pdas";
 
 const PROGRAM = HANSE_PROGRAM_ADDRESS;
@@ -153,6 +157,39 @@ describe("findFeeFloatPda", () => {
       getAddressEncoder().encode(MINT),
     ]);
     expect(feeFloat).toBe(manual);
+  });
+});
+
+describe("subaccordDomainRef + findMutualSubaccordPda", () => {
+  const POLICY = new Uint8Array(32).fill(0xab);
+
+  test("domain_ref = sha256('hanse:subaccord' ‖ seed_le ‖ policy_hash) (initialize_mutual.rs)", () => {
+    // Independent implementation: node:crypto must agree with @noble/hashes.
+    const seed = 719n;
+    const h = createHash("sha256");
+    h.update("hanse:subaccord");
+    h.update(new Uint8Array(new BigInt64Array([seed]).buffer));
+    h.update(POLICY);
+    expect(Buffer.from(subaccordDomainRef(seed, POLICY)).toString("hex")).toBe(h.digest("hex"));
+  });
+
+  test("domain_ref is sensitive to seed and policy_hash (§: policy change ⇒ new subaccord)", () => {
+    const base = Buffer.from(subaccordDomainRef(1n, POLICY)).toString("hex");
+    const otherPolicy = Buffer.from(subaccordDomainRef(1n, new Uint8Array(32).fill(0xcd))).toString(
+      "hex",
+    );
+    expect(otherPolicy).not.toBe(base);
+  });
+
+  test("PDA = ['subaccord', creator, domain_ref] under the accord program", async () => {
+    const creator = OWNER;
+    const [subaccord] = await findMutualSubaccordPda({ creator, seed: 1n, policyHash: POLICY });
+    const [manual] = await pda("cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed" as Address, [
+      new TextEncoder().encode("subaccord"),
+      getAddressEncoder().encode(creator),
+      subaccordDomainRef(1n, POLICY),
+    ]);
+    expect(subaccord).toBe(manual);
   });
 });
 
