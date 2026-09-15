@@ -1,6 +1,6 @@
-# Riprap — Frontend Monorepo
+# Riprap — Monorepo
 
-Riprap is a platform for **event-scoped mutual protection pools** on Solana: one pool, one narrowly defined peril, one finite event. Members pay a fixed entry fee, peer jurors adjudicate claims, unused funds return pro-rata, and the pool dissolves. This monorepo holds the frontend assets: the illustration primitive kit (`@riprap/ui`) and the static landing page (`@riprap/landing`). Project rationale lives in [`meta/PROJECT.md`](meta/PROJECT.md); the first deployment is **Riprap: Blade Pool @ Breakpoint 2026** (15–17 November 2026, Olympia Convention Centre, London).
+Riprap is a platform for **event-scoped mutual protection pools** on Solana: one pool, one narrowly defined peril, one finite event. Members pay a fixed entry fee, peer jurors adjudicate claims, unused funds return pro-rata, and the pool dissolves. This monorepo holds the frontend (`packages/ui` — the illustration kit; `apps/landing` — the static site), the on-chain half (`programs/pool` — the generic three-track mutual-pool primitive; `programs/hanse` — the event-mutual orchestrator implementing [`meta/specs/EVENT-MUTUAL.md`](meta/specs/EVENT-MUTUAL.md); generated Codama clients `@riprap/pool` / `@riprap/hanse`), the operator CLI (`apps/cli` — `riprap`), and the jest e2e suite (`tests/` — `@riprap/tests`, Surfpool). Project rationale lives in [`meta/PROJECT.md`](meta/PROJECT.md); the first deployment is **Riprap: Blade Pool @ Breakpoint 2026** (15–17 November 2026, Olympia Convention Centre, London).
 
 ## Key Features
 
@@ -8,6 +8,8 @@ Riprap is a platform for **event-scoped mutual protection pools** on Solana: one
 - **`apps/landing`** — static Vite + React landing page built from the approved copy in [`meta/marketing/03-website-copy/landing-page.md`](meta/marketing/03-website-copy/landing-page.md), consuming the UI kit.
 - **One design system** — semantic color tokens (`funds` = money, `deliberation` = adjudication, `peril` = the peril), one stroke width (3), one radius (12), 8px grid, no gradients.
 - **Data law** — every number rendered by a component is either doc-sourced or an explicit `{{PARAM}}` placeholder. Components never invent figures.
+- **`programs/pool` + `programs/hanse`** — the on-chain half: a generic three-track mutual-pool primitive and the bounded-lifetime event mutual built on it, each with a Codama-generated TypeScript client (`@riprap/pool`, `@riprap/hanse`) and LiteSVM test suites.
+- **`apps/cli` + `tests/`** — the `riprap` operator CLI (single-signer; `hanse:claim-payout` co-signs with the mutual authority — see [`apps/cli/README.md`](apps/cli/README.md)) and the jest e2e suite against a Surfpool surfnet (specs skip cleanly with no validator reachable).
 
 ## Table of Contents
 
@@ -32,6 +34,7 @@ Riprap is a platform for **event-scoped mutual protection pools** on Solana: one
 - **Test**: Vitest + @testing-library/react (jsdom)
 - **Lint/format**: Biome 2.x (single root config, CSS parser with Tailwind directives enabled)
 - **Build**: Vite (app build for the landing, lib build for the ui package)
+- **On-chain**: Rust 1.89 + Anchor 1.0.2 (`programs/`), Codama-generated clients (`packages/pool`, `packages/hanse`), LiteSVM unit tests, jest e2e on Surfpool
 
 ## Prerequisites
 
@@ -39,9 +42,11 @@ Riprap is a platform for **event-scoped mutual protection pools** on Solana: one
 - pnpm 11 or higher (`corepack enable` or `npm i -g pnpm`)
 - Git
 - A browser (for Storybook and the landing dev server)
+- Rust 1.89.0 (pinned in `rust-toolchain.toml`) and Anchor CLI 1.0.2 (`avm`) — required by the `anchor build` / `cargo test` legs of `pnpm verify`
+- For a live e2e run only: a built sibling checkout of the accord repo (see [Testing](#testing))
 
 > [!NOTE]
-> No database, no API keys, no environment variables are needed for local development. This is a static-frontend monorepo.
+> No database, no API keys. The frontend runs with zero configuration; the CLI and the e2e suite take optional `RIPRAP_*` environment variables with localnet defaults (see [Environment Variables](#environment-variables)).
 
 ## Getting Started
 
@@ -61,13 +66,12 @@ pnpm 11 blocks dependency postinstall scripts by default; this repo already allo
 pnpm verify
 ```
 
-This runs, in order: `pnpm -r run build` → `pnpm lint` → `pnpm -r run test`. On a fresh clone it finishes in under a minute and must exit 0.
+This runs, in order: `pnpm -r run build` → `pnpm lint` → `pnpm -r run test` → `anchor build` → `cargo test` — exactly the `verify` script in [`package.json`](package.json). The jest e2e lane inside the test leg skips itself when no validator is reachable, so the gate stays green on a fresh clone. The first Rust build takes a while and is cached under `target/` from then on. It must exit 0.
 
-Expected tail:
+Expected tail (final leg, `cargo test`):
 
 ```
-Test Files  X passed (X)
-     Tests  X passed (X)
+test result: ok. X passed; 0 failed; 0 ignored; 0 measured; X filtered out
 ```
 
 ### 3. Start developing
@@ -92,35 +96,44 @@ Both hot-reload. The landing imports `@riprap/ui` through the workspace link, so
 ```
 riprap/
 ├── apps/
-│   └── landing/                 # @riprap/landing — static Vite + React site
+│   ├── cli/                    # @riprap/cli — `riprap` operator CLI (oclif v4) over @riprap/pool + @riprap/hanse
+│   ├── docs/                   # ADRs and fleet bean files
+│   └── landing/                # @riprap/landing — static Vite + React site
 │       ├── src/
-│       │   ├── App.tsx          # page composition (sections per the approved copy)
-│       │   ├── main.tsx         # entry
-│       │   └── index.css        # imports @riprap/ui/tokens.css + page globals
+│       │   ├── App.tsx         # page composition (sections per the approved copy)
+│       │   ├── main.tsx        # entry
+│       │   └── index.css       # imports @riprap/ui/tokens.css + page globals
 │       └── index.html
 ├── packages/
-│   └── ui/                      # @riprap/ui — the illustration primitive kit
-│       ├── src/
-│       │   ├── tokens.css       # design tokens: colors (light/dark), type scale, motion
-│       │   ├── lib/             # pure, tested logic: pool math + stone geometry
-│       │   │   ├── poolMath.ts  # TIERS, proRataShare, scaledPayout, fillHeight, usd
-│       │   │   └── stone.ts     # seeded irregular-hexagon generator (no mortar)
-│       │   ├── atoms/           # 12 atomic SVG components (g-fragments, data-bound)
-│       │   ├── scenes/          # 4 composed scenes (join, claim, end-of-event, lifecycle)
-│       │   ├── datastories/     # 5 money-math narratives (annotated frame sequences)
-│       │   ├── motion/          # 5 animated variants of atoms (motion package)
-│       │   └── index.ts         # public API — named exports only
-│       ├── .storybook/          # main.ts (globs), preview.tsx (tokens + light/dark toolbar)
-│       └── vite.config.ts       # lib build + vitest (jsdom)
-├── meta/                        # source-of-truth docs (not code)
-│   ├── PROJECT.md               # the why and the what
-│   ├── Pool Program.md          # pool mechanics design notes
-│   ├── naming.md                # naming session + locked decisions
-│   ├── Breakpoint/              # the Blade Pool policy document
-│   ├── primitives/              # the illustration spec this kit implements
-│   └── marketing/               # the approved marketing package (copy source)
-├── biome.json                   # lint + format, whole repo
-└── pnpm-workspace.yaml          # packages/*, apps/*; esbuild build approval
+│   ├── ui/                     # @riprap/ui — the illustration primitive kit
+│   │   ├── src/
+│   │   │   ├── tokens.css      # design tokens: colors (light/dark), type scale, motion
+│   │   │   ├── lib/            # pure, tested logic: pool math + stone geometry
+│   │   │   │   ├── poolMath.ts # TIERS, proRataShare, scaledPayout, fillHeight, usd
+│   │   │   │   └── stone.ts    # seeded irregular-hexagon generator (no mortar)
+│   │   │   ├── atoms/          # 12 atomic SVG components (g-fragments, data-bound)
+│   │   │   ├── scenes/         # 4 composed scenes (join, claim, end-of-event, lifecycle)
+│   │   │   ├── datastories/    # 5 money-math narratives (annotated frame sequences)
+│   │   │   ├── motion/         # 5 animated variants of atoms (motion package)
+│   │   │   └── index.ts        # public API — named exports only
+│   │   ├── .storybook/         # main.ts (globs), preview.tsx (tokens + light/dark toolbar)
+│   │   └── vite.config.ts      # lib build + vitest (jsdom)
+│   ├── pool/                   # @riprap/pool — Codama client generated from programs/pool
+│   └── hanse/                  # @riprap/hanse — Codama client generated from programs/hanse
+├── programs/
+│   ├── pool/                   # Anchor program `pool` — three-track mutual-pool primitive
+│   └── hanse/                  # Anchor program `hanse` — event mutual (meta/specs/EVENT-MUTUAL.md)
+├── tests/                      # @riprap/tests — jest e2e against a Surfpool surfnet (skips offline)
+├── meta/                       # source-of-truth docs (not code)
+│   ├── PROJECT.md              # the why and the what
+│   ├── specs/                  # protocol specs (EVENT-MUTUAL.md — the hanse contract)
+│   ├── Pool Program.md         # pool mechanics design notes
+│   ├── naming.md               # naming session + locked decisions
+│   ├── Breakpoint/             # the Blade Pool policy document
+│   ├── primitives/             # the illustration spec this kit implements
+│   └── marketing/              # the approved marketing package (copy source)
+├── biome.json                  # lint + format, whole repo
+└── pnpm-workspace.yaml         # packages/*, apps/*, tests; build-script approvals
 ```
 
 ### Data Flow
@@ -161,7 +174,17 @@ Four laws from `meta/primitives/` that the kit enforces and reviewers should che
 
 ## Environment Variables
 
-None. Both packages are static builds with no runtime configuration. Launch parameters that are still undecided (join link, round-1 juror count/fee, claims-window length) are rendered as visible `{{PARAM}}` placeholders by design — they will become real configuration only when the pool terms are published, at which point this section will grow.
+None for the frontend — both packages are static builds with no runtime configuration; the landing's one optional var is `VITE_N8N_WEBHOOK_URL` (waitlist-form webhook, see `apps/landing/.env.example`). The operator CLI and the e2e suite read optional overrides, all defaulting to localnet:
+
+| Variable | Used by | Default | Meaning |
+| --- | --- | --- | --- |
+| `RIPRAP_RPC_URL` / `RIPRAP_WS_URL` | CLI (`--rpc` / `--ws`), e2e | `http://127.0.0.1:8899` / `ws://127.0.0.1:8900` | Solana JSON-RPC / WebSocket endpoint |
+| `RIPRAP_KEYPAIR_PATH` | CLI (`--keypair`) | `ANCHOR_WALLET` → `~/.config/solana/id.json` | Signer keypair JSON |
+| `RIPRAP_PAYER_PATH` | e2e | `~/.config/solana/id.json` | e2e payer keypair |
+| `RIPRAP_SMOKE_RPC` | CLI smoke test | `http://127.0.0.1:8899` | Live-smoke endpoint; test skips when unreachable |
+| `ACCORD_SO` / `ACCORD_KEYPAIR` | e2e | `…/accord/target/deploy/` in the sibling checkout | Built accord program artifact + its keypair |
+
+Full CLI flag table (including `--commitment`, `--dry-run`, `--json`, `--quiet`): [`apps/cli/README.md`](apps/cli/README.md). Launch parameters that are still undecided are rendered as visible `{{PARAM}}` placeholders by design.
 
 ## Available Scripts
 
@@ -174,11 +197,13 @@ Run from the repo root unless noted:
 | `pnpm lint` | Biome lint + format check for the whole repo |
 | `pnpm lint:fix` | Biome with safe fixes + formatting applied |
 | `pnpm test` | Run every package's vitest suite |
-| `pnpm verify` | build → lint → test, the completion gate |
+| `pnpm verify` | build → lint → test → `anchor build` → `cargo test`, the completion gate |
 | `pnpm dev:landing` | Landing dev server (http://localhost:5173) |
 | `pnpm dev:ui` | Storybook dev server (http://localhost:6006) |
 | `pnpm --filter @riprap/ui run build-storybook` | Static Storybook build → `packages/ui/storybook-static/` |
 | `pnpm --filter @riprap/landing run preview` | Serve the built landing locally |
+| `anchor test` | Full e2e: build, start Surfpool, deploy pool + hanse, run the jest suite (`@riprap/tests`) |
+| `pnpm --filter @riprap/cli dev <cmd>` | Run the `riprap` operator CLI from TypeScript sources |
 
 ## Testing
 
@@ -187,6 +212,9 @@ Run from the repo root unless noted:
 ```bash
 # Everything (what CI / the completion gate runs)
 pnpm test
+
+# E2e lane alone (jest, Surfpool) — skips cleanly with no validator
+pnpm --filter @riprap/tests test
 
 # One package
 pnpm --filter @riprap/ui test
@@ -207,6 +235,8 @@ pnpm --filter @riprap/ui exec vitest run -t "area = money"
 - **`lib/`** — pure-function unit tests: the tier table (policy §5), pro-rata math on the worked example ($12,000 ÷ 1,000 = $12), the fail-closed payout wall (P/A scaling, cap-then-scale precedence), fill-height linearity and rim clamping, stone determinism/irregularity/grid snapping.
 - **`atoms/` + `scenes/` + `datastories/`** — render tests via @testing-library: data bindings (labels printed, fill heights, dashed-vs-solid), composition invariants (both doors labeled, rejected branch present in `ClaimFlow`, story frames carry their headline numbers).
 - **`apps/landing`** — a smoke test that the page mounts with its core sections; visual verification is done in a browser (see Storybook/landing dev servers), not snapshot tests.
+- **`tests/` (`@riprap/tests`)** — jest e2e, specs a–e against a live Surfpool surfnet: solvent to-the-cent payouts, denied claims, over-treasury scaling, the appeal ladder, and window gates. Serial by design (`surfnet_timeTravel` warps the global surfnet clock). Live-run prerequisites: `anchor test` (deploys pool + hanse) plus a built sibling accord checkout (`cd ../accord && make build`, or `ACCORD_SO`); the accord rev is pinned in `programs/hanse/Cargo.toml`. With no validator reachable, every spec skips.
+- **`apps/cli`** — vitest: help completeness and dry-run output always run; `surfpool-smoke.test.ts` goes live only when `RIPRAP_SMOKE_RPC` answers.
 
 ### Conventions
 
@@ -253,7 +283,7 @@ pnpm --filter @riprap/ui run build-storybook
 Ship as a second static site (e.g. `design.riprap.xyz` or `/design` on the same host).
 
 > [!IMPORTANT]
-> There is no CI pipeline in the repo yet. Until one exists, `pnpm verify` is the release gate — run it before every push that touches `packages/` or `apps/`.
+> There is no CI pipeline in the repo yet. Until one exists, `pnpm verify` is the release gate — run it before every push that touches `packages/`, `apps/`, `programs/`, or `tests/`.
 
 ## Troubleshooting
 
@@ -296,7 +326,15 @@ pnpm --filter @riprap/ui exec storybook dev -p 6007
 | `meta/primitives/` | The illustration spec this kit implements (atoms, composition grammar, data stories) |
 | `meta/marketing/` | The approved marketing package; landing copy lives in `03-website-copy/landing-page.md` |
 | `meta/Breakpoint/` | The Blade Pool policy document (tiers, exclusions, claims rules) |
+| `meta/specs/` | Protocol specs — `EVENT-MUTUAL.md` is the contract `programs/hanse` implements |
 | `meta/naming.md` | Naming decisions (Riprap locked, `riprap.xyz`, `@riprapxyz`) |
 | `packages/ui/` | The illustration primitive kit |
 | `apps/landing/` | The static landing page |
+| `programs/pool/` | Anchor program `pool` — the three-track mutual-pool primitive |
+| `programs/hanse/` | Anchor program `hanse` — event-mutual orchestrator (`meta/specs/EVENT-MUTUAL.md`) |
+| `packages/pool/` | `@riprap/pool` — Codama client generated from `programs/pool` |
+| `packages/hanse/` | `@riprap/hanse` — Codama client generated from `programs/hanse` |
+| `apps/cli/` | `@riprap/cli` — `riprap` operator CLI (single-signer; `hanse:claim-payout` co-signs via `--co-signer`) |
+| `apps/docs/` | ADRs and fleet bean files |
+| `tests/` | `@riprap/tests` — jest e2e against a Surfpool surfnet (skips offline) |
 | `AGENTS.md` | Instructions for coding agents working in this repo |
