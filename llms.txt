@@ -1,0 +1,29 @@
+# Riprap
+
+> Event-scoped mutual protection pools on Solana. One pool, one narrowly defined peril, one finite event. Peer jurors adjudicate claims, unused funds return to members pro-rata, the pool dissolves. Pre-launch.
+
+Riprap is a platform for micro mutuals: attendees of an event pay a fixed entry fee into one pool against one narrowly defined peril. A qualifying incident during the event is adjudicated by jurors drawn from the pool's own staked members (adjudication runs on Accord, a Schelling-point arbitration protocol; voting coherently with the honest majority is the profitable strategy). Approved claims pay out of the pool; payouts are capped twice, by the member's tier and by the pool's balance. When the claims window closes, every unused cent returns to members pro-rata and the pool dissolves permanently. No insurer, no reserve, no retained profit.
+
+Money leaves a pool through exactly two governed doors: spending (adjudicated claims) and liquidation. There is no third exit and no discretionary signer.
+
+## Pages
+
+- [Platform landing](https://riprap.xyz/): what a micro mutual is, the six-step lifecycle, waitlist. The peril never appears on this page.
+- [Blade Pool @ Breakpoint 2026](https://riprap.xyz/breakpoint-2026): the first pool — policy fineprint, tiers, coverage window.
+
+## Policy: Blade Pool @ Breakpoint 2026 (the first pool)
+
+- Peril: knife assault — bodily injury caused by another person intentionally using a knife or other sharp-edged/bladed instrument against the member.
+- Coverage window: 15–17 November 2026 — opens with the conference, closes with the conference (daily hours per the published event schedule).
+- Covered area: Olympia Convention Centre and designated event area, London.
+- Tiers: Basic $10 entry, max payout $1,000 · Standard $20 entry, max payout $2,000 · Premium $40 entry, max payout $4,000. The max payout is the total a member can receive for qualifying claims from the covered event.
+- Exclusions (not covered): injuries caused by the member themselves; accidental injuries involving a knife or blade; ordinary handling or use of a knife; consensual activities; incidents outside the coverage period; incidents outside the covered area; emotional distress without qualifying bodily injury; claims exceeding the member's tier maximum.
+- Claims: a member files a claim with evidence for a qualifying incident during the window; jurors drawn from this pool's staked members adjudicate it. If approved claims exceed the funds in the pool, payouts are reduced proportionally — the mutual never pays more than it holds.
+- End: after the conference, the claims submission period, and settlement of approved claims, the remaining pool balance is distributed to members and the mutual dissolves permanently. No funds remain.
+
+## Status and links
+
+- Status: pre-launch. No pool has run, no members exist, no payouts to show. The first pool is the build target, not a track record.
+- X: https://x.com/riprapxyz
+- GitHub: https://github.com/xeroc/riprap
+- Policy source: `meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md` in the repository above.
