@@ -1,10 +1,11 @@
 ---
 # riprap-oaa8
 title: Surfpool e2e suite
-status: todo
+status: completed
 type: epic
+priority: normal
 created_at: 2026-09-01T17:38:24Z
-updated_at: 2026-09-01T17:38:24Z
+updated_at: 2026-09-04T11:48:46Z
 parent: riprap-dw8b
 ---
 

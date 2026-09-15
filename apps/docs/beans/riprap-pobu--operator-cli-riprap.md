@@ -1,10 +1,11 @@
 ---
 # riprap-pobu
 title: Operator CLI (riprap)
-status: todo
+status: completed
 type: epic
+priority: normal
 created_at: 2026-09-01T23:29:10Z
-updated_at: 2026-09-01T23:29:10Z
+updated_at: 2026-09-15T10:22:07Z
 parent: riprap-dw8b
 ---
 
