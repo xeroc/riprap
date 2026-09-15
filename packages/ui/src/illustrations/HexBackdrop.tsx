@@ -155,12 +155,12 @@ export function HexBackdrop({
             reduced
               ? { duration: 0 }
               : {
-                duration: c.duration,
-                delay: -c.phase,
-                repeat: Infinity,
-                repeatType: "loop",
-                ease: "easeInOut",
-              }
+                  duration: c.duration,
+                  delay: -c.phase,
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  ease: "easeInOut",
+                }
           }
         />
       ))}

@@ -213,25 +213,25 @@ const FIELD_ROWS: {
   chain: string;
   cells: { v: string; sub?: string }[];
 }[] = [
-    {
-      name: "Nexus Mutual",
-      chain: "ethereum · arbitrum · kyc",
-      cells: [
-        { v: "$5.7M", sub: "cover fees '25" },
-        { v: "$2.7M", sub: "ever · no VC" },
-        { v: "$1B+", sub: "purchased '25" },
-      ],
-    },
-    {
-      name: "OpenCover",
-      chain: "base · ethereum · off-chain co",
-      cells: [
-        { v: "—", sub: "undisclosed" },
-        { v: "$4.6M", sub: "seed '22–23" },
-        { v: "$141.6M", sub: "protected '25" },
-      ],
-    },
-  ];
+  {
+    name: "Nexus Mutual",
+    chain: "ethereum · arbitrum · kyc",
+    cells: [
+      { v: "$5.7M", sub: "cover fees '25" },
+      { v: "$2.7M", sub: "ever · no VC" },
+      { v: "$1B+", sub: "purchased '25" },
+    ],
+  },
+  {
+    name: "OpenCover",
+    chain: "base · ethereum · off-chain co",
+    cells: [
+      { v: "—", sub: "undisclosed" },
+      { v: "$4.6M", sub: "seed '22–23" },
+      { v: "$141.6M", sub: "protected '25" },
+    ],
+  },
+];
 
 const MarketSlide: FC = () => {
   const frame = useSlideFrame();

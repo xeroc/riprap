@@ -16,7 +16,7 @@ export interface StampBadgeProps extends React.ComponentProps<"span"> {
 }
 
 export function StampBadge({ pool, event, className, ...props }: StampBadgeProps) {
-  const text = `#${pool.toUpperCase()}${event ? ` @ ${event.toUpperCase()}` : ""}`;
+  const text = `: ${pool.toUpperCase()}${event ? ` @ ${event.toUpperCase()}` : ""}`;
   return (
     <span
       data-slot="stamp-badge"
