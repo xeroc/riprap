@@ -213,25 +213,25 @@ const FIELD_ROWS: {
   chain: string;
   cells: { v: string; sub?: string }[];
 }[] = [
-  {
-    name: "Nexus Mutual",
-    chain: "ethereum · arbitrum · kyc",
-    cells: [
-      { v: "$5.7M", sub: "cover fees '25" },
-      { v: "$2.7M", sub: "ever · no VC" },
-      { v: "$1B+", sub: "purchased '25" },
-    ],
-  },
-  {
-    name: "OpenCover",
-    chain: "base · ethereum · off-chain co",
-    cells: [
-      { v: "—", sub: "undisclosed" },
-      { v: "$4.6M", sub: "seed '22–23" },
-      { v: "$141.6M", sub: "protected '25" },
-    ],
-  },
-];
+    {
+      name: "Nexus Mutual",
+      chain: "ethereum · arbitrum · kyc",
+      cells: [
+        { v: "$5.7M", sub: "cover fees '25" },
+        { v: "$2.7M", sub: "ever · no VC" },
+        { v: "$1B+", sub: "purchased '25" },
+      ],
+    },
+    {
+      name: "OpenCover",
+      chain: "base · ethereum · off-chain co",
+      cells: [
+        { v: "—", sub: "undisclosed" },
+        { v: "$4.6M", sub: "seed '22–23" },
+        { v: "$141.6M", sub: "protected '25" },
+      ],
+    },
+  ];
 
 const MarketSlide: FC = () => {
   const frame = useSlideFrame();
@@ -252,12 +252,12 @@ const MarketSlide: FC = () => {
           </div>
         ))}
 
-        <div className="flex items-baseline mt-6" style={rise(frame, 116)}>
+        <div className="flex items-baseline mt-6" style={rise(frame, 75)}>
           <span className="text-sm tracking-[0.2em] text-text-secondary">OTHERS</span>
         </div>
         <div
           className="grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] gap-x-12 text-sm tracking-[0.2em] text-text-secondary"
-          style={rise(frame, 16)}
+          style={rise(frame, 78)}
         >
           <div />
           <div className="text-right">FEES &rsquo;25</div>
@@ -268,7 +268,7 @@ const MarketSlide: FC = () => {
           <div
             key={r.name}
             className="grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] items-baseline gap-x-12 border-t border-white/10 pt-5"
-            style={rise(frame, 28 + i * 22)}
+            style={rise(frame, 78 + i * 16)}
           >
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
@@ -302,16 +302,8 @@ const LAUNCH_REASONS = [
     body: "crypto-native members covering each other, one bounded window. the pilot crosses nothing regulated.",
   },
   {
-    head: "funds locked up briefly",
-    body: "a pool lives for the event window only. it pays approved claims, returns the rest, dissolves — and publishes its numbers.",
-  },
-  {
     head: "the solana family is loyal",
-    body: "Breakpoint puts the whole ecosystem in one hall. the family adopts its own and talks about what ships — the pilot's first audience is the space itself.",
-  },
-  {
-    head: "the organizer is the channel",
-    body: "one sale brings the whole attendee list. B2B2C with the organizer's own comms as the funnel.",
+    body: "breakpoint puts the whole ecosystem in one hall. the family adopts its own and talks about what ships.",
   },
   {
     head: "covers can be sponsored",
@@ -328,13 +320,6 @@ const PILOT_TIERS = [
   { name: "premium", entry: "$40", cap: "$4,000" },
 ];
 
-const PILOT_MATH = [
-  { label: "members × standard entry", v: "1,000 × $20" },
-  { label: "pooled", v: "$20,000" },
-  { label: "approved claims paid", v: "4 × $2,000 = $8,000" },
-  { label: "returned pro-rata", v: "$12,000 · $12 each" },
-];
-
 const LaunchSlide: FC = () => {
   const frame = useSlideFrame();
   return (
@@ -343,11 +328,10 @@ const LaunchSlide: FC = () => {
         className="max-w-[100ch] text-body [font:var(--riprap-title-md)]"
         style={rise(frame, 12)}
       >
-        the pilot is{" "}
         <span className="text-accent [font:var(--riprap-mono-number)]">
-          Riprap: Blade Pool @ Breakpoint 2026
-        </span>{" "}
-        — a knife-assault mutual for conference attendees, run in front of the entire Solana
+          Blade Pool @ Breakpoint 2026:
+        </span>
+        a knife-assault mutual for conference attendees, run in front of the entire Solana
         ecosystem.
       </div>
       <div className="flex w-full items-start gap-10">
@@ -358,22 +342,12 @@ const LaunchSlide: FC = () => {
               <div className="text-muted [font:var(--riprap-body-sm)]">{r.body}</div>
             </div>
           ))}
-          <div
-            className="mt-2 uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]"
-            style={rise(frame, 96)}
-          >
-            pilot q4 '26 → the 2027 circuit → organizer-initiated pools
-          </div>
         </div>
         <div
           className="flex w-[46ch] flex-col gap-3 border border-hairline bg-(--riprap-surface-card) p-7"
           style={rise(frame, 48)}
           data-num
         >
-          <div className="flex items-center gap-3">
-            <StampBadge pool="Blade Pool" event="Breakpoint" />
-            <span className="text-muted [font:var(--riprap-mono-label)]">first pool</span>
-          </div>
           <div className="text-muted [font:var(--riprap-mono-label)]">
             Olympia, London · 15–17 November 2026 · 8,000+ attendees
           </div>
@@ -401,6 +375,7 @@ const LaunchSlide: FC = () => {
               ])}
             </div>
           </div>
+          {/*
           <div className="flex flex-col gap-1.5 border-t border-hairline pt-4">
             <div className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
               worked example — standard tier
@@ -422,9 +397,7 @@ const LaunchSlide: FC = () => {
               quiet event: every cent returns, then the pool dissolves
             </div>
           </div>
-          <div className="text-right text-muted-soft [font:var(--riprap-mono-label)]">
-            policy §5 · §10 · solana.com/breakpoint
-          </div>
+ */}
         </div>
       </div>
     </SlideFrame>
@@ -474,15 +447,7 @@ const BusinessSlide: FC = () => {
           className="flex flex-col gap-2 text-muted [font:var(--riprap-body-sm)]"
           style={rise(frame, 100)}
         >
-          <div>
-            USDC end to end — entry fees, juror stake, juror fees, payouts. No product token.
-          </div>
-          <div>
-            The raise carries a token warrant over the one honest future role: staked reserve
-            capital earning transparent protection yield. The warrant is bounded — a fixed share of
-            any future supply, terms published before the round opens — and the preferred end state
-            is token-only via MetaDAO: value to the DAO, not the cap table.
-          </div>
+          <div>USDC end to end. No product token required.</div>
         </div>
       </div>
     </SlideFrame>
@@ -546,26 +511,27 @@ const AskSlide: FC = () => {
 const VISION_PROPERTIES = [
   {
     head: "permissionless creation",
-    body: "founding a mutual is a transaction on shared rails — any risk, any terms, any group. Not a company formation.",
+    body: "founding a mutual is a transaction on shared rails. any risk, any terms, any group.",
   },
   {
     head: "one risk per pool",
-    body: "isolation is structural, not a promise — a pool never cross-subsidizes unrelated risks, and mutuals stack: first loss below, the tail above.",
+    body: "isolation is structural, a pool never cross-subsidizes unrelated risks, and mutuals stack: first loss below, the tail above.",
   },
   {
-    head: "members adjudicate members",
-    body: "each mutual configures its own jury — who serves, under what rules. Judgment stays with the peers who hold the risk.",
+    head: "recurring premiums",
+    body: "require monthly payments for premiums to qualify for payouts.",
   },
-];
-
-const VISION_STACK = [
-  { part: "payment rail", job: "recurring contributions", status: "live · mainnet" },
-  { part: "arbitration layer", job: "contested payouts", status: "live · devnet" },
-  { part: "pool program", job: "pooled cover and payouts", status: "built" },
   {
-    part: "the stack",
-    job: "mutuals covering mutuals — tranched capital by tree, not wrapper",
-    status: "destination",
+    head: "risk capital",
+    body: "accept external risk into a pool for pure yield rewards",
+  },
+  {
+    head: "reinsurance",
+    body: "connect mutuals with eachother for re-insurance across uncorrelated risks.",
+  },
+  {
+    head: "tranching",
+    body: "offer multiple risk/yield tranches to risk capital providers.",
   },
 ];
 
@@ -581,12 +547,11 @@ const VisionSlide: FC = () => {
           className="max-w-[62ch] text-ink [font:var(--riprap-title-md)]"
           style={rise(frame, 16)}
         >
-          The pilot is the proof, not the product. The destination is an open protocol on Solana —
-          true peer-to-peer, permissionless insurance, on-chain. Anyone founds a mutual for
-          anything: members fund it, peers adjudicate the claims, surplus flows back to the people
-          who funded it. No company in the middle, no governance token, one pool per risk.
+          An open protocol for truly peer-to-peer, permissionless insurance, on
+          chain.
         </div>
-        <div className="flex items-start gap-6">
+
+        <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {VISION_PROPERTIES.map((p, i) => (
             <div
               key={p.head}
@@ -595,21 +560,6 @@ const VisionSlide: FC = () => {
             >
               <div className="text-ink [font:var(--riprap-title-sm)]">{p.head}</div>
               <div className="text-muted [font:var(--riprap-body-sm)]">{p.body}</div>
-            </div>
-          ))}
-        </div>
-        <div className="flex flex-col gap-2">
-          {VISION_STACK.map((row, i) => (
-            <div
-              key={row.part}
-              className="flex items-baseline gap-8 border-t border-hairline pt-3"
-              style={rise(frame, 96 + i * 8)}
-            >
-              <span className="w-[18ch] text-right text-accent [font:var(--riprap-mono-number)]">
-                {row.part}
-              </span>
-              <span className="flex-1 text-muted [font:var(--riprap-body-sm)]">{row.job}</span>
-              <span className="text-muted-soft [font:var(--riprap-mono-label)]">{row.status}</span>
             </div>
           ))}
         </div>
@@ -723,6 +673,7 @@ const TeamSlide: FC = () => {
           maskImage: "linear-gradient(to bottom, transparent, black 18%, black 82%, transparent)",
           WebkitMaskImage:
             "linear-gradient(to bottom, transparent, black 18%, black 82%, transparent)",
+          ...rise(frame, 56)
         }}
       >
         <div className="kudos-track flex w-full flex-col">
@@ -812,13 +763,6 @@ export const SLIDES: SlideDef[] = [
     component: ProductSlide,
   },
   {
-    id: "market",
-    label: "the market",
-    notes:
-      "35s. Read the rows, do not editorialize: $1.61T mutual premiums (ICMIF '24); $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama). Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
-    component: MarketSlide,
-  },
-  {
     id: "launch",
     label: "the launch",
     notes:
@@ -831,6 +775,13 @@ export const SLIDES: SlideDef[] = [
     notes:
       "25s. Revenue-first ladder: 0% take on the pilot (it exists to publish numbers); take-rate on surplus switched on with the second pool — doubles as the organizer revenue-share; operator fees for flagship deployments; at the destination, a rail share on mutuals we do not operate. USDC end to end, no product token. The raise carries a token warrant over staked reserve capital — protection yield — bounded to a fixed share of any future supply with terms published before the round opens; the preferred end state is token-only via MetaDAO — value to the DAO, not the cap table. The warrant is the term we negotiate hardest.",
     component: BusinessSlide,
+  },
+  {
+    id: "market",
+    label: "the market",
+    notes:
+      "35s. Read the rows, do not editorialize: $1.61T mutual premiums (ICMIF '24); $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama). Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
+    component: MarketSlide,
   },
   {
     id: "ask",
