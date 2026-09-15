@@ -1,14 +1,14 @@
 ---
 # riprap-izow
 title: CLI hanse lifecycle commands
-status: todo
+status: completed
 type: task
 tags:
     - ts
     - cli
     - tdd
 created_at: 2026-09-01T23:29:35Z
-updated_at: 2026-09-01T23:29:35Z
+updated_at: 2026-09-15T11:30:00Z
 parent: riprap-pobu
 blocked_by:
     - riprap-ctt6
@@ -27,5 +27,14 @@ src/commands/hanse/* over @riprap/hanse (initialize/join/file-claim/settle-claim
 Tests: dry-run snapshots, tier flag parsing/validation, fee derivation math, co-signer signer-set assembly (two signers present in the built tx).
 
 Checklist:
-- [ ] 8 commands + tests green
-- [ ] claim-payout two-signer path proven
+- [x] 8 commands + tests green
+- [x] claim-payout two-signer path proven
+
+## Summary of Changes
+
+- `apps/cli/src/commands/hanse/` — 8 commands (one file per instruction): initialize, join, file-claim, settle-claim, settle-pool, claim-payout, dissolve, set-subaccord-param, all thin wrappers over `@riprap/hanse` + `@useaccord/sdk` PDA/fetch helpers. file-claim derives + prints `min_jury_size × fee_per_juror` before send; settle-pool prints the frozen ratio + pull_close_at post-send; claim-payout is the two-signer exception (claimant = wallet, `--co-signer` defaults to the wallet for self-demo, production = admin key); set-subaccord-param mirrors useaccord propose-update incl. executeAfterSlot readback. join/dissolve/settle-pool take `--pool`/`--deposit-mint` overrides for offline `--dry-run` (pool `--mint` precedent); set-subaccord-param takes `--subaccord`.
+- `apps/cli/src/lib/hanse-args.ts` — pure parsing/fee math (tier spec `contribution:max-payout`, tier name→index, hex64, the 7 exposed `Kind:value` payloads, `juryFee` u64-checked).
+- `packages/hanse/src/pdas.ts` — `subaccordDomainRef` (`H("hanse:subaccord" ‖ seed_le ‖ policy_hash)`, initialize_mutual.rs) + `findMutualSubaccordPda` (PDA `[subaccord, creator=initializer wallet, domain_ref]` under the accord program — the CPI creator is the initializer, not the mutual PDA); `@noble/hashes` dep.
+- deps: `apps/cli` += `@riprap/hanse` (workspace, bundled by tsup) + `@useaccord/sdk@0.1.0` (npm, per milestone); `pool-args.toBigInt` widened to u16 for AlphaBps.
+- tests: 87 CLI tests green — hanse.args (tier/payload/hex/fee), hanse.commands (subprocess dry-run snapshots w/ decoded args + PDA-bound accounts, 8-command help, clean offline errors), hanse.build (offline assembly: fee 3×5=15 USDC per §12, claim/dispute keyed by claim_nonce, claim-payout signed tx carries exactly 2 signatures: claimant + authority).
+- `pnpm verify` green (build, biome, vitest, anchor build, cargo test).

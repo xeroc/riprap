@@ -1,11 +1,12 @@
+import { sha256 } from "@noble/hashes/sha256";
 import {
   type Address,
   getAddressEncoder,
   getProgramDerivedAddress,
   getU64Encoder,
   type ProgramDerivedAddress,
+  type ReadonlyUint8Array,
 } from "@solana/kit";
-
 import { HANSE_PROGRAM_ADDRESS } from "../generated/src/generated";
 
 export { findDepositorPda, findPoolPda } from "@riprap/pool";
@@ -80,6 +81,65 @@ export async function findFeeFloatPda(
   });
 }
 
+/** Accord program id (programs/hanse Cargo.toml git dep, rev ba91bd8). */
+const ACCORD_PROGRAM_ADDRESS = "cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed" as Address;
+
+export type MutualSubaccordSeeds = {
+  /**
+   * The initializer wallet — the subaccord PDA's creator seed
+   * (initialize_mutual.rs: the CPI creator is `authority`, NOT the mutual
+   * PDA; a data-carrying PDA cannot pay rent, Synod file_dispute precedent).
+   */
+  creator: Address;
+  seed: bigint;
+  policyHash: ReadonlyUint8Array;
+};
+
+/**
+ * Juror namespace binding: `H("hanse:subaccord" ‖ seed_le_u64 ‖ policy_hash)`
+ * (programs/hanse initialize_mutual.rs `subaccord_domain_ref`). Binding the
+ * cover-terms hash means a policy change is necessarily a new subaccord.
+ */
+export function subaccordDomainRef(seed: bigint, policyHash: ReadonlyUint8Array): Uint8Array {
+  return sha256(
+    concatBytes(
+      getBytes("hanse:subaccord"),
+      getU64Encoder().encode(seed),
+      new Uint8Array(policyHash),
+    ),
+  );
+}
+
+/**
+ * The subaccord a mutual initializes: PDA ["subaccord", creator, domain_ref]
+ * under the accord program (accord constants.rs SEED_SUBACCORD). Codama
+ * cannot emit this — cross-program seeds with a hashed argument.
+ */
+export async function findMutualSubaccordPda(
+  seeds: MutualSubaccordSeeds,
+  config: { programAddress?: Address | undefined } = {},
+): Promise<ProgramDerivedAddress> {
+  const { programAddress = ACCORD_PROGRAM_ADDRESS } = config;
+  return await getProgramDerivedAddress({
+    programAddress,
+    seeds: [
+      getBytes("subaccord"),
+      getAddressEncoder().encode(seeds.creator),
+      subaccordDomainRef(seeds.seed, seeds.policyHash),
+    ],
+  });
+}
+
 function getBytes(word: string): Uint8Array {
   return new TextEncoder().encode(word);
+}
+
+function concatBytes(...parts: ReadonlyUint8Array[]): Uint8Array {
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  for (const p of parts) {
+    out.set(p, at);
+    at += p.length;
+  }
+  return out;
 }
