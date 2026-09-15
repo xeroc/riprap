@@ -1,7 +1,7 @@
 ---
 # riprap-0yfb
 title: Regenerate @riprap/pool SDK with burn
-status: todo
+status: completed
 type: task
 tags:
     - ts
@@ -17,4 +17,9 @@ GAP found during CLI planning: riprap-609b adds pool::burn but nothing refreshes
 - vitest suites in packages/pool stay green; @riprap/pool consumers (apps/landing) unaffected (tsc -r build proves it).
 
 Checklist:
-- [ ] SDK regenerated, tests green, workspace build green
+- [x] SDK regenerated, tests green, workspace build green
+
+## Summary of Changes
+
+- No new code needed: the AGENTS completion-gate rule (program change -> `pnpm --filter @riprap/pool codegen` in the same commit) already landed the regeneration inside the riprap-609b change `ba358a54`.
+- Verified now: generated client carries `instructions/burn.ts` + `events/burned.ts` with only index/program registrations touched elsewhere (nothing else changed); `pnpm --filter @riprap/pool test` — 2 files, 9 tests passed; `pnpm -r run build` exit 0 (apps/landing consumer unaffected).

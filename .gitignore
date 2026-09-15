@@ -26,7 +26,7 @@ storybook-static
 
 # Anchor
 .anchor
-test-ledger
+.surfpool
 # The localnet program keypair is committed so declare_id stays stable
 # across worktrees; everything else under target/ stays ignored.
 !/target/
@@ -34,6 +34,7 @@ test-ledger
 !/target/deploy/
 /target/deploy/*
 !/target/deploy/pool-keypair.json
+!/target/deploy/hanse-keypair.json
 
 # TypeScript incremental build state (ui predates this rule; pool stays untracked)
 tsconfig.tsbuildinfo

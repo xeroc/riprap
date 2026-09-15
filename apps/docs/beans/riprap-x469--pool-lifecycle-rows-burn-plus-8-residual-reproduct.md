@@ -1,7 +1,7 @@
 ---
 # riprap-x469
 title: 'Pool lifecycle rows: burn plus §8 residual reproduction'
-status: todo
+status: completed
 type: task
 tags:
     - rust
@@ -18,5 +18,11 @@ Extend programs/pool/tests/lifecycle.rs:
 - full existing suite stays green (no behavior change outside burn).
 
 Checklist:
-- [ ] residual math rows green with §8 citation
-- [ ] cargo test workspace green
+- [x] residual math rows green with §8 citation
+- [x] cargo test workspace green
+
+## Summary of Changes
+
+- `tests/lifecycle.rs` +2 rows: `burn_2_4_double_burn_floors_at_zero` (partial burn leaves 600k totals/stake; second over-burn is Ok and floors at 0; treasury untouched throughout) and `event_mutual_8_paid_claimants_get_zero_residual` — 6 equal rights deposits, 2 paid via the §2.4 pair (spend 500k + burn of the 1M contribution), liquidate freezes 5M, crank all 6: paid claimants receive exactly 0, the other 4 receive 1_250_000 each, treasury drains to exactly 0. §8 shape (paid minority excluded, residual across the rest) reproduced end-to-end with cleanly dividing numbers.
+- Treasury-untouched/totals-drop regression rows were already asserted in the 609b rows (`burn_happy_path_rate_1_moves_no_tokens`, `burn_saturates_at_balance`); this bean adds the double-burn floor.
+- Verified: `cargo test` 11 lifecycle + 22 unit tests green; `pnpm verify` exit 0; `cargo build` zero warnings.

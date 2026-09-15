@@ -1,0 +1,28 @@
+################################################################
+# Manage riprap deployments through Crypto Infrastructure as Code
+################################################################
+
+addon "svm" {
+    rpc_api_url = input.rpc_api_url
+    network_id = input.network_id
+}
+
+action "deploy_pool" "svm::deploy_program" {
+    description = "Deploy pool program"
+    program = svm::get_program_from_anchor_project("pool")
+    authority = signer.authority
+    payer = signer.payer
+    # Instant cheatcode deploy: writes program data directly to the program
+    # account on a local Surfnet (port of the accord runbook pairing —
+    # `anchor test` starts Surfpool, which runs this manifest and has the
+    # workspace programs live before the [scripts] jest runner fires).
+    instant_surfnet_deployment = true
+}
+
+action "deploy_hanse" "svm::deploy_program" {
+    description = "Deploy hanse program"
+    program = svm::get_program_from_anchor_project("hanse")
+    authority = signer.authority
+    payer = signer.payer
+    instant_surfnet_deployment = true
+}

@@ -1,7 +1,7 @@
 ---
 # riprap-609b
 title: Implement pool burn instruction
-status: todo
+status: completed
 type: task
 tags:
     - rust
@@ -18,5 +18,13 @@ Wire the burn instruction into programs/pool house style:
 - LiteSVM (tests/lifecycle.rs style): happy burn at rights rate 1; wrong authority reverts; burn after liquidate reverts; saturation burns are Ok and floor at balance.
 
 Checklist:
-- [ ] instruction + event + errors + delegate
-- [ ] LiteSVM happy/auth/saturation rows green
+- [x] instruction + event + errors + delegate
+- [x] LiteSVM happy/auth/saturation rows green
+
+## Summary of Changes
+
+- `burn.rs`: `Burn` accounts struct — mut pool with `PoolNotOpen` constraint, track authority `Signer` gated by `pool.authority(track)` (update_authority pattern), mut depositor PDA `[depositor, pool, owner]` with owner equality + `!settled @ Settled` (crank pattern), `owner` UncheckedAccount bound by seeds. `handler_burn` calls the P1 core and emits `Burned { pool, depositor (owner key), track, amount, stake_burned }`.
+- `events.rs`: `Burned`; `lib.rs`: one-line `burn` delegate; `mod.rs`: glob re-export restored; stale `#[allow(dead_code)]` removed from `apply`.
+- LiteSVM (lifecycle.rs): `Env::burn` + `Env::depositor_state` helpers; 4 rows — happy burn at rate 1 (totals zero, treasury untouched — burn moves no tokens), wrong-track-authority reverts (state unchanged), burn after liquidate `PoolNotOpen`, over-burn Ok and floored at balance.
+- `packages/pool` Codama client regenerated (`pnpm --filter @riprap/pool codegen`) — new `instructions/burn.ts` + `events/burned.ts` committed with the program change.
+- Verified: `pnpm verify` exit 0 (22 unit + 9 lifecycle tests, anchor build, lint); `cargo build` zero warnings.

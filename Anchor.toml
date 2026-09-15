@@ -7,12 +7,13 @@ skip-lint = false
 
 [programs.localnet]
 pool = "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1"
+hanse = "DTSwUuWC1SpZP8LcJ1EJ4HtUxAczqwrsgqNYnR1QXK3p"
 
 [provider]
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "cargo test"
+test = "pnpm --filter @riprap/tests test"
 
 [hooks]

@@ -1,13 +1,13 @@
 ---
 # riprap-dh7g
 title: initialize_mutual + tests
-status: todo
+status: completed
 type: task
 tags:
     - rust
     - tdd
 created_at: 2026-09-01T17:39:11Z
-updated_at: 2026-09-01T17:39:11Z
+updated_at: 2026-09-02T03:20:00Z
 parent: riprap-ggsd
 blocked_by:
     - riprap-e6iq
@@ -24,6 +24,15 @@ Fee float: mutual-PDA ATA of fee_mint.
 
 Tests: happy (pool + subaccord + float wired exactly), re-init revert, bad timestamps, bad tiers, even min_jury_size rejection.
 
+
 Checklist:
-- [ ] red tests then green
-- [ ] config validation errors typed and asserted
+- [x] red tests then green
+- [x] config validation errors typed and asserted
+
+## Summary of Changes
+
+- `instructions/initialize_mutual.rs`: full instruction per §7 — validation BEFORE any CPI (timestamps ordered, pull window, tier sanity, odd jury + ladder ≤ MAX_JURORS, accord domain bounds mirrored: alpha/min_stake/windows/appeal floor/threshold/draw attempts/fee product), mutual account init, CPI `pool::init` (rights 1:1 under mutual_auth, ownership 0 under mutual_own, yield off), CPI `accord::create_subaccord` (Plurality, Redraw, depth 20, stake-only credential default, authority = mutual PDA), fee float ATA (init_if_needed), MutualInitialized emitted.
+- Config: `InitializeMutualConfig { seed, tiers, policy_hash, deposits/claims_close_at, pull_window, subaccord: SubaccordConfig }` — the full forwarded parameter set incl. evidence_operator; aggregation/shortfall/depth/credentials fixed in code with provenance comments.
+- domain_ref = sha256("hanse:subaccord" ‖ seed ‖ policy_hash) — binds the juror namespace to seed AND cover terms; evidence_spec = sha256("hanse:evidence:v1"). Both documented in code.
+- Deviation from a natural reading, forced by chain mechanics (synod file_dispute precedent, cited in code): `create_subaccord`'s creator is the INITIALIZER WALLET, not the mutual PDA — system rejects rent payment from data accounts and accord's instruction has no separate rent-payer field. The mutual PDA remains the subaccord's `authority` (all powers). Subaccord PDA therefore = ["subaccord", initializer, domain_ref]; handler verifies it manually (seeds constraint with a fn call doesn't compile under idl-build — noted in CHECK comment).
+- Tests (red first): happy path asserts mutual + pool (rates/authorities) + subaccord (creator/authority/Plurality/params/credentials) + float wiring; re-init revert; bad timestamps (3); bad tiers (2); even jury + ladder overflow. 5/5 green; clippy zero warnings; `pnpm verify` exit 0 (LiteSVM runs the real pool and accord binaries through both CPIs).
