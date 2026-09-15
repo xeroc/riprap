@@ -1,5 +1,7 @@
-// §1 — hero: platform one-liner, waitlist, instance stamp.
-import { HexBackdrop, Logomark, SectionBand, StampBadge } from "@riprap/ui";
+// §1 — hero: platform one-liner, waitlist. The first-pool stamp is retired
+// (2026-09-15); the pool page is reached by URL until an instances surface
+// exists.
+import { HexBackdrop, Logomark, SectionBand } from "@riprap/ui";
 import { Settle } from "../components/Settle";
 import { Waitlist } from "../components/Waitlist";
 
@@ -23,38 +25,24 @@ export function Hero() {
           <div className="flex flex-col gap-(--riprap-space-lg)">
             <Settle>
               <p className="uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
-                Peer-to-peer risk pools on Solana
+                Real World Risk Pools on Solana
               </p>
             </Settle>
             <Settle delay={60}>
               <h1 className="max-w-3xl tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-md)] sm:[font:var(--riprap-display-xl)] lg:[font:var(--riprap-display-mega)]">
-                Communication went peer-to-peer. Risk can too.
+                Finance went P2P. <br />
+                Mutuals can too.
               </h1>
             </Settle>
             <Settle delay={120}>
               <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                Riprap pools risk the way the internet moved messages: members chip in, drawn peers
-                adjudicate claims, payouts come straight from the shared pot. Whatever goes
-                unclaimed comes back, and when the pool's job is done it dissolves — nothing left
-                for anyone to capture.
+                Riprap is peer-to-peer risk pooling on Solana: members chip in, drawn peers
+                adjudicate claims, payouts come from the shared pool, and whatever goes unclaimed
+                comes back before the pool dissolves.
               </p>
             </Settle>
             <Settle delay={180} className="pt-(--riprap-space-sm)">
               <Waitlist />
-            </Settle>
-            <Settle delay={240}>
-              <div className="flex flex-wrap items-center gap-3 pt-(--riprap-space-sm)">
-                <a
-                  href="/2026-breakpoint-blade-pool"
-                  aria-label="Blade Pool at Breakpoint 2026 — policy and participation"
-                  className="outline-none transition-opacity duration-[160ms] ease-out hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring"
-                >
-                  <StampBadge pool="Blade Pool" event="Breakpoint" />
-                </a>
-                <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
-                  First pool · Olympia Convention Centre, London · 15-17 November 2026
-                </p>
-              </div>
             </Settle>
           </div>
           <div className="hidden lg:block">

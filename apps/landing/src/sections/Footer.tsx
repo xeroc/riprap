@@ -1,6 +1,6 @@
 import { FooterBand, LogoLockup } from "@riprap/ui";
 
-import { GITHUB_URL, X_URL } from "./shared";
+import { X_URL } from "./shared";
 
 // §7 — Footer. Facts only: handle, domain, repo. Closing line per DESIGN.md.
 export function Footer() {
@@ -11,7 +11,7 @@ export function Footer() {
           <LogoLockup size={22} />
         </a>
       }
-      tagline="Event mutuals on Solana. One pool, one peril, one event. Then it.s gone."
+      tagline="Event mutuals on Solana. One pool, one peril, one event. Then it's gone."
       columns={[
         {
           heading: "page",
@@ -22,13 +22,10 @@ export function Footer() {
         },
         {
           heading: "follow",
-          links: [
-            { href: X_URL, label: "@riprapxyz" },
-            { href: GITHUB_URL, label: "GitHub" },
-          ],
+          links: [{ href: X_URL, label: "@riprapxyz" }],
         },
       ]}
-      closing="© 2026 Riprap · pre-launch · riprap.xyz · dead on schedule"
+      closing="© 2026 Riprap · riprap.xyz"
     />
   );
 }

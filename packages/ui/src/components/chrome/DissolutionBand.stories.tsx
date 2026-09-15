@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { End } from "../../illustrations/End";
 import { DissolutionBand } from "./DissolutionBand";
 
 const meta = {
@@ -14,10 +13,5 @@ export const Default: StoryObj<typeof meta> = {
   args: {
     remaining: 0,
     line: "Every claim paid. The crank returned the rest. The pool is closed.",
-    mark: (
-      <div className="w-24">
-        <End />
-      </div>
-    ),
   },
 };

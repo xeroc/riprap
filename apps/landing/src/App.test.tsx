@@ -9,10 +9,10 @@ describe("landing", () => {
   it("renders the approved hero headline as the single h1", () => {
     render(<App />);
     const h1 = screen.getByRole("heading", { level: 1 });
-    expect(h1.textContent).toBe("Communication went peer-to-peer. Risk can too.");
+    expect(h1.textContent).toBe("Finance went P2P. Mutuals can too.");
   });
 
-  it("explains the six lifecycle steps in order — guarantees folded in", () => {
+  it("explains the five lifecycle steps in order — guarantees folded in", () => {
     const { container } = render(<App />);
     const steps = [
       "One more member.",
@@ -20,23 +20,22 @@ describe("landing", () => {
       "Peers decide.",
       "A claim is paid.",
       "Liquidate.",
-      "The pool ends.",
     ];
     for (const h of steps) {
       expect(screen.getAllByRole("heading", { name: h }).length).toBeGreaterThan(0);
     }
-    // order = strip order: join → gather → rule → claim → liquidate → end
+    // order = strip order: join → gather → rule → claim → liquidate
     const hs = [...container.querySelectorAll("section#mechanism h3")].map((h) => h.textContent);
     expect(hs).toEqual(steps);
     // §3 removed: the antagonist box died with the section
     expect(screen.queryByText("The failure mode, named")).toBeNull();
   });
 
-  it("states the lineage and the honest-scope box", () => {
+  it("states the lineage — the primitive replaces the institution", () => {
     render(<App />);
     expect(screen.getByText("The mutual is old. The Solana primitive is new.")).toBeTruthy();
-    expect(screen.getByText("Honest scope")).toBeTruthy();
-    expect(screen.getByText(/No traction numbers, because there is no traction/)).toBeTruthy();
+    expect(screen.getByText(/Programmatic custody holds the Treasury/)).toBeTruthy();
+    expect(screen.getByText("Protection without a protector.")).toBeTruthy();
   });
 
   it("renders the waitlist form exactly once per capture point (hero + final CTA)", () => {
@@ -52,9 +51,8 @@ describe("landing", () => {
     expect(container.textContent).not.toContain("decentralized court");
   });
 
-  it("stamps the first instance and never names the peril on the page", () => {
+  it("never names the peril on the page — the naming lock holds", () => {
     const { container } = render(<App />);
-    expect(screen.getByText(": BLADE POOL @ BREAKPOINT")).toBeTruthy();
     for (const heading of screen.getAllByRole("heading")) {
       expect(heading.textContent).not.toMatch(/knife|assault/i);
     }
@@ -73,9 +71,9 @@ describe("landing", () => {
     expect(blue.length).toBe(1); // the newest member, settled beside the gap
   });
 
-  it("footer closes on the dissolution fact in mono", () => {
+  it("footer closing is the bare fact in mono", () => {
     render(<App />);
-    const closing = screen.getByText(/dead on schedule/);
+    const closing = screen.getByText(/© 2026 Riprap · riprap\.xyz/);
     expect(closing.className).toContain("font-mono");
   });
 
@@ -84,13 +82,9 @@ describe("landing", () => {
     const hrefs = Array.from(container.querySelectorAll("a[href]"), (a) => a.getAttribute("href"));
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {
-      expect(
-        href?.startsWith("#") ||
-          href === "/" ||
-          href === "/2026-breakpoint-blade-pool" ||
-          href === "https://x.com/riprapxyz" ||
-          href === "https://github.com/xeroc/riprap",
-      ).toBe(true);
+      expect(href?.startsWith("#") || href === "/" || href === "https://x.com/riprapxyz").toBe(
+        true,
+      );
     }
     expect(container.textContent).not.toContain("mailto:");
   });

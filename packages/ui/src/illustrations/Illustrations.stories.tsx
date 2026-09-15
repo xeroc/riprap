@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 import { Claim } from "./Claim";
-import { End } from "./End";
 import { Gather } from "./Gather";
 import { HexBackdrop } from "./HexBackdrop";
 import { Join } from "./Join";
@@ -61,15 +60,6 @@ export const ReturnStory: StoryObj = {
   render: () => (
     <Frame>
       <Return />
-    </Frame>
-  ),
-};
-
-export const EndStory: StoryObj = {
-  name: "end — the pool ends",
-  render: () => (
-    <Frame>
-      <End />
     </Frame>
   ),
 };

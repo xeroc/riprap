@@ -26,15 +26,9 @@ describe("/2026-breakpoint-blade-pool — the pool page", () => {
   it("the platform landing still renders at / (naming lock intact)", () => {
     render(<App />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
-      "Communication went peer-to-peer. Risk can too.",
+      "Finance went P2P. Mutuals can too.",
     );
     expect(document.body.textContent).not.toMatch(/knife assault/i);
-  });
-
-  it("hero links to the pool page via the first-pool stamp", () => {
-    render(<App />);
-    const link = screen.getByRole("link", { name: /Blade Pool at Breakpoint/i });
-    expect(link.getAttribute("href")).toBe("/2026-breakpoint-blade-pool");
   });
 
   it("tier slider defaults to Standard ($20 / up to $2,000 — policy §5)", () => {
@@ -75,10 +69,10 @@ describe("/2026-breakpoint-blade-pool — the pool page", () => {
     expect(dialog.querySelectorAll("form[data-waitlist]").length).toBe(1);
   });
 
-  it("fineprint: all 11 policy categories, all 8 exclusions, tier table from TIERS", () => {
+  it("fineprint: all 13 policy categories, all 8 exclusions, tier table from TIERS", () => {
     const { container } = atPoolRoute();
     const sections = [...container.querySelectorAll('[data-slot="policy-section"]')];
-    expect(sections.length).toBe(11);
+    expect(sections.length).toBe(13);
     const headings = sections.map((s) => s.querySelector("span.uppercase")?.textContent ?? "");
     expect(headings).toEqual([
       "Product",
@@ -87,19 +81,29 @@ describe("/2026-breakpoint-blade-pool — the pool page", () => {
       "Exclusions",
       "Coverage tiers",
       "Pool",
-      "Claims",
+      "Payout requests",
       "Pool dissolution",
       "Economic principle",
       "Worked example — Standard tier",
       "Product promise",
+      "Legal status",
+      "Counsel's recommendations",
     ]);
     // §4: exactly the eight exclusions from the policy
-    const exclusions = container.querySelectorAll('[data-slot="policy-section"] ul li');
+    const exclusions = container.querySelectorAll(
+      '[data-slot="policy-section"] [data-slot="policy-exclusions"] li',
+    );
     expect(exclusions.length).toBe(8);
     // §5: table bound to TIERS — all six prices present, mono, data-num
     const nums = [...container.querySelectorAll('[data-slot="policy-section"] td[data-num]')].map(
       (td) => td.textContent,
     );
     expect(nums).toEqual(["$10", "up to $1,000", "$20", "up to $2,000", "$40", "up to $4,000"]);
+    // §7/§12: discretion and liability stated plainly — counsel recs 2 and 3
+    expect(container.textContent).toContain("enforceable right to any payment");
+    expect(container.textContent).toContain("no limited liability");
+    // §13: the five counsel recommendations render
+    const recs = container.querySelectorAll('[data-slot="policy-recommendations"] li');
+    expect(recs.length).toBe(5);
   });
 });

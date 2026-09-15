@@ -14,19 +14,20 @@ interface PolicySection {
   body: ReactNode;
 }
 
-// Sources: meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md §1–§11.
+// Sources: meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md §1–§13.
 const SECTIONS: PolicySection[] = [
   {
     n: "01",
     title: "Product",
     body: (
       <p>
-        Micro Mutual is a one-time mutual insurance pool protecting members against a narrowly
-        defined knife assault during a specific conference. Members contribute a fixed entry fee to
-        a common pool. A member who experiences a qualifying knife assault during the covered event
-        may receive a payout subject to their coverage tier and the remaining funds. After the
-        claims period closes, all remaining funds are distributed proportionally among members and
-        the mutual is dissolved.
+        Micro Mutual is a one-time mutual pool protecting members against a narrowly defined knife
+        assault during a specific conference. Members contribute a fixed entry fee to a common pool.
+        A member who experiences a qualifying knife assault during the covered event may request a
+        discretionary payment, subject to adjudication, their coverage tier, and the remaining funds
+        — no member has an enforceable right to a payment. After the payout request period closes,
+        all remaining funds are distributed proportionally among members and the mutual is
+        dissolved.
       </p>
     ),
   },
@@ -57,7 +58,7 @@ const SECTIONS: PolicySection[] = [
         </p>
         <p>
           The incident must occur during the coverage period, within the covered geographic area,
-          and while the claimant is an active member.
+          and while the requester is an active member.
         </p>
       </div>
     ),
@@ -66,7 +67,7 @@ const SECTIONS: PolicySection[] = [
     n: "04",
     title: "Exclusions",
     body: (
-      <ul className="flex flex-col gap-2">
+      <ul data-slot="policy-exclusions" className="flex flex-col gap-2">
         {[
           "Injuries caused by the member themselves.",
           "Accidental injuries involving a knife or blade.",
@@ -74,8 +75,8 @@ const SECTIONS: PolicySection[] = [
           "Injuries resulting from consensual activities.",
           "Injuries occurring outside the coverage period.",
           "Injuries occurring outside the covered area.",
-          "Claims for emotional distress without qualifying bodily injury.",
-          "Claims exceeding the member's coverage-tier maximum.",
+          "Requests based on emotional distress without qualifying bodily injury.",
+          "Requests exceeding the member's coverage-tier maximum.",
         ].map((item) => (
           <li key={item} className="flex gap-3">
             <span
@@ -95,8 +96,8 @@ const SECTIONS: PolicySection[] = [
       <div className="flex flex-col gap-3">
         <p>
           Members choose their coverage when joining. The maximum payout is the total amount a
-          member can receive for qualifying claims; a member cannot receive more than their tier's
-          maximum.
+          member can receive for qualifying payout requests; a member cannot receive more than their
+          tier's maximum.
         </p>
         {/* policy §5 — rendered from TIERS, never hardcoded */}
         <table className="w-full border-collapse">
@@ -145,9 +146,9 @@ const SECTIONS: PolicySection[] = [
     body: (
       <div className="flex flex-col gap-3">
         <p>
-          All member contributions enter a single mutual pool, used exclusively for qualifying claim
-          payouts and refunds to members after the claims period. There is no permanent reserve. No
-          profit is retained by the mutual.
+          All member contributions enter a single mutual pool, used exclusively for qualifying
+          discretionary payments and refunds to members after the payout request period. There is no
+          permanent reserve. No profit is retained by the mutual.
         </p>
         {/* §6 worked example: 1,000 × $20 = $20,000 */}
         <p data-num className="font-mono text-xs text-stone">
@@ -158,19 +159,21 @@ const SECTIONS: PolicySection[] = [
   },
   {
     n: "07",
-    title: "Claims",
+    title: "Payout requests",
     body: (
       <div className="flex flex-col gap-3">
         <p>
-          A member may submit a claim for a qualifying knife assault occurring during the coverage
-          period. The maximum claim payout is determined by the member's coverage tier. If approved
-          claims are less than the pool, the remaining funds are returned to members. If approved
-          claims exceed the pool, payouts are reduced proportionally so the mutual never pays more
-          than it holds.
+          A member may submit a payout request for a qualifying knife assault occurring during the
+          coverage period. All payments are discretionary: requests are adjudicated by a randomly
+          drawn jury of staked members; no member has a contractual or enforceable right to any
+          payment; the jury's determination is final. The maximum payment is set by the member's
+          coverage tier. If approved requests are less than the pool, the remaining funds are
+          returned to members. If approved requests exceed the pool, payments are reduced
+          proportionally so the mutual never pays more than it holds.
         </p>
-        {/* §7 example: $20,000 pool, $12,000 claims, $8,000 returned */}
+        {/* §7 example: $20,000 pool, $12,000 approved requests, $8,000 returned */}
         <p data-num className="font-mono text-xs text-stone">
-          EXAMPLE: $20,000 POOL · $12,000 APPROVED CLAIMS · $8,000 RETURNED
+          EXAMPLE: $20,000 POOL · $12,000 APPROVED REQUESTS · $8,000 RETURNED
         </p>
       </div>
     ),
@@ -180,8 +183,8 @@ const SECTIONS: PolicySection[] = [
     title: "Pool dissolution",
     body: (
       <p>
-        The mutual has a finite lifetime. After the conference ends, the claims submission period
-        closes, and all approved claims are settled, the remaining balance is distributed to
+        The mutual has a finite lifetime. After the conference ends, the payout request period
+        closes, and all approved requests are settled, the remaining balance is distributed to
         eligible members. The mutual is then dissolved permanently — no funds remain.
       </p>
     ),
@@ -204,10 +207,10 @@ const SECTIONS: PolicySection[] = [
       <div className="flex flex-col gap-3">
         <p>
           1,000 members each contribute $20 into a $20,000 pool with a $2,000 maximum individual
-          payout. Four qualifying claims are approved at $2,000 each: claims paid $8,000, remaining
-          pool $12,000. After the claims period closes, the remaining $12,000 is distributed to
-          eligible members and the mutual dissolves — a $20 member receives their share of the
-          unused pool back.
+          payout. Four qualifying payout requests are approved at $2,000 each: payments $8,000,
+          remaining pool $12,000. After the payout request period closes, the remaining $12,000 is
+          distributed to eligible members and the mutual dissolves — a $20 member receives their
+          share of the unused pool back.
         </p>
       </div>
     ),
@@ -218,9 +221,36 @@ const SECTIONS: PolicySection[] = [
     body: (
       <p>
         Join a temporary community mutual. Pay a fixed amount. Receive defined protection against
-        knife assault during the event. If claims don't consume the pool, the remaining money comes
-        back to the members. When the event is over, the mutual ends.
+        knife assault during the event. If payments don't consume the pool, the remaining money
+        comes back to the members. When the event is over, the mutual ends.
       </p>
+    ),
+  },
+  {
+    n: "12",
+    title: "Legal status",
+    body: (
+      <div className="flex flex-col gap-3">
+        <p>
+          The mutual is an unincorporated association under English law — not insurance, and not
+          authorised or regulated under the Financial Services and Markets Act. Every payment is
+          discretionary, no member has a contractual right to a payout, and the decision-maker's
+          determination is final. No profit is earned or distributed, surplus returns to members
+          pro-rata, and no risk capital is invested for yield.
+        </p>
+        <p>
+          An unincorporated association has no separate legal personality and no limited liability:
+          if the pool is exhausted and a liability arises, the operators may be personally exposed.
+          The pool runs on a smart contract on Solana; English law treats cryptoassets as personal
+          property, but on-chain association governance is legally untested and no UK legislation
+          expressly validates it. The pool is closed, small-value, and not operated by way of
+          business; the operators take advice on the money-laundering regulations.
+        </p>
+        {/* policy §12 — authorities as cited in counsel's opinion */}
+        <p data-num className="font-mono text-xs text-stone">
+          NOT INSURANCE · FSMA 2000 · PERG 6.6.1 · BURRELL [1982] · CCBSA 2014 · MLR 2017
+        </p>
+      </div>
     ),
   },
 ];

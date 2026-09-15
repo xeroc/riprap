@@ -1,11 +1,11 @@
-// §2 — the lifecycle in six plates; the full design lives in the repo (copy doc §2).
+// §2 — the lifecycle in five plates; the full design lives in the repo (copy doc §2).
 import { LifecycleStrip, SectionBand } from "@riprap/ui";
 
 import { Settle } from "../components/Settle";
 
 // Steps mirror LifecycleStrip's order (join → gather → rule → claim →
-// liquidate → end). §3's guarantees folded in: two doors → liquidate,
-// fail-closed caps → a claim is paid, guaranteed death → the pool ends.
+// liquidate). §3's guarantees folded in: two doors → liquidate,
+// fail-closed caps → a claim is paid.
 const STEPS = [
   {
     n: "01",
@@ -30,12 +30,7 @@ const STEPS = [
   {
     n: "05",
     h: "Liquidate.",
-    p: "Money leaves a pool only by spending (governed by adjudication) or liquidation (governed by the ownership authority). No third path, no discretionary signer, nobody who can decide.",
-  },
-  {
-    n: "06",
-    h: "The pool ends.",
-    p: "When the claims window closes, a permissionless crank returns every unused cent to members, pro-rata, and the pool dissolves permanently. No treasury survives. Nothing to capture.",
+    p: "Money leaves a pool only by spending (governed by adjudication) or liquidation. No third path, no discretionary signer, nobody who can decide.",
   },
 ];
 
@@ -44,7 +39,7 @@ export function Mechanism() {
     <SectionBand id="mechanism" label="how it works" tone="soft">
       <Settle className="flex flex-col gap-(--riprap-space-xl)">
         <h2 className="max-w-2xl tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
-          Six steps. One pool.
+          Five steps. One pool.
         </h2>
 
         <LifecycleStrip />

@@ -3,7 +3,6 @@ import type * as MotionReact from "motion/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GlyphTile } from "../components/chrome/GlyphTile";
 import { Claim } from "./Claim";
-import { End } from "./End";
 import { Gather } from "./Gather";
 import { HexBackdrop } from "./HexBackdrop";
 import { Join } from "./Join";
@@ -33,17 +32,16 @@ function colorAttrs(container: HTMLElement): string[] {
     .filter((v): v is string => Boolean(v));
 }
 
-const SIX = [
+const GLYPHS = [
   ["gather", Gather],
   ["join", Join],
   ["claim", Claim],
   ["rule", Rule],
   ["return", Return],
-  ["end", End],
 ] as const;
 
 describe("glyphs — one concept each, sharp geometry, token colors", () => {
-  for (const [name, Glyph] of SIX) {
+  for (const [name, Glyph] of GLYPHS) {
     it(`${name}: renders its frame, no rounded corners, no hex colors`, () => {
       const { container } = render(<Glyph />);
       const svg = container.querySelector(`[data-glyph="${name}"]`);
@@ -108,12 +106,6 @@ describe("glyphs — one concept each, sharp geometry, token colors", () => {
     const widths = new Set(shares.map((s) => s.getAttribute("width")));
     expect(widths.size).toBe(1); // equal shares — pro-rata is the concept
   });
-
-  it("end: the vessel in four loose segments, no money anywhere", () => {
-    const { container } = render(<End />);
-    expect(container.querySelectorAll("line").length).toBe(4);
-    expect(container.querySelector("rect")).toBeNull();
-  });
 });
 
 describe("GlyphTile — concept on a registered plate", () => {
@@ -135,20 +127,19 @@ describe("GlyphTile — concept on a registered plate", () => {
   });
 });
 
-describe("LifecycleStrip — the whole product in six plates", () => {
-  it("renders six ordered steps, one concept each, no technical terms", () => {
+describe("LifecycleStrip — the whole product in five plates", () => {
+  it("renders five ordered steps, one concept each, no technical terms", () => {
     const { container } = render(<LifecycleStrip />);
     const steps = [...container.querySelectorAll("li")];
-    expect(steps.length).toBe(6);
+    expect(steps.length).toBe(5);
     expect(steps.map((li) => li.getAttribute("data-step"))).toEqual([
       "join",
       "gather",
       "rule",
       "claim",
       "return",
-      "end",
     ]);
-    for (const ord of ["01", "02", "03", "04", "05", "06"]) {
+    for (const ord of ["01", "02", "03", "04", "05"]) {
       expect(screen.getByText(ord).className).toContain("[font:var(--riprap-mono-label)]");
     }
   });

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import { GlyphTile } from "../components/chrome/GlyphTile";
 import { Claim } from "./Claim";
-import { End } from "./End";
 import { Gather } from "./Gather";
 import { Join } from "./Join";
 import { Return } from "./Return";
@@ -19,7 +18,6 @@ const STEPS = [
   { id: "rule", step: "03", label: "peers decide", Glyph: Rule },
   { id: "claim", step: "04", label: "a claim is paid", Glyph: Claim },
   { id: "return", step: "05", label: "liquidate", Glyph: Return },
-  { id: "end", step: "06", label: "the pool ends", Glyph: End },
 ] as const;
 
 /**

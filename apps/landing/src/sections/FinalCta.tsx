@@ -2,7 +2,7 @@ import { SectionBand, TextLink } from "@riprap/ui";
 
 import { Settle } from "../components/Settle";
 import { Waitlist } from "../components/Waitlist";
-import { GITHUB_URL, X_URL } from "./shared";
+import { X_URL } from "./shared";
 
 // §6 — Final CTA. The member-benefit line as the closing hook.
 export function FinalCta() {
@@ -23,12 +23,6 @@ export function FinalCta() {
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
           <TextLink href={X_URL} external>
             @riprapxyz
-          </TextLink>
-          <span className="text-muted-soft" aria-hidden="true">
-            ·
-          </span>
-          <TextLink href={GITHUB_URL} external>
-            GitHub
           </TextLink>
         </div>
       </Settle>

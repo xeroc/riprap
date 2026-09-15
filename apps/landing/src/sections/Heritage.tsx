@@ -27,7 +27,7 @@ const lineage = [
   {
     when: "now",
     name: "Two programs",
-    body: "Programmatic custody holds the pool behind two governed exit doors. Accord's arbitration oracle adjudicates. Treasurer and judge, both programs.",
+    body: "Programmatic custody holds the Treasury. Solana's high-speed, low-cost transaction processing implements the logic.",
   },
 ];
 
@@ -61,9 +61,6 @@ export function Heritage() {
         <div className="flex flex-col gap-3">
           <p className="max-w-2xl tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
             Protection without a protector.
-          </p>
-          <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
-            We claim the mechanism. We don't claim traction. The first pool is the build target.
           </p>
         </div>
       </Settle>

@@ -19,23 +19,8 @@ export function Audience() {
           </p>
           <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
             Behind them: the <span className="text-ink">Sponsor</span> (founds a pool at their
-            event) and the <span className="text-ink">Juror</span> (a staked member who adjudicates
-            and earns by being honest).
-          </p>
-        </div>
-
-        <div className="max-w-2xl border border-hairline bg-card px-6 py-5">
-          <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
-            Honest scope
-          </p>
-          <p className="mt-2 leading-relaxed text-body [font:var(--riprap-body-md)]">
-            Riprap is pre-launch. No pool has run, no members exist, no payouts to show. The first
-            pool, Blade Pool @ Breakpoint{" "}
-            <span data-num className="font-mono text-ink">
-              2026
-            </span>{" "}
-            , is the worked example, not a track record. No traction numbers, because there is no
-            traction. Read the policy. Follow the build.
+            event) and the <span className="text-ink">Jurors</span> (staked members who adjudicate
+            and earn by being honest).
           </p>
         </div>
       </Settle>
