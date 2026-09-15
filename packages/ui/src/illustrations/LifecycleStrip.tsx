@@ -1,3 +1,4 @@
+import { useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 
 import { GlyphTile } from "../components/chrome/GlyphTile";
@@ -8,9 +9,11 @@ import { Return } from "./Return";
 import { Rule } from "./Rule";
 
 /**
- * LifecycleStrip — the whole product in six single-concept plates:
- * gather → join → claim → rule → return → end. One line of story, no
- * technical terms; each tile holds exactly one idea.
+ * LifecycleStrip — the whole product in five single-concept plates:
+ * join → gather → rule → claim → liquidate. One line of story, no
+ * technical terms; each tile holds exactly one idea. `skipSteps` hides
+ * plates by their printed ordinal (the pitch omits the liquidate plate:
+ * `skipSteps={[5]}`); kept plates keep their ordinals, no renumbering.
  */
 const STEPS = [
   { id: "join", step: "01", label: "one more member", Glyph: Join },
@@ -21,19 +24,25 @@ const STEPS = [
 ] as const;
 
 /**
- * Hover-loop period — longest glyph stagger (0.16s) + settle (0.16s) plus a
- * beat of rest before the arrival replays. The one sanctioned loop in the
- * kit: pointer-only, and reduced motion stays settled throughout.
+ * Auto-loop cadence — the arrival (longest stagger 0.16s + settle 0.16s)
+ * replays indefinitely after a rest of LOOP_BREAK_MS. Reduced motion never
+ * loops: the glyph mounts settled and stays.
  */
-export const HOVER_LOOP_MS = 1200;
+export const LOOP_BREAK_MS = 3000;
+export const AUTO_LOOP_MS = 320 + LOOP_BREAK_MS;
 
-export function LifecycleStrip() {
+export function LifecycleStrip({ skipSteps = [] }: { skipSteps?: readonly number[] }) {
+  const visible = STEPS.filter((tile) => !skipSteps.includes(Number(tile.step)));
   return (
     <ol
       data-slot="lifecycle-strip"
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
+      className={
+        visible.length === 4
+          ? "grid grid-cols-2 gap-4 sm:grid-cols-4"
+          : "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
+      }
     >
-      {STEPS.map((tile) => (
+      {visible.map((tile) => (
         <LifecycleTile key={tile.id} {...tile} />
       ))}
     </ol>
@@ -41,29 +50,23 @@ export function LifecycleStrip() {
 }
 
 /**
- * One plate. While hovered, the glyph's arrival replays in a loop: each
- * tick remounts it (key bump), re-running the settle-in stagger from its
- * ENTER state. On leave it stops and stays arrived.
+ * One plate. The glyph's arrival replays in a loop: each tick remounts it
+ * (key bump), re-running the settle-in stagger from its ENTER state, then
+ * rests LOOP_BREAK_MS before the next replay — indefinitely. Under reduced
+ * motion no interval runs at all.
  */
 function LifecycleTile({ id, step, label, Glyph }: (typeof STEPS)[number]) {
-  const [hover, setHover] = useState(false);
   const [run, setRun] = useState(0);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
-    if (!hover) return;
-    const loop = window.setInterval(() => setRun((r) => r + 1), HOVER_LOOP_MS);
+    if (reduced) return;
+    const loop = window.setInterval(() => setRun((r) => r + 1), AUTO_LOOP_MS);
     return () => window.clearInterval(loop);
-  }, [hover]);
+  }, [reduced]);
 
   return (
-    <li
-      data-step={id}
-      onMouseEnter={() => {
-        setHover(true);
-        setRun((r) => r + 1); // first replay is immediate, not after one period
-      }}
-      onMouseLeave={() => setHover(false)}
-    >
+    <li data-step={id}>
       <GlyphTile step={step} label={label}>
         <Glyph key={run} />
       </GlyphTile>
