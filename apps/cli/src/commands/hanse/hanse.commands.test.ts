@@ -152,7 +152,7 @@ const INIT_ARGS = [
   EVIDENCE_OPERATOR,
 ];
 
-test("hanse topic help lists all eight commands", () => {
+test("hanse topic help lists all twelve commands", () => {
   const res = spawnSync("bun", [devJs, "hanse", "--help"], { encoding: "utf8", cwd: cliRoot });
   expect(res.status).toBe(0);
   for (const name of [
@@ -164,6 +164,10 @@ test("hanse topic help lists all eight commands", () => {
     "hanse:claim-payout",
     "hanse:dissolve",
     "hanse:set-subaccord-param",
+    "hanse:show",
+    "hanse:claim",
+    "hanse:member",
+    "hanse:quote",
   ]) {
     expect(res.stdout).toContain(name);
   }
@@ -314,4 +318,37 @@ test("file-claim without a reachable rpc errors cleanly (nonce + fee are chain s
   );
   expect(res.status).not.toBe(0);
   expect(res.stderr).toContain("RpcUnreachable");
+});
+
+describe("hanse:quote (pure, offline)", () => {
+  test("§8 exhausted path via the CLI, no keypair or rpc needed", () => {
+    const res = spawnSync(
+      "bun",
+      [
+        devJs,
+        "hanse:quote",
+        "--json",
+        "--claim-amount",
+        "2000000000",
+        "--fee-paid",
+        "15000000",
+        "--treasury",
+        "20000000000",
+        "--obligations",
+        "30000000000",
+        "--fee-refunds",
+        "225000000",
+        "--contribution",
+        "20000000",
+      ],
+      { encoding: "utf8", cwd: cliRoot },
+    );
+    expect(res.status).toBe(0);
+    const out = JSON.parse(res.stdout);
+    expect(out.ratio1e9).toBe("661703887"); // bigint → decimal string (jsonStringify)
+    expect(out.claimPart).toBe("1323407774"); // $1,323.407774 — §8 "$1,323.40"
+    expect(out.feePart).toBe("9925558"); // $9.925558 — §8 "$9.93"
+    expect(out.payout).toBe("1333333332");
+    expect(out.burn).toBe("20000000"); // saturates at the $20 contribution
+  });
 });
