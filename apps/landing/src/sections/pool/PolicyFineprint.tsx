@@ -253,6 +253,42 @@ const SECTIONS: PolicySection[] = [
       </div>
     ),
   },
+  {
+    n: "13",
+    title: "Counsel's recommendations",
+    body: (
+      <div className="flex flex-col gap-3">
+        {/* policy §13 — each recommendation with the policy's response */}
+        <ul data-slot="policy-recommendations" className="flex flex-col gap-2">
+          <li>
+            1. Reconsider the legal form — a registered society (CCBSA 2014) would provide separate
+            legal personality and limited liability, at the cost of annual FCA filings; the
+            unincorporated association leaves the operators personally exposed (§12).
+          </li>
+          <li>2. Document the discretion exhaustively — adopted: §1 and §7.</li>
+          <li>
+            3. Avoid insurance terminology — adopted throughout: contribution, discretionary
+            payment.
+          </li>
+          <li>
+            4. Take specific advice on the smart contract — the interaction between Solana-based
+            execution and English association law needs a dedicated opinion.
+          </li>
+          <li>
+            5. Consider FCA pre-application engagement — the Mutual Societies Development Unit can
+            confirm whether the model falls within the regulatory perimeter before the structure is
+            committed.
+          </li>
+        </ul>
+        <p>
+          Counsel's conclusion: the discretionary mutual model is legally viable in principle, but
+          the combination of unincorporated status and smart-contract implementation introduces
+          material legal uncertainty and personal liability risk. Proceed with caution and specific
+          legal advice.
+        </p>
+      </div>
+    ),
+  },
 ];
 
 // The fineprint band: clear items, small type. Two columns on wide screens;

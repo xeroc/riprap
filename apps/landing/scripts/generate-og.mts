@@ -65,10 +65,10 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
   </style>
   <rect width="${W}" height="${H}" fill="#0C0E10"/>
   <rect x="40" y="40" width="${W - 80}" height="${H - 80}" fill="none" stroke="#2a2e33" stroke-width="1"/>
-  <text class="mono" x="96" y="208" font-size="21" letter-spacing="4.5" fill="#3e7ca6">EVENT MUTUALS ON SOLANA</text>
+  <text class="mono" x="96" y="208" font-size="21" letter-spacing="4.5" fill="#3e7ca6">RISK POOLS ON SOLANA</text>
   <text x="94" y="330" font-size="122" font-weight="600" fill="#f2efe8">Riprap</text>
-  <text x="96" y="396" font-size="30" fill="#c9cdd1">Any event. Any narrow peril.</text>
-  <text x="96" y="438" font-size="30" fill="#c9cdd1">One finite pool.</text>
+  <text x="96" y="396" font-size="30" fill="#c9cdd1">Finance went P2P.</text>
+  <text x="96" y="438" font-size="30" fill="#c9cdd1">Mutuals can too.</text>
   <text class="mono" x="96" y="530" font-size="20" fill="#8a9096">riprap.xyz</text>
 ${stones.join("\n")}
 </svg>
@@ -77,6 +77,8 @@ ${stones.join("\n")}
 const htmlPath = path.join(tmp, "og.html");
 const pngPath = path.join(tmp, "og.png");
 writeFileSync(htmlPath, `<!doctype html><html><head><style>html,body{margin:0;padding:0}</style></head><body>${svg}</body></html>`);
+
+console.log(`html written: ${htmlPath}`);
 
 try {
   execFileSync(

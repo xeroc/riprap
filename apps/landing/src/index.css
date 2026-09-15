@@ -42,18 +42,22 @@ samp {
 /*
  * Motion law (DESIGN.md § Motion): settle, not slide. Elements drop and
  * stop — opacity + transform only, one strong ease-out curve, no bounce.
+ * Curve = the kit's canonical settle quart (tokens.css --riprap-settle).
+ * Scroll-arrival runs at 2× settle (320ms) like the kit's in-view fills
+ * (illustrations use 2 × SETTLE): at 160ms an ease-out fade finishes
+ * ~94% inside the first 100ms and reads as a pop, not a fade.
  * Reduced motion collapses to an opacity fade with no displacement.
  */
 :root {
-  --ease-settle: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-settle: cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
 .settle {
   opacity: 0;
   transform: translateY(8px);
   transition:
-    opacity 160ms var(--ease-settle),
-    transform 160ms var(--ease-settle);
+    opacity 320ms var(--ease-settle),
+    transform 320ms var(--ease-settle);
   transition-delay: var(--settle-delay, 0ms);
 }
 
