@@ -1,4 +1,4 @@
-import { LifecycleStrip, Logomark, StampBadge, Wordmark } from "@riprap/ui";
+import { LifecycleStrip, Logomark, Wordmark } from "@riprap/ui";
 import type { FC } from "react";
 
 import { SlideFrame } from "./shell";
@@ -40,7 +40,7 @@ const TitleSlide: FC = () => {
           className="mt-6 uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]"
           style={rise(frame, 48)}
         >
-          seed raise · 2026
+          pre-seed raise · 2026
         </div>
       </div>
     </div>
@@ -474,7 +474,7 @@ const UNLOCK_STEPS = [
 const AskSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="seed" headline="the ask">
+    <SlideFrame kicker="pre-seed" headline="the ask">
       <div className="flex w-full items-start gap-10" data-num>
         <div className="flex flex-1 flex-col gap-6">
           {ASK_TERMS.map((t, i) => (
@@ -547,8 +547,7 @@ const VisionSlide: FC = () => {
           className="max-w-[62ch] text-ink [font:var(--riprap-title-md)]"
           style={rise(frame, 16)}
         >
-          An open protocol for truly peer-to-peer, permissionless insurance, on
-          chain.
+          An open protocol for truly peer-to-peer, permissionless insurance, on chain.
         </div>
 
         <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -673,7 +672,7 @@ const TeamSlide: FC = () => {
           maskImage: "linear-gradient(to bottom, transparent, black 18%, black 82%, transparent)",
           WebkitMaskImage:
             "linear-gradient(to bottom, transparent, black 18%, black 82%, transparent)",
-          ...rise(frame, 56)
+          ...rise(frame, 56),
         }}
       >
         <div className="kudos-track flex w-full flex-col">
@@ -745,7 +744,7 @@ export const SLIDES: SlideDef[] = [
     id: "title",
     label: "riprap",
     notes:
-      "10s. Riprap — peer-to-peer risk pooling on Solana. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Seed raise, 2026.",
+      "10s. Riprap — peer-to-peer risk pooling on Solana. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Pre-Seed raise, 2026.",
     component: TitleSlide,
   },
   {
