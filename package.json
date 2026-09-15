@@ -2,7 +2,7 @@
   "name": "riprap",
   "version": "0.1.0",
   "private": true,
-  "description": "Riprap — event-scoped mutual protection pools on Solana. Frontend: @riprap/ui (illustration kit) + @riprap/landing (static site); on-chain: programs/pool (Anchor) + @riprap/pool (Codama client).",
+  "description": "Riprap — mutuals as a protocol on Solana: permissionless protection pools, any terms, any lifetime. Frontend: @riprap/ui (illustration kit) + @riprap/landing (static site); on-chain: programs/pool (Anchor) + @riprap/pool (Codama client).",
   "type": "module",
   "scripts": {
     "build": "pnpm -r run build",
