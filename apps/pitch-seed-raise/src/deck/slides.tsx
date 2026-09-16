@@ -8,13 +8,15 @@ import { useSlideFrame } from "./useSlideFrame";
  * The seed-raise deck — 10 slides, copy from meta/PITCH.md (the law for every
  * string and number below; citations ride along in mono). Golden-circle order:
  * WHY (the problem — the oldest fix has no on-ramp) → WHAT (the product) →
- * → the market (mutual risk pools) → the launch (events are the door,
- * Breakpoint first) → the business → the ask → the vision → the team → close.
+ * → the market (communities conventional economics skips) → the launch
+ * (events are the door, Breakpoint first) → the business → the ask → the
+ * vision → the team → close.
  *
  * Staging rules: headlines are lowercase (deck law); "insurance" never
- * describes our product (one directed exception: the vision slide names the
- * destination, 2026-09-15); every number carries its source; the team slide is
- * the accord deck's builder layout (copied 2026-09-15) on Riprap tokens.
+ * describes our product (two directed exceptions: the vision slide names the
+ * destination, 2026-09-15; the market slide names the conventional sector it
+ * does not serve, 2026-09-16); every number carries its source; the team slide
+ * is the accord deck's builder layout (copied 2026-09-15) on Riprap tokens.
  */
 
 /** Rise style for frame-gated reveals: clamped progress in the
@@ -158,8 +160,8 @@ const ProblemSlide: FC = () => {
 
 const PRODUCT_LAWS = [
   {
-    head: "two exit doors, no third",
-    body: "money leaves only by spending (governed by adjudication) or liquidation (governed by the members' own hand). No discretionary signer, ever.",
+    head: "written terms",
+    body: "a hash-linked document provides the terms for the pool. build the basis for the pools purpose.",
   },
   {
     head: "members judge members",
@@ -167,7 +169,7 @@ const PRODUCT_LAWS = [
   },
   {
     head: "an enforced end, either way",
-    body: "an expiring pool dissolves by clock; an open-ended one liquidates when its members choose. Ending is a property, not a promise.",
+    body: "an expiring pool dissolves by clock; an open-ended one liquidates when its members choose.",
   },
 ];
 
@@ -198,38 +200,45 @@ const ProductSlide: FC = () => {
 
 /* 05 — the market ------------------------------------------------------------ */
 
-const MARKET_ROWS = [
-  { v: "$1.61T", label: "mutual premiums written per year", src: "ICMIF '24" },
+/** The market story (rewritten 2026-09-16): not "insurance is a $1.6T
+ * market" — the communities conventional insurance economics cannot serve.
+ * Each "too" is the same fixed-cost wall from a different side; each inverts
+ * into a pool the rails make possible. Numbers follow as evidence. */
+const SKIPPED_COMMUNITIES = [
+  {
+    head: "too small",
+    body: "a savings circle to start a small business. a sports club covering rent for one season.",
+  },
+  {
+    head: "too geographically specific",
+    body: "one bay's coastal homeowners. one valley's harvest failure.",
+  },
+  {
+    head: "too short-duration",
+    body: "a three-day conference. a fishing season. a tournament.",
+  },
+  {
+    head: "too low-premium",
+    body: "a one time $20 payment for a limited time cover",
+  },
+];
+
+const EVIDENCE_ROWS = [
   { v: "$424B", label: "annual protection gap nobody covers", src: "Swiss Re sigma '25" },
   {
     v: "344M / 88%",
     label: "covered by microinsurance / of target still uncovered",
     src: "Micro Insurance Network '24",
   },
-];
-
-const FIELD_ROWS: {
-  name: string;
-  chain: string;
-  cells: { v: string; sub?: string }[];
-}[] = [
   {
-    name: "Nexus Mutual",
-    chain: "ethereum · arbitrum · kyc",
-    cells: [
-      { v: "$5.7M", sub: "cover fees '25" },
-      { v: "$2.7M", sub: "ever · no VC" },
-      { v: "$1B+", sub: "purchased '25" },
-    ],
+    v: "~26¢",
+    label: "of every US P&C premium dollar spent before a claim is paid",
+    src: "Verisk/APCIA '25",
   },
   {
-    name: "OpenCover",
-    chain: "base · ethereum · off-chain co",
-    cells: [
-      { v: "—", sub: "undisclosed" },
-      { v: "$4.6M", sub: "seed '22–23" },
-      { v: "$141.6M", sub: "protected '25" },
-    ],
+    v: "$1.61T",
+    label: "mutual premiums a year — the behavior, already formalized",
+    src: "ICMIF '24",
   },
 ];
 
@@ -237,53 +246,39 @@ const MarketSlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame kicker="mutual risk pools" headline="the market">
-      <div className="flex w-full flex-col gap-5" data-num>
-        {MARKET_ROWS.map((r, i) => (
+      <div className="max-w-[76ch] text-body [font:var(--riprap-title-md)]" style={rise(frame, 12)}>
+        Millions of communities don't fit conventional insurance economics.{" "}
+        <span className="text-ink">
+          We are building the infrastructure that lets those groups create their own risk pools.
+        </span>
+      </div>
+      <div className="flex w-full items-start gap-6">
+        {SKIPPED_COMMUNITIES.map((c, i) => (
+          <div
+            key={c.head}
+            className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
+            style={rise(frame, 36 + i * 10)}
+          >
+            <div className="text-ink [font:var(--riprap-title-sm)]">{c.head}</div>
+            <div className="text-muted [font:var(--riprap-body-sm)]">{c.body}</div>
+          </div>
+        ))}
+      </div>
+      <div className="flex w-full flex-col gap-4" data-num>
+        <div className="flex items-baseline" style={rise(frame, 84)}>
+          <span className="text-sm tracking-[0.2em] text-text-secondary">EVIDENCE</span>
+        </div>
+        {EVIDENCE_ROWS.map((r, i) => (
           <div
             key={r.label}
-            className="flex items-baseline gap-8 border-t border-hairline pt-4"
-            style={rise(frame, 24 + i * 16)}
+            className="flex items-baseline gap-8 border-t border-hairline pt-3"
+            style={rise(frame, 92 + i * 12)}
           >
             <span className="w-[24ch] text-right text-accent [font:var(--riprap-mono-number)]">
               {r.v}
             </span>
             <span className="flex-1 text-ink [font:var(--riprap-title-sm)]">{r.label}</span>
             <span className="text-muted-soft [font:var(--riprap-mono-label)]">{r.src}</span>
-          </div>
-        ))}
-
-        <div className="flex items-baseline mt-6" style={rise(frame, 75)}>
-          <span className="text-sm tracking-[0.2em] text-text-secondary">OTHERS</span>
-        </div>
-        <div
-          className="grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] gap-x-12 text-sm tracking-[0.2em] text-text-secondary"
-          style={rise(frame, 78)}
-        >
-          <div />
-          <div className="text-right">FEES &rsquo;25</div>
-          <div className="text-right">RAISED</div>
-          <div className="text-right">COVER</div>
-        </div>
-        {FIELD_ROWS.map((r, i) => (
-          <div
-            key={r.name}
-            className="grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] items-baseline gap-x-12 border-t border-white/10 pt-5"
-            style={rise(frame, 78 + i * 16)}
-          >
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2">
-                <span className="font-heading text-xl font-bold tracking-tight text-nearwhite">
-                  {r.name}
-                </span>
-              </div>
-              <span className="text-sm text-text-secondary">{r.chain}</span>
-            </div>
-            {r.cells.map((c, j) => (
-              <div key={j} className="flex flex-col items-end gap-1 text-right">
-                <span className="text-xl tabular-nums text-nearwhite">{c.v}</span>
-                {c.sub ? <span className="text-sm text-text-secondary">{c.sub}</span> : null}
-              </div>
-            ))}
           </div>
         ))}
       </div>
@@ -299,7 +294,7 @@ const MarketSlide: FC = () => {
 const LAUNCH_REASONS = [
   {
     head: "the cleanest legal surface",
-    body: "crypto-native members covering each other, one bounded window. the pilot crosses nothing regulated.",
+    body: "crypto-native members covering each other, one bounded window.",
   },
   {
     head: "the solana family is loyal",
@@ -407,20 +402,19 @@ const LaunchSlide: FC = () => {
 /* 07 — the business ---------------------------------------------------------- */
 
 const BUSINESS_LADDER = [
-  { v: "0%", label: "protocol take on pool #1 — the pilot exists to publish numbers, not revenue" },
+  { v: "0%", label: "protocol take on pool #1, the pilot exists to confirm the market" },
   {
     v: "% of surplus",
-    label: "take-rate, switched on with the second pool — doubles as the organizer revenue-share",
+    label:
+      "take-rate, switched on with the subsequent pools, doubles as the organizer revenue-share",
   },
   {
-    v: "fee",
-    label:
-      "operator services — running flagship pools for sponsors who want the product, not the ops",
+    v: "operating fees",
+    label: "running flagship pools for sponsors who want the product but not the ops",
   },
   {
-    v: "rail share",
-    label:
-      "infrastructure capture — when anyone can launch a mutual, the share extends to pools we do not operate",
+    v: "other options",
+    label: "The correct monetization should emerge from usage.",
   },
 ];
 
@@ -779,7 +773,7 @@ export const SLIDES: SlideDef[] = [
     id: "market",
     label: "the market",
     notes:
-      "35s. Read the rows, do not editorialize: $1.61T mutual premiums (ICMIF '24); $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama). Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
+      "35s. The story first, then the numbers: millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics — a $20, 3-day, single-peril cover is sub-economic by construction when ~26¢ of every US P&C premium dollar is spent before a claim is paid (Verisk/APCIA '25). We are building the infrastructure that lets those groups create their own risk pools. Then read the evidence, do not editorialize: $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); ~26¢ per premium dollar (Verisk '25); $1.61T mutual premiums — the same behavior, formalized (ICMIF '24). If asked: $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama); market scan — Nexus Mutual $5.7M cover fees '25, $2.7M raised ever, $1B+ purchased; OpenCover $4.6M seed '22–23, $141.6M protected '25. Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
     component: MarketSlide,
   },
   {

@@ -51,9 +51,11 @@
 
         **Slide 3 — the product ("one mutual · one risk · a lifetime of its choosing").** Lifecycle: join → gather → rule → claim. Three laws:
 
-        - **two exit doors, no third** — money leaves only by spending (governed by adjudication) or liquidation (governed by the members' own hand). No discretionary signer, ever.
+        - **written terms** — a hash-linked document provides the terms for the pool. build the basis for the pools purpose.
         - **members judge members** — claims adjudicate on-chain with staked jurors, sealed-then-revealed votes, bounded appeals, slashed incoherence.
-        - **an enforced end, either way** — an expiring pool dissolves by clock; an open-ended one liquidates when its members choose. Ending is a property, not a promise.
+        - **an enforced end, either way** — an expiring pool dissolves by clock; an open-ended one liquidates when its members choose.
+
+        Nexus validates demand for on-chain protection, while Riprap explores a different architecture: user-created, isolated mutuals rather than a protocol-centered protection marketplace.
 
         Speaker notes: event pools expire by clock; open-ended mutuals liquidate when members choose. Adjudication runs on Accord (useaccord.xyz) — staked jurors, sealed votes, appeals, slashing; each mutual configures its own jury. Status row verbatim if asked: pool built, arbitration on devnet, hanse in build, Tributary on mainnet. Audits gate mainnet capital — that is what the raise funds first.
 
@@ -80,9 +82,18 @@
 
         USDC end to end. No product token required. The raise carries a token warrant over staked reserve capital — bounded to a fixed share of any future supply, terms published before the round opens; preferred end state is token-only via MetaDAO — value to the DAO, not the cap table. The warrant is the term negotiated hardest.
 
-        **Slide 6 — the market.** Rows, read plainly (source): $1.61T mutual premiums written per year (ICMIF '24); $424B annual protection gap nobody covers (Swiss Re sigma '25); 344M / 88% — covered by microinsurance / of target still uncovered (Micro Insurance Network '24). Speaker notes add: $136B alternative capital wanting in, gated at ~$200k QIB-only tickets (Aon '25); on-chain, $3.4B stolen per year against a ~$104M cover sector (Chainalysis, DeFiLlama).
+        **Slide 6 — the market.** Deck copy, verbatim: "Millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics. We are building the infrastructure that lets those groups create their own risk pools."
 
-        Others — deck market-scan figures: Nexus Mutual (ethereum · arbitrum · kyc): $5.7M cover fees '25; $2.7M raised ever, no VC; $1B+ purchased '25. OpenCover (base · ethereum · off-chain co): fees undisclosed; $4.6M seed '22–23; $141.6M protected '25.
+        The four walls, each with its communities:
+
+        - **too small** — a savings circle covering funerals; a sports club covering one season.
+        - **too geographically specific** — one bay's coastal homeowners; one valley's harvest failure.
+        - **too short-duration** — a three-day conference; a fishing season; a tournament.
+        - **too low-premium** — a $20 cover; the fixed cost is the product.
+
+        Evidence rows, read plainly (source): $424B annual protection gap nobody covers (Swiss Re sigma '25); 344M / 88% — covered by microinsurance / of target still uncovered (Micro Insurance Network '24); ~26¢ of every US P&C premium dollar spent before a claim is paid (Verisk/APCIA '25); $1.61T mutual premiums a year — the behavior, already formalized (ICMIF '24).
+
+        Speaker notes add: $136B alternative capital wanting in, gated at ~$200k QIB-only tickets (Aon '25); on-chain, $3.4B stolen per year against a ~$104M cover sector (Chainalysis, DeFiLlama); the market scan — Nexus Mutual ($5.7M cover fees '25; $2.7M raised ever, no VC; $1B+ purchased '25) and OpenCover ($4.6M seed '22–23; $141.6M protected '25) — carried in Q&A, no longer a slide table.
 
         Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.
 
@@ -148,6 +159,26 @@
         1. **Two exit doors, no third.** Money leaves a pool only by spending (governed by adjudication) or liquidation (governed by the ownership authority — the members' collective hand in an open-ended mutual, never an operator's). No discretionary signer, ever.
         2. **Members judge members.** Adjudication runs on Accord (useaccord.xyz) — staked jurors, private-then-revealed votes, bounded appeals, slashed incoherence. The mutual configures its own jury; anyone can read how the arbitration layer works end to end.
         3. **An enforced end, either way.** An expiring mutual dissolves by permissionless crank once its term passes — it cannot linger, cannot be captured, cannot become a treasury; every unused cent returns pro-rata. An open-ended mutual ends when its members choose: the same crank, pulled by decision instead of by clock. Ending is a property of the pool, not a promise an operator can withhold.
+
+        ## Claims — the cover terms are the contract, the jury applies them
+
+        A licensed insurer's claims look objective because a policy existed before the incident. Mutual claims work the same way, minus the insurer: the rules are written first, the judgment comes after. Two layers, deliberately separate:
+
+        - **The cover terms are the contract.** Every mutual is founded with its own written agreement — the cover terms — hash-committed on chain before the first member joins: the peril, the window, the place, the tiers and caps, the exclusions, and what a claim must carry. For a serious mutual it may as well be drafted as a legal contract; for the pilot it is a public document (the Blade Pool policy). Jurors answer one question: did the event that actually happened fall inside the written rules?
+        - **The protocol is policy-agnostic.** What counts as proof — a police report, a medical record, witness attestations, on-chain facts — is a term among terms, chosen by the founders of that mutual and readable by anyone before joining. One mutual may require a police report within 24 hours; another may accept two witnessed statements; the machinery is identical either way. The detail lives in the document, not the code — which is why a mutual's rules can sharpen without anyone shipping a smart-contract change.
+
+        The questions a claims process has to survive, and where each one is answered:
+
+        - **What counts as a covered event?** The cover terms. Blade Pool policy §3 defines knife assault; §4 excludes self-caused, accidental, consensual, and out-of-scope injuries. The definition is public before anyone pays.
+        - **Police involved? Witnesses required?** A cover-terms clause, not a protocol feature. Each mutual writes its evidence requirements; jurors check the claim against them.
+        - **Incident 100m outside the venue?** The covered area is a definition in the terms. The jurors find where the incident happened; the terms draw the line.
+        - **Claimant provoked the fight? Both parties intoxicated?** However the terms answer it — an explicit exclusion, or the jury's judgment where the terms are silent. Ambiguity lands on the jury by design; the finding is public, and the next version of those terms writes the lesson in.
+        - **Injury surfaced 12 hours later?** The window binds the incident, not its discovery — the claims window stays open past coverage end (the pilot: 14 days) so late-manifesting injuries can still be filed and judged.
+        - **Manufactured evidence?** Evidence goes encrypted to the drawn jurors only, hash-committed on chain, watermarked per juror. Beyond the plumbing it is the jury's judgment — and the pilot's attack bounty pays anyone who lands a fraudulent claim through the jury.
+        - **Jurors know the claimant? The attacker is also a member?** The draw is random at dispute time — panels cannot be groomed in advance — and conflicts are the terms' problem to define and the jury's to weigh. Not solved; bounded.
+        - **A $2,000 claim against a $20 juror stake?** The sharpest open question, answered honestly: juror economics are **not finalized**. The mechanism is fixed — stake-gated draws, sealed votes, slashed incoherence, a bounded appeal ladder, claimant-paid fees that junk filings must eat. The parameters — stake relative to claim size, slash depth, appeal cost — are deliberately unfrozen until the pilot produces real numbers: draw turnout, deliberation quality, cost to attack. The design constraint is written down: juror skin must scale with the treasury it guards, and the stake base and its concentration are public on chain, so a reviewer can check rather than take it on faith.
+
+        The protocol makes the mechanism decentralized and auditable. The cover terms make the truth question answerable — in writing, in advance, per mutual. Neither layer makes judgment automatic; both make it accountable.
 
         ## Why web3 — the $20 product is impossible with a company in the middle
 
@@ -281,7 +312,7 @@
         | Fraud ~10% of US P&C incurred losses | Adjudication economics matter | CAIF/NAIC |
         | Breakpoint 8,000+ attendees | Pilot cohort scale | solana.com/breakpoint (attributed) |
         | Pilot tiers $10/$20/$40 → $1k/$2k/$4k; worked example | Unit economics | Policy §5/§10 |
-        | Nexus Mutual $5.7M cover fees '25, $2.7M raised ever (no VC), $1B+ purchased '25; OpenCover $4.6M seed '22–23, $141.6M protected '25 | On-chain cover competitors' scale | Deck market scan |
+        | Nexus Mutual $5.7M cover fees '25, $2.7M raised ever (no VC), $1B+ purchased '25; OpenCover $4.6M seed '22–23, $141.6M protected '25 | On-chain cover competitors' scale | Market scan (Q&A notes) |
 
         ## Vocabulary note
 
