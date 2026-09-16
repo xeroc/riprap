@@ -31,11 +31,12 @@ afterEach(() => {
   reducedMotion = false;
 });
 
-/** all fill/stroke colors in a glyph tree — must be var(--riprap-*) refs only */
+/** all fill/stroke colors in a glyph tree — must be var(--riprap-*) refs only
+ * ("none" is absence of paint, not a color). */
 function colorAttrs(container: HTMLElement): string[] {
   return [...container.querySelectorAll("[fill],[stroke]")]
     .flatMap((el) => [el.getAttribute("fill"), el.getAttribute("stroke")])
-    .filter((v): v is string => Boolean(v));
+    .filter((v): v is string => Boolean(v) && v !== "none");
 }
 
 const GLYPHS = [
@@ -101,11 +102,15 @@ describe("glyphs — one concept each, sharp geometry, token colors", () => {
     expect(container.querySelectorAll('rect[fill="var(--riprap-funds)"]').length).toBe(2);
   });
 
-  it("rule: three peers, the majority carries deliberation", () => {
+  it("rule: three peers vote — two checks carry, one cross dissents", () => {
     const { container } = render(<Rule />);
     const fills = [...container.querySelectorAll("rect")].map((r) => r.getAttribute("fill"));
     expect(fills.filter((f) => f === "var(--riprap-deliberation)")).toHaveLength(2);
     expect(fills.filter((f) => f === "var(--riprap-diagram-stone)")).toHaveLength(1);
+    // vote marks: checks knocked out of the approve fills, cross on the dissent stone
+    const marks = [...container.querySelectorAll("path")].map((p) => p.getAttribute("stroke"));
+    expect(marks.filter((s) => s === "var(--riprap-diagram-canvas)")).toHaveLength(2);
+    expect(marks.filter((s) => s === "var(--riprap-diagram-stone-edge)")).toHaveLength(1);
   });
 
   it("return: empty vessel above, six equal funds shares below", () => {
