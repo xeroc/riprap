@@ -1,12 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
+import { Backstop } from "./Backstop";
 import { Claim } from "./Claim";
+import { ExpansionStrip } from "./ExpansionStrip";
+import { Found } from "./Found";
 import { Gather } from "./Gather";
 import { HexBackdrop } from "./HexBackdrop";
 import { Join } from "./Join";
 import { LifecycleStrip } from "./LifecycleStrip";
+import { OnePool } from "./OnePool";
+import { Renew } from "./Renew";
 import { Return } from "./Return";
 import { Rule } from "./Rule";
+import { Stack } from "./Stack";
 
 const meta = {
   title: "Illustrations/Glyphs",
@@ -79,6 +85,60 @@ export const Backdrop: StoryObj = {
   render: () => (
     <div className="relative h-screen w-full overflow-hidden bg-ground">
       <HexBackdrop className="absolute inset-0 size-full" />
+    </div>
+  ),
+};
+
+export const PoolStory: StoryObj = {
+  name: "pool — one pool, one risk",
+  render: () => (
+    <Frame>
+      <OnePool />
+    </Frame>
+  ),
+};
+
+export const FoundStory: StoryObj = {
+  name: "found — anyone founds one",
+  render: () => (
+    <Frame>
+      <Found />
+    </Frame>
+  ),
+};
+
+export const RenewStory: StoryObj = {
+  name: "renew — cover renews",
+  render: () => (
+    <Frame>
+      <Renew />
+    </Frame>
+  ),
+};
+
+export const BackstopStory: StoryObj = {
+  name: "backstop — a backstop grows",
+  render: () => (
+    <Frame>
+      <Backstop />
+    </Frame>
+  ),
+};
+
+export const StackStory: StoryObj = {
+  name: "stack — pools cover pools",
+  render: () => (
+    <Frame>
+      <Stack />
+    </Frame>
+  ),
+};
+
+export const Expansion: StoryObj = {
+  name: "expansion strip — from one pool to cover for anything",
+  render: () => (
+    <div className="p-8">
+      <ExpansionStrip />
     </div>
   ),
 };

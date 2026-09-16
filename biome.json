@@ -43,6 +43,18 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["packages/*/generated/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "useLiteralKeys": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "double",

@@ -2,13 +2,19 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import type * as MotionReact from "motion/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GlyphTile } from "../components/chrome/GlyphTile";
+import { Backstop } from "./Backstop";
 import { Claim } from "./Claim";
+import { ExpansionStrip } from "./ExpansionStrip";
+import { Found } from "./Found";
 import { Gather } from "./Gather";
 import { HexBackdrop } from "./HexBackdrop";
 import { Join } from "./Join";
 import { AUTO_LOOP_MS, LifecycleStrip } from "./LifecycleStrip";
+import { OnePool } from "./OnePool";
+import { Renew } from "./Renew";
 import { Return } from "./Return";
 import { Rule } from "./Rule";
+import { Stack } from "./Stack";
 
 // controllable reduced-motion flag — same pattern as chrome.test.tsx
 let reducedMotion = false;
@@ -38,6 +44,11 @@ const GLYPHS = [
   ["claim", Claim],
   ["rule", Rule],
   ["return", Return],
+  ["pool", OnePool],
+  ["found", Found],
+  ["renew", Renew],
+  ["backstop", Backstop],
+  ["stack", Stack],
 ] as const;
 
 describe("glyphs — one concept each, sharp geometry, token colors", () => {
@@ -105,6 +116,45 @@ describe("glyphs — one concept each, sharp geometry, token colors", () => {
     expect(shares.length).toBe(6);
     const widths = new Set(shares.map((s) => s.getAttribute("width")));
     expect(widths.size).toBe(1); // equal shares — pro-rata is the concept
+  });
+
+  it("pool: one vessel, one funds level — nothing else", () => {
+    const { container } = render(<OnePool />);
+    expect(container.querySelectorAll("line").length).toBe(3);
+    expect(container.querySelectorAll('rect[fill="var(--riprap-funds)"]').length).toBe(1);
+  });
+
+  it("found: a second vessel settles in with its own money", () => {
+    const { container } = render(<Found />);
+    expect(container.querySelectorAll("line").length).toBe(6); // two vessels × 3 walls
+    expect(container.querySelectorAll('rect[fill="var(--riprap-funds)"]').length).toBe(2);
+  });
+
+  it("renew: equal contributions keep arriving above the pool", () => {
+    const { container } = render(<Renew />);
+    const incoming = [...container.querySelectorAll("rect")].filter(
+      (r) => Number(r.getAttribute("y")) < 30 && r.getAttribute("fill") === "var(--riprap-funds)",
+    );
+    expect(incoming.length).toBe(3);
+    const widths = new Set(incoming.map((r) => r.getAttribute("width")));
+    expect(widths.size).toBe(1); // equal blocks — the cadence is the concept
+  });
+
+  it("backstop: the reserve grows beneath the pool floor", () => {
+    const { container } = render(<Backstop />);
+    const slabs = [...container.querySelectorAll('rect[fill="var(--riprap-diagram-stone)"]')];
+    expect(slabs.length).toBe(2);
+    for (const slab of slabs) {
+      expect(Number(slab.getAttribute("y"))).toBeGreaterThan(70); // below the vessel floor
+    }
+  });
+
+  it("stack: two pools, one door, money passing between them", () => {
+    const { container } = render(<Stack />);
+    // leaf right wall split by its door (4) + parent walls (3)
+    expect(container.querySelectorAll("line").length).toBe(7);
+    // two levels + the passing block
+    expect(container.querySelectorAll('rect[fill="var(--riprap-funds)"]').length).toBe(3);
   });
 });
 
@@ -189,6 +239,62 @@ describe("LifecycleStrip — the whole product in five plates", () => {
       for (const g of groups) {
         expect(g.style.opacity).not.toBe("0");
       }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("ExpansionStrip — from one pool to cover for anything", () => {
+  it("renders five ordered plates, one added thing each", () => {
+    const { container } = render(<ExpansionStrip />);
+    const steps = [...container.querySelectorAll("li")];
+    expect(steps.length).toBe(5);
+    expect(steps.map((li) => li.getAttribute("data-step"))).toEqual([
+      "pool",
+      "found",
+      "renew",
+      "backstop",
+      "stack",
+    ]);
+    for (const ord of ["01", "02", "03", "04", "05"]) {
+      expect(screen.getByText(ord).className).toContain("[font:var(--riprap-mono-label)]");
+    }
+  });
+
+  it("skipSteps omits plates by ordinal — kept plates keep their ordinals", () => {
+    const { container } = render(<ExpansionStrip skipSteps={[4, 5]} />);
+    const steps = [...container.querySelectorAll("li")].map((li) => li.getAttribute("data-step"));
+    expect(steps).toEqual(["pool", "found", "renew"]);
+    expect(screen.queryByText("04")).toBeNull();
+    expect(screen.queryByText("05")).toBeNull();
+    expect(screen.getByText("01")).toBeTruthy();
+  });
+
+  it("replays each plate's arrival on the strip's shared loop cadence", () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<ExpansionStrip />);
+      const mounted = container.querySelector('svg[data-glyph="pool"]');
+      act(() => {
+        vi.advanceTimersByTime(AUTO_LOOP_MS + 10);
+      });
+      expect(container.querySelector('svg[data-glyph="pool"]')).not.toBe(mounted);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("under reduced motion the loop never runs — glyphs stay mounted and settled", () => {
+    reducedMotion = true;
+    vi.useFakeTimers();
+    try {
+      const { container } = render(<ExpansionStrip />);
+      const mounted = container.querySelector('svg[data-glyph="pool"]');
+      act(() => {
+        vi.advanceTimersByTime(AUTO_LOOP_MS * 3);
+      });
+      expect(container.querySelector('svg[data-glyph="pool"]')).toBe(mounted);
     } finally {
       vi.useRealTimers();
     }

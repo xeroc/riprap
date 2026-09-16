@@ -1,4 +1,4 @@
-import { LifecycleStrip, Logomark, Wordmark } from "@riprap/ui";
+import { ExpansionStrip, LifecycleStrip, Logomark, Wordmark } from "@riprap/ui";
 import type { FC } from "react";
 
 import { SlideFrame } from "./shell";
@@ -502,30 +502,61 @@ const AskSlide: FC = () => {
 
 /* 09 — the vision (mutuals as a protocol — the directed "insurance" slide) --- */
 
-const VISION_PROPERTIES = [
+/** The vision, enumerated like the ExpansionStrip below it — one added
+ * thing per step, ordinals matching the plates (n ↔ tile step). The pool
+ * itself never changes shape; only what surrounds it grows. Copy per
+ * meta/PITCH.md §12 (destination vocabulary; this slide's directed
+ * exception to the vocabulary law is the headline sentence only). */
+const VISION_STEPS = [
   {
-    head: "permissionless creation",
-    body: "founding a mutual is a transaction on shared rails. any risk, any terms, any group.",
+    n: "01",
+    head: "one pool",
+    body: (
+      <>
+        where it starts: single risk, one treasury, a bounded lifetime. the{" "}
+        <span className="font-extrabold text-white/80">blade pool</span> pilot
+      </>
+    ),
   },
   {
-    head: "one risk per pool",
-    body: "isolation is structural, a pool never cross-subsidizes unrelated risks, and mutuals stack: first loss below, the tail above.",
+    n: "02",
+    head: "anyone founds one",
+    body: (
+      <>
+        a mutual is a transaction and can carry any risk, any terms, any group and use the same
+        <span className="font-extrabold text-white/80"> shared contract</span>.
+      </>
+    ),
   },
   {
-    head: "recurring premiums",
-    body: "require monthly payments for premiums to qualify for payouts.",
+    n: "03",
+    head: "cover renews",
+    body: (
+      <>
+        contributions recur through the pull payments rail. We've alreday built that with{" "}
+        <span className="font-extrabold text-white/80"> tributary.so</span>.
+      </>
+    ),
   },
   {
-    head: "risk capital",
-    body: "accept external risk into a pool for pure yield rewards",
+    n: "04",
+    head: "a backstop grows",
+    body: (
+      <>
+        <span className="font-extrabold text-white/80">external risk capital</span> stakes a reserve
+        beneath the pool and earns a rule-set share of its surplus.
+      </>
+    ),
   },
   {
-    head: "reinsurance",
-    body: "connect mutuals with eachother for re-insurance across uncorrelated risks.",
-  },
-  {
-    head: "tranching",
-    body: "offer multiple risk/yield tranches to risk capital providers.",
+    n: "05",
+    head: "pools cover pools",
+    body: (
+      <>
+        mutuals cover each other: first loss below, the tail above.{" "}
+        <span className="font-extrabold text-white/80">reinsurance and tranching</span>.
+      </>
+    ),
   },
 ];
 
@@ -544,15 +575,25 @@ const VisionSlide: FC = () => {
           An open protocol for truly peer-to-peer, permissionless insurance, on chain.
         </div>
 
-        <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {VISION_PROPERTIES.map((p, i) => (
+        <div style={rise(frame, 32)}>
+          <ExpansionStrip />
+        </div>
+
+        {/* same grid template as the strip — column i elaborates plate i */}
+        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          {VISION_STEPS.map((s, i) => (
             <div
-              key={p.head}
-              className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
-              style={rise(frame, 44 + i * 14)}
+              key={s.n}
+              className="flex flex-col gap-2 border-t border-hairline pt-4"
+              style={rise(frame, 52 + i * 12)}
             >
-              <div className="text-ink [font:var(--riprap-title-sm)]">{p.head}</div>
-              <div className="text-muted [font:var(--riprap-body-sm)]">{p.body}</div>
+              <div className="flex items-baseline gap-2">
+                <span data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
+                  {s.n}
+                </span>
+                <span className="text-ink [font:var(--riprap-title-sm)]">{s.head}</span>
+              </div>
+              <div className="text-muted [font:var(--riprap-body-sm)]">{s.body}</div>
             </div>
           ))}
         </div>
@@ -787,7 +828,7 @@ export const SLIDES: SlideDef[] = [
     id: "vision",
     label: "the vision",
     notes:
-      "30s. Zoom out before the team: the pilot is the proof, not the product. The destination is mutuals as an open protocol on Solana — true peer-to-peer, permissionless insurance, on-chain. This is the one slide that says the word: it names where the machine goes, not what we sell today — everywhere else the vocabulary law holds, and the licensed perimeter is entered deliberately, with carriers, where it requires it. Three properties: permissionless creation (a mutual is a transaction, not a company formation); one risk per pool (isolation is structural — and mutuals stack into tranched capital: first loss below, tail above); members adjudicate members (each mutual configures its own jury). The three machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built. The stack is the destination. Segue: who builds it — next slide.",
+      "30s. Zoom out before the team: the pilot is the proof, not the product. The destination is mutuals as an open protocol on Solana — true peer-to-peer, permissionless insurance, on-chain. This is the one slide that says the word: it names where the machine goes, not what we sell today — everywhere else the vocabulary law holds, and the licensed perimeter is entered deliberately, with carriers, where it requires it. Walk the strip, one added thing per step, the pool itself never changing shape: 01 one pool — the pilot's shape, the proof everything grows from; 02 anyone founds one — a mutual is a transaction, not a company formation; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built. The stack is the destination. Segue: who builds it — next slide.",
     component: VisionSlide,
   },
   {

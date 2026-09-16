@@ -9,6 +9,9 @@
 
 // UI chrome layer (shadcn primitives restyled to DESIGN.md + brand bands)
 export * from "./components";
+export { Backstop } from "./illustrations/Backstop";
+export { ExpansionStrip } from "./illustrations/ExpansionStrip";
+export { Found } from "./illustrations/Found";
 export { Gather } from "./illustrations/Gather";
 export {
   ENTER,
@@ -26,8 +29,11 @@ export type { HexBackdropProps } from "./illustrations/HexBackdrop";
 export { HexBackdrop } from "./illustrations/HexBackdrop";
 export { Join } from "./illustrations/Join";
 export { LifecycleStrip } from "./illustrations/LifecycleStrip";
+export { OnePool } from "./illustrations/OnePool";
+export { Renew } from "./illustrations/Renew";
 export { Return } from "./illustrations/Return";
 export { Rule } from "./illustrations/Rule";
+export { Stack } from "./illustrations/Stack";
 // lib
 export type { Tier, TierName } from "./lib/poolMath";
 export { fillHeight, proRataShare, scaledPayout, TIERS, tierFor, usd } from "./lib/poolMath";
