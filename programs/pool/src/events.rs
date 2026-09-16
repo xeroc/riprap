@@ -38,10 +38,12 @@ pub struct Liquidated {
 }
 
 /// Emitted once per depositor when the crank pays its money-weighted share.
+/// `beneficiary` is `Pubkey::default()` for self-funded positions.
 #[event]
 pub struct CrankPaid {
     pub pool: Pubkey,
     pub depositor: Pubkey,
+    pub beneficiary: Pubkey,
     pub paid: u64,
 }
 

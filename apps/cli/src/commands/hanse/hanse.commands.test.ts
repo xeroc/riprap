@@ -48,6 +48,11 @@ const WALLET_SECRET = new Uint8Array(64);
 WALLET_SECRET.set(WALLET_SEED);
 WALLET_SECRET.set(ed25519.getPublicKey(WALLET_SEED), 32);
 
+// Fixed-seed sponsor keypair, same trick.
+const SPONSOR_SEED = new Uint8Array(32).fill(11);
+const SPONSOR_SECRET = new Uint8Array(64);
+SPONSOR_SECRET.set(SPONSOR_SEED);
+SPONSOR_SECRET.set(ed25519.getPublicKey(SPONSOR_SEED), 32);
 let keypairPath: string;
 let wallet: Address;
 let mutualPda: Address;
@@ -58,6 +63,7 @@ let memberAccountPda: Address;
 let depositorPda: Address;
 let overrideTreasury: Address;
 let ownershipAuthorityPda: Address;
+let sponsor: Address;
 
 beforeAll(async () => {
   const dir = mkdtempSync(join(tmpdir(), "riprap-hanse-"));
@@ -80,6 +86,7 @@ beforeAll(async () => {
   depositorPda = (await findDepositorPda({ pool: POOL_OVERRIDE, owner: wallet }))[0];
   overrideTreasury = await findAssociatedTokenAddress(DEPOSIT_MINT, POOL_OVERRIDE);
   ownershipAuthorityPda = (await findOwnershipAuthorityPda({ mutual: mutualPda }))[0];
+  sponsor = (await createKeyPairSignerFromBytes(SPONSOR_SECRET)).address;
 });
 
 afterAll(() => {
@@ -177,12 +184,14 @@ describe("hanse:initialize --dry-run", () => {
   test("snapshot: §12 pilot args decoded; PDAs bound to wallet + seed", () => {
     const run = dryRun(["hanse:initialize", ...INIT_ARGS]);
     expect(run.programAddress).toBe(HANSE_PROGRAM_ADDRESS);
-    expect(run.accounts[0]?.address).toBe(wallet); // authority signer (rent payer)
+    expect(run.accounts[0]?.address).toBe(wallet); // authority signer (demo admin)
     expect(run.accounts[0]?.role).toContain("signer");
-    expect(run.accounts[1]?.address).toBe(mutualPda);
-    expect(run.accounts[2]?.address).toBe(poolPda);
-    expect(run.accounts[3]?.address).toBe(treasury);
-    expect(run.accounts[4]?.address).toBe(subaccordPda);
+    expect(run.accounts[1]?.address).toBe(wallet); // rent payer (sponsor slot)
+    expect(run.accounts[1]?.role).toContain("signer");
+    expect(run.accounts[2]?.address).toBe(mutualPda);
+    expect(run.accounts[3]?.address).toBe(poolPda);
+    expect(run.accounts[4]?.address).toBe(treasury);
+    expect(run.accounts[5]?.address).toBe(subaccordPda);
 
     const decoded = getInitializeMutualInstructionDataDecoder().decode(decodeHex(run.data));
     expect(decoded.seed).toBe(7n);
@@ -228,10 +237,36 @@ describe("hanse:join --dry-run", () => {
     expect(decoded.tier).toBe(2);
 
     expect(run.accounts[0]?.address).toBe(wallet); // member signer
-    expect(run.accounts[1]?.address).toBe(memberAccountPda);
-    expect(run.accounts[2]?.address).toBe(mutualPda);
-    expect(run.accounts[3]?.address).toBe(POOL_OVERRIDE);
-    expect(run.accounts[4]?.address).toBe(depositorPda);
+    expect(run.accounts[1]?.address).toBe(HANSE_PROGRAM_ADDRESS); // funder slot unfilled → program id
+    expect(run.accounts[2]?.address).toBe(memberAccountPda);
+    expect(run.accounts[3]?.address).toBe(mutualPda);
+    expect(run.accounts[4]?.address).toBe(POOL_OVERRIDE);
+    expect(run.accounts[5]?.address).toBe(depositorPda);
+  });
+
+  test("sponsor: funder slot = sponsor signer, source ATA + rent = sponsor's", async () => {
+    const sponsorPath = join(dirname(keypairPath), "sponsor.json");
+    writeFileSync(sponsorPath, JSON.stringify(Array.from(SPONSOR_SECRET)));
+    const run = dryRun([
+      "hanse:join",
+      "--mutual",
+      mutualPda,
+      "--tier",
+      "standard",
+      "--pool",
+      POOL_OVERRIDE,
+      "--deposit-mint",
+      DEPOSIT_MINT,
+      "--sponsor",
+      sponsorPath,
+    ]);
+    expect(run.accounts[0]?.address).toBe(wallet); // member still signs
+    expect(run.accounts[1]?.address).toBe(sponsor); // funder signer
+    expect(run.accounts[1]?.role).toContain("signer");
+    expect(run.accounts[6]?.address).toBe(await findAssociatedTokenAddress(DEPOSIT_MINT, sponsor)); // source ATA = sponsor's
+    expect(run.accounts[7]?.address).toBe(sponsor); // rent payer = sponsor
+    const decoded = getJoinInstructionDataDecoder().decode(decodeHex(run.data));
+    expect(decoded.tier).toBe(1);
   });
 });
 

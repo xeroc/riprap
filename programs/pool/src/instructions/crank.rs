@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::associated_token::{get_associated_token_address, AssociatedToken};
 use anchor_spl::token::{self, Token, TokenAccount};
 
 use crate::error::PoolError;
@@ -32,11 +32,21 @@ pub struct Crank<'info> {
     /// CHECK: bound by the depositor PDA seeds and owner equality above.
     pub owner: UncheckedAccount<'info>,
 
-    /// Payout destination: the owner's canonical ATA of the pool's token.
+    /// Payout destination: the canonical ATA of the position's residual
+    /// payee — the owner, or the beneficiary when a funder sponsored the
+    /// position. Exactly one address passes: the assignment made at first
+    /// deposit is the contract, not a menu for whoever turns the crank.
     #[account(
         mut,
-        associated_token::mint = pool.mint,
-        associated_token::authority = owner,
+        constraint = {
+            let payee = if depositor.residual_beneficiary == Pubkey::default() {
+                depositor.owner
+            } else {
+                depositor.residual_beneficiary
+            };
+            destination.mint == pool.mint
+                && destination.key() == get_associated_token_address(&payee, &pool.mint)
+        } @ PoolError::WrongDestination
     )]
     pub destination: Account<'info, TokenAccount>,
 
@@ -81,6 +91,7 @@ impl<'info> Crank<'info> {
         emit!(events::CrankPaid {
             pool: pool.key(),
             depositor: depositor.owner,
+            beneficiary: depositor.residual_beneficiary,
             paid,
         });
         Ok(())

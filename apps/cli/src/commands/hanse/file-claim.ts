@@ -71,6 +71,7 @@ export async function buildFileClaim(input: {
 
   const instruction = await getFileClaimInstructionAsync({
     claimant,
+    rentPayer: claimant,
     mutual: mutual.address,
     claim,
     depositor,

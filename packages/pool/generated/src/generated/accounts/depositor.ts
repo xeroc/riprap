@@ -52,6 +52,14 @@ export function getDepositorDiscriminatorBytes(): ReadonlyUint8Array {
 export type Depositor = {
   discriminator: ReadonlyUint8Array;
   owner: Address;
+  /**
+   * Residual beneficiary: when not `Pubkey::default()`, the liquidation
+   * crank pays this key's canonical ATA instead of the owner's. Recorded
+   * at first deposit when a funder sponsors the position; immutable
+   * after. Never touches spend/burn/payout paths — residual exit only,
+   * so sponsorship buys no claim rights.
+   */
+  residualBeneficiary: Address;
   /** Total this party deposited; its money-weighted liquidation numerator. */
   totalAmount: bigint;
   /** Stake minted at deposit time, per track. Frozen at the rate of deposit. */
@@ -64,6 +72,14 @@ export type Depositor = {
 
 export type DepositorArgs = {
   owner: Address;
+  /**
+   * Residual beneficiary: when not `Pubkey::default()`, the liquidation
+   * crank pays this key's canonical ATA instead of the owner's. Recorded
+   * at first deposit when a funder sponsors the position; immutable
+   * after. Never touches spend/burn/payout paths — residual exit only,
+   * so sponsorship buys no claim rights.
+   */
+  residualBeneficiary: Address;
   /** Total this party deposited; its money-weighted liquidation numerator. */
   totalAmount: number | bigint;
   /** Stake minted at deposit time, per track. Frozen at the rate of deposit. */
@@ -80,6 +96,7 @@ export function getDepositorEncoder(): FixedSizeEncoder<DepositorArgs> {
     getStructEncoder([
       ["discriminator", fixEncoderSize(getBytesEncoder(), 8)],
       ["owner", getAddressEncoder()],
+      ["residualBeneficiary", getAddressEncoder()],
       ["totalAmount", getU64Encoder()],
       ["ownershipStake", getU128Encoder()],
       ["rightsStake", getU128Encoder()],
@@ -95,6 +112,7 @@ export function getDepositorDecoder(): FixedSizeDecoder<Depositor> {
   return getStructDecoder([
     ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
     ["owner", getAddressDecoder()],
+    ["residualBeneficiary", getAddressDecoder()],
     ["totalAmount", getU64Decoder()],
     ["ownershipStake", getU128Decoder()],
     ["rightsStake", getU128Decoder()],
@@ -159,5 +177,5 @@ export async function fetchAllMaybeDepositor(
 }
 
 export function getDepositorSize(): number {
-  return 97;
+  return 129;
 }

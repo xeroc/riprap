@@ -142,6 +142,7 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
       env.sendIx(
         await getFileClaimInstructionAsync({
           claimant: fx.members[0]!,
+          rentPayer: fx.members[0]!,
           mutual: fx.mutual,
           depositor: (
             await findDepositorPda({ pool: fx.poolPda, owner: fx.members[0]!.address })

@@ -56,6 +56,7 @@ export function getFileClaimDiscriminatorBytes(): ReadonlyUint8Array {
 export type FileClaimInstruction<
   TProgram extends string = typeof HANSE_PROGRAM_ADDRESS,
   TAccountClaimant extends string | AccountMeta<string> = string,
+  TAccountRentPayer extends string | AccountMeta<string> = string,
   TAccountMutual extends string | AccountMeta<string> = string,
   TAccountMemberAccount extends string | AccountMeta<string> = string,
   TAccountClaim extends string | AccountMeta<string> = string,
@@ -86,6 +87,9 @@ export type FileClaimInstruction<
       TAccountClaimant extends string
         ? WritableSignerAccount<TAccountClaimant> & AccountSignerMeta<TAccountClaimant>
         : TAccountClaimant,
+      TAccountRentPayer extends string
+        ? WritableSignerAccount<TAccountRentPayer> & AccountSignerMeta<TAccountRentPayer>
+        : TAccountRentPayer,
       TAccountMutual extends string ? WritableAccount<TAccountMutual> : TAccountMutual,
       TAccountMemberAccount extends string
         ? WritableAccount<TAccountMemberAccount>
@@ -163,6 +167,7 @@ export function getFileClaimInstructionDataCodec(): FixedSizeCodec<
 
 export type FileClaimAsyncInput<
   TAccountClaimant extends string = string,
+  TAccountRentPayer extends string = string,
   TAccountMutual extends string = string,
   TAccountMemberAccount extends string = string,
   TAccountClaim extends string = string,
@@ -181,6 +186,12 @@ export type FileClaimAsyncInput<
   TAccountAccordProgram extends string = string,
 > = {
   claimant: TransactionSigner<TAccountClaimant>;
+  /**
+   * Data-free rent payer for the Claim PDA init — decoupled from the
+   * claimant so a third party can sponsor the filing (the juror fee
+   * still leaves the claimant's own fee ATA, §2.6).
+   */
+  rentPayer: TransactionSigner<TAccountRentPayer>;
   mutual: Address<TAccountMutual>;
   /** One Pending claim per member — the flip lives in the handler. */
   memberAccount?: Address<TAccountMemberAccount>;
@@ -226,6 +237,7 @@ export type FileClaimAsyncInput<
 
 export async function getFileClaimInstructionAsync<
   TAccountClaimant extends string,
+  TAccountRentPayer extends string,
   TAccountMutual extends string,
   TAccountMemberAccount extends string,
   TAccountClaim extends string,
@@ -246,6 +258,7 @@ export async function getFileClaimInstructionAsync<
 >(
   input: FileClaimAsyncInput<
     TAccountClaimant,
+    TAccountRentPayer,
     TAccountMutual,
     TAccountMemberAccount,
     TAccountClaim,
@@ -268,6 +281,7 @@ export async function getFileClaimInstructionAsync<
   FileClaimInstruction<
     TProgramAddress,
     TAccountClaimant,
+    TAccountRentPayer,
     TAccountMutual,
     TAccountMemberAccount,
     TAccountClaim,
@@ -292,6 +306,7 @@ export async function getFileClaimInstructionAsync<
   // Original accounts.
   const originalAccounts = {
     claimant: { value: input.claimant ?? null, isWritable: true },
+    rentPayer: { value: input.rentPayer ?? null, isWritable: true },
     mutual: { value: input.mutual ?? null, isWritable: true },
     memberAccount: { value: input.memberAccount ?? null, isWritable: true },
     claim: { value: input.claim ?? null, isWritable: true },
@@ -380,6 +395,7 @@ export async function getFileClaimInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta("claimant", accounts.claimant),
+      getAccountMeta("rentPayer", accounts.rentPayer),
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("memberAccount", accounts.memberAccount),
       getAccountMeta("claim", accounts.claim),
@@ -402,6 +418,7 @@ export async function getFileClaimInstructionAsync<
   } as FileClaimInstruction<
     TProgramAddress,
     TAccountClaimant,
+    TAccountRentPayer,
     TAccountMutual,
     TAccountMemberAccount,
     TAccountClaim,
@@ -423,6 +440,7 @@ export async function getFileClaimInstructionAsync<
 
 export type FileClaimInput<
   TAccountClaimant extends string = string,
+  TAccountRentPayer extends string = string,
   TAccountMutual extends string = string,
   TAccountMemberAccount extends string = string,
   TAccountClaim extends string = string,
@@ -441,6 +459,12 @@ export type FileClaimInput<
   TAccountAccordProgram extends string = string,
 > = {
   claimant: TransactionSigner<TAccountClaimant>;
+  /**
+   * Data-free rent payer for the Claim PDA init — decoupled from the
+   * claimant so a third party can sponsor the filing (the juror fee
+   * still leaves the claimant's own fee ATA, §2.6).
+   */
+  rentPayer: TransactionSigner<TAccountRentPayer>;
   mutual: Address<TAccountMutual>;
   /** One Pending claim per member — the flip lives in the handler. */
   memberAccount: Address<TAccountMemberAccount>;
@@ -486,6 +510,7 @@ export type FileClaimInput<
 
 export function getFileClaimInstruction<
   TAccountClaimant extends string,
+  TAccountRentPayer extends string,
   TAccountMutual extends string,
   TAccountMemberAccount extends string,
   TAccountClaim extends string,
@@ -506,6 +531,7 @@ export function getFileClaimInstruction<
 >(
   input: FileClaimInput<
     TAccountClaimant,
+    TAccountRentPayer,
     TAccountMutual,
     TAccountMemberAccount,
     TAccountClaim,
@@ -527,6 +553,7 @@ export function getFileClaimInstruction<
 ): FileClaimInstruction<
   TProgramAddress,
   TAccountClaimant,
+  TAccountRentPayer,
   TAccountMutual,
   TAccountMemberAccount,
   TAccountClaim,
@@ -550,6 +577,7 @@ export function getFileClaimInstruction<
   // Original accounts.
   const originalAccounts = {
     claimant: { value: input.claimant ?? null, isWritable: true },
+    rentPayer: { value: input.rentPayer ?? null, isWritable: true },
     mutual: { value: input.mutual ?? null, isWritable: true },
     memberAccount: { value: input.memberAccount ?? null, isWritable: true },
     claim: { value: input.claim ?? null, isWritable: true },
@@ -600,6 +628,7 @@ export function getFileClaimInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta("claimant", accounts.claimant),
+      getAccountMeta("rentPayer", accounts.rentPayer),
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("memberAccount", accounts.memberAccount),
       getAccountMeta("claim", accounts.claim),
@@ -622,6 +651,7 @@ export function getFileClaimInstruction<
   } as FileClaimInstruction<
     TProgramAddress,
     TAccountClaimant,
+    TAccountRentPayer,
     TAccountMutual,
     TAccountMemberAccount,
     TAccountClaim,
@@ -648,44 +678,50 @@ export type ParsedFileClaimInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     claimant: TAccountMetas[0];
-    mutual: TAccountMetas[1];
+    /**
+     * Data-free rent payer for the Claim PDA init — decoupled from the
+     * claimant so a third party can sponsor the filing (the juror fee
+     * still leaves the claimant's own fee ATA, §2.6).
+     */
+    rentPayer: TAccountMetas[1];
+    mutual: TAccountMetas[2];
     /** One Pending claim per member — the flip lives in the handler. */
-    memberAccount: TAccountMetas[2];
-    claim: TAccountMetas[3];
+    memberAccount: TAccountMetas[3];
+    claim: TAccountMetas[4];
     /**
      * The member's pool position. CHECK: PDA ["depositor", pool, member]
      * under the pool program, verified in the handler; ownership by the pool
      * program is enforced by the Account type.
      */
-    depositor: TAccountMetas[4];
+    depositor: TAccountMetas[5];
     /**
      * The subaccord this mutual owns — the live source of the filing fee.
      * mut: accord's create_dispute writes fee tracking on it.
      */
-    subaccord: TAccountMetas[5];
+    subaccord: TAccountMetas[6];
     /** The member's fee-mint ATA — the upfront juror fee leaves here. */
-    memberFeeAta: TAccountMetas[6];
+    memberFeeAta: TAccountMetas[7];
     /**
      * Fee float: the mutual PDA's ATA of fee_mint — the fee lands here, the
      * create_dispute CPI drains it into the subaccord fee vault.
      */
-    feeFloat: TAccountMetas[7];
-    feeMint: TAccountMetas[8];
+    feeFloat: TAccountMetas[8];
+    feeMint: TAccountMetas[9];
     /**
      * Pool treasury — read for the solvency context baked into the evidence
      * manifest. CHECK: must be the pool's ATA; verified in the handler.
      */
-    treasury: TAccountMetas[9];
+    treasury: TAccountMetas[10];
     /** The Dispute PDA ["dispute", mutual, nonce] — created by the CPI. */
-    dispute: TAccountMetas[10];
+    dispute: TAccountMetas[11];
     /** The subaccord's fee vault ATA — created (init_if_needed) by the CPI. */
-    feeVault: TAccountMetas[11];
+    feeVault: TAccountMetas[12];
     /** Accord's global state (pause flag). */
-    accordState: TAccountMetas[12];
-    tokenProgram: TAccountMetas[13];
-    associatedTokenProgram: TAccountMetas[14];
-    systemProgram: TAccountMetas[15];
-    accordProgram: TAccountMetas[16];
+    accordState: TAccountMetas[13];
+    tokenProgram: TAccountMetas[14];
+    associatedTokenProgram: TAccountMetas[15];
+    systemProgram: TAccountMetas[16];
+    accordProgram: TAccountMetas[17];
   };
   data: FileClaimInstructionData;
 };
@@ -698,10 +734,10 @@ export function parseFileClaimInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedFileClaimInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 17) {
+  if (instruction.accounts.length < 18) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 17,
+      expectedAccountMetas: 18,
     });
   }
   let accountIndex = 0;
@@ -714,6 +750,7 @@ export function parseFileClaimInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       claimant: getNextAccount(),
+      rentPayer: getNextAccount(),
       mutual: getNextAccount(),
       memberAccount: getNextAccount(),
       claim: getNextAccount(),

@@ -72,18 +72,19 @@ describe("buildFileClaim (hanse:file-claim)", () => {
     // [10]dispute [11]feeVault [12]accordState
     const accounts = build.instruction.accounts ?? [];
     expect(accounts[0]?.address).toBe(claimant.address); // claimant signer
-    expect(accounts[3]?.address).toBe(build.claim);
-    expect(accounts[4]?.address).toBe(
+    expect(accounts[1]?.address).toBe(claimant.address); // rent payer (sponsor slot)
+    expect(accounts[4]?.address).toBe(build.claim);
+    expect(accounts[5]?.address).toBe(
       (await findDepositorPda({ pool: POOL, owner: claimant.address }))[0],
     );
-    expect(accounts[5]?.address).toBe(SUBACCORD);
-    expect(accounts[6]?.address).toBe(await findAssociatedTokenAddress(FEE_MINT, claimant.address));
-    expect(accounts[7]?.address).toBe(
+    expect(accounts[6]?.address).toBe(SUBACCORD);
+    expect(accounts[7]?.address).toBe(await findAssociatedTokenAddress(FEE_MINT, claimant.address));
+    expect(accounts[8]?.address).toBe(
       (await findFeeFloatPda({ mutual: MUTUAL, feeMint: FEE_MINT }))[0],
     );
-    expect(accounts[9]?.address).toBe(await findAssociatedTokenAddress(DEPOSIT_MINT, POOL));
-    expect(accounts[10]?.address).toBe(build.dispute);
-    expect(accounts[11]?.address).toBe(await findAssociatedTokenAddress(FEE_MINT, SUBACCORD));
+    expect(accounts[10]?.address).toBe(await findAssociatedTokenAddress(DEPOSIT_MINT, POOL));
+    expect(accounts[11]?.address).toBe(build.dispute);
+    expect(accounts[12]?.address).toBe(await findAssociatedTokenAddress(FEE_MINT, SUBACCORD));
   });
 });
 

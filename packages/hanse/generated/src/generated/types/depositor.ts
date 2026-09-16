@@ -27,6 +27,14 @@ import {
 /** One depositor position per pool per party (CONTEXT.md, Depositor). */
 export type Depositor = {
   owner: Address;
+  /**
+   * Residual beneficiary: when not `Pubkey::default()`, the liquidation
+   * crank pays this key's canonical ATA instead of the owner's. Recorded
+   * at first deposit when a funder sponsors the position; immutable
+   * after. Never touches spend/burn/payout paths — residual exit only,
+   * so sponsorship buys no claim rights.
+   */
+  residualBeneficiary: Address;
   /** Total this party deposited; its money-weighted liquidation numerator. */
   totalAmount: bigint;
   /** Stake minted at deposit time, per track. Frozen at the rate of deposit. */
@@ -39,6 +47,14 @@ export type Depositor = {
 
 export type DepositorArgs = {
   owner: Address;
+  /**
+   * Residual beneficiary: when not `Pubkey::default()`, the liquidation
+   * crank pays this key's canonical ATA instead of the owner's. Recorded
+   * at first deposit when a funder sponsors the position; immutable
+   * after. Never touches spend/burn/payout paths — residual exit only,
+   * so sponsorship buys no claim rights.
+   */
+  residualBeneficiary: Address;
   /** Total this party deposited; its money-weighted liquidation numerator. */
   totalAmount: number | bigint;
   /** Stake minted at deposit time, per track. Frozen at the rate of deposit. */
@@ -52,6 +68,7 @@ export type DepositorArgs = {
 export function getDepositorEncoder(): FixedSizeEncoder<DepositorArgs> {
   return getStructEncoder([
     ["owner", getAddressEncoder()],
+    ["residualBeneficiary", getAddressEncoder()],
     ["totalAmount", getU64Encoder()],
     ["ownershipStake", getU128Encoder()],
     ["rightsStake", getU128Encoder()],
@@ -63,6 +80,7 @@ export function getDepositorEncoder(): FixedSizeEncoder<DepositorArgs> {
 export function getDepositorDecoder(): FixedSizeDecoder<Depositor> {
   return getStructDecoder([
     ["owner", getAddressDecoder()],
+    ["residualBeneficiary", getAddressDecoder()],
     ["totalAmount", getU64Decoder()],
     ["ownershipStake", getU128Decoder()],
     ["rightsStake", getU128Decoder()],

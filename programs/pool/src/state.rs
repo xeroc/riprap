@@ -84,6 +84,12 @@ impl Pool {
 #[derive(InitSpace)]
 pub struct Depositor {
     pub owner: Pubkey,
+    /// Residual beneficiary: when not `Pubkey::default()`, the liquidation
+    /// crank pays this key's canonical ATA instead of the owner's. Recorded
+    /// at first deposit when a funder sponsors the position; immutable
+    /// after. Never touches spend/burn/payout paths — residual exit only,
+    /// so sponsorship buys no claim rights.
+    pub residual_beneficiary: Pubkey,
     /// Total this party deposited; its money-weighted liquidation numerator.
     pub total_amount: u64,
     /// Stake minted at deposit time, per track. Frozen at the rate of deposit.
@@ -127,11 +133,11 @@ mod tests {
         assert_eq!(POOL_SPACE, 8 + 186);
     }
 
-    /// Handoff §2: Depositor = owner 32 + total 8 + stakes 3×16 + settled 1.
+    /// Depositor = owner 32 + beneficiary 32 + total 8 + stakes 3×16 + settled 1.
     #[test]
     fn depositor_space_matches_handoff_layout() {
-        assert_eq!(Depositor::INIT_SPACE, 32 + 8 + 3 * 16 + 1);
-        assert_eq!(DEPOSITOR_SPACE, 8 + 89);
+        assert_eq!(Depositor::INIT_SPACE, 32 + 32 + 8 + 3 * 16 + 1);
+        assert_eq!(DEPOSITOR_SPACE, 8 + 121);
     }
 
     /// Handoff §2 / pseudo-code: rate lookup per track, 0 = closed.

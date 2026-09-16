@@ -38,6 +38,7 @@ fn init_tx(env: &mut Env, cfg: &hanse::instructions::InitializeMutualConfig) -> 
         .data(),
         hanse::accounts::InitializeMutual {
             authority: env.payer.pubkey(),
+            rent_payer: env.payer.pubkey(),
             mutual,
             pool,
             treasury: pool_treasury(&pool, &env.mint),

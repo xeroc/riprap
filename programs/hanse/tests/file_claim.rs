@@ -48,6 +48,7 @@ fn file_claim_tx(
         .data(),
         hanse::accounts::FileClaim {
             claimant: member.pubkey(),
+            rent_payer: member.pubkey(),
             mutual,
             member_account: member_pda(&mutual, &member.pubkey()),
             claim: claim_pda(&mutual, nonce),
@@ -255,6 +256,7 @@ fn non_member_reverts() {
             .data(),
             hanse::accounts::FileClaim {
                 claimant: stranger.pubkey(),
+                rent_payer: stranger.pubkey(),
                 mutual,
                 member_account: member_pda(&mutual, &real_member.pubkey()),
                 claim: claim_pda(&mutual, 0),

@@ -68,6 +68,7 @@ export function getInitializeMutualDiscriminatorBytes(): ReadonlyUint8Array {
 export type InitializeMutualInstruction<
   TProgram extends string = typeof HANSE_PROGRAM_ADDRESS,
   TAccountAuthority extends string | AccountMeta<string> = string,
+  TAccountRentPayer extends string | AccountMeta<string> = string,
   TAccountMutual extends string | AccountMeta<string> = string,
   TAccountPool extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
@@ -96,6 +97,9 @@ export type InitializeMutualInstruction<
       TAccountAuthority extends string
         ? WritableSignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
         : TAccountAuthority,
+      TAccountRentPayer extends string
+        ? WritableSignerAccount<TAccountRentPayer> & AccountSignerMeta<TAccountRentPayer>
+        : TAccountRentPayer,
       TAccountMutual extends string ? WritableAccount<TAccountMutual> : TAccountMutual,
       TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
       TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
@@ -190,6 +194,7 @@ export function getInitializeMutualInstructionDataCodec(): FixedSizeCodec<
 
 export type InitializeMutualAsyncInput<
   TAccountAuthority extends string = string,
+  TAccountRentPayer extends string = string,
   TAccountMutual extends string = string,
   TAccountPool extends string = string,
   TAccountTreasury extends string = string,
@@ -205,10 +210,19 @@ export type InitializeMutualAsyncInput<
 > = {
   /**
    * Initializer — recorded as the demo admin (§2.10): gates
-   * set_subaccord_param and co-signs payouts. Paying rent implies no
-   * other authority.
+   * set_subaccord_param and co-signs payouts. Implies no other
+   * authority; rent is paid by [`Self::rent_payer`].
    */
   authority: TransactionSigner<TAccountAuthority>;
+  /**
+   * Data-free rent payer — funds the Mutual PDA, the fee float ATA, and
+   * the pool CPI's accounts (pool PDA + treasury ATA). v1: the
+   * initializer passes their own wallet here; any funded wallet may
+   * sponsor without gaining any authority (pool's §5 rent-sponsor
+   * pattern). The subaccord CPI is excluded: its `creator` is PDA seed
+   * material in accord, so that rent stays with the initializer.
+   */
+  rentPayer: TransactionSigner<TAccountRentPayer>;
   mutual: Address<TAccountMutual>;
   /**
    * Pool PDA — created by the `pool::init` CPI below (rights 1:1 under
@@ -250,6 +264,7 @@ export type InitializeMutualAsyncInput<
 
 export async function getInitializeMutualInstructionAsync<
   TAccountAuthority extends string,
+  TAccountRentPayer extends string,
   TAccountMutual extends string,
   TAccountPool extends string,
   TAccountTreasury extends string,
@@ -266,6 +281,7 @@ export async function getInitializeMutualInstructionAsync<
 >(
   input: InitializeMutualAsyncInput<
     TAccountAuthority,
+    TAccountRentPayer,
     TAccountMutual,
     TAccountPool,
     TAccountTreasury,
@@ -284,6 +300,7 @@ export async function getInitializeMutualInstructionAsync<
   InitializeMutualInstruction<
     TProgramAddress,
     TAccountAuthority,
+    TAccountRentPayer,
     TAccountMutual,
     TAccountPool,
     TAccountTreasury,
@@ -304,6 +321,7 @@ export async function getInitializeMutualInstructionAsync<
   // Original accounts.
   const originalAccounts = {
     authority: { value: input.authority ?? null, isWritable: true },
+    rentPayer: { value: input.rentPayer ?? null, isWritable: true },
     mutual: { value: input.mutual ?? null, isWritable: true },
     pool: { value: input.pool ?? null, isWritable: true },
     treasury: { value: input.treasury ?? null, isWritable: true },
@@ -374,6 +392,7 @@ export async function getInitializeMutualInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta("authority", accounts.authority),
+      getAccountMeta("rentPayer", accounts.rentPayer),
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("pool", accounts.pool),
       getAccountMeta("treasury", accounts.treasury),
@@ -394,6 +413,7 @@ export async function getInitializeMutualInstructionAsync<
   } as InitializeMutualInstruction<
     TProgramAddress,
     TAccountAuthority,
+    TAccountRentPayer,
     TAccountMutual,
     TAccountPool,
     TAccountTreasury,
@@ -411,6 +431,7 @@ export async function getInitializeMutualInstructionAsync<
 
 export type InitializeMutualInput<
   TAccountAuthority extends string = string,
+  TAccountRentPayer extends string = string,
   TAccountMutual extends string = string,
   TAccountPool extends string = string,
   TAccountTreasury extends string = string,
@@ -426,10 +447,19 @@ export type InitializeMutualInput<
 > = {
   /**
    * Initializer — recorded as the demo admin (§2.10): gates
-   * set_subaccord_param and co-signs payouts. Paying rent implies no
-   * other authority.
+   * set_subaccord_param and co-signs payouts. Implies no other
+   * authority; rent is paid by [`Self::rent_payer`].
    */
   authority: TransactionSigner<TAccountAuthority>;
+  /**
+   * Data-free rent payer — funds the Mutual PDA, the fee float ATA, and
+   * the pool CPI's accounts (pool PDA + treasury ATA). v1: the
+   * initializer passes their own wallet here; any funded wallet may
+   * sponsor without gaining any authority (pool's §5 rent-sponsor
+   * pattern). The subaccord CPI is excluded: its `creator` is PDA seed
+   * material in accord, so that rent stays with the initializer.
+   */
+  rentPayer: TransactionSigner<TAccountRentPayer>;
   mutual: Address<TAccountMutual>;
   /**
    * Pool PDA — created by the `pool::init` CPI below (rights 1:1 under
@@ -471,6 +501,7 @@ export type InitializeMutualInput<
 
 export function getInitializeMutualInstruction<
   TAccountAuthority extends string,
+  TAccountRentPayer extends string,
   TAccountMutual extends string,
   TAccountPool extends string,
   TAccountTreasury extends string,
@@ -487,6 +518,7 @@ export function getInitializeMutualInstruction<
 >(
   input: InitializeMutualInput<
     TAccountAuthority,
+    TAccountRentPayer,
     TAccountMutual,
     TAccountPool,
     TAccountTreasury,
@@ -504,6 +536,7 @@ export function getInitializeMutualInstruction<
 ): InitializeMutualInstruction<
   TProgramAddress,
   TAccountAuthority,
+  TAccountRentPayer,
   TAccountMutual,
   TAccountPool,
   TAccountTreasury,
@@ -523,6 +556,7 @@ export function getInitializeMutualInstruction<
   // Original accounts.
   const originalAccounts = {
     authority: { value: input.authority ?? null, isWritable: true },
+    rentPayer: { value: input.rentPayer ?? null, isWritable: true },
     mutual: { value: input.mutual ?? null, isWritable: true },
     pool: { value: input.pool ?? null, isWritable: true },
     treasury: { value: input.treasury ?? null, isWritable: true },
@@ -573,6 +607,7 @@ export function getInitializeMutualInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta("authority", accounts.authority),
+      getAccountMeta("rentPayer", accounts.rentPayer),
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("pool", accounts.pool),
       getAccountMeta("treasury", accounts.treasury),
@@ -593,6 +628,7 @@ export function getInitializeMutualInstruction<
   } as InitializeMutualInstruction<
     TProgramAddress,
     TAccountAuthority,
+    TAccountRentPayer,
     TAccountMutual,
     TAccountPool,
     TAccountTreasury,
@@ -616,40 +652,49 @@ export type ParsedInitializeMutualInstruction<
   accounts: {
     /**
      * Initializer — recorded as the demo admin (§2.10): gates
-     * set_subaccord_param and co-signs payouts. Paying rent implies no
-     * other authority.
+     * set_subaccord_param and co-signs payouts. Implies no other
+     * authority; rent is paid by [`Self::rent_payer`].
      */
     authority: TAccountMetas[0];
-    mutual: TAccountMetas[1];
+    /**
+     * Data-free rent payer — funds the Mutual PDA, the fee float ATA, and
+     * the pool CPI's accounts (pool PDA + treasury ATA). v1: the
+     * initializer passes their own wallet here; any funded wallet may
+     * sponsor without gaining any authority (pool's §5 rent-sponsor
+     * pattern). The subaccord CPI is excluded: its `creator` is PDA seed
+     * material in accord, so that rent stays with the initializer.
+     */
+    rentPayer: TAccountMetas[1];
+    mutual: TAccountMetas[2];
     /**
      * Pool PDA — created by the `pool::init` CPI below (rights 1:1 under
      * the mutual_auth PDA, ownership disabled under mutual_own, yield off).
      */
-    pool: TAccountMetas[2];
+    pool: TAccountMetas[3];
     /**
      * The pool's treasury ATA — created inside the `pool::init` CPI.
      * reject the not-yet-existing account).
      */
-    treasury: TAccountMetas[3];
+    treasury: TAccountMetas[4];
     /**
      * Subaccord PDA ["subaccord", mutual, domain_ref] — created by the
      * `accord::create_subaccord` CPI; the mutual PDA is its creator and
      * authority. CHECK: seeds-verified against the accord program.
      * verified in the handler (idl-build cannot resolve fn calls in seeds).
      */
-    subaccord: TAccountMetas[4];
-    depositMint: TAccountMetas[5];
-    feeMint: TAccountMetas[6];
+    subaccord: TAccountMetas[5];
+    depositMint: TAccountMetas[6];
+    feeMint: TAccountMetas[7];
     /**
      * Fee float: the mutual PDA's ATA of fee_mint — claimant-funded filing
      * fees land here before the create_dispute CPI drains them (§2.6).
      */
-    feeFloat: TAccountMetas[7];
-    tokenProgram: TAccountMetas[8];
-    associatedTokenProgram: TAccountMetas[9];
-    systemProgram: TAccountMetas[10];
-    poolProgram: TAccountMetas[11];
-    accordProgram: TAccountMetas[12];
+    feeFloat: TAccountMetas[8];
+    tokenProgram: TAccountMetas[9];
+    associatedTokenProgram: TAccountMetas[10];
+    systemProgram: TAccountMetas[11];
+    poolProgram: TAccountMetas[12];
+    accordProgram: TAccountMetas[13];
   };
   data: InitializeMutualInstructionData;
 };
@@ -662,10 +707,10 @@ export function parseInitializeMutualInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedInitializeMutualInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 13) {
+  if (instruction.accounts.length < 14) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 13,
+      expectedAccountMetas: 14,
     });
   }
   let accountIndex = 0;
@@ -678,6 +723,7 @@ export function parseInitializeMutualInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       authority: getNextAccount(),
+      rentPayer: getNextAccount(),
       mutual: getNextAccount(),
       pool: getNextAccount(),
       treasury: getNextAccount(),

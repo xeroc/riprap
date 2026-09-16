@@ -11,6 +11,12 @@ pub enum PoolError {
     TrackClosed,
     #[msg("This depositor is settled: it cannot deposit again")]
     Settled,
+    #[msg("The deposit source ATA must belong to the owner or the passing funder")]
+    WrongSourceAuthority,
+    #[msg("The residual beneficiary was set at first deposit and cannot change")]
+    BeneficiaryImmutable,
+    #[msg("The crank destination must be the owner's or the beneficiary's canonical ATA")]
+    WrongDestination,
     #[msg("Checked math overflowed — the amounts do not fit the accounting")]
     MathOverflow,
 }

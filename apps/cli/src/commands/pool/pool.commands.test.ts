@@ -42,6 +42,12 @@ const SECRET = new Uint8Array(64);
 SECRET.set(SEED);
 SECRET.set(ed25519.getPublicKey(SEED), 32);
 
+// Fixed-seed sponsor keypair, same trick.
+const SPONSOR_SEED = new Uint8Array(32).fill(11);
+const SPONSOR_SECRET = new Uint8Array(64);
+SPONSOR_SECRET.set(SPONSOR_SEED);
+SPONSOR_SECRET.set(ed25519.getPublicKey(SPONSOR_SEED), 32);
+
 let keypairPath: string;
 let wallet: Address;
 let poolPda: Address;
@@ -51,6 +57,7 @@ let walletAta: Address;
 let initTreasury: Address;
 let depositorPdaOfOwner: Address;
 let depositorPdaOfWallet: Address;
+let sponsor: Address;
 
 beforeAll(async () => {
   const dir = mkdtempSync(join(tmpdir(), "riprap-pool-"));
@@ -64,6 +71,7 @@ beforeAll(async () => {
   initTreasury = await findAssociatedTokenAddress(MINT, poolPda);
   depositorPdaOfOwner = (await findDepositorPda({ pool: POOL, owner: OWNER }))[0];
   depositorPdaOfWallet = (await findDepositorPda({ pool: POOL, owner: wallet }))[0];
+  sponsor = (await createKeyPairSignerFromBytes(SPONSOR_SECRET)).address;
 });
 
 afterAll(() => {
@@ -158,14 +166,36 @@ describe("pool:deposit --dry-run", () => {
       MINT,
     ]);
     const decoded = getDepositInstructionDataDecoder().decode(decodeHex(run.data));
-    expect(decoded.track).toBe(Track.Rights);
     expect(decoded.amount).toBe(1000n);
     expect(run.accounts[0]?.address).toBe(POOL);
     expect(run.accounts[1]?.address).toBe(depositorPdaOfWallet);
     expect(run.accounts[2]?.address).toBe(wallet); // owner signer
-    expect(run.accounts[3]?.address).toBe(wallet); // rent payer defaults to wallet
-    expect(run.accounts[4]?.address).toBe(walletAta);
-    expect(run.accounts[5]?.address).toBe(treasury);
+    expect(run.accounts[3]?.address).toBe(POOL_PROGRAM_ADDRESS); // funder slot unfilled → program id
+    expect(run.accounts[4]?.address).toBe(wallet); // rent payer defaults to wallet
+    expect(run.accounts[5]?.address).toBe(walletAta);
+    expect(run.accounts[6]?.address).toBe(treasury);
+  });
+
+  test("sponsor: funder slot = sponsor signer, source ATA = sponsor's", async () => {
+    const sponsorPath = join(dirname(keypairPath), "sponsor.json");
+    writeFileSync(sponsorPath, JSON.stringify(Array.from(SPONSOR_SECRET)));
+    const run = dryRun([
+      "pool:deposit",
+      "--pool",
+      POOL,
+      "--track",
+      "rights",
+      "--amount",
+      "40",
+      "--mint",
+      MINT,
+      "--sponsor",
+      sponsorPath,
+    ]);
+    expect(run.accounts[2]?.address).toBe(wallet); // wallet still owns the position
+    expect(run.accounts[3]?.address).toBe(sponsor); // funder signer
+    expect(run.accounts[3]?.role).toContain("signer");
+    expect(run.accounts[5]?.address).toBe(await findAssociatedTokenAddress(MINT, sponsor));
   });
 });
 

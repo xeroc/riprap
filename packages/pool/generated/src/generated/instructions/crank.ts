@@ -129,7 +129,12 @@ export type CrankAsyncInput<
    * someone else's position pays that someone, never the cranker.
    */
   owner: Address<TAccountOwner>;
-  /** Payout destination: the owner's canonical ATA of the pool's token. */
+  /**
+   * Payout destination: the canonical ATA of the position's residual
+   * payee — the owner, or the beneficiary when a funder sponsored the
+   * position. Exactly one address passes: the assignment made at first
+   * deposit is the contract, not a menu for whoever turns the crank.
+   */
   destination: Address<TAccountDestination>;
   treasury: Address<TAccountTreasury>;
   tokenProgram?: Address<TAccountTokenProgram>;
@@ -259,7 +264,12 @@ export type CrankInput<
    * someone else's position pays that someone, never the cranker.
    */
   owner: Address<TAccountOwner>;
-  /** Payout destination: the owner's canonical ATA of the pool's token. */
+  /**
+   * Payout destination: the canonical ATA of the position's residual
+   * payee — the owner, or the beneficiary when a funder sponsored the
+   * position. Exactly one address passes: the assignment made at first
+   * deposit is the contract, not a menu for whoever turns the crank.
+   */
   destination: Address<TAccountDestination>;
   treasury: Address<TAccountTreasury>;
   tokenProgram?: Address<TAccountTokenProgram>;
@@ -374,7 +384,12 @@ export type ParsedCrankInstruction<
      * someone else's position pays that someone, never the cranker.
      */
     owner: TAccountMetas[3];
-    /** Payout destination: the owner's canonical ATA of the pool's token. */
+    /**
+     * Payout destination: the canonical ATA of the position's residual
+     * payee — the owner, or the beneficiary when a funder sponsored the
+     * position. Exactly one address passes: the assignment made at first
+     * deposit is the contract, not a menu for whoever turns the crank.
+     */
     destination: TAccountMetas[4];
     treasury: TAccountMetas[5];
     tokenProgram: TAccountMetas[6];

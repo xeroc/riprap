@@ -39,12 +39,14 @@ export function getCrankPaidEventDiscriminatorBytes(): ReadonlyUint8Array {
 export type CrankPaidEvent = {
   pool: Address;
   depositor: Address;
+  beneficiary: Address;
   paid: bigint;
 };
 
 export type CrankPaidEventArgs = {
   pool: Address;
   depositor: Address;
+  beneficiary: Address;
   paid: number | bigint;
 };
 
@@ -54,6 +56,7 @@ export function getCrankPaidEventEncoder(): FixedSizeEncoder<CrankPaidEventArgs>
     getStructEncoder([
       ["pool", getAddressEncoder()],
       ["depositor", getAddressEncoder()],
+      ["beneficiary", getAddressEncoder()],
       ["paid", getU64Encoder()],
     ]),
     [getConstantEncoder(CRANK_PAID_EVENT_DISCRIMINATOR)],
@@ -66,6 +69,7 @@ export function getCrankPaidEventDecoder(): FixedSizeDecoder<CrankPaidEvent> {
     getStructDecoder([
       ["pool", getAddressDecoder()],
       ["depositor", getAddressDecoder()],
+      ["beneficiary", getAddressDecoder()],
       ["paid", getU64Decoder()],
     ]),
     [getConstantDecoder(CRANK_PAID_EVENT_DISCRIMINATOR)],

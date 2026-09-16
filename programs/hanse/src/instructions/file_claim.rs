@@ -39,6 +39,12 @@ pub struct FileClaim<'info> {
     #[account(mut)]
     pub claimant: Signer<'info>,
 
+    /// Data-free rent payer for the Claim PDA init — decoupled from the
+    /// claimant so a third party can sponsor the filing (the juror fee
+    /// still leaves the claimant's own fee ATA, §2.6).
+    #[account(mut)]
+    pub rent_payer: Signer<'info>,
+
     #[account(
         mut,
         constraint = mutual.phase == crate::state::Phase::Active @ HanseError::MutualNotActive
@@ -58,7 +64,7 @@ pub struct FileClaim<'info> {
 
     #[account(
         init,
-        payer = claimant,
+        payer = rent_payer,
         space = CLAIM_SPACE,
         seeds = [CLAIM_SEED, mutual.key().as_ref(), nonce.to_le_bytes().as_ref()],
         bump,
