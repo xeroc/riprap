@@ -15,6 +15,53 @@ Riprap is a platform for event-scoped mutual protection pools on Solana (first d
 - `meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md` — the tier table and claims rules. The **only** allowed prices: $10/$20/$40 entry, $1,000/$2,000/$4,000 caps.
 - `meta/marketing/07-brand-assets/messaging-guide.md` — tone law for any user-facing string: deadpan-honest, no buzzwords, ≤1 emoji per surface (landing uses zero), numbers exactly as sourced.
 
+## Repository Map
+
+### Parts
+
+|Part|Path|Role|
+|---|---|---|
+|Programs|`programs/{pool,hanse}/` (`src/{lib,state,events,error}.rs`, `src/instructions/`, `tests/`)|Source of truth for on-chain behavior — except `hanse`, which is subordinate to `meta/specs/EVENT-MUTUAL.md` (spec wins). `anchor build` emits the IDLs to `target/idl/`.|
+|Generated clients|`packages/{pool,hanse}/generated/`|Codama output from the IDLs — regenerated (`pnpm --filter @riprap/<p> codegen`), never hand-edited, committed alongside the program change.|
+|SDK facades|`packages/{pool,hanse}/src/` (`index.ts`, `pdas.ts`, `fetch.ts` + colocated tests)|Hand-written public surface (PDA derivation, account fetchers) re-exported together with the generated client; `@riprap/hanse` depends on `@riprap/pool`.|
+|Shared UI|`packages/ui/` (public API = `src/index.ts`)|Tokens, atoms, chrome per `DESIGN.md` + `meta/primitives/`; consumed by every `apps/*` frontend via source imports.|
+|CLI|`apps/cli/` (`src/commands/{config,pool,hanse}/`, `src/lib/`)|`riprap` operator CLI; consumes `@riprap/pool` + `@riprap/hanse` + `@useaccord/sdk` (accord PDAs/reads). No protocol logic lives here.|
+|Frontends|`apps/landing/`, `apps/pitch-seed-raise/`|React + Vite; consume `@riprap/ui`. `pitch-seed-raise` has no test lane — the gate's `build`/`lint` legs are its only automated check.|
+|e2e tests|`tests/src/` (`spec-*.spec.ts`, `{mutual,draw}-harness.ts`, `setup/`)|Drives pool + hanse through both SDKs and `@useaccord/sdk` against a Surfpool surfnet.|
+|Governing docs|`meta/` (symlink → the Obsidian spec vault), root `DESIGN.md`, `PROJECT.md`, `CONTEXT.md`, `README.md`|Must describe the code as it is; the spec-wins rules in Project Overview make several of them law.|
+|Decisions & ledger|`apps/docs/adr/`, `apps/docs/beans/` (`.beans.yml`)|ADRs for architectural calls; beans task ledger.|
+|CI / deploy|`.github/workflows/landing-page.yaml`|Builds `apps/landing` and deploys to GitHub Pages (`riprap.xyz`) on push to `main`.|
+|Cross-repo pin|`programs/hanse/Cargo.toml` (accord `rev`, see Completion Gate), `@useaccord/sdk@0.1.0` (`apps/cli` + `tests`), `ACCORD_SO` artifact|The sibling accord checkout is an external dependency of both the program and the TS workspace.|
+
+### When you change X, also touch Y
+
+- **Instruction signature** (add/rename/remove an arg or account in `programs/<p>/src/instructions/`): `anchor build` → `pnpm --filter @riprap/<p> codegen` → every call site in `apps/cli/src/commands/<topic>/` plus `src/lib/{pool-args,hanse-args}.ts` parsing → the harnesses and specs in `tests/src/` → the LiteSVM suite in `programs/<p>/tests/` → for `hanse`, reconcile with `meta/specs/EVENT-MUTUAL.md` (spec wins) and write an ADR if architectural. _E.g. adding an arg to `file_claim` ripples into `getFileClaimInstructionAsync` call sites in `apps/cli/src/commands/hanse/file-claim.ts`, the CLI arg parser, and every e2e claim call._
+
+- **Account field** (add/rename/remove a field in `state.rs`): codegen → every **object literal** constructing that account — `tests/src/setup/fixtures.ts`, CLI test fixtures in `apps/cli/src/**/*.test.ts` — plus `packages/<p>/src/fetch.ts` decoders that read the field → the account table in `meta/specs/EVENT-MUTUAL.md` (hanse).
+
+- **New instruction:** all of the above, plus a new `apps/cli` command (oclif `summary` + `examples` — `src/suite.test.ts` enforces help completeness), a new e2e spec, and a command-list entry in `apps/cli/README.md`.
+
+- **SDK public surface** (new/renamed export from `packages/{pool,hanse}` — a PDA, fetcher, codec — or from `packages/ui/src/index.ts`): migrate **every consumer** (`apps/cli` + `tests` for chain; `apps/landing` + `apps/pitch-seed-raise` for UI), then `pnpm -r run build` to let every `tsc` catch stragglers. No parallel hand-rolled PDA/ATA/fetcher implementations — the SDK packages are the single source.
+
+- **CLI command or flag** (add/rename/remove a command, or rename/make-optional a flag): update `apps/cli/README.md` (command list, `chainFlags` table, `--dry-run` matrix) in the same change and keep `src/suite.test.ts` green — a flag that drifts from the README makes the documented copy-paste commands fail or silently behave differently.
+
+- **Error code / enum variant:** `programs/<p>/src/error.rs` → codegen → generated error maps → every consumer switching on the name (`apps/cli/src/lib/errors.ts`, e2e assertions).
+
+- **Payout math / tier economics:** `meta/specs/EVENT-MUTUAL.md` §8 and the policy doc are the source — change them first; then `programs/hanse` settle instructions, `apps/cli/src/lib/hanse-quote.ts` (the offline `hanse:quote` calculator), `packages/ui/src/lib/poolMath.ts` (`TIERS`), and e2e expectations move together. A changed number carries its provenance.
+
+- **Landing copy:** update `meta/marketing/03-website-copy/landing-page.md` first, then the code; the PR quotes the source line.
+
+- **Visual law** (tokens, type, motion): one place — `packages/ui/src/tokens.css` + the kit; hex values never appear anywhere else.
+
+- **Accord pin bump** (`rev` in `programs/hanse/Cargo.toml` or `@useaccord/sdk` version in `apps/cli`/`tests`): rebuild the sibling (`cd ../accord && make build`, or point `ACCORD_SO` at the artifact), audit every `@useaccord/sdk` import site (`apps/cli/src/commands/hanse/{file-claim,set-subaccord-param}.ts` + build tests, `tests/src/setup/deploy.ts`), and run the live e2e.
+
+### Keeping this map current
+
+- This section is load-bearing documentation, not a snapshot. Any change that adds/removes/renames a workspace package or app, introduces a **new import across package boundaries**, a new cross-repo dependency, or a new doc that governs code **must update the Parts table and the propagation list in the same change** — before running the completion gate. A dependency that exists in code but not in this map is a bug in this file.
+- You have recognized a new dependency when: you add an `@riprap/*` or `@useaccord/*` import where none existed, you scaffold a new `apps/*` or `packages/*` entry, or you discover a consumer this map missed. Adding the row (or propagation edge) is part of done, not a follow-up task.
+- A new app lands under `apps/*` (the workspace globs pick it up), gets a Parts row naming its consumers and test lane (or explicitly "no test lane"), and must not break any leg of `pnpm verify`.
+- When code and this map disagree, fix whichever is wrong — establish reality by reading imports (`from "@riprap/`, `from "@useaccord/`), not from memory.
+
 ## Setup Commands
 
 ```bash
@@ -65,7 +112,7 @@ Or the shorthand: `pnpm verify`. Run it before declaring any task complete — n
 ## Build and Deployment
 
 - `pnpm build` builds every package. Artifacts: `apps/landing/dist/` (deploy to the static host serving `riprap.xyz` — immutable cache for hashed assets, revalidate `index.html`) and `packages/ui/storybook-static/` (from `build-storybook`, deploy as the docs site).
-- No CI yet. The completion gate is manual and mandatory until CI lands; if you add CI, keep the gate command identical.
+- CI: `.github/workflows/landing-page.yaml` builds `apps/landing` and deploys it to GitHub Pages (`riprap.xyz`) on push to `main`. The completion gate stays manual and mandatory for every change; if you add more CI, keep the gate command identical.
 
 ## Pull Request Guidelines
 
