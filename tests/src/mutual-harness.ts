@@ -135,6 +135,7 @@ export async function setupMutualCohort(
 
   const initIx = await getInitializeMutualInstructionAsync({
     authority: env.payer,
+    rentPayer: env.payer,
     mutual,
     pool: poolPda,
     treasury,
@@ -268,6 +269,7 @@ export async function fileMemberClaim(
   });
   const fileIx = await getFileClaimInstructionAsync({
     claimant,
+    rentPayer: claimant,
     mutual,
     depositor: claimantDepositor,
     subaccord: fx.fx.subaccord,

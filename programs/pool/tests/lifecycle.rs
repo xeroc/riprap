@@ -161,6 +161,31 @@ impl Env {
     }
 
     fn deposit(&mut self, owner: &Keypair, ata: &Pubkey, track: pool::Track, amount: u64) -> Result<(), String> {
+        self.deposit_inner(owner, None, ata, track, amount)
+    }
+
+    /// Sponsored deposit: `funder`'s money into `owner`'s position — the
+    /// funder's ATA is the source, the funder becomes the residual
+    /// beneficiary. All three of rent sponsor, owner, funder sign.
+    fn deposit_funded(
+        &mut self,
+        owner: &Keypair,
+        funder: &Keypair,
+        funder_ata: &Pubkey,
+        track: pool::Track,
+        amount: u64,
+    ) -> Result<(), String> {
+        self.deposit_inner(owner, Some(funder), funder_ata, track, amount)
+    }
+
+    fn deposit_inner(
+        &mut self,
+        owner: &Keypair,
+        funder: Option<&Keypair>,
+        ata: &Pubkey,
+        track: pool::Track,
+        amount: u64,
+    ) -> Result<(), String> {
         self.svm_airdrop_if_needed(owner);
         let ix = Instruction::new_with_bytes(
             pool::id(),
@@ -173,6 +198,7 @@ impl Env {
                 )
                 .0,
                 owner: owner.pubkey(),
+                funder: funder.map(|f| f.pubkey()),
                 owner_ata: *ata,
                 rent_payer: self.sponsor.pubkey(),
                 treasury: self.treasury,
@@ -181,7 +207,11 @@ impl Env {
             }
             .to_account_metas(None),
         );
-        try_send(&mut self.svm, &[ix], &mut [&self.sponsor, owner])
+        let mut signers: Vec<&Keypair> = vec![&self.sponsor, owner];
+        if let Some(f) = funder {
+            signers.push(f);
+        }
+        try_send(&mut self.svm, &[ix], &mut signers)
     }
 
     fn svm_airdrop_if_needed(&mut self, _owner: &Keypair) {}
@@ -445,6 +475,169 @@ fn deposit_into_closed_track_reverts() {
     let (o1, a1, _) = env.depositor(5_000_000);
     let res = env.deposit(&o1, &a1, pool::Track::Ownership, 1_000_000); // rate 0
     assert_custom_err(res, pool::error::PoolError::TrackClosed);
+}
+
+/// Sponsored position end-to-end: the funder's money in, the owner's
+/// position, the funder's residual — and the assignment frozen at birth.
+#[test]
+fn sponsored_deposit_residual_goes_to_funder() {
+    let mut env = Env::setup(4);
+
+    // Owner holds dust (proves their money never moves); funder holds the cover.
+    let (owner, owner_ata, _) = env.depositor(1_000_000);
+    let (funder, funder_ata, _) = env.depositor(20_000_000);
+
+    env.deposit_funded(&owner, &funder, &funder_ata, pool::Track::Rights, 20_000_000)
+        .unwrap();
+
+    // Position: bound to the owner, residual assigned to the funder.
+    let d = env.depositor_state(&owner.pubkey());
+    assert_eq!(d.owner, owner.pubkey());
+    assert_eq!(d.residual_beneficiary, funder.pubkey());
+    assert_eq!(d.total_amount, 20_000_000);
+    assert_eq!(d.rights_stake, 20_000_000, "rate 1");
+    assert_eq!(token_amount(&env.svm, &funder_ata), 0, "funder paid the cover");
+    assert_eq!(token_amount(&env.svm, &owner_ata), 1_000_000, "owner money untouched");
+
+    // Owner self-top-up reverts: that money would silently exit to the funder.
+    let res = env.deposit(&owner, &owner_ata, pool::Track::Rights, 1_000_000);
+    assert_custom_err(res, pool::error::PoolError::BeneficiaryImmutable);
+
+    // Liquidate, then crank: the residual lands at the funder's ATA.
+    send(
+        &mut env.svm,
+        &[Instruction::new_with_bytes(
+            pool::id(),
+            &pool::instruction::Liquidate {}.data(),
+            pool::accounts::Liquidate {
+                pool: env.pool,
+                ownership_authority: env.ownership_authority.pubkey(),
+                treasury: env.treasury,
+                token_program: spl_token_interface::ID,
+            }
+            .to_account_metas(None),
+        )],
+        &mut [&env.ownership_authority],
+    );
+    let depositor = Pubkey::find_program_address(
+        &[b"depositor", env.pool.as_ref(), owner.pubkey().as_ref()],
+        &pool::id(),
+    )
+    .0;
+    let funder_dest = get_associated_token_address(&funder.pubkey(), &env.mint);
+    send(
+        &mut env.svm,
+        &[Instruction::new_with_bytes(
+            pool::id(),
+            &pool::instruction::Crank {}.data(),
+            pool::accounts::Crank {
+                pool: env.pool,
+                cranker: env.payer.pubkey(),
+                depositor,
+                owner: owner.pubkey(),
+                destination: funder_dest,
+                treasury: env.treasury,
+                token_program: spl_token_interface::ID,
+                associated_token_program: spl_associated_token_account_interface::program::ID,
+            }
+            .to_account_metas(None),
+        )],
+        &mut [&env.payer],
+    );
+    assert_eq!(
+        token_amount(&env.svm, &funder_dest),
+        20_000_000,
+        "whole residual to the funder"
+    );
+    assert_eq!(
+        token_amount(&env.svm, &owner_ata),
+        1_000_000,
+        "owner ATA still untouched"
+    );
+}
+
+/// The beneficiary is frozen at first deposit from BOTH sides: a self-funded
+/// position can never be retroactively sponsored either.
+#[test]
+fn self_funded_position_cannot_be_sponsored_later() {
+    let mut env = Env::setup(5);
+    let (owner, owner_ata, _) = env.depositor(10_000_000);
+    env.deposit(&owner, &owner_ata, pool::Track::Rights, 10_000_000)
+        .unwrap();
+
+    // A later funder's top-up reverts: residual would be redirected.
+    let (funder, funder_ata, _) = env.depositor(10_000_000);
+    let res = env.deposit_funded(&owner, &funder, &funder_ata, pool::Track::Rights, 10_000_000);
+    assert_custom_err(res, pool::error::PoolError::BeneficiaryImmutable);
+
+    let d = env.depositor_state(&owner.pubkey());
+    assert_eq!(
+        d.residual_beneficiary,
+        Pubkey::default(),
+        "self-funded stays self-residual"
+    );
+}
+
+/// The source ATA must belong to the passing funder — passing a funder with
+/// someone else's (here: the owner's) ATA reverts before any state moves.
+#[test]
+fn funder_with_foreign_source_ata_reverts() {
+    let mut env = Env::setup(6);
+    let (owner, owner_ata, _) = env.depositor(10_000_000);
+    let (funder, _funder_ata, _) = env.depositor(10_000_000);
+
+    let res = env.deposit_funded(&owner, &funder, &owner_ata, pool::Track::Rights, 10_000_000);
+    assert_custom_err(res, pool::error::PoolError::WrongSourceAuthority);
+    assert_eq!(env.treasury_balance(), 0, "nothing moved");
+}
+
+/// Crank destination law: a sponsored position will not pay the owner's ATA,
+/// and a self-funded one will not pay a stranger's.
+#[test]
+fn crank_destination_follows_the_beneficiary() {
+    let mut env = Env::setup(7);
+    let (owner, _owner_ata, depositor) = env.depositor(0);
+    let (funder, funder_ata, _) = env.depositor(30_000_000);
+    env.deposit_funded(&owner, &funder, &funder_ata, pool::Track::Rights, 30_000_000)
+        .unwrap();
+
+    send(
+        &mut env.svm,
+        &[Instruction::new_with_bytes(
+            pool::id(),
+            &pool::instruction::Liquidate {}.data(),
+            pool::accounts::Liquidate {
+                pool: env.pool,
+                ownership_authority: env.ownership_authority.pubkey(),
+                treasury: env.treasury,
+                token_program: spl_token_interface::ID,
+            }
+            .to_account_metas(None),
+        )],
+        &mut [&env.ownership_authority],
+    );
+
+    // Owner ATA is refused: the residual belongs to the funder now.
+    let owner_dest = get_associated_token_address(&owner.pubkey(), &env.mint);
+    let res = {
+        let ix = Instruction::new_with_bytes(
+            pool::id(),
+            &pool::instruction::Crank {}.data(),
+            pool::accounts::Crank {
+                pool: env.pool,
+                cranker: env.payer.pubkey(),
+                depositor,
+                owner: owner.pubkey(),
+                destination: owner_dest,
+                treasury: env.treasury,
+                token_program: spl_token_interface::ID,
+                associated_token_program: spl_associated_token_account_interface::program::ID,
+            }
+            .to_account_metas(None),
+        );
+        try_send(&mut env.svm, &[ix], &mut [&env.payer])
+    };
+    assert_custom_err(res, pool::error::PoolError::WrongDestination);
 }
 
 /// Matrix row 4: non-authorities cannot spend, liquidate, or rotate authority.

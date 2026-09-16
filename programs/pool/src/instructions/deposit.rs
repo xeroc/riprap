@@ -74,17 +74,20 @@ pub struct Deposit<'info> {
     pub depositor: Account<'info, Depositor>,
     pub owner: Signer<'info>,
 
+    /// Optional funds sponsor: when present, `owner_ata` must belong to this
+    /// key and the position's liquidation residual is assigned to it (first
+    /// deposit only, immutable after). Grants nothing else — the position
+    /// stays bound to the owner by seeds; spend/burn/payout never read it.
+    pub funder: Option<Signer<'info>>,
+
     /// Sponsors rent for the depositor PDA on first deposit — anyone. Paying
     /// grants no rights: seeds bind the position to the owner alone.
     #[account(mut)]
     pub rent_payer: Signer<'info>,
 
-    /// Deposit source; must hold the pool's one token.
-    #[account(
-        mut,
-        token::mint = pool.mint,
-        token::authority = owner,
-    )]
+    /// Deposit source; must hold the pool's one token and belong to the
+    /// owner, or to the funder when one sponsors (handler-checked).
+    #[account(mut, token::mint = pool.mint)]
     pub owner_ata: Account<'info, TokenAccount>,
 
     /// Treasury: pool PDA's ATA. Deposits were never swig-gated (ADR-0001).
@@ -103,8 +106,36 @@ pub struct Deposit<'info> {
 
 impl<'info> Deposit<'info> {
     /// Deposit into one track; mints stake at that track's rate and moves the
-    /// money into the treasury. The only way money enters.
+    /// money into the treasury. The only way money enters. With a funder,
+    /// the sponsor's money buys the owner's position and the sponsor's
+    /// residual share — never the owner's claim rights.
     pub fn handler_deposit(ctx: Context<Deposit>, track: Track, amount: u64) -> Result<()> {
+        // Freshness read before any writes: a zeroed owner field is only
+        // possible on the just-created account (Pubkey::default cannot sign,
+        // so no live position ever carries it).
+        let fresh = ctx.accounts.depositor.owner == Pubkey::default();
+
+        // Source authority: the owner's own ATA, or the funder's when a
+        // sponsor pays. The beneficiary assignment rides the same decision.
+        let (beneficiary, source_authority) = match &ctx.accounts.funder {
+            Some(funder) => {
+                require_keys_eq!(
+                    ctx.accounts.owner_ata.owner,
+                    funder.key(),
+                    PoolError::WrongSourceAuthority
+                );
+                (funder.key(), funder.to_account_info())
+            }
+            None => {
+                require_keys_eq!(
+                    ctx.accounts.owner_ata.owner,
+                    ctx.accounts.owner.key(),
+                    PoolError::WrongSourceAuthority
+                );
+                (Pubkey::default(), ctx.accounts.owner.to_account_info())
+            }
+        };
+
         // Stake math and bookkeeping before the transfer — no state changes if it reverts.
         let stake = apply(&mut ctx.accounts.pool, &mut ctx.accounts.depositor, track, amount)?;
         let owner = ctx.accounts.owner.key();
@@ -114,13 +145,25 @@ impl<'info> Deposit<'info> {
                 token::Transfer {
                     from: ctx.accounts.owner_ata.to_account_info(),
                     to: ctx.accounts.treasury.to_account_info(),
-                    authority: ctx.accounts.owner.to_account_info(),
+                    authority: source_authority,
                 },
             ),
             amount,
         )?;
         // init_if_needed: owner is only set meaningfully on first creation.
         ctx.accounts.depositor.owner = owner;
+        // First deposit fixes the residual assignment; later deposits must
+        // come from the same side — a self-funded position can never be
+        // retroactively sponsored, nor a sponsored one topped up by its owner
+        // (that money would silently exit to the sponsor).
+        if fresh {
+            ctx.accounts.depositor.residual_beneficiary = beneficiary;
+        } else {
+            require!(
+                ctx.accounts.depositor.residual_beneficiary == beneficiary,
+                PoolError::BeneficiaryImmutable
+            );
+        }
         emit!(events::Deposit {
             pool: ctx.accounts.pool.key(),
             depositor: owner,
@@ -165,6 +208,7 @@ mod tests {
     fn depositor() -> Depositor {
         Depositor {
             owner: Pubkey::new_unique(),
+            residual_beneficiary: Pubkey::default(),
             total_amount: 0,
             ownership_stake: 0,
             rights_stake: 0,

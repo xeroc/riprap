@@ -57,6 +57,7 @@ export type DepositInstruction<
   TAccountPool extends string | AccountMeta<string> = string,
   TAccountDepositor extends string | AccountMeta<string> = string,
   TAccountOwner extends string | AccountMeta<string> = string,
+  TAccountFunder extends string | AccountMeta<string> = string,
   TAccountRentPayer extends string | AccountMeta<string> = string,
   TAccountOwnerAta extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
@@ -74,6 +75,9 @@ export type DepositInstruction<
       TAccountOwner extends string
         ? ReadonlySignerAccount<TAccountOwner> & AccountSignerMeta<TAccountOwner>
         : TAccountOwner,
+      TAccountFunder extends string
+        ? ReadonlySignerAccount<TAccountFunder> & AccountSignerMeta<TAccountFunder>
+        : TAccountFunder,
       TAccountRentPayer extends string
         ? WritableSignerAccount<TAccountRentPayer> & AccountSignerMeta<TAccountRentPayer>
         : TAccountRentPayer,
@@ -130,6 +134,7 @@ export type DepositAsyncInput<
   TAccountPool extends string = string,
   TAccountDepositor extends string = string,
   TAccountOwner extends string = string,
+  TAccountFunder extends string = string,
   TAccountRentPayer extends string = string,
   TAccountOwnerAta extends string = string,
   TAccountTreasury extends string = string,
@@ -141,11 +146,21 @@ export type DepositAsyncInput<
   depositor?: Address<TAccountDepositor>;
   owner: TransactionSigner<TAccountOwner>;
   /**
+   * Optional funds sponsor: when present, `owner_ata` must belong to this
+   * key and the position's liquidation residual is assigned to it (first
+   * deposit only, immutable after). Grants nothing else — the position
+   * stays bound to the owner by seeds; spend/burn/payout never read it.
+   */
+  funder?: TransactionSigner<TAccountFunder>;
+  /**
    * Sponsors rent for the depositor PDA on first deposit — anyone. Paying
    * grants no rights: seeds bind the position to the owner alone.
    */
   rentPayer: TransactionSigner<TAccountRentPayer>;
-  /** Deposit source; must hold the pool's one token. */
+  /**
+   * Deposit source; must hold the pool's one token and belong to the
+   * owner, or to the funder when one sponsors (handler-checked).
+   */
   ownerAta: Address<TAccountOwnerAta>;
   /**
    * Treasury: pool PDA's ATA. Deposits were never swig-gated (ADR-0001).
@@ -163,6 +178,7 @@ export async function getDepositInstructionAsync<
   TAccountPool extends string,
   TAccountDepositor extends string,
   TAccountOwner extends string,
+  TAccountFunder extends string,
   TAccountRentPayer extends string,
   TAccountOwnerAta extends string,
   TAccountTreasury extends string,
@@ -174,6 +190,7 @@ export async function getDepositInstructionAsync<
     TAccountPool,
     TAccountDepositor,
     TAccountOwner,
+    TAccountFunder,
     TAccountRentPayer,
     TAccountOwnerAta,
     TAccountTreasury,
@@ -187,6 +204,7 @@ export async function getDepositInstructionAsync<
     TAccountPool,
     TAccountDepositor,
     TAccountOwner,
+    TAccountFunder,
     TAccountRentPayer,
     TAccountOwnerAta,
     TAccountTreasury,
@@ -202,6 +220,7 @@ export async function getDepositInstructionAsync<
     pool: { value: input.pool ?? null, isWritable: true },
     depositor: { value: input.depositor ?? null, isWritable: true },
     owner: { value: input.owner ?? null, isWritable: false },
+    funder: { value: input.funder ?? null, isWritable: false },
     rentPayer: { value: input.rentPayer ?? null, isWritable: true },
     ownerAta: { value: input.ownerAta ?? null, isWritable: true },
     treasury: { value: input.treasury ?? null, isWritable: true },
@@ -241,6 +260,7 @@ export async function getDepositInstructionAsync<
       getAccountMeta("pool", accounts.pool),
       getAccountMeta("depositor", accounts.depositor),
       getAccountMeta("owner", accounts.owner),
+      getAccountMeta("funder", accounts.funder),
       getAccountMeta("rentPayer", accounts.rentPayer),
       getAccountMeta("ownerAta", accounts.ownerAta),
       getAccountMeta("treasury", accounts.treasury),
@@ -254,6 +274,7 @@ export async function getDepositInstructionAsync<
     TAccountPool,
     TAccountDepositor,
     TAccountOwner,
+    TAccountFunder,
     TAccountRentPayer,
     TAccountOwnerAta,
     TAccountTreasury,
@@ -266,6 +287,7 @@ export type DepositInput<
   TAccountPool extends string = string,
   TAccountDepositor extends string = string,
   TAccountOwner extends string = string,
+  TAccountFunder extends string = string,
   TAccountRentPayer extends string = string,
   TAccountOwnerAta extends string = string,
   TAccountTreasury extends string = string,
@@ -277,11 +299,21 @@ export type DepositInput<
   depositor: Address<TAccountDepositor>;
   owner: TransactionSigner<TAccountOwner>;
   /**
+   * Optional funds sponsor: when present, `owner_ata` must belong to this
+   * key and the position's liquidation residual is assigned to it (first
+   * deposit only, immutable after). Grants nothing else — the position
+   * stays bound to the owner by seeds; spend/burn/payout never read it.
+   */
+  funder?: TransactionSigner<TAccountFunder>;
+  /**
    * Sponsors rent for the depositor PDA on first deposit — anyone. Paying
    * grants no rights: seeds bind the position to the owner alone.
    */
   rentPayer: TransactionSigner<TAccountRentPayer>;
-  /** Deposit source; must hold the pool's one token. */
+  /**
+   * Deposit source; must hold the pool's one token and belong to the
+   * owner, or to the funder when one sponsors (handler-checked).
+   */
   ownerAta: Address<TAccountOwnerAta>;
   /**
    * Treasury: pool PDA's ATA. Deposits were never swig-gated (ADR-0001).
@@ -299,6 +331,7 @@ export function getDepositInstruction<
   TAccountPool extends string,
   TAccountDepositor extends string,
   TAccountOwner extends string,
+  TAccountFunder extends string,
   TAccountRentPayer extends string,
   TAccountOwnerAta extends string,
   TAccountTreasury extends string,
@@ -310,6 +343,7 @@ export function getDepositInstruction<
     TAccountPool,
     TAccountDepositor,
     TAccountOwner,
+    TAccountFunder,
     TAccountRentPayer,
     TAccountOwnerAta,
     TAccountTreasury,
@@ -322,6 +356,7 @@ export function getDepositInstruction<
   TAccountPool,
   TAccountDepositor,
   TAccountOwner,
+  TAccountFunder,
   TAccountRentPayer,
   TAccountOwnerAta,
   TAccountTreasury,
@@ -336,6 +371,7 @@ export function getDepositInstruction<
     pool: { value: input.pool ?? null, isWritable: true },
     depositor: { value: input.depositor ?? null, isWritable: true },
     owner: { value: input.owner ?? null, isWritable: false },
+    funder: { value: input.funder ?? null, isWritable: false },
     rentPayer: { value: input.rentPayer ?? null, isWritable: true },
     ownerAta: { value: input.ownerAta ?? null, isWritable: true },
     treasury: { value: input.treasury ?? null, isWritable: true },
@@ -366,6 +402,7 @@ export function getDepositInstruction<
       getAccountMeta("pool", accounts.pool),
       getAccountMeta("depositor", accounts.depositor),
       getAccountMeta("owner", accounts.owner),
+      getAccountMeta("funder", accounts.funder),
       getAccountMeta("rentPayer", accounts.rentPayer),
       getAccountMeta("ownerAta", accounts.ownerAta),
       getAccountMeta("treasury", accounts.treasury),
@@ -379,6 +416,7 @@ export function getDepositInstruction<
     TAccountPool,
     TAccountDepositor,
     TAccountOwner,
+    TAccountFunder,
     TAccountRentPayer,
     TAccountOwnerAta,
     TAccountTreasury,
@@ -398,20 +436,30 @@ export type ParsedDepositInstruction<
     depositor: TAccountMetas[1];
     owner: TAccountMetas[2];
     /**
+     * Optional funds sponsor: when present, `owner_ata` must belong to this
+     * key and the position's liquidation residual is assigned to it (first
+     * deposit only, immutable after). Grants nothing else — the position
+     * stays bound to the owner by seeds; spend/burn/payout never read it.
+     */
+    funder?: TAccountMetas[3] | undefined;
+    /**
      * Sponsors rent for the depositor PDA on first deposit — anyone. Paying
      * grants no rights: seeds bind the position to the owner alone.
      */
-    rentPayer: TAccountMetas[3];
-    /** Deposit source; must hold the pool's one token. */
-    ownerAta: TAccountMetas[4];
+    rentPayer: TAccountMetas[4];
+    /**
+     * Deposit source; must hold the pool's one token and belong to the
+     * owner, or to the funder when one sponsors (handler-checked).
+     */
+    ownerAta: TAccountMetas[5];
     /**
      * Treasury: pool PDA's ATA. Deposits were never swig-gated (ADR-0001).
      * Treasury: must be THIS pool's canonical ATA (mint + authority = pool),
      * so money can never land in or leave another pool's treasury.
      */
-    treasury: TAccountMetas[5];
-    tokenProgram: TAccountMetas[6];
-    systemProgram: TAccountMetas[7];
+    treasury: TAccountMetas[6];
+    tokenProgram: TAccountMetas[7];
+    systemProgram: TAccountMetas[8];
   };
   data: DepositInstructionData;
 };
@@ -424,10 +472,10 @@ export function parseDepositInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedDepositInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 8) {
+  if (instruction.accounts.length < 9) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 8,
+      expectedAccountMetas: 9,
     });
   }
   let accountIndex = 0;
@@ -436,12 +484,17 @@ export function parseDepositInstruction<
     accountIndex += 1;
     return accountMeta;
   };
+  const getNextOptionalAccount = () => {
+    const accountMeta = getNextAccount();
+    return accountMeta.address === POOL_PROGRAM_ADDRESS ? undefined : accountMeta;
+  };
   return {
     programAddress: instruction.programAddress,
     accounts: {
       pool: getNextAccount(),
       depositor: getNextAccount(),
       owner: getNextAccount(),
+      funder: getNextOptionalAccount(),
       rentPayer: getNextAccount(),
       ownerAta: getNextAccount(),
       treasury: getNextAccount(),

@@ -5,15 +5,24 @@ use crate::error::HanseError;
 use crate::events::MemberJoined;
 use crate::state::{Member, Mutual, MEMBER_SEED, MEMBER_SPACE};
 
-/// Account context for `join` — member-signed (EVENT-MUTUAL §7).
+/// Account context for `join` — member-signed (EVENT-MUTUAL §7). The member
+/// always signs (consent + the claim key); the money may come from an
+/// optional sponsor (§7 sponsorship amendment, option C).
 #[derive(Accounts)]
 pub struct Join<'info> {
     #[account(mut)]
     pub member: Signer<'info>,
 
+    /// Optional cover sponsor: when present, the contribution leaves this
+    /// wallet's ATA (`owner_ata`) and the pool assigns the liquidation
+    /// residual of the member's position to this key — the sponsor gets the
+    /// leftover, the member keeps every claim right. Data-free otherwise.
+    #[account(mut)]
+    pub funder: Option<Signer<'info>>,
+
     #[account(
         init,
-        payer = member,
+        payer = rent_payer,
         space = MEMBER_SPACE,
         seeds = [MEMBER_SEED, mutual.key().as_ref(), member.key().as_ref()],
         bump,
@@ -31,13 +40,17 @@ pub struct Join<'info> {
     #[account(mut)]
     pub depositor: UncheckedAccount<'info>,
 
-    /// The member's deposit-mint ATA — the contribution source. CHECK: mint
-    /// and authority are enforced inside the pool::deposit CPI against the
-    /// pool's one mint and the owner signer.
+    /// The contribution source — the member's own deposit-mint ATA, or the
+    /// sponsor's when `funder` is present. CHECK: mint and authority are
+    /// enforced inside the pool::deposit CPI (pool's one mint; authority must
+    /// be the owner or the passing funder).
     #[account(mut)]
     pub owner_ata: UncheckedAccount<'info>,
 
-    /// v1: the member sponsors its own depositor rent (bean riprap-gneb).
+    /// Data-free rent payer for both init sites here: the Member PDA and
+    /// the pool::deposit CPI's depositor PDA (bean riprap-gneb). v1: the
+    /// member passes their own wallet; any funded wallet may sponsor the
+    /// join without becoming the member.
     #[account(mut)]
     pub rent_payer: Signer<'info>,
 
@@ -72,7 +85,7 @@ impl<'info> Join<'info> {
 
         // Rights stake: rate is fixed 1:1 at initialize_mutual, so the pool
         // mints stake == contribution. The member signs as owner; the money
-        // moves member ATA → treasury inside the pool.
+        // moves owner_ata (member or sponsor) → treasury inside the pool.
         pool::cpi::deposit(
             CpiContext::new(
                 ctx.accounts.pool_program.key(),
@@ -80,6 +93,11 @@ impl<'info> Join<'info> {
                     pool: ctx.accounts.pool.to_account_info(),
                     depositor: ctx.accounts.depositor.to_account_info(),
                     owner: ctx.accounts.member.to_account_info(),
+                    funder: ctx
+                        .accounts
+                        .funder
+                        .as_ref()
+                        .map(|f| f.to_account_info()),
                     owner_ata: ctx.accounts.owner_ata.to_account_info(),
                     rent_payer: ctx.accounts.rent_payer.to_account_info(),
                     treasury: ctx.accounts.treasury.to_account_info(),

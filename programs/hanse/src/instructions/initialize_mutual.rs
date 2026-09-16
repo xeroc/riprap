@@ -72,14 +72,23 @@ const SUBACCORD_DEPTH: u8 = 12;
 #[instruction(config: InitializeMutualConfig)]
 pub struct InitializeMutual<'info> {
     /// Initializer — recorded as the demo admin (§2.10): gates
-    /// set_subaccord_param and co-signs payouts. Paying rent implies no
-    /// other authority.
+    /// set_subaccord_param and co-signs payouts. Implies no other
+    /// authority; rent is paid by [`Self::rent_payer`].
     #[account(mut)]
     pub authority: Signer<'info>,
 
+    /// Data-free rent payer — funds the Mutual PDA, the fee float ATA, and
+    /// the pool CPI's accounts (pool PDA + treasury ATA). v1: the
+    /// initializer passes their own wallet here; any funded wallet may
+    /// sponsor without gaining any authority (pool's §5 rent-sponsor
+    /// pattern). The subaccord CPI is excluded: its `creator` is PDA seed
+    /// material in accord, so that rent stays with the initializer.
+    #[account(mut)]
+    pub rent_payer: Signer<'info>,
+
     #[account(
         init,
-        payer = authority,
+        payer = rent_payer,
         space = MUTUAL_SPACE,
         seeds = [MUTUAL_SEED, config.seed.to_le_bytes().as_ref()],
         bump,
@@ -118,7 +127,7 @@ pub struct InitializeMutual<'info> {
     /// fees land here before the create_dispute CPI drains them (§2.6).
     #[account(
         init_if_needed,
-        payer = authority,
+        payer = rent_payer,
         associated_token::authority = mutual,
         associated_token::mint = fee_mint,
     )]
@@ -261,7 +270,7 @@ impl<'info> InitializeMutual<'info> {
             CpiContext::new(
                 ctx.accounts.pool_program.key(),
                 pool::cpi::accounts::InitPool {
-                    rent_payer: ctx.accounts.authority.to_account_info(),
+                    rent_payer: ctx.accounts.rent_payer.to_account_info(),
                     mint: ctx.accounts.deposit_mint.to_account_info(),
                     pool: ctx.accounts.pool.to_account_info(),
                     treasury: ctx.accounts.treasury.to_account_info(),
@@ -289,7 +298,10 @@ impl<'info> InitializeMutual<'info> {
         //    degradation). Synod file_dispute precedent: a data-carrying PDA
         //    cannot pay rent (system rejects transfers from data accounts)
         //    and create_subaccord has no separate rent-payer field, so the
-        //    initializer wallet is the creator.
+        //    initializer wallet is the creator. `creator` is also PDA seed
+        //    material in accord (["subaccord", creator, domain_ref]) —
+        //    routing it through rent_payer would move the subaccord address,
+        //    so this rent is deliberately NOT sponsorable in v1.
         accord::cpi::create_subaccord(
             CpiContext::new(
                 ctx.accounts.accord_program.key(),

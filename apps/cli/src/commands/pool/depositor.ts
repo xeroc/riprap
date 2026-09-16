@@ -19,6 +19,9 @@ import { groupBigInt, truncateAddress } from "../../lib/format";
 import { moneyWeightedPayout } from "../../lib/pool-math";
 import { findAssociatedTokenAddress } from "../../lib/token";
 
+/** Pubkey::default() on-chain — an unset residual beneficiary. */
+const NO_BENEFICIARY = "11111111111111111111111111111111" as Address;
+
 export interface DepositorView {
   pool: Pool;
   depositor: Depositor;
@@ -99,6 +102,7 @@ export default class PoolDepositor extends ChainCommand {
         owner: view.depositor.owner,
         depositorAddress: view.depositorAddress,
         totalAmount: view.depositor.totalAmount,
+        residualBeneficiary: view.depositor.residualBeneficiary,
         ownershipStake: view.depositor.ownershipStake,
         rightsStake: view.depositor.rightsStake,
         yieldStake: view.depositor.yieldStake,
@@ -115,7 +119,11 @@ export default class PoolDepositor extends ChainCommand {
           `owner        : ${truncateAddress(view.depositor.owner)}`,
           `depositor    : ${truncateAddress(view.depositorAddress)}`,
           `totalAmount  : ${groupBigInt(view.depositor.totalAmount)} of pool ${groupBigInt(view.pool.totalAmount)}`,
-          `stakes       : ownership ${groupBigInt(view.depositor.ownershipStake)} / rights ${groupBigInt(view.depositor.rightsStake)} / yield ${groupBigInt(view.depositor.yieldStake)}`,
+          `residualTo   : ${
+            view.depositor.residualBeneficiary === NO_BENEFICIARY
+              ? "owner (self-funded)"
+              : truncateAddress(view.depositor.residualBeneficiary)
+          }`,
           `settled      : ${view.depositor.settled}`,
           `treasury     : ${truncateAddress(view.treasury)} — ${groupBigInt(view.treasuryBalance)}`,
           `payoutBase   : ${groupBigInt(view.payoutBase)} (${view.baseSource})`,

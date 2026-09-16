@@ -49,6 +49,19 @@ fn join_tx(
     member_ata: &anchor_lang::prelude::Pubkey,
     tier: u8,
 ) -> Result<(), String> {
+    join_tx_paying(env, cfg, member, member_ata, tier, member)
+}
+
+/// `join_tx` with an explicit rent sponsor — the Member PDA and the pool's
+/// depositor PDA both rent to this wallet (v1: the member themself).
+fn join_tx_paying(
+    env: &mut Env,
+    cfg: &hanse::instructions::InitializeMutualConfig,
+    member: &Keypair,
+    member_ata: &anchor_lang::prelude::Pubkey,
+    tier: u8,
+    rent_payer: &Keypair,
+) -> Result<(), String> {
     use anchor_lang::solana_program::instruction::Instruction;
     let mutual = mutual_pda(cfg.seed);
     let pool = pool_pda(cfg.seed);
@@ -57,12 +70,13 @@ fn join_tx(
         &hanse::instruction::Join { tier }.data(),
         hanse::accounts::Join {
             member: member.pubkey(),
+            funder: None,
             member_account: member_pda(&mutual, &member.pubkey()),
             mutual,
             pool,
             depositor: pool_depositor(&pool, &member.pubkey()),
             owner_ata: *member_ata,
-            rent_payer: member.pubkey(),
+            rent_payer: rent_payer.pubkey(),
             treasury: pool_treasury(&pool, &env.mint),
             deposit_mint: env.mint,
             token_program: spl_token_interface::ID,
@@ -71,7 +85,11 @@ fn join_tx(
         }
         .to_account_metas(None),
     );
-    try_send(&mut env.svm, &[ix], &mut [member])
+    if rent_payer.pubkey() == member.pubkey() {
+        try_send(&mut env.svm, &[ix], &mut [member])
+    } else {
+        try_send(&mut env.svm, &[ix], &mut [member, rent_payer])
+    }
 }
 
 /// §7 happy path: rights stake == contribution (rate 1), Member fields exact.
@@ -121,6 +139,181 @@ fn join_mints_rights_stake_and_enrolls_member() {
         "reserved (riprap-7wa9)"
     );
     assert!(!m.has_pending_claim);
+}
+
+/// Sponsored cover, the full arc (§7 sponsorship, pool option C): the
+/// sponsor's money buys the member's position, the member keeps every claim
+/// right, and after settle → dissolve the pool crank pays the leftover to
+/// the sponsor's ATA. The member holds nothing throughout.
+#[test]
+fn sponsored_join_residual_settles_to_sponsor() {
+    let (mut env, cfg) = setup_with_mutual(1);
+    let (member, _member_ata) = member_with(&mut env, 0); // member is broke on purpose
+    use anchor_lang::solana_program::instruction::Instruction;
+
+    // Fund a sponsor wallet (tokens + rent lamports).
+    let sponsor = cranker(&mut env);
+    let sponsor_ata = ata(&sponsor.pubkey(), &env.mint);
+    {
+        use spl_associated_token_account_interface::instruction as ata_ix;
+        use spl_token_interface::instruction as token_ix;
+        send(
+            &mut env.svm,
+            &[
+                ata_ix::create_associated_token_account_idempotent(
+                    &env.payer.pubkey(),
+                    &sponsor.pubkey(),
+                    &env.mint,
+                    &spl_token_interface::ID,
+                ),
+                token_ix::mint_to(
+                    &spl_token_interface::ID,
+                    &env.mint,
+                    &sponsor_ata,
+                    &env.payer.pubkey(),
+                    &[],
+                    20_000_000,
+                )
+                .unwrap(),
+            ],
+            &mut [&env.payer],
+        );
+    }
+
+    // join: member signs (consent), sponsor pays cover + rent.
+    let mutual = mutual_pda(cfg.seed);
+    let pool = pool_pda(cfg.seed);
+    let ix = Instruction::new_with_bytes(
+        hanse::id(),
+        &hanse::instruction::Join { tier: 1 }.data(),
+        hanse::accounts::Join {
+            member: member.pubkey(),
+            funder: Some(sponsor.pubkey()),
+            member_account: member_pda(&mutual, &member.pubkey()),
+            mutual,
+            pool,
+            depositor: pool_depositor(&pool, &member.pubkey()),
+            owner_ata: sponsor_ata,
+            rent_payer: sponsor.pubkey(),
+            treasury: pool_treasury(&pool, &env.mint),
+            deposit_mint: env.mint,
+            token_program: spl_token_interface::ID,
+            system_program: anchor_lang::solana_program::system_program::ID,
+            pool_program: pool::id(),
+        }
+        .to_account_metas(None),
+    );
+    try_send(&mut env.svm, &[ix], &mut [&member, &sponsor]).unwrap();
+
+    // Member enrolled; position bound to the member, residual to the sponsor.
+    let d: pool::Depositor = anchor_lang::AccountDeserialize::try_deserialize(
+        &mut &env.svm
+            .get_account(&pool_depositor(&pool, &member.pubkey()))
+            .unwrap()
+            .data[..],
+    )
+    .unwrap();
+    assert_eq!(d.owner, member.pubkey(), "position is the member's");
+    assert_eq!(d.residual_beneficiary, sponsor.pubkey());
+    assert_eq!(d.total_amount, 20_000_000, "tier 1 = Standard $20");
+    assert_eq!(token_amount(&env.svm, &sponsor_ata), 0, "cover fully paid");
+    assert_eq!(
+        token_amount(&env.svm, &pool_treasury(&pool, &env.mint)),
+        20_000_000
+    );
+
+    // No claims filed: settle past the claims window, then past the pull
+    // window, dissolve, and crank the position — to the sponsor's ATA.
+    warp_clock(&mut env.svm, cfg.claims_close_at + 1);
+    let cranker_kp = cranker(&mut env);
+    send(
+        &mut env.svm,
+        &[Instruction::new_with_bytes(
+            hanse::id(),
+            &hanse::instruction::SettlePool {}.data(),
+            hanse::accounts::SettlePool {
+                cranker: cranker_kp.pubkey(),
+                mutual,
+                treasury: pool_treasury(&pool, &env.mint),
+            }
+            .to_account_metas(None),
+        )],
+        &mut [&cranker_kp],
+    );
+    warp_clock(&mut env.svm, cfg.claims_close_at + cfg.pull_window + 2);
+    send(
+        &mut env.svm,
+        &[Instruction::new_with_bytes(
+            hanse::id(),
+            &hanse::instruction::Dissolve {}.data(),
+            hanse::accounts::Dissolve {
+                cranker: cranker_kp.pubkey(),
+                mutual,
+                ownership_authority: mutual_own_pda(&mutual),
+                pool,
+                treasury: pool_treasury(&pool, &env.mint),
+                token_program: spl_token_interface::ID,
+                pool_program: pool::id(),
+            }
+            .to_account_metas(None),
+        )],
+        &mut [&cranker_kp],
+    );
+    send(
+        &mut env.svm,
+        &[Instruction::new_with_bytes(
+            pool::id(),
+            &pool::instruction::Crank {}.data(),
+            pool::accounts::Crank {
+                pool,
+                cranker: cranker_kp.pubkey(),
+                depositor: pool_depositor(&pool, &member.pubkey()),
+                owner: member.pubkey(),
+                destination: sponsor_ata,
+                treasury: pool_treasury(&pool, &env.mint),
+                token_program: spl_token_interface::ID,
+                associated_token_program:
+                    spl_associated_token_account_interface::program::ID,
+            }
+            .to_account_metas(None),
+        )],
+        &mut [&cranker_kp],
+    );
+
+    // The leftover is the sponsor's; nothing ever landed on the member.
+    assert_eq!(token_amount(&env.svm, &sponsor_ata), 20_000_000);
+}
+
+/// Rent sponsorship: a third-party wallet funds both init sites (Member
+/// PDA + depositor PDA); the member still signs and is recorded unchanged —
+/// the sponsor buys nothing but the rent bills.
+#[test]
+fn join_rent_sponsored_by_third_party() {
+    let (mut env, cfg) = setup_with_mutual(1);
+    let (member, member_ata) = member_with(&mut env, 20_000_000);
+    let sponsor = cranker(&mut env);
+    let before = env
+        .svm
+        .get_account(&sponsor.pubkey())
+        .unwrap()
+        .lamports;
+    join_tx_paying(&mut env, &cfg, &member, &member_ata, 1, &sponsor).unwrap();
+
+    let m: hanse::Member = anchor_lang::AccountDeserialize::try_deserialize(
+        &mut &env.svm
+            .get_account(&member_pda(&mutual_pda(1), &member.pubkey()))
+            .unwrap()
+            .data[..],
+    )
+    .unwrap();
+    assert_eq!(m.member, member.pubkey(), "sponsor is not the member");
+    assert_eq!(m.tier, 1);
+    let after = env
+        .svm
+        .get_account(&sponsor.pubkey())
+        .unwrap()
+        .lamports;
+    assert!(after < before, "sponsor paid the rent");
 }
 
 #[test]

@@ -27,6 +27,9 @@ const DEPOSITOR_PDA = await findDepositorPda({ pool: POOL_ADDR, owner: OWNER }).
   ([pda]) => pda,
 );
 
+/** Pubkey::default() on-chain — an unset residual beneficiary. */
+const NO_BENEFICIARY = "11111111111111111111111111111111" as Address;
+
 function encodedPool(state: PoolState, totalAmount: bigint, liquidationBalance = 0n): string {
   const raw = getPoolEncoder().encode({
     mint: MINT,
@@ -48,6 +51,7 @@ function encodedPool(state: PoolState, totalAmount: bigint, liquidationBalance =
 function encodedDepositor(totalAmount: bigint): string {
   const raw = getDepositorEncoder().encode({
     owner: OWNER,
+    residualBeneficiary: NO_BENEFICIARY,
     totalAmount,
     ownershipStake: totalAmount,
     rightsStake: 2n * totalAmount,

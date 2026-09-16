@@ -1,7 +1,10 @@
 /**
  * `riprap hanse:initialize` — create a mutual: Mutual PDA, its pool (CPI),
  * its subaccord (CPI), and the fee float ATA. All inputs explicit; the
- * loaded wallet is the initializer = demo admin (§2.10) and pays all rent.
+ * loaded wallet is the initializer = demo admin (§2.10). Rent (mutual +
+ * pool + fee float — not the subaccord, whose creator seeds its PDA) is
+ * paid by the on-chain rent_payer account; the CLI wires that to this
+ * wallet, so by default the initializer sponsors their own rent.
  *
  * Pilot values (devnet/mainnet): EVENT-MUTUAL §12 — tiers 10/1000 · 20/2000
  * · 40/4000 (6-dec raw), jury 3 × 5 fee, windows 48h/12h/12h/48h.
@@ -154,6 +157,7 @@ export default class HanseInitialize extends ChainCommand {
 
     const instruction = await getInitializeMutualInstructionAsync({
       authority: ctx.signer,
+      rentPayer: ctx.signer,
       mutual,
       pool,
       treasury,

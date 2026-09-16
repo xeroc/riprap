@@ -53,6 +53,7 @@ export function getJoinDiscriminatorBytes(): ReadonlyUint8Array {
 export type JoinInstruction<
   TProgram extends string = typeof HANSE_PROGRAM_ADDRESS,
   TAccountMember extends string | AccountMeta<string> = string,
+  TAccountFunder extends string | AccountMeta<string> = string,
   TAccountMemberAccount extends string | AccountMeta<string> = string,
   TAccountMutual extends string | AccountMeta<string> = string,
   TAccountPool extends string | AccountMeta<string> = string,
@@ -76,6 +77,9 @@ export type JoinInstruction<
       TAccountMember extends string
         ? WritableSignerAccount<TAccountMember> & AccountSignerMeta<TAccountMember>
         : TAccountMember,
+      TAccountFunder extends string
+        ? WritableSignerAccount<TAccountFunder> & AccountSignerMeta<TAccountFunder>
+        : TAccountFunder,
       TAccountMemberAccount extends string
         ? WritableAccount<TAccountMemberAccount>
         : TAccountMemberAccount,
@@ -136,6 +140,7 @@ export function getJoinInstructionDataCodec(): FixedSizeCodec<
 
 export type JoinAsyncInput<
   TAccountMember extends string = string,
+  TAccountFunder extends string = string,
   TAccountMemberAccount extends string = string,
   TAccountMutual extends string = string,
   TAccountPool extends string = string,
@@ -149,6 +154,13 @@ export type JoinAsyncInput<
   TAccountPoolProgram extends string = string,
 > = {
   member: TransactionSigner<TAccountMember>;
+  /**
+   * Optional cover sponsor: when present, the contribution leaves this
+   * wallet's ATA (`owner_ata`) and the pool assigns the liquidation
+   * residual of the member's position to this key — the sponsor gets the
+   * leftover, the member keeps every claim right. Data-free otherwise.
+   */
+  funder?: TransactionSigner<TAccountFunder>;
   memberAccount?: Address<TAccountMemberAccount>;
   mutual: Address<TAccountMutual>;
   pool: Address<TAccountPool>;
@@ -158,12 +170,18 @@ export type JoinAsyncInput<
    */
   depositor: Address<TAccountDepositor>;
   /**
-   * The member's deposit-mint ATA — the contribution source. CHECK: mint
-   * and authority are enforced inside the pool::deposit CPI against the
-   * pool's one mint and the owner signer.
+   * The contribution source — the member's own deposit-mint ATA, or the
+   * sponsor's when `funder` is present. CHECK: mint and authority are
+   * enforced inside the pool::deposit CPI (pool's one mint; authority must
+   * be the owner or the passing funder).
    */
   ownerAta: Address<TAccountOwnerAta>;
-  /** v1: the member sponsors its own depositor rent (bean riprap-gneb). */
+  /**
+   * Data-free rent payer for both init sites here: the Member PDA and
+   * the pool::deposit CPI's depositor PDA (bean riprap-gneb). v1: the
+   * member passes their own wallet; any funded wallet may sponsor the
+   * join without becoming the member.
+   */
   rentPayer: TransactionSigner<TAccountRentPayer>;
   /**
    * The pool treasury ATA. CHECK: created by pool::init; the pool program
@@ -179,6 +197,7 @@ export type JoinAsyncInput<
 
 export async function getJoinInstructionAsync<
   TAccountMember extends string,
+  TAccountFunder extends string,
   TAccountMemberAccount extends string,
   TAccountMutual extends string,
   TAccountPool extends string,
@@ -194,6 +213,7 @@ export async function getJoinInstructionAsync<
 >(
   input: JoinAsyncInput<
     TAccountMember,
+    TAccountFunder,
     TAccountMemberAccount,
     TAccountMutual,
     TAccountPool,
@@ -211,6 +231,7 @@ export async function getJoinInstructionAsync<
   JoinInstruction<
     TProgramAddress,
     TAccountMember,
+    TAccountFunder,
     TAccountMemberAccount,
     TAccountMutual,
     TAccountPool,
@@ -230,6 +251,7 @@ export async function getJoinInstructionAsync<
   // Original accounts.
   const originalAccounts = {
     member: { value: input.member ?? null, isWritable: true },
+    funder: { value: input.funder ?? null, isWritable: true },
     memberAccount: { value: input.memberAccount ?? null, isWritable: true },
     mutual: { value: input.mutual ?? null, isWritable: false },
     pool: { value: input.pool ?? null, isWritable: true },
@@ -277,6 +299,7 @@ export async function getJoinInstructionAsync<
   return Object.freeze({
     accounts: [
       getAccountMeta("member", accounts.member),
+      getAccountMeta("funder", accounts.funder),
       getAccountMeta("memberAccount", accounts.memberAccount),
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("pool", accounts.pool),
@@ -294,6 +317,7 @@ export async function getJoinInstructionAsync<
   } as JoinInstruction<
     TProgramAddress,
     TAccountMember,
+    TAccountFunder,
     TAccountMemberAccount,
     TAccountMutual,
     TAccountPool,
@@ -310,6 +334,7 @@ export async function getJoinInstructionAsync<
 
 export type JoinInput<
   TAccountMember extends string = string,
+  TAccountFunder extends string = string,
   TAccountMemberAccount extends string = string,
   TAccountMutual extends string = string,
   TAccountPool extends string = string,
@@ -323,6 +348,13 @@ export type JoinInput<
   TAccountPoolProgram extends string = string,
 > = {
   member: TransactionSigner<TAccountMember>;
+  /**
+   * Optional cover sponsor: when present, the contribution leaves this
+   * wallet's ATA (`owner_ata`) and the pool assigns the liquidation
+   * residual of the member's position to this key — the sponsor gets the
+   * leftover, the member keeps every claim right. Data-free otherwise.
+   */
+  funder?: TransactionSigner<TAccountFunder>;
   memberAccount: Address<TAccountMemberAccount>;
   mutual: Address<TAccountMutual>;
   pool: Address<TAccountPool>;
@@ -332,12 +364,18 @@ export type JoinInput<
    */
   depositor: Address<TAccountDepositor>;
   /**
-   * The member's deposit-mint ATA — the contribution source. CHECK: mint
-   * and authority are enforced inside the pool::deposit CPI against the
-   * pool's one mint and the owner signer.
+   * The contribution source — the member's own deposit-mint ATA, or the
+   * sponsor's when `funder` is present. CHECK: mint and authority are
+   * enforced inside the pool::deposit CPI (pool's one mint; authority must
+   * be the owner or the passing funder).
    */
   ownerAta: Address<TAccountOwnerAta>;
-  /** v1: the member sponsors its own depositor rent (bean riprap-gneb). */
+  /**
+   * Data-free rent payer for both init sites here: the Member PDA and
+   * the pool::deposit CPI's depositor PDA (bean riprap-gneb). v1: the
+   * member passes their own wallet; any funded wallet may sponsor the
+   * join without becoming the member.
+   */
   rentPayer: TransactionSigner<TAccountRentPayer>;
   /**
    * The pool treasury ATA. CHECK: created by pool::init; the pool program
@@ -353,6 +391,7 @@ export type JoinInput<
 
 export function getJoinInstruction<
   TAccountMember extends string,
+  TAccountFunder extends string,
   TAccountMemberAccount extends string,
   TAccountMutual extends string,
   TAccountPool extends string,
@@ -368,6 +407,7 @@ export function getJoinInstruction<
 >(
   input: JoinInput<
     TAccountMember,
+    TAccountFunder,
     TAccountMemberAccount,
     TAccountMutual,
     TAccountPool,
@@ -384,6 +424,7 @@ export function getJoinInstruction<
 ): JoinInstruction<
   TProgramAddress,
   TAccountMember,
+  TAccountFunder,
   TAccountMemberAccount,
   TAccountMutual,
   TAccountPool,
@@ -402,6 +443,7 @@ export function getJoinInstruction<
   // Original accounts.
   const originalAccounts = {
     member: { value: input.member ?? null, isWritable: true },
+    funder: { value: input.funder ?? null, isWritable: true },
     memberAccount: { value: input.memberAccount ?? null, isWritable: true },
     mutual: { value: input.mutual ?? null, isWritable: false },
     pool: { value: input.pool ?? null, isWritable: true },
@@ -440,6 +482,7 @@ export function getJoinInstruction<
   return Object.freeze({
     accounts: [
       getAccountMeta("member", accounts.member),
+      getAccountMeta("funder", accounts.funder),
       getAccountMeta("memberAccount", accounts.memberAccount),
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("pool", accounts.pool),
@@ -457,6 +500,7 @@ export function getJoinInstruction<
   } as JoinInstruction<
     TProgramAddress,
     TAccountMember,
+    TAccountFunder,
     TAccountMemberAccount,
     TAccountMutual,
     TAccountPool,
@@ -478,31 +522,44 @@ export type ParsedJoinInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     member: TAccountMetas[0];
-    memberAccount: TAccountMetas[1];
-    mutual: TAccountMetas[2];
-    pool: TAccountMetas[3];
+    /**
+     * Optional cover sponsor: when present, the contribution leaves this
+     * wallet's ATA (`owner_ata`) and the pool assigns the liquidation
+     * residual of the member's position to this key — the sponsor gets the
+     * leftover, the member keeps every claim right. Data-free otherwise.
+     */
+    funder?: TAccountMetas[1] | undefined;
+    memberAccount: TAccountMetas[2];
+    mutual: TAccountMetas[3];
+    pool: TAccountMetas[4];
     /**
      * Depositor PDA ["depositor", pool, member] — created inside the
      * pool::deposit CPI. CHECK: seeds verified by the pool program.
      */
-    depositor: TAccountMetas[4];
+    depositor: TAccountMetas[5];
     /**
-     * The member's deposit-mint ATA — the contribution source. CHECK: mint
-     * and authority are enforced inside the pool::deposit CPI against the
-     * pool's one mint and the owner signer.
+     * The contribution source — the member's own deposit-mint ATA, or the
+     * sponsor's when `funder` is present. CHECK: mint and authority are
+     * enforced inside the pool::deposit CPI (pool's one mint; authority must
+     * be the owner or the passing funder).
      */
-    ownerAta: TAccountMetas[5];
-    /** v1: the member sponsors its own depositor rent (bean riprap-gneb). */
-    rentPayer: TAccountMetas[6];
+    ownerAta: TAccountMetas[6];
+    /**
+     * Data-free rent payer for both init sites here: the Member PDA and
+     * the pool::deposit CPI's depositor PDA (bean riprap-gneb). v1: the
+     * member passes their own wallet; any funded wallet may sponsor the
+     * join without becoming the member.
+     */
+    rentPayer: TAccountMetas[7];
     /**
      * The pool treasury ATA. CHECK: created by pool::init; the pool program
      * re-derives and checks it inside the CPI.
      */
-    treasury: TAccountMetas[7];
-    depositMint: TAccountMetas[8];
-    tokenProgram: TAccountMetas[9];
-    systemProgram: TAccountMetas[10];
-    poolProgram: TAccountMetas[11];
+    treasury: TAccountMetas[8];
+    depositMint: TAccountMetas[9];
+    tokenProgram: TAccountMetas[10];
+    systemProgram: TAccountMetas[11];
+    poolProgram: TAccountMetas[12];
   };
   data: JoinInstructionData;
 };
@@ -515,10 +572,10 @@ export function parseJoinInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedJoinInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 12) {
+  if (instruction.accounts.length < 13) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 12,
+      expectedAccountMetas: 13,
     });
   }
   let accountIndex = 0;
@@ -527,10 +584,15 @@ export function parseJoinInstruction<
     accountIndex += 1;
     return accountMeta;
   };
+  const getNextOptionalAccount = () => {
+    const accountMeta = getNextAccount();
+    return accountMeta.address === HANSE_PROGRAM_ADDRESS ? undefined : accountMeta;
+  };
   return {
     programAddress: instruction.programAddress,
     accounts: {
       member: getNextAccount(),
+      funder: getNextOptionalAccount(),
       memberAccount: getNextAccount(),
       mutual: getNextAccount(),
       pool: getNextAccount(),

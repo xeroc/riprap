@@ -106,6 +106,7 @@ fn file_claim_any(
         .data(),
         hanse::accounts::FileClaim {
             claimant: member.pubkey(),
+            rent_payer: member.pubkey(),
             mutual,
             member_account: member_pda(&mutual, &member.pubkey()),
             claim: claim_pda(&mutual, nonce),

@@ -108,6 +108,7 @@ fn file_claim_attacked(
         .data(),
         hanse::accounts::FileClaim {
             claimant: signer.pubkey(),
+            rent_payer: signer.pubkey(),
             mutual,
             member_account,
             claim: claim_pda(&mutual, nonce),
@@ -349,6 +350,7 @@ fn s4_join_with_foreign_pool() {
         &hanse::instruction::Join { tier: 0 }.data(),
         hanse::accounts::Join {
             member: m2.pubkey(),
+            funder: None,
             member_account: member_pda(&mutual_pda(cfg1.seed), &m2.pubkey()),
             mutual: mutual_pda(cfg1.seed),
             pool: pool_pda(cfg2.seed),

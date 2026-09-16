@@ -439,6 +439,7 @@ pub fn init_mutual(
         .data(),
         hanse::accounts::InitializeMutual {
             authority: env.payer.pubkey(),
+            rent_payer: env.payer.pubkey(),
             mutual,
             pool,
             treasury: pool_treasury(&pool, &env.mint),
@@ -515,6 +516,7 @@ pub fn join_member(
         &hanse::instruction::Join { tier }.data(),
         hanse::accounts::Join {
             member: member.pubkey(),
+            funder: None,
             member_account: member_pda(&mutual, &member.pubkey()),
             mutual,
             pool,
@@ -631,6 +633,7 @@ pub fn file_claim_raw(
         .data(),
         hanse::accounts::FileClaim {
             claimant: member.pubkey(),
+            rent_payer: member.pubkey(),
             mutual,
             member_account: member_pda(&mutual, &member.pubkey()),
             claim: claim_pda(&mutual, nonce),

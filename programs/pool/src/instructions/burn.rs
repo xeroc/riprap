@@ -137,6 +137,7 @@ mod tests {
     fn depositor() -> Depositor {
         Depositor {
             owner: Pubkey::new_unique(),
+            residual_beneficiary: Pubkey::default(),
             total_amount: 0,
             ownership_stake: 0,
             rights_stake: 0,

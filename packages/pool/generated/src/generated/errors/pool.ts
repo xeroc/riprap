@@ -22,29 +22,41 @@ export const POOL_ERROR__POOL_NOT_LIQUIDATED = 0x1771; // 6001
 export const POOL_ERROR__TRACK_CLOSED = 0x1772; // 6002
 /** Settled: This depositor is settled: it cannot deposit again */
 export const POOL_ERROR__SETTLED = 0x1773; // 6003
+/** WrongSourceAuthority: The deposit source ATA must belong to the owner or the passing funder */
+export const POOL_ERROR__WRONG_SOURCE_AUTHORITY = 0x1774; // 6004
+/** BeneficiaryImmutable: The residual beneficiary was set at first deposit and cannot change */
+export const POOL_ERROR__BENEFICIARY_IMMUTABLE = 0x1775; // 6005
+/** WrongDestination: The crank destination must be the owner's or the beneficiary's canonical ATA */
+export const POOL_ERROR__WRONG_DESTINATION = 0x1776; // 6006
 /** MathOverflow: Checked math overflowed — the amounts do not fit the accounting */
-export const POOL_ERROR__MATH_OVERFLOW = 0x1774; // 6004
+export const POOL_ERROR__MATH_OVERFLOW = 0x1777; // 6007
 
 export type PoolError =
+  | typeof POOL_ERROR__BENEFICIARY_IMMUTABLE
   | typeof POOL_ERROR__MATH_OVERFLOW
   | typeof POOL_ERROR__POOL_NOT_LIQUIDATED
   | typeof POOL_ERROR__POOL_NOT_OPEN
   | typeof POOL_ERROR__SETTLED
-  | typeof POOL_ERROR__TRACK_CLOSED;
+  | typeof POOL_ERROR__TRACK_CLOSED
+  | typeof POOL_ERROR__WRONG_DESTINATION
+  | typeof POOL_ERROR__WRONG_SOURCE_AUTHORITY;
 
 let poolErrorMessages: Record<PoolError, string> | undefined;
-if (process.env.NODE_ENV !== "production") {
+if (process.env["NODE_ENV"] !== "production") {
   poolErrorMessages = {
+    [POOL_ERROR__BENEFICIARY_IMMUTABLE]: `The residual beneficiary was set at first deposit and cannot change`,
     [POOL_ERROR__MATH_OVERFLOW]: `Checked math overflowed — the amounts do not fit the accounting`,
     [POOL_ERROR__POOL_NOT_LIQUIDATED]: `The crank only runs after liquidation`,
     [POOL_ERROR__POOL_NOT_OPEN]: `Deposits are refused: the pool is not open`,
     [POOL_ERROR__SETTLED]: `This depositor is settled: it cannot deposit again`,
     [POOL_ERROR__TRACK_CLOSED]: `The track is closed: its stake rate is zero, deposits cannot mint stake`,
+    [POOL_ERROR__WRONG_DESTINATION]: `The crank destination must be the owner's or the beneficiary's canonical ATA`,
+    [POOL_ERROR__WRONG_SOURCE_AUTHORITY]: `The deposit source ATA must belong to the owner or the passing funder`,
   };
 }
 
 export function getPoolErrorMessage(code: PoolError): string {
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env["NODE_ENV"] !== "production") {
     return (poolErrorMessages as Record<PoolError, string>)[code];
   }
 
