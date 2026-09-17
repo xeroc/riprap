@@ -1,10 +1,11 @@
 ---
 # riprap-rckz
 title: Kit chrome — Solana-free wallet/cluster components
-status: todo
+status: completed
 type: epic
+priority: normal
 created_at: 2026-09-17T14:05:21Z
-updated_at: 2026-09-17T14:05:21Z
+updated_at: 2026-09-17T18:42:09Z
 parent: riprap-9ehc
 ---
 
