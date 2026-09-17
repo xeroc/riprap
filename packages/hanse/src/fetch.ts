@@ -2,9 +2,9 @@ import type {
   Account,
   Address,
   FetchAccountConfig,
+  GetAccountInfoApi,
   MaybeAccount,
   Rpc,
-  SolanaRpcApi,
 } from "@solana/kit";
 import {
   type Claim,
@@ -20,7 +20,7 @@ import {
 import { findClaimPda, findMemberAccountPda, findMutualPda } from "./pdas";
 
 export async function fetchMutualBySeed(
-  rpc: Rpc<SolanaRpcApi>,
+  rpc: Rpc<GetAccountInfoApi>,
   seeds: { seed: bigint },
   config?: FetchAccountConfig,
 ): Promise<Account<Mutual>> {
@@ -29,7 +29,7 @@ export async function fetchMutualBySeed(
 }
 
 export async function fetchMaybeMutualBySeed(
-  rpc: Rpc<SolanaRpcApi>,
+  rpc: Rpc<GetAccountInfoApi>,
   seeds: { seed: bigint },
   config?: FetchAccountConfig,
 ): Promise<MaybeAccount<Mutual>> {
@@ -38,7 +38,7 @@ export async function fetchMaybeMutualBySeed(
 }
 
 export async function fetchMemberByOwner(
-  rpc: Rpc<SolanaRpcApi>,
+  rpc: Rpc<GetAccountInfoApi>,
   seeds: { mutual: Address; member: Address },
   config?: FetchAccountConfig,
 ): Promise<Account<Member>> {
@@ -50,7 +50,7 @@ export async function fetchMemberByOwner(
 }
 
 export async function fetchMaybeMemberByOwner(
-  rpc: Rpc<SolanaRpcApi>,
+  rpc: Rpc<GetAccountInfoApi>,
   seeds: { mutual: Address; member: Address },
   config?: FetchAccountConfig,
 ): Promise<MaybeAccount<Member>> {
@@ -62,7 +62,7 @@ export async function fetchMaybeMemberByOwner(
 }
 
 export async function fetchClaimByNonce(
-  rpc: Rpc<SolanaRpcApi>,
+  rpc: Rpc<GetAccountInfoApi>,
   seeds: { mutual: Address; nonce: number | bigint },
   config?: FetchAccountConfig,
 ): Promise<Account<Claim>> {
@@ -71,7 +71,7 @@ export async function fetchClaimByNonce(
 }
 
 export async function fetchMaybeClaimByNonce(
-  rpc: Rpc<SolanaRpcApi>,
+  rpc: Rpc<GetAccountInfoApi>,
   seeds: { mutual: Address; nonce: number | bigint },
   config?: FetchAccountConfig,
 ): Promise<MaybeAccount<Claim>> {

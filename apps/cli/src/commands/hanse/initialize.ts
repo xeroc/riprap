@@ -19,12 +19,11 @@ import {
   type SubaccordConfigArgs,
   type TierArgs,
 } from "@riprap/hanse";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { hexToBytes32, parseTierSpec } from "../../lib/hanse-args";
 import { toBigInt } from "../../lib/pool-args";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 export default class HanseInitialize extends ChainCommand {
   static summary = "Create a mutual (mutual + pool + subaccord + fee float)";

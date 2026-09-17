@@ -5,13 +5,11 @@
  * treasury balance is the record.
  */
 import { Flags } from "@oclif/core";
-import { getSpendInstruction } from "@riprap/pool";
+import { findAssociatedTokenAddress, getSpendInstruction } from "@riprap/pool";
 import type { Address } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { toBigInt } from "../../lib/pool-args";
 import { resolvePoolMint } from "../../lib/pool-resolve";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 export default class PoolSpend extends ChainCommand {
   static summary = "Spend from the treasury (rights authority signs)";

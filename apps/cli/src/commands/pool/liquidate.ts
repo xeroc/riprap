@@ -5,12 +5,10 @@
  * pool:crank.
  */
 import { Flags } from "@oclif/core";
-import { getLiquidateInstruction } from "@riprap/pool";
+import { findAssociatedTokenAddress, getLiquidateInstruction } from "@riprap/pool";
 import type { Address } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { resolvePoolMint } from "../../lib/pool-resolve";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 export default class PoolLiquidate extends ChainCommand {
   static summary = "Liquidate the pool (ownership authority signs)";

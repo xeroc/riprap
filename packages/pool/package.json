@@ -18,6 +18,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@solana-program/token": "^0.15.0",
     "@solana/kit": "^7.0.0",
     "@solana/program-client-core": "^7.1.1"
   },
