@@ -1,4 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
+import { AddressChip } from "./AddressChip";
+import { ClusterSelect } from "./ClusterSelect";
 import { TopNav, type TopNavProps } from "./TopNav";
 
 // link set per DESIGN.md § top-nav
@@ -30,6 +33,34 @@ export const Default: StoryObj<typeof meta> = {
   ),
 };
 
+export const WithActions: StoryObj<typeof meta> = {
+  args,
+  render: () => (
+    <div className="min-h-screen bg-ground">
+      <TopNav {...args} actions={<ActionsDemo />} />
+    </div>
+  ),
+};
+
+// dogfood: the actions slot carries the account controls (cluster picker +
+// address chip); the app wires real wallet state to the same props
+function ActionsDemo() {
+  const [cluster, setCluster] = useState("devnet");
+  return (
+    <>
+      <ClusterSelect
+        clusters={[
+          { value: "devnet", label: "devnet" },
+          { value: "localnet", label: "localnet" },
+          { value: "mainnet-beta", label: "mainnet-beta" },
+        ]}
+        value={cluster}
+        onValueChange={setCluster}
+      />
+      <AddressChip address="4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU" />
+    </>
+  );
+}
 export const WithWordmark: StoryObj<typeof meta> = {
   args: {
     ...args,

@@ -24,6 +24,8 @@ export type { FooterBandProps, FooterColumn, FooterLink } from "./chrome/FooterB
 export { FooterBand } from "./chrome/FooterBand";
 export type { GlyphTileProps } from "./chrome/GlyphTile";
 export { GlyphTile } from "./chrome/GlyphTile";
+export type { JurorUpsellDialogProps } from "./chrome/JurorUpsellDialog";
+export { JurorUpsellDialog } from "./chrome/JurorUpsellDialog";
 // brand
 export type { LogoLockupProps } from "./chrome/LogoLockup";
 export { LogoLockup } from "./chrome/LogoLockup";

@@ -24,9 +24,11 @@ export interface TopNavProps extends React.ComponentProps<"header"> {
   brand?: React.ReactNode;
   signIn?: { href: string; label: string };
   cta?: { href: string; label: string };
+  /** account controls slot (wallet button, cluster picker) — rendered before Sign In */
+  actions?: React.ReactNode;
 }
 
-export function TopNav({ links, brand, signIn, cta, className, ...props }: TopNavProps) {
+export function TopNav({ links, brand, signIn, cta, actions, className, ...props }: TopNavProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -56,6 +58,11 @@ export function TopNav({ links, brand, signIn, cta, className, ...props }: TopNa
         </div>
 
         <div className="flex items-center gap-2">
+          {actions && (
+            <div data-slot="top-nav-actions" className="flex items-center gap-2">
+              {actions}
+            </div>
+          )}
           {signIn && (
             <Button variant="link" asChild className="hidden md:inline-flex">
               <a href={signIn.href}>{signIn.label}</a>
