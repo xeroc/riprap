@@ -8,13 +8,11 @@
  * frozen at deposit.
  */
 import { Flags } from "@oclif/core";
-import { getDepositInstructionAsync } from "@riprap/pool";
+import { findAssociatedTokenAddress, getDepositInstructionAsync } from "@riprap/pool";
 import type { Address } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { TRACK_OPTIONS, toBigInt, trackFromName } from "../../lib/pool-args";
 import { resolvePoolMint } from "../../lib/pool-resolve";
-import { findAssociatedTokenAddress } from "../../lib/token";
 import { loadKeypair } from "../../lib/wallet";
 
 export default class PoolDeposit extends ChainCommand {

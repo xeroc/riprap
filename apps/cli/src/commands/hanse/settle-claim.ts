@@ -12,10 +12,9 @@ import {
   findMemberAccountPda,
   getSettleClaimInstructionAsync,
 } from "@riprap/hanse";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address, Instruction, TransactionSigner } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 /**
  * Pure instruction assembly from decoded accounts — exported for tests.

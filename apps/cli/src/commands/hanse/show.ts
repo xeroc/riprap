@@ -6,11 +6,10 @@
  */
 import { Flags } from "@oclif/core";
 import { fetchMutual, type Mutual } from "@riprap/hanse";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address, Commitment, Rpc, SolanaRpcApi } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { groupBigInt, isoFromUnixSeconds, truncateAddress } from "../../lib/format";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 export interface MutualView {
   mutual: Mutual;

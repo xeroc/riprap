@@ -3,11 +3,10 @@
  * `rpc.getBalance` (SOL) / `rpc.getTokenAccountBalance` (SPL via derived ATA).
  */
 import { Args, Flags } from "@oclif/core";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { truncateAddress } from "../../lib/format";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 export default class ConfigBalance extends ChainCommand {
   static summary = "SOL or SPL token balance for an address";

@@ -7,12 +7,14 @@
  * ATA passes the on-chain check.
  */
 import { Flags } from "@oclif/core";
-import { fetchMaybeDepositorByOwner, getCrankInstructionAsync } from "@riprap/pool";
+import {
+  fetchMaybeDepositorByOwner,
+  findAssociatedTokenAddress,
+  getCrankInstructionAsync,
+} from "@riprap/pool";
 import type { Address, Rpc, SolanaRpcApi } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { resolvePoolMint } from "../../lib/pool-resolve";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 /** Pubkey::default() on-chain — an unset residual beneficiary. */
 const NO_BENEFICIARY = "11111111111111111111111111111111" as Address;

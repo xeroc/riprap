@@ -15,11 +15,10 @@ import {
   findJoinMemberAccountPda,
   getJoinInstructionAsync,
 } from "@riprap/hanse";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { TIER_OPTIONS, tierIndexFromName } from "../../lib/hanse-args";
-import { findAssociatedTokenAddress } from "../../lib/token";
 import { loadKeypair } from "../../lib/wallet";
 
 export default class HanseJoin extends ChainCommand {

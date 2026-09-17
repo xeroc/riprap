@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { ed25519 } from "@noble/curves/ed25519";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import {
   type Address,
   createKeyPairSignerFromBytes,
@@ -12,8 +13,6 @@ import {
   type Lamports,
 } from "@solana/kit";
 import { afterAll, beforeAll, expect, test } from "vitest";
-
-import { findAssociatedTokenAddress } from "./lib/token";
 
 /**
  * Optional Surfpool smoke (bean riprap-7b4e): one happy chain through the

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { ed25519 } from "@noble/curves/ed25519";
 import {
+  findAssociatedTokenAddress,
   findDepositorPda,
   findPoolPda,
   getBurnInstructionDataDecoder,
@@ -18,8 +19,6 @@ import {
 } from "@riprap/pool";
 import { type Address, createKeyPairSignerFromBytes } from "@solana/kit";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 /**
  * Dry-run instruction snapshots for every pool:* write command, driven
