@@ -235,10 +235,11 @@ export type InitializeMutualAsyncInput<
    */
   treasury: Address<TAccountTreasury>;
   /**
-   * Subaccord PDA ["subaccord", mutual, domain_ref] — created by the
-   * `accord::create_subaccord` CPI; the mutual PDA is its creator and
-   * authority. CHECK: seeds-verified against the accord program.
-   * verified in the handler (idl-build cannot resolve fn calls in seeds).
+   * Subaccord PDA ["subaccord", authority, domain_ref] under the Accord
+   * program — created by the `accord::create_subaccord` CPI. The
+   * initializer authority is the creator and payer; the mutual PDA is the
+   * subaccord authority. The handler verifies the PDA because idl-build
+   * cannot resolve the hashed domain reference in seeds.
    */
   subaccord: Address<TAccountSubaccord>;
   depositMint: Address<TAccountDepositMint>;
@@ -472,10 +473,11 @@ export type InitializeMutualInput<
    */
   treasury: Address<TAccountTreasury>;
   /**
-   * Subaccord PDA ["subaccord", mutual, domain_ref] — created by the
-   * `accord::create_subaccord` CPI; the mutual PDA is its creator and
-   * authority. CHECK: seeds-verified against the accord program.
-   * verified in the handler (idl-build cannot resolve fn calls in seeds).
+   * Subaccord PDA ["subaccord", authority, domain_ref] under the Accord
+   * program — created by the `accord::create_subaccord` CPI. The
+   * initializer authority is the creator and payer; the mutual PDA is the
+   * subaccord authority. The handler verifies the PDA because idl-build
+   * cannot resolve the hashed domain reference in seeds.
    */
   subaccord: Address<TAccountSubaccord>;
   depositMint: Address<TAccountDepositMint>;
@@ -677,10 +679,11 @@ export type ParsedInitializeMutualInstruction<
      */
     treasury: TAccountMetas[4];
     /**
-     * Subaccord PDA ["subaccord", mutual, domain_ref] — created by the
-     * `accord::create_subaccord` CPI; the mutual PDA is its creator and
-     * authority. CHECK: seeds-verified against the accord program.
-     * verified in the handler (idl-build cannot resolve fn calls in seeds).
+     * Subaccord PDA ["subaccord", authority, domain_ref] under the Accord
+     * program — created by the `accord::create_subaccord` CPI. The
+     * initializer authority is the creator and payer; the mutual PDA is the
+     * subaccord authority. The handler verifies the PDA because idl-build
+     * cannot resolve the hashed domain reference in seeds.
      */
     subaccord: TAccountMetas[5];
     depositMint: TAccountMetas[6];

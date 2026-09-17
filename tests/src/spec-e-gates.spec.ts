@@ -4,9 +4,9 @@
 //   join after deposits_close_at        → 6001 DepositsClosed
 //   file_claim after claims_close_at    → 6016 ClaimsClosed
 //   settle_pool with a pending claim    → 6023 ClaimsUnresolved
-//   claim_payout without authority      → 6030 Unauthorized
-//   claim_payout after pull_close_at    → 6026 PullWindowClosed
-//   double claim_payout                 → 6029 ClaimAlreadyPaid
+//   file_claim while a claim is pending (same member) → 6019 PendingClaimExists
+//   requested above the member's tier cap → clamped to tiers[member].max_payout
+//   (§2.3) at filing — and the pending gate releases once resolved
 //   dissolve before pull_close_at       → 6027 PullWindowOpen
 // Offline (no validator) the spec skips — pnpm verify stays green.
 
@@ -54,6 +54,7 @@ const ERR = {
   PULL_WINDOW_OPEN: 6027,
   CLAIM_ALREADY_PAID: 6029,
   UNAUTHORIZED: 6030,
+  PENDING_CLAIM_EXISTS: 6019,
 } as const;
 
 /** Deep error text: message + cause chain (kit nests the anchor code in the
@@ -304,5 +305,55 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     );
     const mutualD = await fetchMutualBySeed(env.rpc, { seed: fx.seed });
     expect(mutualD.data.phase).toBe(Phase.Dissolved);
+  }, 600_000);
+
+  it("clamps over-cap requests to the tier cap and holds one pending claim per member", async () => {
+    if (!env.up) return; // offline CI lane — pnpm verify must stay green
+
+    const fx = await setupMutualCohort(env, { nMembers: 4 });
+    const { mutual, mint } = fx;
+
+    // ── requested $2,500 on Standard ($2,000 cap): stored = the cap ──────
+    const filed = await fileMemberClaim(fx, {
+      memberIdx: 0,
+      requested: 2_500_000_000n,
+    });
+    const claimAcct = await fetchClaimByNonce(env.rpc, { mutual, nonce: 0n });
+    expect(claimAcct.data.claimAmount).toBe(2_000_000_000n); // min(requested, cap)
+    expect(claimAcct.data.feePaid).toBe(FILING_FEE);
+
+    // ── same member, claim still Pending: a second filing reverts ────────
+    await expectRevert(
+      fileMemberClaim(fx, { memberIdx: 0, requested: 2_500_000_000n }),
+      ERR.PENDING_CLAIM_EXISTS,
+    );
+    const mutualAfterReject = await fetchMutualBySeed(env.rpc, { seed: fx.seed });
+    expect(mutualAfterReject.data.claimsFiled).toBe(1); // nothing booked
+
+    // ── resolve it (Deny), then the SAME member can file again ───────────
+    await driveDispute(fx, filed, [1n, 1n, 1n]);
+    await env.sendIx(
+      await getSettleClaimInstructionAsync({
+        cranker: env.payer,
+        mutual,
+        claim: filed.claimPda,
+        memberAccount: (
+          await findMemberAccountPda({ mutual, claimant: filed.claimant.address })
+        )[0],
+        dispute: filed.dispute,
+        claimantAta: filed.claimantAta,
+        feeMint: mint,
+      }),
+    );
+    const denied = await fetchClaimByNonce(env.rpc, { mutual, nonce: 0n });
+    expect(denied.data.status).toBe(ClaimStatus.Denied);
+
+    await fileMemberClaim(fx, { memberIdx: 0, requested: 2_500_000_000n });
+    const mutualAfterRefile = await fetchMutualBySeed(env.rpc, { seed: fx.seed });
+    expect(mutualAfterRefile.data.claimsFiled).toBe(2);
+    expect(mutualAfterRefile.data.claimNonce).toBe(2n);
+    const refiled = await fetchClaimByNonce(env.rpc, { mutual, nonce: 1n });
+    expect(refiled.data.status).toBe(ClaimStatus.Pending);
+    expect(refiled.data.claimAmount).toBe(2_000_000_000n); // clamped again
   }, 600_000);
 });

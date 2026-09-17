@@ -112,11 +112,12 @@ pub struct InitializeMutual<'info> {
     #[account(mut)]
     pub treasury: UncheckedAccount<'info>,
 
-    /// Subaccord PDA ["subaccord", mutual, domain_ref] — created by the
-    /// `accord::create_subaccord` CPI; the mutual PDA is its creator and
-    /// authority. CHECK: seeds-verified against the accord program.
-    /// CHECK: PDA ["subaccord", mutual, domain_ref] under the accord program,
-    /// verified in the handler (idl-build cannot resolve fn calls in seeds).
+    /// Subaccord PDA ["subaccord", authority, domain_ref] under the Accord
+    /// program — created by the `accord::create_subaccord` CPI. The
+    /// initializer authority is the creator and payer; the mutual PDA is the
+    /// subaccord authority. The handler verifies the PDA because idl-build
+    /// cannot resolve the hashed domain reference in seeds.
+    /// CHECK: PDA validation is performed by the handler.
     #[account(mut)]
     pub subaccord: UncheckedAccount<'info>,
 

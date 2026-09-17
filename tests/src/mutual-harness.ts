@@ -51,6 +51,10 @@ export interface MutualCohortOptions {
   /** Tier index for every member (uniform cohort keeps the residual math
    * cleanly dividing). Default 1 = Standard. */
   tier?: number;
+  /** Per-member tier indices — a mixed-tier cohort (overrides nMembers/tier;
+   * length is the cohort size). Spec a's money-weighted residual: 4 × Basic +
+   * 4 × Standard + 2 × Premium. */
+  tiers?: number[];
   /** Members staked as jurors (the LAST n of the cohort). Spec d's appeal
    * ladder needs 7 seats on round 1 — stake 8 for margin. Default 3. */
   nJurors?: number;
@@ -105,9 +109,8 @@ export async function setupMutualCohort(
   env: TestEnv,
   opts: MutualCohortOptions = {},
 ): Promise<MutualFixture> {
-  const nMembers = opts.nMembers ?? 10;
-  const tier = opts.tier ?? 1;
-  const contribution = PILOT_TIERS[tier]!.contribution;
+  const tiers = opts.tiers ?? Array.from({ length: opts.nMembers ?? 10 }, () => opts.tier ?? 1);
+  const nMembers = tiers.length;
   const feePerJuror = 5_000_000n; // §12: $5
 
   const now0 = (await readClock(env)).unixTimestamp;
@@ -169,6 +172,7 @@ export async function setupMutualCohort(
   const memberAtas: Address[] = [];
   for (let i = 0; i < nMembers; i++) {
     const signer = await fundSigner(env);
+    const contribution = PILOT_TIERS[tiers[i]!]!.contribution;
     await setTokenBalance(env, signer.address, mint, contribution);
     const ownerAta = await ataOf(mint, signer.address);
     const [depositor] = await findDepositorPda({
@@ -184,13 +188,15 @@ export async function setupMutualCohort(
       ownerAta,
       treasury,
       depositMint: mint,
-      tier,
+      tier: tiers[i]!,
     });
     await env.sendIx(joinIx);
     members.push(signer);
     memberAtas.push(ownerAta);
   }
-  const jurorSigners = members.slice(-(opts.nJurors ?? 3));
+  const nJurors = opts.nJurors ?? 3;
+  const jurorSigners = members.slice(-nJurors);
+  const jurorTiers = tiers.slice(-nJurors);
   const accordState = await ensurePause(env);
   const core = await armMutualJurors(
     env,
@@ -199,7 +205,8 @@ export async function setupMutualCohort(
     mint,
     SUBACCORD_DEPTH,
     jurorSigners,
-    contribution, // §12: default juror stake = tier contribution
+    // §12: default juror stake = the juror's own tier contribution
+    jurorTiers.map((t) => PILOT_TIERS[t]!.contribution),
   );
   const fx: DrawFixture = { env, up: true, ...core };
 

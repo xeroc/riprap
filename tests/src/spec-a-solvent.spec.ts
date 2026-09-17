@@ -1,16 +1,19 @@
-// spec-a-solvent.spec.ts — riprap-efdw: EVENT-MUTUAL §8 solvent shape, scaled
-// to cleanly dividing numbers, driven entirely THROUGH @riprap/hanse +
-// @riprap/pool (the SDK ↔ program leg):
+// spec-a-solvent.spec.ts — riprap-efdw: EVENT-MUTUAL §8 solvent shape on a
+// MIXED-TIER cohort (all three pilot tiers), scaled to cleanly dividing
+// numbers, driven entirely THROUGH @riprap/hanse + @riprap/pool (the SDK ↔
+// program leg):
 //
-//   initialize_mutual → 10 × Standard join → 3 member-jurors stake →
-//   file_claim → draw → commit/reveal Approve → finalize_dispute →
-//   settle_claim Approved → settle_pool ratio 1e9 → claim_payout
-//   (authority co-sign; spend + burn) → dissolve → crank residuals.
+//   initialize_mutual → 4 × Basic + 4 × Standard + 2 × Premium join →
+//   3 member-jurors stake → file_claim → draw → commit/reveal Approve →
+//   finalize_dispute → settle_claim Approved → settle_pool ratio 1e9 →
+//   claim_payout (authority co-sign; spend + burn) → dissolve → crank residuals.
 //
-// Cohort math (6-dp USDC units): 10 × $20 = $200 treasury; claim $95 + $15
-// fee = $110 obligations (ratio exactly 1e9); payout $110 burns the claimant
-// to 0; residual $90 over remaining total $180 ⇒ each crank pays exactly
-// $10, treasury hits $0 after 9 cranks. Every hop asserts exact token units.
+// Cohort math (6-dp USDC units): 4 × $10 + 4 × $20 + 2 × $40 = $200 treasury;
+// a Standard claimant's $95 claim + $15 fee = $110 obligations (ratio exactly
+// 1e9); payout $110 burns the claimant to 0; residual $90 over remaining
+// total $180 ⇒ $0.50 per dollar deposited — the §2.5 money-weighted pro-rata:
+// Basic cranks exactly $5, Standard $10, Premium $20 (4:2:1 by contribution),
+// treasury hits $0 after 9 cranks. Every hop asserts exact token units.
 // Offline (no validator) the spec skips — pnpm verify stays green.
 
 import {
@@ -41,17 +44,21 @@ import {
   driveDispute,
   fileMemberClaim,
   type MutualFixture,
+  PILOT_TIERS,
   setupMutualCohort,
 } from "./mutual-harness.js";
 import { ensureAccordProgram } from "./setup/deploy.js";
 import { createTestEnv, type TestEnv } from "./setup/env.js";
 
 const N_MEMBERS = 10;
-const CONTRIBUTION = 20_000_000n; // $20 (Standard)
 const CLAIM_AMOUNT = 95_000_000n; // $95 — leaves residual $90 over $180 total
 const FILING_FEE = 15_000_000n; // $15
 const PAYOUT = CLAIM_AMOUNT + FILING_FEE; // $110
-const RESIDUAL_EACH = 10_000_000n; // $20 × $90 / $180
+/** Standard first: the claimant's $20 burn leaves pool total exactly $180,
+ * so the $90 residual divides at $0.50 per dollar deposited (§2.5). */
+const COHORT_TIERS = [1, 0, 0, 0, 0, 1, 1, 1, 2, 2];
+/** Residual per member by tier: $90 × contribution / $180. */
+const RESIDUAL_BY_TIER = [5_000_000n, 10_000_000n, 20_000_000n];
 
 async function balanceOf(env: TestEnv, ata: Address): Promise<bigint> {
   const { value } = await env.rpc.getTokenAccountBalance(ata).send();
@@ -66,7 +73,7 @@ describe("e2e spec a: solvent lifecycle to the cent (riprap-efdw)", () => {
     env = await createTestEnv();
     if (env.up) {
       await ensureAccordProgram(env); // jest file-order safety
-      fx = await setupMutualCohort(env);
+      fx = await setupMutualCohort(env, { tiers: COHORT_TIERS });
     }
   }, 120_000);
 
@@ -75,17 +82,18 @@ describe("e2e spec a: solvent lifecycle to the cent (riprap-efdw)", () => {
 
     const { mutual, poolPda, treasury, mint } = fx;
 
-    // ── cohort armed: 10 × $20 joined, 3 member-jurors staked ────────────
+    // ── cohort armed: 4 × $10, 4 × $20, 2 × $40 joined, 3 member-jurors ──
     const poolAcct0 = await fetchPoolBySeed(env.rpc, { seed: fx.seed });
     expect(poolAcct0.data.totalAmount).toBe(200_000_000n);
     expect(await balanceOf(env, treasury)).toBe(200_000_000n);
-    for (const signer of fx.members) {
+    for (let i = 0; i < N_MEMBERS; i++) {
+      const contribution = PILOT_TIERS[COHORT_TIERS[i]!]!.contribution;
       const dep = await fetchDepositorByOwner(env.rpc, {
         pool: poolPda,
-        owner: signer.address,
+        owner: fx.members[i]!.address,
       });
-      expect(dep.data.totalAmount).toBe(CONTRIBUTION);
-      expect(dep.data.rightsStake).toBe(CONTRIBUTION); // rights rate 1
+      expect(dep.data.totalAmount).toBe(contribution);
+      expect(dep.data.rightsStake).toBe(contribution); // rights rate 1
     }
 
     // ── file_claim ($95 requested, $15 fee funded upfront) ───────────────
@@ -172,7 +180,7 @@ describe("e2e spec a: solvent lifecycle to the cent (riprap-efdw)", () => {
     expect(poolAcct1.data.liquidationBalance).toBe(90_000_000n);
     expect(poolAcct1.data.totalAmount).toBe(180_000_000n); // claimant burned
 
-    // ── residual cranks: $10 each to the cent, treasury → 0 ──────────────
+    // ── residual cranks: money-weighted to the cent, treasury → 0 ─────────
     for (let i = 1; i < N_MEMBERS; i++) {
       const owner = fx.members[i]!;
       const [depositor] = await findDepositorPda({
@@ -190,7 +198,10 @@ describe("e2e spec a: solvent lifecycle to the cent (riprap-efdw)", () => {
           treasury,
         }),
       );
-      expect(await balanceOf(env, fx.memberAtas[i]!)).toBe(before + RESIDUAL_EACH);
+      // §2.5 money-weighted pro-rata: residual scales with the deposit
+      expect(await balanceOf(env, fx.memberAtas[i]!)).toBe(
+        before + RESIDUAL_BY_TIER[COHORT_TIERS[i]!],
+      );
     }
     expect(await balanceOf(env, treasury)).toBe(0n);
   }, 600_000);
