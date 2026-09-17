@@ -3,8 +3,9 @@
 title: SolanaProviders + useClusterRpc/useHanseEnv + ported transaction.ts
 status: todo
 type: task
+priority: normal
 created_at: 2026-09-17T14:05:48Z
-updated_at: 2026-09-17T14:05:48Z
+updated_at: 2026-09-17T18:54:25Z
 parent: riprap-wan9
 blocked_by:
     - riprap-6dv3
