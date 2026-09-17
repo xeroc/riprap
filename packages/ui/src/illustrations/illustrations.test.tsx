@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type * as MotionReact from "motion/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GlyphTile } from "../components/chrome/GlyphTile";
@@ -9,7 +9,7 @@ import { Found } from "./Found";
 import { Gather } from "./Gather";
 import { HexBackdrop } from "./HexBackdrop";
 import { Join } from "./Join";
-import { AUTO_LOOP_MS, LifecycleStrip } from "./LifecycleStrip";
+import { HOVER_LOOP_MS, LifecycleStrip } from "./LifecycleStrip";
 import { OnePool } from "./OnePool";
 import { Renew } from "./Renew";
 import { Return } from "./Return";
@@ -209,36 +209,48 @@ describe("LifecycleStrip — the whole product in five plates", () => {
     }
   });
 
-  it("replays each tile's arrival indefinitely, one loop per AUTO_LOOP_MS", () => {
+  it("hover replays that tile's arrival in a loop; leaving stops it (arrive and stay)", () => {
     vi.useFakeTimers();
     try {
       const { container } = render(<LifecycleStrip />);
-      const mounted = container.querySelector('svg[data-glyph="join"]');
+      const joinLi = container.querySelector("li[data-step='join']");
+      if (!joinLi) throw new Error("join tile not rendered");
+      const joinSvg = () => container.querySelector('svg[data-glyph="join"]');
+
+      const initial = joinSvg();
+      fireEvent.mouseEnter(joinLi);
+      expect(joinSvg()).not.toBe(initial); // first replay is immediate
+
+      const onHover = joinSvg();
       act(() => {
-        vi.advanceTimersByTime(AUTO_LOOP_MS + 10);
+        vi.advanceTimersByTime(HOVER_LOOP_MS + 10);
       });
-      const first = container.querySelector('svg[data-glyph="join"]');
-      expect(first).not.toBe(mounted); // replayed after the break
+      expect(joinSvg()).not.toBe(onHover); // then it loops
+
+      const looped = joinSvg();
+      fireEvent.mouseLeave(joinLi);
       act(() => {
-        vi.advanceTimersByTime(AUTO_LOOP_MS * 2);
+        vi.advanceTimersByTime(HOVER_LOOP_MS * 3);
       });
-      expect(container.querySelector('svg[data-glyph="join"]')).not.toBe(first); // still looping
+      expect(joinSvg()).toBe(looped); // stopped — the glyph stays arrived
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it("auto loop under reduced motion never replays — every group stays settled", () => {
+  it("hover loop under reduced motion leaves every group settled", () => {
     reducedMotion = true;
     vi.useFakeTimers();
     try {
       const { container } = render(<LifecycleStrip />);
-      const mounted = container.querySelector('svg[data-glyph="join"]');
+      const joinLi = container.querySelector("li[data-step='join']");
+      if (!joinLi) throw new Error("join tile not rendered");
+      fireEvent.mouseEnter(joinLi);
       act(() => {
-        vi.advanceTimersByTime(AUTO_LOOP_MS * 3);
+        vi.advanceTimersByTime(HOVER_LOOP_MS * 2);
       });
-      expect(container.querySelector('svg[data-glyph="join"]')).toBe(mounted); // no remount loop
-      // join's four member squares are SettleGroups — settled, never opacity 0
+      // join's four member squares are SettleGroups — under reduced motion
+      // every loop replay must still render settled (never opacity 0)
       const groups = container.querySelectorAll<SVGElement>('svg[data-glyph="join"] g');
       expect(groups.length).toBeGreaterThan(0);
       for (const g of groups) {
@@ -250,14 +262,14 @@ describe("LifecycleStrip — the whole product in five plates", () => {
   });
 });
 
-describe("ExpansionStrip — from one pool to cover for anything", () => {
-  it("renders five ordered plates, one added thing each", () => {
+describe("ExpansionStrip — the machines on-chain cover needs", () => {
+  it("renders five ordered plates, one machine each", () => {
     const { container } = render(<ExpansionStrip />);
     const steps = [...container.querySelectorAll("li")];
     expect(steps.length).toBe(5);
     expect(steps.map((li) => li.getAttribute("data-step"))).toEqual([
-      "pool",
-      "found",
+      "gather",
+      "rule",
       "renew",
       "backstop",
       "stack",
@@ -270,36 +282,59 @@ describe("ExpansionStrip — from one pool to cover for anything", () => {
   it("skipSteps omits plates by ordinal — kept plates keep their ordinals", () => {
     const { container } = render(<ExpansionStrip skipSteps={[4, 5]} />);
     const steps = [...container.querySelectorAll("li")].map((li) => li.getAttribute("data-step"));
-    expect(steps).toEqual(["pool", "found", "renew"]);
+    expect(steps).toEqual(["gather", "rule", "renew"]);
     expect(screen.queryByText("04")).toBeNull();
     expect(screen.queryByText("05")).toBeNull();
     expect(screen.getByText("01")).toBeTruthy();
   });
 
-  it("replays each plate's arrival on the strip's shared loop cadence", () => {
+  it("hover replays that plate's arrival in a loop; leaving stops it (arrive and stay)", () => {
     vi.useFakeTimers();
     try {
       const { container } = render(<ExpansionStrip />);
-      const mounted = container.querySelector('svg[data-glyph="pool"]');
+      const gatherLi = container.querySelector("li[data-step='gather']");
+      if (!gatherLi) throw new Error("gather plate not rendered");
+      const gatherSvg = () => container.querySelector('svg[data-glyph="gather"]');
+
+      const initial = gatherSvg();
+      fireEvent.mouseEnter(gatherLi);
+      expect(gatherSvg()).not.toBe(initial); // first replay is immediate
+
+      const onHover = gatherSvg();
       act(() => {
-        vi.advanceTimersByTime(AUTO_LOOP_MS + 10);
+        vi.advanceTimersByTime(HOVER_LOOP_MS + 10);
       });
-      expect(container.querySelector('svg[data-glyph="pool"]')).not.toBe(mounted);
+      expect(gatherSvg()).not.toBe(onHover); // then it loops
+
+      const looped = gatherSvg();
+      fireEvent.mouseLeave(gatherLi);
+      act(() => {
+        vi.advanceTimersByTime(HOVER_LOOP_MS * 3);
+      });
+      expect(gatherSvg()).toBe(looped); // stopped — the glyph stays arrived
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it("under reduced motion the loop never runs — glyphs stay mounted and settled", () => {
+  it("hover loop under reduced motion leaves every group settled", () => {
     reducedMotion = true;
     vi.useFakeTimers();
     try {
       const { container } = render(<ExpansionStrip />);
-      const mounted = container.querySelector('svg[data-glyph="pool"]');
+      const ruleLi = container.querySelector("li[data-step='rule']");
+      if (!ruleLi) throw new Error("rule plate not rendered");
+      fireEvent.mouseEnter(ruleLi);
       act(() => {
-        vi.advanceTimersByTime(AUTO_LOOP_MS * 3);
+        vi.advanceTimersByTime(HOVER_LOOP_MS * 2);
       });
-      expect(container.querySelector('svg[data-glyph="pool"]')).toBe(mounted);
+      // rule's three juror figures are SettleGroups — under reduced motion
+      // every loop replay must still render settled (never opacity 0)
+      const groups = container.querySelectorAll<SVGElement>('svg[data-glyph="rule"] g');
+      expect(groups.length).toBeGreaterThan(0);
+      for (const g of groups) {
+        expect(g.style.opacity).not.toBe("0");
+      }
     } finally {
       vi.useRealTimers();
     }

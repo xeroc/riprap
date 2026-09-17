@@ -1,4 +1,3 @@
-import { useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 
 import { GlyphTile } from "../components/chrome/GlyphTile";
@@ -24,12 +23,11 @@ const STEPS = [
 ] as const;
 
 /**
- * Auto-loop cadence — the arrival (longest stagger 0.16s + settle 0.16s)
- * replays indefinitely after a rest of LOOP_BREAK_MS. Reduced motion never
- * loops: the glyph mounts settled and stays.
+ * Hover-loop period — longest glyph stagger (0.16s) + settle (0.16s) plus a
+ * beat of rest before the arrival replays. The one sanctioned loop in the
+ * kit: pointer-only, and reduced motion stays settled throughout.
  */
-export const LOOP_BREAK_MS = 3000;
-export const AUTO_LOOP_MS = 320 + LOOP_BREAK_MS;
+export const HOVER_LOOP_MS = 1200;
 
 export function LifecycleStrip({ skipSteps = [] }: { skipSteps?: readonly number[] }) {
   const visible = STEPS.filter((tile) => !skipSteps.includes(Number(tile.step)));
@@ -50,23 +48,29 @@ export function LifecycleStrip({ skipSteps = [] }: { skipSteps?: readonly number
 }
 
 /**
- * One plate. The glyph's arrival replays in a loop: each tick remounts it
- * (key bump), re-running the settle-in stagger from its ENTER state, then
- * rests LOOP_BREAK_MS before the next replay — indefinitely. Under reduced
- * motion no interval runs at all.
+ * One plate. While hovered, the glyph's arrival replays in a loop: each
+ * tick remounts it (key bump), re-running the settle-in stagger from its
+ * ENTER state. On leave it stops and stays arrived.
  */
 function LifecycleTile({ id, step, label, Glyph }: (typeof STEPS)[number]) {
+  const [hover, setHover] = useState(false);
   const [run, setRun] = useState(0);
-  const reduced = useReducedMotion();
 
   useEffect(() => {
-    if (reduced) return;
-    const loop = window.setInterval(() => setRun((r) => r + 1), AUTO_LOOP_MS);
+    if (!hover) return;
+    const loop = window.setInterval(() => setRun((r) => r + 1), HOVER_LOOP_MS);
     return () => window.clearInterval(loop);
-  }, [reduced]);
+  }, [hover]);
 
   return (
-    <li data-step={id}>
+    <li
+      data-step={id}
+      onMouseEnter={() => {
+        setHover(true);
+        setRun((r) => r + 1); // first replay is immediate, not after one period
+      }}
+      onMouseLeave={() => setHover(false)}
+    >
       <GlyphTile step={step} label={label}>
         <Glyph key={run} />
       </GlyphTile>

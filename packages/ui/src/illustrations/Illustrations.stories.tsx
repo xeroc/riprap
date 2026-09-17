@@ -135,7 +135,7 @@ export const StackStory: StoryObj = {
 };
 
 export const Expansion: StoryObj = {
-  name: "expansion strip — from one pool to cover for anything",
+  name: "expansion strip — the machines on-chain cover needs",
   render: () => (
     <div className="p-8">
       <ExpansionStrip />

@@ -6,11 +6,11 @@ import { useSlideFrame } from "./useSlideFrame";
 
 /**
  * The seed-raise deck — 10 slides, copy from meta/PITCH.md (the law for every
- * string and number below; citations ride along in mono). Golden-circle order:
- * WHY (the problem — the oldest fix has no on-ramp) → WHAT (the product) →
- * → the market (communities conventional economics skips) → the launch
- * (events are the door, Breakpoint first) → the business → the ask → the
- * vision → the team → close.
+ * string and number below; citations ride along in mono). The destination
+ * leads: the vision right after the title, then the walk back down to today —
+ * the problem (the oldest fix has no on-ramp) → the product → the launch
+ * (events are the door, Breakpoint first) → the business → the market →
+ * the ask → the team → close.
  *
  * Staging rules: headlines are lowercase (deck law); "insurance" never
  * describes our product (two directed exceptions: the vision slide names the
@@ -36,7 +36,7 @@ const TitleSlide: FC = () => {
       <div data-rise className="flex flex-col items-center gap-6">
         <Wordmark size={84} className="tracking-(--riprap-tracking-mega)" />
         <div className="text-ink [font:var(--riprap-display-md)]">
-          Peer-to-peer risk pooling on Solana.
+          Real-world risk protection on Solana.
         </div>
         <div
           className="mt-6 uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]"
@@ -49,7 +49,112 @@ const TitleSlide: FC = () => {
   );
 };
 
-/* 02 — the problem ----------------------------------------------------------- */
+/* 02 — the vision (mutuals as a protocol — the directed "insurance" slide) --- */
+
+/** The vision, enumerated like the ExpansionStrip below it — the five
+ * machines on-chain cover needs, one per step, ordinals matching the plates
+ * (n ↔ tile step): custody, adjudication, recurrence, reserve capital,
+ * reinsurance. Copy per meta/PITCH.md §12 (destination vocabulary; this
+ * slide's directed exception to the vocabulary law is the headline sentence
+ * only). */
+const VISION_STEPS = [
+  {
+    n: "01",
+    head: "money gathers",
+    body: (
+      <>
+        the pool is <span className="font-extrabold text-white/80">a program, not a company</span> —
+        it holds usdc and nothing else. members chip in, one pool per defined risk.
+      </>
+    ),
+  },
+  {
+    n: "02",
+    head: "peers decide",
+    body: (
+      <>
+        claims are judged by staked members of the same pool — drawn at random, sealed votes,
+        appeals double the jury. adjudication by{" "}
+        <span className="font-extrabold text-white/80">accord</span>, honestly an arbitration
+        oracle.
+      </>
+    ),
+  },
+  {
+    n: "03",
+    head: "cover renews",
+    body: (
+      <>
+        contributions recur through the pull payments rail. We've alreday built that with{" "}
+        <span className="font-extrabold text-white/80"> tributary.so</span>.
+      </>
+    ),
+  },
+  {
+    n: "04",
+    head: "a backstop grows",
+    body: (
+      <>
+        <span className="font-extrabold text-white/80">external risk capital</span> stakes a reserve
+        beneath the pool and earns a rule-set share of its surplus.
+      </>
+    ),
+  },
+  {
+    n: "05",
+    head: "pools cover pools",
+    body: (
+      <>
+        mutuals cover each other: first loss below, the tail above.{" "}
+        <span className="font-extrabold text-white/80">reinsurance and tranching</span>.
+      </>
+    ),
+  },
+];
+
+/** The vision slide is the deck's one directed exception to the vocabulary
+ * law: "insurance" appears here and only here, naming the destination the
+ * protocol points at — never the product sold today (meta/PITCH.md §0/§12). */
+const VisionSlide: FC = () => {
+  const frame = useSlideFrame();
+  return (
+    <SlideFrame kicker="mutuals are the destination" headline="the vision">
+      <div className="flex w-full flex-col gap-8">
+        <div
+          className="max-w-[62ch] text-ink [font:var(--riprap-title-md)]"
+          style={rise(frame, 16)}
+        >
+          An open protocol for truly peer-to-peer, permissionless insurance, on chain.
+        </div>
+
+        <div style={rise(frame, 32)}>
+          <ExpansionStrip />
+        </div>
+
+        {/* same grid template as the strip — column i elaborates plate i */}
+        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          {VISION_STEPS.map((s, i) => (
+            <div
+              key={s.n}
+              className="flex flex-col gap-2 border-t border-hairline pt-4"
+              style={rise(frame, 52 + i * 12)}
+            >
+              <div className="flex items-baseline gap-2">
+                <span data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
+                  {s.n}
+                </span>
+                <span className="text-ink [font:var(--riprap-title-sm)]">{s.head}</span>
+              </div>
+              <div className="text-muted [font:var(--riprap-body-sm)]">{s.body}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SlideFrame>
+  );
+};
+
+/* 03 — the problem ----------------------------------------------------------- */
 /** The 2020–22 autopsy: one card per named failure, the error in three
  * words or fewer. Each maps to a structural fix in Hanse (one risk per
  * pool, staked jury, surplus to members) — the Q&A answer to "why has
@@ -156,7 +261,7 @@ const ProblemSlide: FC = () => {
   );
 };
 
-/* 03 — the product ----------------------------------------------------------- */
+/* 04 — the product ----------------------------------------------------------- */
 
 const PRODUCT_LAWS = [
   {
@@ -500,109 +605,7 @@ const AskSlide: FC = () => {
   );
 };
 
-/* 09 — the vision (mutuals as a protocol — the directed "insurance" slide) --- */
-
-/** The vision, enumerated like the ExpansionStrip below it — one added
- * thing per step, ordinals matching the plates (n ↔ tile step). The pool
- * itself never changes shape; only what surrounds it grows. Copy per
- * meta/PITCH.md §12 (destination vocabulary; this slide's directed
- * exception to the vocabulary law is the headline sentence only). */
-const VISION_STEPS = [
-  {
-    n: "01",
-    head: "one pool",
-    body: (
-      <>
-        where it starts: single risk, one treasury, a bounded lifetime. the{" "}
-        <span className="font-extrabold text-white/80">blade pool</span> pilot
-      </>
-    ),
-  },
-  {
-    n: "02",
-    head: "anyone founds one",
-    body: (
-      <>
-        a mutual is a transaction and can carry any risk, any terms, any group and use the same
-        <span className="font-extrabold text-white/80"> shared contract</span>.
-      </>
-    ),
-  },
-  {
-    n: "03",
-    head: "cover renews",
-    body: (
-      <>
-        contributions recur through the pull payments rail. We've alreday built that with{" "}
-        <span className="font-extrabold text-white/80"> tributary.so</span>.
-      </>
-    ),
-  },
-  {
-    n: "04",
-    head: "a backstop grows",
-    body: (
-      <>
-        <span className="font-extrabold text-white/80">external risk capital</span> stakes a reserve
-        beneath the pool and earns a rule-set share of its surplus.
-      </>
-    ),
-  },
-  {
-    n: "05",
-    head: "pools cover pools",
-    body: (
-      <>
-        mutuals cover each other: first loss below, the tail above.{" "}
-        <span className="font-extrabold text-white/80">reinsurance and tranching</span>.
-      </>
-    ),
-  },
-];
-
-/** The vision slide is the deck's one directed exception to the vocabulary
- * law: "insurance" appears here and only here, naming the destination the
- * protocol points at — never the product sold today (meta/PITCH.md §0/§12). */
-const VisionSlide: FC = () => {
-  const frame = useSlideFrame();
-  return (
-    <SlideFrame kicker="mutuals are the destination" headline="the vision">
-      <div className="flex w-full flex-col gap-8">
-        <div
-          className="max-w-[62ch] text-ink [font:var(--riprap-title-md)]"
-          style={rise(frame, 16)}
-        >
-          An open protocol for truly peer-to-peer, permissionless insurance, on chain.
-        </div>
-
-        <div style={rise(frame, 32)}>
-          <ExpansionStrip />
-        </div>
-
-        {/* same grid template as the strip — column i elaborates plate i */}
-        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {VISION_STEPS.map((s, i) => (
-            <div
-              key={s.n}
-              className="flex flex-col gap-2 border-t border-hairline pt-4"
-              style={rise(frame, 52 + i * 12)}
-            >
-              <div className="flex items-baseline gap-2">
-                <span data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
-                  {s.n}
-                </span>
-                <span className="text-ink [font:var(--riprap-title-sm)]">{s.head}</span>
-              </div>
-              <div className="text-muted [font:var(--riprap-body-sm)]">{s.body}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </SlideFrame>
-  );
-};
-
-/* 10 — the team (layout copied from the accord deck's builder slide) --------- */
+/* 09 — the team (layout copied from the accord deck's builder slide) --------- */
 
 const FABIAN_ROWS = [
   "Dr.-Ing., engineering",
@@ -727,7 +730,7 @@ const TeamSlide: FC = () => {
   );
 };
 
-/* 11 — close ------------------------------------------------------------------ */
+/* 10 — close ------------------------------------------------------------------ */
 
 const LINKS = [
   { url: "riprap.xyz", note: "the platform" },
@@ -779,8 +782,15 @@ export const SLIDES: SlideDef[] = [
     id: "title",
     label: "riprap",
     notes:
-      "10s. Riprap — peer-to-peer risk pooling on Solana. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Pre-Seed raise, 2026.",
+      "10s. Riprap — real-world risk protection on Solana. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Pre-Seed raise, 2026.",
     component: TitleSlide,
+  },
+  {
+    id: "vision",
+    label: "the vision",
+    notes:
+      "30s. The destination leads — set it before the diagnosis; the rest of the deck walks from today's build back up to this stack. The destination is mutuals as an open protocol on Solana — true peer-to-peer, permissionless insurance, on-chain. This is the one slide that says the word: it names where the machine goes, not what we sell today — everywhere else the vocabulary law holds, and the licensed perimeter is entered deliberately, with carriers, where it requires it. Walk the strip — the five machines on-chain cover needs, one per plate: 01 money gathers — programmatic custody: the pool is a program, not a company, it holds USDC and nothing else; 02 peers decide — adjudication: staked members of the same pool, drawn at random, sealed votes, appeals that double the jury — Accord, honestly an arbitration oracle; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. Custody, adjudication, recurrence, reserve capital, reinsurance — everything an insurer needs, none of it a company. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built. The stack is the destination. Segue: why doesn't it exist today — the problem, next slide.",
+    component: VisionSlide,
   },
   {
     id: "problem",
@@ -823,13 +833,6 @@ export const SLIDES: SlideDef[] = [
     notes:
       "30s. $700k on a post-money SAFE plus a bounded token warrant; range $600–800k; opening cap $7M post — 10%; 18 months; primary milestone organizer-initiated pools. The narrative: capital → de-risk → prove → unlock — security, product, proof, legal, growth. If asked what $100k gets an angel to: from an audited working product and an operational pilot to a repeatable network of organizer-initiated pools. Angel-ladder construction stays private.",
     component: AskSlide,
-  },
-  {
-    id: "vision",
-    label: "the vision",
-    notes:
-      "30s. Zoom out before the team: the pilot is the proof, not the product. The destination is mutuals as an open protocol on Solana — true peer-to-peer, permissionless insurance, on-chain. This is the one slide that says the word: it names where the machine goes, not what we sell today — everywhere else the vocabulary law holds, and the licensed perimeter is entered deliberately, with carriers, where it requires it. Walk the strip, one added thing per step, the pool itself never changing shape: 01 one pool — the pilot's shape, the proof everything grows from; 02 anyone founds one — a mutual is a transaction, not a company formation; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built. The stack is the destination. Segue: who builds it — next slide.",
-    component: VisionSlide,
   },
   {
     id: "team",
