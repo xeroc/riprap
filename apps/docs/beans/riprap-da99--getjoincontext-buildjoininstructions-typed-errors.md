@@ -3,8 +3,9 @@
 title: getJoinContext + buildJoinInstructions + typed errors + unit tests
 status: todo
 type: task
+priority: normal
 created_at: 2026-09-17T14:05:48Z
-updated_at: 2026-09-17T14:05:48Z
+updated_at: 2026-09-17T18:54:24Z
 parent: riprap-vol3
 blocked_by:
     - riprap-hi6g
