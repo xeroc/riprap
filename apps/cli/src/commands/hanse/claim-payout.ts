@@ -12,10 +12,9 @@ import {
   findDepositorPda,
   getClaimPayoutInstructionAsync,
 } from "@riprap/hanse";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address, Instruction, KeyPairSigner } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
-import { findAssociatedTokenAddress } from "../../lib/token";
 import { loadKeypair } from "../../lib/wallet";
 
 /**

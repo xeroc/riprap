@@ -6,6 +6,7 @@ import {
   findMemberAccountPda,
   findRightsAuthorityPda,
 } from "@riprap/hanse";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import {
   type Address,
   appendTransactionMessageInstructions,
@@ -17,7 +18,6 @@ import {
 } from "@solana/kit";
 import { findDisputePda } from "@useaccord/sdk";
 import { describe, expect, test } from "vitest";
-import { findAssociatedTokenAddress } from "../../lib/token";
 import { buildClaimPayout } from "./claim-payout";
 import { buildFileClaim } from "./file-claim";
 import { buildSettleClaim } from "./settle-claim";

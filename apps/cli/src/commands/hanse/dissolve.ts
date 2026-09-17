@@ -6,10 +6,9 @@
  */
 import { Flags } from "@oclif/core";
 import { fetchMutual, getDissolveInstructionAsync } from "@riprap/hanse";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 export default class HanseDissolve extends ChainCommand {
   static summary = "Liquidate the pool after the pull window (permissionless)";
