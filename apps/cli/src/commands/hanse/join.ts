@@ -7,9 +7,15 @@
  * claim right — payouts still land only in the member's ATA. The on-chain
  * rent_payer account funds the Member + depositor PDA rent; the CLI wires it
  * to the sponsor when present, else to this wallet.
+ *
+ * Self-pay live joins build through the @riprap/hanse facade
+ * (buildJoinInstructions: guard re-runs + idempotent ATA-create prepended);
+ * --sponsor, --dry-run, and offline --pool/--deposit-mint overrides assemble
+ * locally.
  */
 import { Flags } from "@oclif/core";
 import {
+  buildJoinInstructions,
   fetchMutual,
   findDepositorPda,
   findJoinMemberAccountPda,
@@ -67,6 +73,26 @@ export default class HanseJoin extends ChainCommand {
     const mutual = flags.mutual as Address;
     const tier = tierIndexFromName(flags.tier);
     const sponsor = flags.sponsor ? await loadKeypair(flags.sponsor) : undefined;
+    const [memberAccount] = await findJoinMemberAccountPda({
+      mutual,
+      member: ctx.signer.address,
+    });
+
+    // Self-pay live join rides the @riprap/hanse facade: guards re-run on
+    // chain state (DepositsClosed / AlreadyMember / InsufficientBalance) and
+    // the idempotent ATA-create is prepended — one transaction, one
+    // signature. Sponsor (facade has no funder param yet), --dry-run, and
+    // the offline --pool/--deposit-mint overrides keep the local assembly.
+    if (!sponsor && !flags["dry-run"] && !(flags.pool && flags["deposit-mint"])) {
+      const instructions = await buildJoinInstructions(ctx.rpc, {
+        mutual,
+        tier,
+        member: ctx.signer,
+      });
+      const signature = await this.sendInstruction(ctx, instructions);
+      this.emitSend(signature, { mutual, memberAccount, tier: flags.tier });
+      return;
+    }
 
     let pool: Address;
     let depositMint: Address;
@@ -79,10 +105,6 @@ export default class HanseJoin extends ChainCommand {
       depositMint = account.data.depositMint;
     }
 
-    const [memberAccount] = await findJoinMemberAccountPda({
-      mutual,
-      member: ctx.signer.address,
-    });
     const [depositor] = await findDepositorPda({ pool, owner: ctx.signer.address });
     // Contribution source: the sponsor's ATA when sponsoring, else the member's.
     const ownerAta = await findAssociatedTokenAddress(

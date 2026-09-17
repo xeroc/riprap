@@ -14,15 +14,25 @@ import {
 import {
   type Account,
   type Address,
+  type GetAccountInfoApi,
+  type GetBalanceApi,
+  type GetTokenAccountBalanceApi,
   type Instruction,
   isSolanaError,
   type Rpc,
-  type SolanaRpcApi,
   type TransactionSigner,
 } from "@solana/kit";
 import { fetchMutual, getJoinInstructionAsync, type Mutual } from "../generated/src/generated";
 import { fetchMaybeMemberByOwner } from "./fetch";
 import { findDepositorPda, findJoinMemberAccountPda } from "./pdas";
+
+/**
+ * Minimal structural rpc the facade calls: account reads via the generated
+ * fetchers plus the two balance methods. Admits both `createDefaultSolanaRpc`
+ * outputs (accord app convention) and the CLI's cluster-capable rpc union —
+ * no casts at either consumer.
+ */
+type JoinRpc = Rpc<GetAccountInfoApi & GetBalanceApi & GetTokenAccountBalanceApi>;
 
 // --- typed errors (name-stable: the hero maps constructor names to toasts) ---
 
@@ -105,7 +115,7 @@ export type JoinContext = {
 };
 
 export async function getJoinContext(
-  rpc: Rpc<SolanaRpcApi>,
+  rpc: JoinRpc,
   seeds: { mutual: Address; wallet: Address },
 ): Promise<JoinContext> {
   const mutual = await fetchMutual(rpc, seeds.mutual);
@@ -159,7 +169,7 @@ export async function getJoinContext(
 // --- instruction assembly ---
 
 export async function buildJoinInstructions(
-  rpc: Rpc<SolanaRpcApi>,
+  rpc: JoinRpc,
   input: { mutual: Address; tier: number; member: TransactionSigner },
 ): Promise<Instruction[]> {
   const account = await fetchMutual(rpc, input.mutual);
@@ -220,7 +230,7 @@ export async function buildJoinInstructions(
 /** getTokenAccountBalance's accountNotFound path: a missing ATA is balance
  * 0n, not an exception (HANDOFF §3). Any other RPC failure rethrows so the
  * page can render its retry state instead of a fake zero. */
-async function tokenBalanceOrZero(rpc: Rpc<SolanaRpcApi>, ata: Address): Promise<bigint> {
+async function tokenBalanceOrZero(rpc: JoinRpc, ata: Address): Promise<bigint> {
   try {
     const { value } = await rpc.getTokenAccountBalance(ata).send();
     return BigInt(value.amount);

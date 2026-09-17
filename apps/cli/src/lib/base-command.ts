@@ -176,11 +176,16 @@ export abstract class ChainCommand extends BaseCommand {
   }
 
   /**
-   * Build, sign, and confirm a single instruction as a v0 transaction. The
-   * loaded signer is both fee payer and the instruction's signing account.
+   * Build, sign, and confirm one or more instructions as a single v0
+   * transaction. The loaded signer is both fee payer and every signing
+   * account in the instruction set.
    */
-  protected async sendInstruction(ctx: ChainContext, instruction: Instruction): Promise<string> {
+  protected async sendInstruction(
+    ctx: ChainContext,
+    instruction: Instruction | Instruction[],
+  ): Promise<string> {
     const { rpc, sendAndConfirm, signer, commitment } = ctx;
+    const instructions = Array.isArray(instruction) ? instruction : [instruction];
 
     const { value: latestBlockhash } = await rpc.getLatestBlockhash({ commitment }).send();
 
@@ -188,7 +193,7 @@ export abstract class ChainCommand extends BaseCommand {
       createTransactionMessage({ version: 0 }),
       (tx) => setTransactionMessageFeePayerSigner(signer as TransactionSigner, tx),
       (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-      (tx) => appendTransactionMessageInstructions([instruction], tx),
+      (tx) => appendTransactionMessageInstructions(instructions, tx),
     );
 
     const signed = await signTransactionMessageWithSigners(message);
