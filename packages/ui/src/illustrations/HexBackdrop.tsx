@@ -1,4 +1,6 @@
 import { motion, useReducedMotion } from "motion/react";
+import { easeInOut } from "../lib/settle";
+import { useGlyphClock } from "./Glyph";
 
 /*
  * HexBackdrop — the hero's engineering paper: a hexagonal Voronoi lattice
@@ -68,6 +70,7 @@ export function HexBackdrop({
   anchorX = width * 0.78,
   anchorY = height * 0.6,
 }: HexBackdropProps) {
+  const clock = useGlyphClock();
   const reduced = useReducedMotion();
 
   const dx = Math.sqrt(3) * radius; // column pitch (flat-top)
@@ -142,28 +145,43 @@ export function HexBackdrop({
           />
         ))}
       {/* 2 — breathers: slow in/out, desynchronized from a random phase;
-             static mid-tone when reduced motion is preferred (loops collapse) */}
-      {breathers.map((c) => (
-        <motion.polygon
-          key={c.id}
-          data-breathe="true"
-          points={c.points}
-          fill="var(--riprap-surface-strong)"
-          initial={reduced ? { opacity: 0.5 } : { opacity: c.floor }}
-          animate={reduced ? { opacity: 0.5 } : { opacity: [c.floor, 1, c.floor] }}
-          transition={
-            reduced
-              ? { duration: 0 }
-              : {
-                  duration: c.duration,
-                  delay: -c.phase,
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  ease: "easeInOut",
-                }
-          }
-        />
-      ))}
+             static mid-tone when reduced motion is preferred (loops collapse);
+             a pure function of the glyph clock when one is provided */}
+      {breathers.map((c) => {
+        if (clock || reduced) {
+          const t = clock ? clock.frame / clock.fps : 0;
+          // mirrored 0→1→0 over the cycle, eased per half — the same shape
+          // motion's [floor,1,floor] easeInOut keyframes trace
+          const cycle = (((t + c.phase) % c.duration) + c.duration) % c.duration;
+          const opacity = c.floor + (1 - c.floor) * easeInOut(cycle / c.duration);
+          return (
+            <polygon
+              key={c.id}
+              data-breathe="true"
+              points={c.points}
+              fill="var(--riprap-surface-strong)"
+              style={{ opacity: reduced ? 0.5 : opacity }}
+            />
+          );
+        }
+        return (
+          <motion.polygon
+            key={c.id}
+            data-breathe="true"
+            points={c.points}
+            fill="var(--riprap-surface-strong)"
+            initial={{ opacity: c.floor }}
+            animate={{ opacity: [c.floor, 1, c.floor] }}
+            transition={{
+              duration: c.duration,
+              delay: -c.phase,
+              repeat: Infinity,
+              repeatType: "loop",
+              ease: "easeInOut",
+            }}
+          />
+        );
+      })}
     </svg>
   );
 }

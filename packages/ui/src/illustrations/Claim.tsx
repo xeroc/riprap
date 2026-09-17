@@ -1,5 +1,15 @@
 import { motion, useReducedMotion } from "motion/react";
-import { Glyph, SETTLE, SETTLE_EASE, STAGGER, useGlyphInView, VESSEL, VesselLines } from "./Glyph";
+import { settleAt } from "../lib/settle";
+import {
+  Glyph,
+  SETTLE,
+  SETTLE_EASE,
+  STAGGER,
+  useGlyphClock,
+  useGlyphInView,
+  VESSEL,
+  VesselLines,
+} from "./Glyph";
 
 /**
  * claim — a claim is paid.
@@ -11,9 +21,38 @@ const INSIDE_X = 56;
 const OUTSIDE_X = 78;
 
 export function Claim() {
+  const clock = useGlyphClock();
   const reduced = useReducedMotion();
   const inView = useGlyphInView();
   const { fill } = VESSEL;
+
+  if (clock) {
+    // deterministic twin of the motion path below, from the glyph clock
+    const p = settleAt(clock.frame / clock.fps, 3 * STAGGER, 2 * SETTLE);
+    return (
+      <Glyph label="a claim is paid out" name="claim">
+        <VesselLines door />
+        <rect
+          x={fill.x}
+          y={BLOCK.y + BLOCK.height - 1.5}
+          width={fill.width}
+          height={fill.floorY - (BLOCK.y + BLOCK.height - 1.5)}
+          fill="var(--riprap-funds)"
+        />
+        <rect
+          x={INSIDE_X}
+          y={BLOCK.y}
+          width={BLOCK.width}
+          height={BLOCK.height}
+          fill="var(--riprap-funds)"
+          stroke="var(--riprap-funds-ink)"
+          strokeWidth={1.5}
+          style={{ transform: `translateX(${(OUTSIDE_X - INSIDE_X) * p}px)` }}
+        />
+      </Glyph>
+    );
+  }
+
   return (
     <Glyph label="a claim is paid out" name="claim">
       <VesselLines door />

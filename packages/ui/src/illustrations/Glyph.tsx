@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import { createContext, type ReactNode, useContext } from "react";
 import { useInView } from "../hooks/useInView";
+import { SETTLE, SETTLE_EASE, settleAt } from "../lib/settle";
 import { cn } from "../lib/utils";
 
 /*
@@ -14,12 +15,8 @@ import { cn } from "../lib/utils";
  *    renders the settled state.
  */
 
-/** --riprap-settle */
-export const SETTLE = 0.16;
-/** --riprap-stagger */
-export const STAGGER = 0.04;
-/** ease-out quart — matches tokens.css --riprap-settle curve */
-export const SETTLE_EASE = [0.215, 0.61, 0.355, 1] as const;
+/** --riprap-settle (definitions + deterministic math in lib/settle.ts) */
+export { SETTLE, SETTLE_EASE, STAGGER } from "../lib/settle";
 
 /** illustration stroke weight (meta/primitives/composition.md: stroke 3) */
 export const STROKE = 3;
@@ -32,6 +29,34 @@ export function settle(delay = 0) {
 /** enter state: 12px above, invisible. The settled state is always {y:0, opacity:1}. */
 export const ENTER = { opacity: 0, y: -12 } as const;
 export const SETTLED = { opacity: 1, y: 0 } as const;
+
+/**
+ * The glyph clock — an explicit time source for frame-accurate consumers
+ * (Remotion: `frame` from useCurrentFrame inside a Sequence). When present,
+ * every animated glyph evaluates the identical settle curve from
+ * frame/fps instead of mounting wall-clock motion, so each rendered frame
+ * is a pure function of the clock. Absent, glyphs behave as on the web.
+ */
+export interface GlyphClock {
+  readonly frame: number;
+  readonly fps: number;
+}
+
+const GlyphClockContext = createContext<GlyphClock | null>(null);
+
+export function GlyphClockProvider({
+  clock,
+  children,
+}: {
+  clock: GlyphClock;
+  children: ReactNode;
+}) {
+  return <GlyphClockContext.Provider value={clock}>{children}</GlyphClockContext.Provider>;
+}
+
+export function useGlyphClock(): GlyphClock | null {
+  return useContext(GlyphClockContext);
+}
 
 /** arrival signal for the glyph's elements — true once its frame is in view */
 const GlyphViewContext = createContext(true);
@@ -52,8 +77,10 @@ export interface GlyphProps {
 /** Frame: the 96×96 drawing field every glyph shares; owns arrival. */
 export function Glyph({ label, name, className, children }: GlyphProps) {
   const { ref, inView } = useInView<SVGSVGElement>();
+  // under a glyph clock every frame is "in view" — arrival is clock-driven
+  const arrived = useGlyphClock() !== null ? true : inView;
   return (
-    <GlyphViewContext.Provider value={inView}>
+    <GlyphViewContext.Provider value={arrived}>
       <svg
         ref={ref}
         viewBox="0 0 96 96"
@@ -71,10 +98,17 @@ export function Glyph({ label, name, className, children }: GlyphProps) {
 /**
  * Shared motion wrapper: one arriving group — drops 12px and stops, once,
  * when its glyph scrolls into view. Under reduced motion it renders settled.
+ * Under a glyph clock it renders the same arrival as a pure function of
+ * frame/fps (lib/settle.ts) with no motion state at all.
  */
 export function SettleGroup({ delay = 0, children }: { delay?: number; children: ReactNode }) {
+  const clock = useGlyphClock();
   const reduced = useReducedMotion();
   const inView = useGlyphInView();
+  if (clock) {
+    const p = settleAt(clock.frame / clock.fps, delay);
+    return <g style={{ opacity: p, transform: `translateY(${(1 - p) * -12}px)` }}>{children}</g>;
+  }
   return (
     <motion.g
       initial={reduced ? SETTLED : ENTER}

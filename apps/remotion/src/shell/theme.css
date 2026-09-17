@@ -1,0 +1,36 @@
+/*
+ * @riprap/remotion — Tailwind v4 engine wiring, mirroring
+ * apps/landing/src/index.css. The engine stays with each consuming app by
+ * design; this file owns it for video. Depths: this file sits at
+ * src/shell/, hence four ../ segments to the repo root in @source.
+ *
+ * @import "@riprap/ui/main.css" — engine + tokens + theme + shadcn layer
+ *                                  + Fontsource fonts (tokens.css imports)
+ * @source packages/ui/src        — discover utilities used inside the kit
+ * @source ../                    — the app's own scene sources
+ *
+ * videos/ utilities: the videos/ tree is gitignored (only _example/
+ * _template are tracked), so Tailwind v4 auto source detection never
+ * scans it — classes used only by a video would silently not generate.
+ * The sync CLI emits src/video-tw-classes.ts (under src/, which IS
+ * scanned) listing every candidate class found under videos/. See
+ * src/cli/sync.ts.
+ */
+@import "@riprap/ui/main.css";
+
+@source "../../../../packages/ui/src";
+@source "../";
+/* Local video sources live under videos/, which is gitignored (only
+ * _example/_template are tracked), so automatic source detection never
+ * scans them. The one-level glob is load-bearing: pointing at videos/
+ * itself lets the scanner prune the walk at the gitignored boundary,
+ * while the glob puts each video directory inside the ignored region
+ * where the scan actually runs. */
+@source "../../videos/*";
+
+/* Remotion mounts into its own container; keep the page dark + full-size. */
+html,
+body {
+  height: 100%;
+  background: var(--riprap-canvas);
+}

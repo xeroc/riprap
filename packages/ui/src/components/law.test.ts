@@ -10,7 +10,9 @@ import { describe, expect, it } from "vitest";
  *    in avatar.tsx (the avatar disc is the only circle)
  *  - zero inline hex colors (colors live in tokens.css only)
  */
-const SANCTIONED_FULL_RADIUS: Record<string, true> = {}; // avatar retired; no circles remain
+// the avatar disc is the one sanctioned circle (DESIGN.md § Shapes) — carried
+// by quoted tweets, which render the author's real avatar on paper cards
+const SANCTIONED_FULL_RADIUS: Record<string, true> = { "TweetCard.tsx": true };
 const ROOT = join(__dirname);
 
 function collect(dir: string): string[] {
@@ -51,9 +53,11 @@ describe("DESIGN.md law — chrome layer source", () => {
     }
   });
 
-  it("no circles remain — sharp geometry only (avatar retired in the lean cut)", () => {
+  it("no circles remain outside the sanctioned avatar disc (TweetCard)", () => {
     for (const file of files) {
       const src = readFileSync(file, "utf8");
+      const base = file.split("/").pop() ?? file;
+      if (SANCTIONED_FULL_RADIUS[base]) continue;
       expect(src, file).not.toMatch(/rounded-full/);
     }
   });

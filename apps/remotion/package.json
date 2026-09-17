@@ -1,0 +1,40 @@
+{
+  "name": "@riprap/remotion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "@riprap/remotion — Remotion 4 video framework rendering @riprap/ui kit illustrations under the glyph clock. Videos under videos/ are local-only (gitignored); wav/render artifacts local-only.",
+  "type": "module",
+  "scripts": {
+    "sync": "tsx src/cli/main.ts sync",
+    "new": "tsx src/cli/main.ts new",
+    "studio": "tsx src/cli/main.ts sync && tsx src/cli/main.ts score --stale && remotion studio",
+    "score": "tsx src/cli/main.ts score",
+    "render": "tsx src/cli/main.ts sync && tsx src/cli/main.ts score --stale && remotion render",
+    "build": "tsx src/cli/main.ts sync && tsc -p tsconfig.json && remotion bundle",
+    "lint": "tsx src/cli/main.ts sync && biome check src videos",
+    "test": "tsx src/cli/main.ts sync && vitest run",
+    "clean": "rm -rf build out public/audio src/videos.gen.ts src/video-tw-classes.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.514",
+    "@riprap/ui": "workspace:*",
+    "@strudel/web": "1.3.0",
+    "node-web-audio-api": "^2.2.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "4.0.514"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "jsdom": "^26.1.0",
+    "postcss": "^8.5.6",
+    "postcss-loader": "^8.2.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.19.0",
+    "typescript": "~6.0.2",
+    "vitest": "^3.2.4"
+  }
+}

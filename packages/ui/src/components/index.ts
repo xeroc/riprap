@@ -38,13 +38,15 @@ export type { TierCardProps } from "./chrome/TierCard";
 export { TierCard } from "./chrome/TierCard";
 export type { TopNavLink, TopNavProps } from "./chrome/TopNav";
 export { TopNav } from "./chrome/TopNav";
+export type { TweetCardProps } from "./chrome/TweetCard";
+export { TweetCard } from "./chrome/TweetCard";
 export type { WordmarkProps } from "./chrome/Wordmark";
 export { Wordmark } from "./chrome/Wordmark";
 export type {
-  WorkedExampleBandProps,
-  WorkedExampleFigure,
-} from "./chrome/WorkedExampleBand";
-export { WorkedExampleBand } from "./chrome/WorkedExampleBand";
+  WorkedExampleLine,
+  WorkedExampleReceiptProps,
+} from "./chrome/WorkedExampleReceipt";
+export { WorkedExampleReceipt } from "./chrome/WorkedExampleReceipt";
 export { Button, buttonVariants } from "./ui/button";
 export {
   Card,

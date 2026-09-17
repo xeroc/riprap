@@ -1,0 +1,65 @@
+// blade-pool-intro-30s — "passive pulse" (Strudel score), riprap family
+//
+// Prebaked to public/audio/blade-pool-intro-30s.wav (gitignored artifact):
+//   pnpm --filter @riprap/remotion score blade-pool-intro-30s 34
+// Pasteable into https://strudel.cc as-is.
+//
+// 120 BPM grid: cpm 30 → 1 bar = 2.000s = 60 frames @30fps.
+// Family: riprap — Gb major (flat side, kinship with the corpus; the V is
+// spelled Dbmaj9 rather than Db7sus: the 7sus needs Cb, which the dough
+// piano map does not carry — enharmonic C does the refusing-to-resolve job).
+// Scene map: fear b1–2 (hammered quotes) · hook b3–4 · chip-in b5–7
+// · claim b8–10 · settle b11–12 (thinned) · dissolve b13–14
+// · endcard b15–17 (bloom, button shifted +4s).
+setcpm(30)
+
+// ── bed ──
+const kick = s("bd ~ bd ~").bank("RolandTR909").gain(.45) // pulse on 1 & 3
+const tick = s("~ hh ~ hh").gain(.09).hpf(9000)           // whisper hats
+const rimt = s("~ ~ rim ~").gain(.13)                     // one wooden tick per bar
+// chord loop (one chord per bar): Gbmaj9 · Ebm9 · Dbmaj9
+const arpGb = note("gb3 [bb3 db4] [f4 ab4] ~").s("piano").gain(.34).room(.35)
+const arpEb = note("eb3 [gb3 bb3] [db4 eb4] ~").s("piano").gain(.32).room(.35)
+const arpDb = note("db3 [f3 ab3] [c4 eb4] ~").s("piano").gain(.32).room(.35)
+const pad = x => note(x).s("triangle").fm("<0 2 4>").clip(1).attack(.8).release(1.2).gain(.22).room(.4)
+const hum = x => note(x).s("piano").gain(.2).room(.4)     // sparse top-line hum
+
+const bF1 = stack(s("bd ~ ~ ~").bank("RolandTR909").gain(.45), pad("gb2"))
+const bF2 = stack(s("bd ~ bd ~").bank("RolandTR909").gain(.42), tick, pad("gb2"),
+  note("~ ~ ~ db3").s("piano").gain(.18).room(.5).release(2))       // shadow — pile peaks @3.0
+
+// ── S1 hook · 4–8s — almost nothing ──
+const b1 = stack(s("bd ~ ~ ~").bank("RolandTR909").gain(.45), pad("gb2"))
+const b2 = stack(s("bd ~ ~ ~").bank("RolandTR909").gain(.45),
+  note("[gb4,db4] ~ ~ ~").s("piano").gain(.22).room(.45), pad("gb2"))
+
+// ── S2 chip in · 8–14s — arps enter, tiers uncover ──
+const b3 = stack(kick, arpGb, tick, pad("gb2"),
+  note("[~ bb5] ~ ~ ~").s("piano").gain(.16).room(.5))              // rise — tiers land @4.5
+const b4 = stack(kick, arpEb, tick, rimt, pad("eb2"), hum("db5"))
+const b5 = stack(kick, arpDb, tick, rimt, pad("db2"))
+
+// ── S3 the claim · 14–20s — loop steady, one shadow on the ruling ──
+const b6 = stack(kick, arpGb, tick, pad("gb2"),
+  note("~ ~ gb3 ~").s("piano").gain(.19).room(.5).release(1.5))     // shadow — ruling @11.0
+const b7 = stack(kick, arpEb, tick, rimt, pad("eb2"), hum("gb5"))
+const b8 = stack(kick, arpDb, tick, rimt, pad("db2"))
+
+// ── S4 settlement · 20–24s — bed thins so the ledger reads ──
+const b9 = stack(s("bd ~ bd ~").bank("RolandTR909").gain(.4), arpGb.release(1.5), pad("gb2"))
+const b10 = stack(s("bd ~ bd ~").bank("RolandTR909").gain(.4), arpEb.release(1.5), pad("eb2"))
+
+// ── S5 refund · 24–28s — one rise on the payoff line (@24.2), then plain ──
+const b11 = stack(s("bd ~ bd ~").bank("RolandTR909").gain(.4), arpDb.release(1.5), pad("db2"),
+  note("[~ bb5] ~ ~ ~").s("piano").gain(.17).room(.5))              // rise — refund hook @24.2
+const b12 = stack(s("bd ~ bd ~").bank("RolandTR909").gain(.4), pad("gb2"))
+
+// ── S6 endcard · 28–34s — home ──
+const b13 = stack(s("bd ~ bd ~").bank("RolandTR909").gain(.42), arpGb, tick, pad("gb2"),
+  note("~ ~ ~ ~ ~ ~ ~ [gb4,bb4,db5,f5,ab5]").s("piano").gain(.3).room(.5).release(1.5), // bloom — tagline @28.9
+  note("~ ~ ~ ~ ~ ~ ~ ~ ~ ~ [gb4,gb5] ~").s("piano").gain(.24).room(.45).release(.5))   // button — riprap.xyz @29.4
+const b14 = stack(kick, arpEb.release(.6), pad("eb2"))
+const b15 = stack(s("bd ~ ~ ~").bank("RolandTR909").gain(.4),
+  note("[gb3,bb3,db4,ab4]").s("piano").sustain(.2).release(.8).gain(.3).room(.5)) // Gbmaj9 shell — decays, silent before 34
+cat(bF1, bF2, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15)
+  .gain(.48)
