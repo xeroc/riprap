@@ -120,3 +120,4 @@ export {
   SheetTrigger,
 } from "./ui/sheet";
 export { Slider } from "./ui/slider";
+export { Toaster } from "./ui/sonner";
