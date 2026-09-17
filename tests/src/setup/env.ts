@@ -119,7 +119,7 @@ export async function createTestEnv(opts: TestEnvOptions = {}): Promise<TestEnv>
     } catch (e) {
       throw new Error(
         `TestEnv: cannot load payer keypair at ${payerPath} ` +
-        `(set RIPRAP_PAYER_PATH or run \`solana-keygen new -o ${DEFAULT_PAYER}\`): ${String(e)}`,
+          `(set RIPRAP_PAYER_PATH or run \`solana-keygen new -o ${DEFAULT_PAYER}\`): ${String(e)}`,
       );
     }
   } else {
@@ -180,8 +180,8 @@ export async function createTestEnv(opts: TestEnvOptions = {}): Promise<TestEnv>
       if (account.value === null) {
         throw new Error(
           `TestEnv: ${name} program not deployed at ${programId}. ` +
-          "Run `anchor test` (builds, starts Surfpool, deploys pool + hanse) " +
-          "or build with `anchor build` and restart the validator.",
+            "Run `anchor test` (builds, starts Surfpool, deploys pool + hanse) " +
+            "or build with `anchor build` and restart the validator.",
         );
       }
     }
