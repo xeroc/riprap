@@ -316,7 +316,7 @@ export async function armMutualJurors(
   mint: Address,
   depth: number,
   signers: KeyPairSigner[],
-  stakeAmount: bigint,
+  stakeAmount: bigint | readonly bigint[],
 ): Promise<Omit<DrawFixture, "env" | "up">> {
   const vault = await ataOf(mint, subaccord);
   const tree = await new TreeTracker(depth).init();
@@ -325,7 +325,8 @@ export async function armMutualJurors(
   const jurorPdaByHex = new Map<string, Address>();
   for (let i = 0; i < signers.length; i++) {
     const signer = signers[i]!;
-    await setTokenBalance(env, signer.address, mint, stakeAmount);
+    const amount = typeof stakeAmount === "bigint" ? stakeAmount : stakeAmount[i]!;
+    await setTokenBalance(env, signer.address, mint, amount);
     const jurorAccord = roleAccord(env, signer);
     const jurorAta = await ataOf(mint, signer.address);
     const [stakePda] = await findJurorStakePda({ subaccord, juror: signer.address });
@@ -343,11 +344,11 @@ export async function armMutualJurors(
           jurorTokenAccount: jurorAta,
           stakeVault: vault,
         },
-        stakeAmount,
+        amount,
         path,
       ),
     );
-    await tree.setLeaf(i, signer.address, stakeAmount);
+    await tree.setLeaf(i, signer.address, amount);
     jurors.push({ signer, stakePda, jurorAta, accord: jurorAccord });
     jurorPdaByHex.set(toHex(addressBytes(signer.address)), stakePda);
   }
