@@ -7,4 +7,5 @@ export {
 } from "@riprap/pool";
 export * from "../generated/src/generated";
 export * from "./fetch";
+export * from "./join";
 export * from "./pdas";
