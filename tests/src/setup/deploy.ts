@@ -53,8 +53,8 @@ export class MissingAccordBuildError extends Error {
   constructor(soPath: string, cause?: unknown) {
     super(
       `accord.so not found at ${soPath}. Build the sibling checkout: ` +
-      "`cd ../accord && make build` (produces target/deploy/accord.so), " +
-      "or point ACCORD_SO at an existing artifact.",
+        "`cd ../accord && make build` (produces target/deploy/accord.so), " +
+        "or point ACCORD_SO at an existing artifact.",
     );
     this.name = "MissingAccordBuildError";
     this.soPath = soPath;
@@ -333,7 +333,7 @@ export async function ensureAccordProgram(env: TestEnv): Promise<{
   if (programSigner.address !== ACCORD_PROGRAM_ID) {
     throw new Error(
       `accord-keypair.json at ${keypairPath} derives ${programSigner.address}, ` +
-      `but @useaccord/sdk pins ${ACCORD_PROGRAM_ID} — rebuild the sibling checkout.`,
+        `but @useaccord/sdk pins ${ACCORD_PROGRAM_ID} — rebuild the sibling checkout.`,
     );
   }
 

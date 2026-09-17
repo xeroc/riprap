@@ -108,6 +108,21 @@ describe("TopNav — DESIGN.md § top-nav", () => {
     const bar = container.querySelector('[data-slot="container"]');
     expect(bar?.className).toContain("h-(--riprap-nav-h)");
   });
+
+  it("actions slot renders account controls beside the CTA, links untouched", () => {
+    render(
+      <TopNav
+        links={[{ href: "#platform", label: "Platform" }]}
+        actions={<button type="button">connect wallet</button>}
+      />,
+    );
+    const header = screen.getByRole("banner");
+    const slot = header.querySelector('[data-slot="top-nav-actions"]');
+    expect(slot?.textContent).toBe("connect wallet");
+    // brand/links unchanged: still mono stamps inside the nav
+    const link = screen.getByText("Platform");
+    expect(link.className).toContain("[font:var(--riprap-mono-label)]");
+  });
 });
 
 describe("StampBadge — the instance lockup", () => {

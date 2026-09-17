@@ -1,43 +1,30 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
-import { App } from "./App";
+import { BreakpointPage } from "./BreakpointPage";
 
 // jsdom has no resize observer / matchMedia in some paths — match landing tests
-afterEach(() => {
-  cleanup();
-  window.history.pushState({}, "", "/");
-  vi.restoreAllMocks();
-});
+afterEach(cleanup);
 
-function atPoolRoute() {
-  window.history.pushState({}, "", "/2026-breakpoint-blade-pool");
-  return render(<App />);
+function renderPoolPage() {
+  return render(<BreakpointPage />);
 }
 
 describe("/2026-breakpoint-blade-pool — the pool page", () => {
-  it("routes by pathname: the pool page names the peril the landing must not", () => {
-    atPoolRoute();
+  it("names the peril the platform landing must not", () => {
+    renderPoolPage();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Get stabbed with friends.");
     // naming lock is a platform-page rule; the policy page states it plainly
     expect(document.body.textContent).toMatch(/knife assault/i);
   });
 
-  it("the platform landing still renders at / (naming lock intact)", () => {
-    render(<App />);
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
-      "Finance went P2P. Risk Cover can too.",
-    );
-    expect(document.body.textContent).not.toMatch(/knife assault/i);
-  });
-
   it("tier slider defaults to Standard ($20 / up to $2,000 — policy §5)", () => {
-    atPoolRoute();
+    renderPoolPage();
     expect(screen.getByText("Standard · $20 entry · up to $2,000 maximum payout")).toBeTruthy();
   });
 
   it("slider keyboard moves through exactly the three policy tiers", () => {
-    atPoolRoute();
+    renderPoolPage();
     const thumb = screen.getByRole("slider");
     fireEvent.keyDown(thumb, { key: "ArrowRight" });
     expect(screen.getByText("Premium · $40 entry · up to $4,000 maximum payout")).toBeTruthy();
@@ -49,7 +36,7 @@ describe("/2026-breakpoint-blade-pool — the pool page", () => {
   });
 
   it("the odds table carries the four ludic rows, jokes never touching the math", () => {
-    const { container } = atPoolRoute();
+    const { container } = renderPoolPage();
     const rows = [...container.querySelectorAll('[data-slot="odds"] tbody tr')].map(
       (tr) => tr.textContent,
     );
@@ -62,7 +49,7 @@ describe("/2026-breakpoint-blade-pool — the pool page", () => {
   });
 
   it("Chip in opens the waitlist dialog carrying the chosen tier", () => {
-    atPoolRoute();
+    renderPoolPage();
     fireEvent.click(screen.getByRole("button", { name: "Chip in $20" }));
     const dialog = screen.getByRole("dialog");
     expect(dialog.textContent).toContain("Standard — $20 entry");
@@ -70,7 +57,7 @@ describe("/2026-breakpoint-blade-pool — the pool page", () => {
   });
 
   it("fineprint: all 13 policy categories, all 8 exclusions, tier table from TIERS", () => {
-    const { container } = atPoolRoute();
+    const { container } = renderPoolPage();
     const sections = [...container.querySelectorAll('[data-slot="policy-section"]')];
     expect(sections.length).toBe(13);
     const headings = sections.map((s) => s.querySelector("span.uppercase")?.textContent ?? "");

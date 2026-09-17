@@ -8,6 +8,10 @@
  *
  * The parent `src/index.ts` wires this barrel into the public API.
  */
+export type { AddressChipProps } from "./chrome/AddressChip";
+export { AddressChip, shortenAddress } from "./chrome/AddressChip";
+export type { ClusterOption, ClusterSelectProps } from "./chrome/ClusterSelect";
+export { ClusterSelect } from "./chrome/ClusterSelect";
 
 export { Container } from "./chrome/Container";
 export type { CTABandProps } from "./chrome/CTABand";
@@ -20,6 +24,8 @@ export type { FooterBandProps, FooterColumn, FooterLink } from "./chrome/FooterB
 export { FooterBand } from "./chrome/FooterBand";
 export type { GlyphTileProps } from "./chrome/GlyphTile";
 export { GlyphTile } from "./chrome/GlyphTile";
+export type { JurorUpsellDialogProps } from "./chrome/JurorUpsellDialog";
+export { JurorUpsellDialog } from "./chrome/JurorUpsellDialog";
 // brand
 export type { LogoLockupProps } from "./chrome/LogoLockup";
 export { LogoLockup } from "./chrome/LogoLockup";
@@ -40,6 +46,8 @@ export type { TopNavLink, TopNavProps } from "./chrome/TopNav";
 export { TopNav } from "./chrome/TopNav";
 export type { TweetCardProps } from "./chrome/TweetCard";
 export { TweetCard } from "./chrome/TweetCard";
+export type { WalletConnector, WalletDialogProps } from "./chrome/WalletDialog";
+export { WalletDialog } from "./chrome/WalletDialog";
 export type { WordmarkProps } from "./chrome/Wordmark";
 export { Wordmark } from "./chrome/Wordmark";
 export type {
@@ -88,6 +96,18 @@ export {
 } from "./ui/dropdown-menu";
 export { Input } from "./ui/input";
 export { Label } from "./ui/label";
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 export { Separator } from "./ui/separator";
 export {
   Sheet,
