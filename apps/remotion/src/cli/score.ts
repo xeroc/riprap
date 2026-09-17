@@ -166,31 +166,3 @@ export async function renderAllScores(
   }
   return results;
 }
-
-/**
- * CLI: `tsx src/cli/score.ts [name] [seconds] [--stale]`
- * No name → every score. `--stale` → only changed scores.
- */
-async function main() {
-  const argv = process.argv.slice(2);
-  const staleOnly = argv.includes("--stale");
-  const positional = argv.filter((a) => !a.startsWith("--"));
-  const name = positional[0];
-  const seconds = Number(positional[1] ?? DEFAULT_SECONDS);
-  const results = name
-    ? [await renderScore(name, { seconds, staleOnly })]
-    : await renderAllScores({ seconds, staleOnly });
-  for (const r of results) {
-    if (r) {
-      console.log(`[score:${r.name}] ${r.seconds}s → ${r.wavPath} (peak ${r.peak.toFixed(3)})`);
-    }
-  }
-}
-
-const invokedDirectly = process.argv[1]?.includes("score");
-if (invokedDirectly) {
-  main().catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
-}

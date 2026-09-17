@@ -1,16 +1,28 @@
-import { Composition } from "remotion";
+import { Composition, Folder } from "remotion";
 
-import { BladePoolIntro } from "./video/BladePoolIntro";
+import { withMusic } from "./framework/music";
+import { videos } from "./videos.gen";
 
+/**
+ * One <Folder><Composition/></Folder> per videos/<slug>/ entry, mounted
+ * from the generated manifest (src/videos.gen.ts — see src/cli/sync.ts).
+ */
 export function RemotionRoot() {
   return (
-    <Composition
-      id="blade-pool-intro-30s"
-      component={BladePoolIntro}
-      durationInFrames={34 * 30}
-      fps={30}
-      width={1920}
-      height={1080}
-    />
+    <>
+      {videos.map((video) => (
+        <Folder key={video.id} name={video.id}>
+          <Composition
+            id={video.id}
+            component={withMusic(video)}
+            durationInFrames={video.durationInFrames}
+            fps={video.fps}
+            width={video.width}
+            height={video.height}
+            defaultProps={video.defaultProps}
+          />
+        </Folder>
+      ))}
+    </>
   );
 }
