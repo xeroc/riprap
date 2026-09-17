@@ -10,6 +10,8 @@
  */
 export type { AddressChipProps } from "./chrome/AddressChip";
 export { AddressChip, shortenAddress } from "./chrome/AddressChip";
+export type { ClusterOption, ClusterSelectProps } from "./chrome/ClusterSelect";
+export { ClusterSelect } from "./chrome/ClusterSelect";
 
 export { Container } from "./chrome/Container";
 export type { CTABandProps } from "./chrome/CTABand";
@@ -92,6 +94,18 @@ export {
 } from "./ui/dropdown-menu";
 export { Input } from "./ui/input";
 export { Label } from "./ui/label";
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 export { Separator } from "./ui/separator";
 export {
   Sheet,

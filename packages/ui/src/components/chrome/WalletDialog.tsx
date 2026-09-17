@@ -67,7 +67,7 @@ export function WalletDialog({
             ) : (
               <span
                 data-num=""
-                className="[font:var(--riprap-mono-label)] tracking-(--riprap-tracking-stamp) text-muted"
+                className="[font:var(--riprap-mono-label)] tracking-(--riprap-tracking-stamp) text-muted-foreground"
               >
                 {"{{ADDRESS}}"}
               </span>

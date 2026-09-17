@@ -65,7 +65,7 @@ export function AddressChip({ address, className, ...props }: AddressChipProps) 
           copied
         </span>
       ) : (
-        <CopyIcon className="size-3.5 text-muted" />
+        <CopyIcon className="size-3.5 text-muted-foreground" />
       )}
     </button>
   );
