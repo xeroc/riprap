@@ -160,7 +160,7 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 
 **`feature-card`** — 3-up grids. Background `{colors.surface-card}`, text `{colors.ink}`, radius `{rounded.none}`, padding 24px, 1px hairline border.
 
-**`worked-example-band`** — The pool math narrative: `1,000 × $20 = $20,000 → 4 × $2,000 paid → $12 back each → dissolved`, each figure a `{typography.mono-number-lg}` arriving one at a time on scroll. Mostly empty ground.
+**`worked-example-receipt`** — The pool math as a bill: line items in reading order, each a mono caption left of a dotted leader and a `{typography.mono-number}` value right; the closing figure sits under a hairline rule in `{typography.mono-number-lg}`, like a total. Card ground + 1px hairline, radius `{rounded.none}`; one line arrives at a time and settles, total last.
 
 ### Forms & Tags
 

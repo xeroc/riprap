@@ -13,7 +13,8 @@ import { StampBadge } from "./StampBadge";
 import { TextLink } from "./TextLink";
 import { TierCard } from "./TierCard";
 import { TopNav } from "./TopNav";
-import { WorkedExampleBand } from "./WorkedExampleBand";
+import { TweetCard } from "./TweetCard";
+import { WorkedExampleReceipt } from "./WorkedExampleReceipt";
 
 // controllable reduced-motion flag — motion caches matchMedia support at
 // import time (jsdom has none), so the hook itself is mocked
@@ -59,11 +60,12 @@ afterAll(() => {
   vi.unstubAllGlobals();
 });
 
-const FIGURES = [
+const LINES = [
   { value: "1,000", caption: "members" },
+  { value: "× $20", caption: "entry (Standard)" },
   { value: "$20,000", caption: "pool" },
-  { value: "$12", caption: "back each" },
 ];
+const TOTAL = { value: "$12,000", caption: "remains" };
 
 describe("TopNav — DESIGN.md § top-nav", () => {
   it("renders mono links, sign-in and the single primary CTA", () => {
@@ -190,55 +192,130 @@ describe("MechanismCard", () => {
   });
 });
 
-describe("WorkedExampleBand — numbers arrive one at a time", () => {
-  it("staggered arrival in prop order, 40ms apart (--riprap-stagger)", () => {
-    render(<WorkedExampleBand figures={FIGURES} />);
-    const items = screen.getAllByRole("listitem");
-    expect(items).toHaveLength(3);
+describe("WorkedExampleReceipt — a bill, one line at a time", () => {
+  it("staggered arrival in prop order, lines then total, 40ms apart (--riprap-stagger)", () => {
+    render(<WorkedExampleReceipt lines={LINES} total={TOTAL} />);
+    const rows = screen.getAllByRole("listitem");
+    expect(rows).toHaveLength(3);
+    const total = screen.getByText("$12,000").closest("[data-total]");
 
-    // before the band scrolls into view: nothing arrived
-    expect(items[0].getAttribute("data-arrived")).toBe("false");
+    // before the receipt scrolls into view: nothing arrived
+    expect(rows[0].getAttribute("data-arrived")).toBe("false");
+    expect(total?.getAttribute("data-arrived")).toBe("false");
 
-    // the band enters the viewport → arrival timers start
+    // the receipt enters the viewport → arrival timers start
     act(() => observers[observers.length - 1].fire(true));
-    expect(items[0].getAttribute("data-arrived")).toBe("false");
+    expect(rows[0].getAttribute("data-arrived")).toBe("false");
 
-    act(() => vi.advanceTimersByTime(1)); // t=1ms: figure 1 settled
-    expect(items[0].getAttribute("data-arrived")).toBe("true");
-    expect(items[1].getAttribute("data-arrived")).toBe("false");
+    act(() => vi.advanceTimersByTime(1)); // t=1ms: line 1 settled
+    expect(rows[0].getAttribute("data-arrived")).toBe("true");
+    expect(rows[1].getAttribute("data-arrived")).toBe("false");
 
-    act(() => vi.advanceTimersByTime(38)); // t=39ms: still only figure 1
-    expect(items[1].getAttribute("data-arrived")).toBe("false");
+    act(() => vi.advanceTimersByTime(38)); // t=39ms: still only line 1
+    expect(rows[1].getAttribute("data-arrived")).toBe("false");
 
-    act(() => vi.advanceTimersByTime(1)); // t=40ms: figure 2 settles
-    expect(items[1].getAttribute("data-arrived")).toBe("true");
-    expect(items[2].getAttribute("data-arrived")).toBe("false");
+    act(() => vi.advanceTimersByTime(1)); // t=40ms: line 2 settles
+    expect(rows[1].getAttribute("data-arrived")).toBe("true");
+    expect(rows[2].getAttribute("data-arrived")).toBe("false");
 
-    act(() => vi.advanceTimersByTime(40)); // t=80ms: figure 3 settles
-    expect(items[2].getAttribute("data-arrived")).toBe("true");
+    act(() => vi.advanceTimersByTime(80)); // t=120ms: lines 3 + total settled
+    expect(rows[2].getAttribute("data-arrived")).toBe("true");
+    expect(total?.getAttribute("data-arrived")).toBe("true");
   });
 
-  it("renders every figure statically under prefers-reduced-motion", () => {
+  it("renders every line and the total statically under prefers-reduced-motion", () => {
     reducedMotion = true;
     try {
-      render(<WorkedExampleBand figures={FIGURES} />);
-      const items = screen.getAllByRole("listitem");
-      for (const item of items) {
-        expect(item.getAttribute("data-arrived")).toBe("true");
-        expect(item.className).not.toContain("opacity-0");
+      render(<WorkedExampleReceipt lines={LINES} total={TOTAL} />);
+      const rows = screen.getAllByRole("listitem");
+      for (const item of [...rows, screen.getByText("$12,000").closest("[data-total]")]) {
+        expect(item?.getAttribute("data-arrived")).toBe("true");
+        expect(item?.className).not.toContain("opacity-0");
       }
     } finally {
       reducedMotion = false;
     }
   });
 
-  it("figures carry mono-number-lg on mostly empty ground", () => {
-    render(<WorkedExampleBand figures={FIGURES} />);
+  it("tabular line rows: caption left, value right in mono; total set off under a hairline rule", () => {
+    render(<WorkedExampleReceipt lines={LINES} total={TOTAL} />);
     act(() => observers[observers.length - 1].fire(true));
     vi.advanceTimersByTime(200);
+
     const first = screen.getByText("1,000").closest("li");
-    expect(first?.className).toContain("[font:var(--riprap-mono-number-lg)]");
+    expect(first?.className).toContain("flex");
+    expect(first?.querySelector("span")?.textContent).toBe("members");
     expect(first?.hasAttribute("data-num")).toBe(true);
+
+    const value = first?.lastElementChild; // caption · leader · value
+    expect(value?.className).toContain("[font:var(--riprap-mono-number)]");
+
+    const total = screen.getByText("$12,000").closest("[data-total]");
+    expect(total?.className).toContain("border-t");
+    expect(total?.className).toContain("border-hairline");
+    expect(total?.lastElementChild?.className).toContain("[font:var(--riprap-mono-number-lg)]");
+  });
+});
+
+describe("TweetCard — quoted evidence, verbatim", () => {
+  const TWEET = {
+    author: "bunjil",
+    handle: "bunjil",
+    text: "at london breakpoint 😃🤙\n\ngetting stabbed 😱🔪\n\nat 1 billion TPS 🤯🚀",
+    date: "Dec 12, 2025",
+  };
+
+  it("renders the quote verbatim with author, handle and date stamp", () => {
+    render(<TweetCard {...TWEET} />);
+    expect(screen.getByText("@bunjil")).toBeTruthy();
+    expect(screen.getByText("Dec 12, 2025")).toBeTruthy();
+    // multiline text keeps its line breaks
+    const quote = screen.getByText(/getting stabbed/i);
+    expect(quote.className).toContain("whitespace-pre-line");
+  });
+
+  it("truncates past maxChars with an ellipsis, never edits short quotes", () => {
+    const long = "a".repeat(100);
+    const { rerender } = render(<TweetCard {...TWEET} text={long} maxChars={90} />);
+    expect(screen.getByText(/^a{90}…$/)).toBeTruthy();
+    rerender(<TweetCard {...TWEET} text="short" />);
+    expect(screen.getByText("short")).toBeTruthy();
+  });
+
+  it("paper slip on the dark board: data-mode=paper, hairline, sharp corners", () => {
+    render(<TweetCard {...TWEET} />);
+    const card = screen.getByText("@bunjil").closest('[data-slot="tweet-card"]');
+    expect(card?.getAttribute("data-mode")).toBe("paper");
+    expect(card?.className).toContain("border-hairline");
+    expect(card?.className).toContain("rounded-none");
+    expect(card?.className).not.toContain("rounded-2xl");
+    // no avatar → the square initials tile
+    const tile = card?.querySelector("span[aria-hidden='true']");
+    expect(tile?.className).toContain("rounded-none");
+    expect(tile?.textContent).toBe("B"); // initials of "bunjil" (one word)
+  });
+
+  it("the author's real avatar is the disc — the one sanctioned circle", () => {
+    render(<TweetCard {...TWEET} avatar="/avatars/bunjil.jpg" />);
+    const img = screen.getByAltText("avatar of bunjil");
+    expect(img.getAttribute("src")).toBe("/avatars/bunjil.jpg");
+    expect(img.className).toContain("rounded-full");
+    expect(img.className).toContain("object-cover");
+  });
+
+  it("handle and date are mono (numerals/stamps); quote body is grotesk", () => {
+    render(<TweetCard {...TWEET} />);
+    expect(screen.getByText("@bunjil").className).toContain("[font:var(--riprap-mono-label)]");
+    expect(screen.getByText("Dec 12, 2025").className).toContain("[font:var(--riprap-mono-label)]");
+    const quote = screen.getByText(/getting stabbed/i);
+    expect(quote.className).toContain("[font:var(--riprap-body-sm)]");
+  });
+
+  it("renders as a link to the source tweet when href is given", () => {
+    render(<TweetCard {...TWEET} href="https://x.com/bunjil/status/1999412271404187937" />);
+    const link = screen.getByRole("link");
+    expect(link.getAttribute("href")).toBe("https://x.com/bunjil/status/1999412271404187937");
+    expect(link.getAttribute("target")).toBe("_blank");
   });
 });
 

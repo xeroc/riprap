@@ -1,0 +1,4 @@
+build/
+out/
+public/audio/
+*.tsbuildinfo

@@ -1,0 +1,22 @@
+/*
+ * @riprap/remotion — Tailwind v4 engine wiring, mirroring
+ * apps/landing/src/index.css. The engine stays with each consuming app by
+ * design; this file owns it for video. Depths: this file sits at
+ * src/shell/, hence four ../ segments to the repo root in @source.
+ *
+ * @import "@riprap/ui/main.css" — engine + tokens + theme + shadcn layer
+ *                                  + Fontsource fonts (tokens.css imports)
+ * @source packages/ui/src        — discover utilities used inside the kit
+ * @source ../                    — the app's own scene sources
+ */
+@import "@riprap/ui/main.css";
+
+@source "../../../../packages/ui/src";
+@source "../";
+
+/* Remotion mounts into its own container; keep the page dark + full-size. */
+html,
+body {
+  height: 100%;
+  background: var(--riprap-canvas);
+}
