@@ -8,6 +8,8 @@
  *
  * The parent `src/index.ts` wires this barrel into the public API.
  */
+export type { AddressChipProps } from "./chrome/AddressChip";
+export { AddressChip, shortenAddress } from "./chrome/AddressChip";
 
 export { Container } from "./chrome/Container";
 export type { CTABandProps } from "./chrome/CTABand";
@@ -40,6 +42,8 @@ export type { TopNavLink, TopNavProps } from "./chrome/TopNav";
 export { TopNav } from "./chrome/TopNav";
 export type { TweetCardProps } from "./chrome/TweetCard";
 export { TweetCard } from "./chrome/TweetCard";
+export type { WalletConnector, WalletDialogProps } from "./chrome/WalletDialog";
+export { WalletDialog } from "./chrome/WalletDialog";
 export type { WordmarkProps } from "./chrome/Wordmark";
 export { Wordmark } from "./chrome/Wordmark";
 export type {
