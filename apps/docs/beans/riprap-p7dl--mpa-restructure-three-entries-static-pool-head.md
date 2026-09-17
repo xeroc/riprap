@@ -1,10 +1,11 @@
 ---
 # riprap-p7dl
 title: MPA restructure — three entries, static pool head
-status: todo
+status: completed
 type: epic
+priority: normal
 created_at: 2026-09-17T14:05:21Z
-updated_at: 2026-09-17T14:05:21Z
+updated_at: 2026-09-17T18:37:22Z
 parent: riprap-9ehc
 ---
 

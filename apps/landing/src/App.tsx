@@ -1,6 +1,6 @@
-// The lean landing composition — copy doc §0–§7.
-import { BreakpointPage } from "./pages/BreakpointPage";
-
+// The platform landing (the / entry) — copy doc §0–§7. Instance surfaces are
+// separate MPA entries (/2026-breakpoint-blade-pool/, /app/), each with its own
+// head in its index.html; this entry stays Solana-free forever.
 import { Audience } from "./sections/Audience";
 import { FinalCta } from "./sections/FinalCta";
 import { Footer } from "./sections/Footer";
@@ -10,14 +10,6 @@ import { Mechanism } from "./sections/Mechanism";
 import { Nav } from "./sections/Nav";
 
 export function App() {
-  // static host serves index.html for every path (SPA fallback); the pool
-  // page is one route off the platform landing — no router dependency
-  if (
-    typeof window !== "undefined" &&
-    window.location.pathname.startsWith("/2026-breakpoint-blade-pool")
-  ) {
-    return <BreakpointPage />;
-  }
   return (
     <>
       <Nav />
