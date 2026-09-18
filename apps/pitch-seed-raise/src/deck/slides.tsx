@@ -6,17 +6,18 @@ import { useSlideFrame } from "./useSlideFrame";
 
 /**
  * The seed-raise deck — 10 slides, copy from meta/PITCH.md (the law for every
- * string and number below; citations ride along in mono). The destination
- * leads: the vision right after the title, then the walk back down to today —
- * the problem (the oldest fix has no on-ramp) → the product → the launch
- * (events are the door, Breakpoint first) → the business → the market →
- * the ask → the team → close.
+ * string and number below; citations ride along in mono — the 2026-09-17
+ * headline re-stage below is not yet mirrored there). The destination leads:
+ * the vision right after the title, then the walk back down to today — the
+ * problem → the product → the pilot (events are the door, Breakpoint first) →
+ * the business → the market → the ask → the team → close.
  *
- * Staging rules: headlines are lowercase (deck law); "insurance" never
- * describes our product (two directed exceptions: the vision slide names the
- * destination, 2026-09-15; the market slide names the conventional sector it
- * does not serve, 2026-09-16); every number carries its source; the team slide
- * is the accord deck's builder layout (copied 2026-09-15) on Riprap tokens.
+ * Staging rules (re-staged 2026-09-17): the kicker names the slide; the
+ * headline carries the statement. "insurance" appears in headlines by
+ * authorial call — the vision names the destination, the product the rails,
+ * business/market the conventional economics; every number carries its
+ * source; the team slide is the accord deck's builder layout (copied
+ * 2026-09-15) on Riprap tokens.
  */
 
 /** Rise style for frame-gated reveals: clamped progress in the
@@ -36,7 +37,7 @@ const TitleSlide: FC = () => {
       <div data-rise className="flex flex-col items-center gap-6">
         <Wordmark size={84} className="tracking-(--riprap-tracking-mega)" />
         <div className="text-ink [font:var(--riprap-display-md)]">
-          Real-world risk protection on Solana.
+          Real-World Risk Protection on Solana.
         </div>
         <div
           className="mt-6 uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]"
@@ -112,13 +113,12 @@ const VISION_STEPS = [
   },
 ];
 
-/** The vision slide is the deck's one directed exception to the vocabulary
- * law: "insurance" appears here and only here, naming the destination the
- * protocol points at — never the product sold today (meta/PITCH.md §0/§12). */
+/** The vision headline names the destination the protocol points at — not
+ * the product sold today (meta/PITCH.md §0/§12). */
 const VisionSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="mutuals are the destination" headline="the vision">
+    <SlideFrame kicker="the vision" headline="Internet Insurance">
       <div className="flex w-full flex-col gap-8">
         <div
           className="max-w-[62ch] text-ink [font:var(--riprap-title-md)]"
@@ -196,7 +196,17 @@ const INCUMBENT_ISSUES = [
 const ProblemSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the oldest fix in finance" headline="the problem">
+    <SlideFrame
+      kicker="the problem"
+      headline={
+        <>
+          <span data-num className="font-mono">
+            ~16%
+          </span>{" "}
+          of premiums vanish for admin
+        </>
+      }
+    >
       <div className="flex w-full flex-col gap-8">
         <div
           className="max-w-[62ch] text-ink [font:var(--riprap-title-md)]"
@@ -281,7 +291,7 @@ const PRODUCT_LAWS = [
 const ProductSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="one mutual · one risk · a lifetime of its choosing" headline="the product">
+    <SlideFrame kicker="the product" headline="on-chain rails for insurance contracts">
       <div className="flex w-full flex-col gap-8">
         <div style={rise(frame, 16)}>
           <LifecycleStrip skipSteps={[5]} />
@@ -350,12 +360,12 @@ const EVIDENCE_ROWS = [
 const MarketSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="mutual risk pools" headline="the market">
-      <div className="max-w-[76ch] text-body [font:var(--riprap-title-md)]" style={rise(frame, 12)}>
-        Millions of communities don't fit conventional insurance economics.{" "}
-        <span className="text-ink">
-          We are building the infrastructure that lets those groups create their own risk pools.
-        </span>
+    <SlideFrame
+      kicker="the market"
+      headline="Millions of communities don't fit conventional insurances"
+    >
+      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 12)}>
+        We are building the infrastructure that lets those groups create their own risk pools.
       </div>
       <div className="flex w-full items-start gap-6">
         {SKIPPED_COMMUNITIES.map((c, i) => (
@@ -391,7 +401,7 @@ const MarketSlide: FC = () => {
   );
 };
 
-/* 06 — the launch ------------------------------------------------------------ */
+/* 06 — the pilot ------------------------------------------------------------- */
 
 /** Why events, why Breakpoint first (PITCH.md §5/§8 + the 2026-09-15
  * additions: the Solana family's loyalty, sponsored covers). None of these
@@ -423,7 +433,7 @@ const PILOT_TIERS = [
 const LaunchSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="events are the door" headline="the launch">
+    <SlideFrame kicker="the pilot" headline="a knife-assault mutual aid for breakpoint">
       <div
         className="max-w-[100ch] text-body [font:var(--riprap-title-md)]"
         style={rise(frame, 12)}
@@ -526,7 +536,10 @@ const BUSINESS_LADDER = [
 const BusinessSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="revenue first" headline="the business">
+    <SlideFrame
+      kicker="the business"
+      headline="Same insurance economics with unlimited room to experiment."
+    >
       <div className="flex w-full flex-col gap-8">
         <div className="flex flex-col gap-4" data-num>
           {BUSINESS_LADDER.map((r, i) => (
@@ -573,7 +586,18 @@ const UNLOCK_STEPS = [
 const AskSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="pre-seed" headline="the ask">
+    <SlideFrame
+      kicker="the ask"
+      headline={
+        <>
+          raising pre-seed @{" "}
+          <span data-num className="font-mono">
+            $7M
+          </span>{" "}
+          post
+        </>
+      }
+    >
       <div className="flex w-full items-start gap-10" data-num>
         <div className="flex flex-1 flex-col gap-6">
           {ASK_TERMS.map((t, i) => (
@@ -672,10 +696,10 @@ const TeamSlide: FC = () => {
       <div className="flex h-full flex-col justify-center gap-10 pl-[7cqw] pr-[30cqw]">
         <div className="flex flex-col gap-5">
           <div className="uppercase text-accent [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
-            the builders
+            the team
           </div>
           <h2 className="max-w-[24ch] text-ink [font:var(--riprap-display-xl)] [letter-spacing:var(--riprap-tracking-display)]">
-            the team
+            started as solo and interviewing co-founders
           </h2>
         </div>
         <div className="flex items-start gap-20">
@@ -808,7 +832,7 @@ export const SLIDES: SlideDef[] = [
   },
   {
     id: "launch",
-    label: "the launch",
+    label: "the pilot",
     notes:
       "35s. Events are the door — five reasons, none of them market size: the cleanest legal surface (discretionary mutual, crypto-native members, bounded window — no counsel spend at pilot scale); funds locked up briefly (a pool lives for the event window, then pays approved claims, returns the rest, dissolves — numbers published either way); the Solana family is loyal (Breakpoint concentrates the ecosystem in one hall — the space adopts its own and talks about what ships, so the pilot's first audience is the space itself); the organizer is a B2B2C channel — one sale brings the attendee list; covers can be sponsored — companies or regional superteams buying for their members. The pilot itself: Blade Pool at Breakpoint, Olympia London, 15–17 Nov 2026, 8,000+ attendees (solana.com/breakpoint); tiers $10/$20/$40 capped at $1k/$2k/$4k (policy §5); worked example (policy §10): 1,000 × $20 → $20,000 pooled; 4 approved claims × $2,000 → $8,000 paid; $12,000 returned → $12 back each; quiet event: every cent returns. Then the 2027 circuit — the PMF signal and the primary milestone: organizer-initiated pools, an organizer who shows up without us.",
     component: LaunchSlide,

@@ -20,7 +20,7 @@
 
         - The website at this URL is a JavaScript single-page app; this file reproduces its entire content and adds the context an investor needs. Treat it as the authoritative pitch text.
         - Deck copy is quoted verbatim from the slides. Context sections come from the company's pitch master document; every number carries its source.
-        - Vocabulary: the product is a discretionary mutual, not insurance. The word "insurance" appears only when describing the traditional market or the destination market the protocol points at — never the product sold today.
+        - Vocabulary: the product is a discretionary mutual, not insurance. The word "insurance" is reserved for the traditional market and the destination the protocol points at — never the product sold today. (Exception: the 2026-09-17 deck headline re-stage uses it in four slide headlines by authorial call — vision, product, business, market.)
 
         ## The pitch in one sentence
 
@@ -34,77 +34,85 @@
 
         ## The deck — 10 slides, full content
 
-        **Slide 1 — title.** Riprap. Peer-to-peer risk pooling on Solana. Pre-seed raise · 2026. Opening status, stated honestly: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet.
+        Staging (re-staged 2026-09-17): each slide leads with a small kicker naming the slide and one large statement headline. On-slide copy below is verbatim from the slides, typos included; each slide's speaker notes follow it in full. Nothing on the slides is omitted here.
 
-        **Slide 2 — the problem ("the oldest fix in finance").** Deck copy, verbatim: "Mutual risk pools are the oldest form of pooled protection on earth. Its members manage the payouts (Nexus Mutual, Lloyd's Evertas, Opencover, etc.)."
+        **Slide 1 — title.** Riprap (logomark + wordmark). Deck copy, verbatim: "Real-World Risk Protection on Solana." Stamp: "pre-seed raise · 2026". Speaker notes: Riprap — real-world risk protection on Solana. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Pre-Seed raise, 2026.
 
-        The incumbents carry four structural issues — every existing on-chain mutual shares them, none fixes them:
+        **Slide 2 — the vision.** Kicker: "the vision". Headline: "Internet Insurance". Deck copy, verbatim: "An open protocol for truly peer-to-peer, permissionless insurance, on chain." Below it an ExpansionStrip of five plates, one step per machine — copy verbatim:
 
-        - **token required** — governance-token ownership sits inside the operational path. Joining, claiming, and exiting all route through the token.
-        - **on-chain events only** — exploits, hacks, theft. If an oracle cannot read the event, the mutual cannot cover it.
-        - **one pool for every risk** — a single shared treasury instead of one treasury per mutual. Risks cross-subsidize, members cannot see their own money.
+        - **01 money gathers** — the pool is **a program, not a company** — it holds usdc and nothing else. members chip in, one pool per defined risk.
+        - **02 peers decide** — claims are judged by staked members of the same pool — drawn at random, sealed votes, appeals double the jury. adjudication by **accord**, honestly an arbitration oracle.
+        - **03 cover renews** — contributions recur through the pull payments rail. We've alreday built that with **tributary.so**.
+        - **04 a backstop grows** — **external risk capital** stakes a reserve beneath the pool and earns a rule-set share of its surplus.
+        - **05 pools cover pools** — mutuals cover each other: first loss below, the tail above. **reinsurance and tranching**.
+
+        Speaker notes: the destination leads — set it before the diagnosis; the rest of the deck walks from today's build back up to this stack. The destination is mutuals as an open protocol on Solana — true peer-to-peer, permissionless insurance, on-chain. This is the one slide that says the word: it names where the machine goes, not what we sell today — everywhere else the vocabulary law holds, and the licensed perimeter is entered deliberately, with carriers, where it requires it. Walk the strip — the five machines on-chain cover needs, one per plate: 01 money gathers — programmatic custody: the pool is a program, not a company, it holds USDC and nothing else; 02 peers decide — adjudication: staked members of the same pool, drawn at random, sealed votes, appeals that double the jury — Accord, honestly an arbitration oracle; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. Custody, adjudication, recurrence, reserve capital, reinsurance — everything an insurer needs, none of it a company. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built. The stack is the destination. Segue: why doesn't it exist today — the problem, next slide.
+
+        **Slide 3 — the problem.** Kicker: "the problem". Headline: "~16% of premiums vanish for admin". Deck copy, verbatim: "Mutual risk pools are the oldest form of pooled protection on earth. Its members manage the payouts (Nexus Mutual, Lloyd's Evertas, Opencover, etc.)."
+
+        THE INCUMBENTS — four structural issues; every existing on-chain mutual shares them, none fixes them:
+
+        - **token required** — governance-token ownership sits inside the operational path. joining, claiming, and exiting all route through the token.
+        - **on-chain events only** — exploits, hacks, theft. if an oracle cannot read the event, the mutual cannot cover it.
+        - **one pool for every risk** — a single shared treasury instead of one treasury per mutual. risks cross-subsidize, members cannot see their own money.
         - **none are permissionless** — no existing mutual lets a US corporation and a farmer in Bangladesh found one on the same rails.
 
-        The 2020–22 graveyard, one named structural failure per project: Neptune Mutual (upfront lump sum; token-vote claims), Cover Protocol (exploited itself), Solace (shared idle pool), OpenCover (web3 portfolio cover), Unslashed (no float income), InsurAce (twenty thin chains), Bridge Mutual (farmed, not mutual), Risk Harbor (wLUNA collateral).
+        OTHER LIMITATIONS — the 2020–22 graveyard, one named structural failure per project: Neptune Mutual (upfront lump sum; token-vote claims), Cover Protocol (exploited itself), Solace (shared idle pool), OpenCover (web3 portfolio cover), Unslashed (no float income), InsurAce (twenty thin chains), Bridge Mutual (farmed, not mutual), Risk Harbor (wLUNA collateral).
 
-        Speaker notes: mutual protection is the oldest fix — farmers, fishers, shipowners, savings groups, gig workers, clubs. The formal version is $1.61T and winning (ICMIF '24). The informal version dies of opacity, disputes, and scale — which is exactly why the friendly societies became licensed mutuals: formalization fixed trust at the price of the charter. Today the choice is a WhatsApp group with a cash box or a decade of licensing. The behavior is universal; the on-ramp does not exist.
+        Speaker notes: mutual protection is the oldest fix — farmers, fishers, shipowners, savings groups, gig workers, clubs. The formal version is $1.61T and winning (ICMIF '24). The informal version dies of opacity, disputes, and scale — which is exactly why the friendly societies became licensed mutuals: formalization fixed trust at the price of the charter. The on-chain incumbents — Nexus et al. — carry four structural issues: a governance token wired into the operational hot path, cover for on-chain events only, one shared pool where each mutual should hold its own treasury, and permissioned entry end to end — none of them lets a US corporation and a Bangladeshi farmer found one on the same rails. The 2020–22 graveyard scrolling below is the same lesson at company scale. Today the choice is a WhatsApp group with a cash box or a decade of licensing. Land: the behavior is universal, the on-ramp does not exist.
 
-        **Slide 3 — the product ("one mutual · one risk · a lifetime of its choosing").** Lifecycle: join → gather → rule → claim. Three laws:
+        **Slide 4 — the product.** Kicker: "the product". Headline: "on-chain rails for insurance contracts". Lifecycle strip: join → gather → rule → claim. Three laws, verbatim:
 
         - **written terms** — a hash-linked document provides the terms for the pool. build the basis for the pools purpose.
         - **members judge members** — claims adjudicate on-chain with staked jurors, sealed-then-revealed votes, bounded appeals, slashed incoherence.
         - **an enforced end, either way** — an expiring pool dissolves by clock; an open-ended one liquidates when its members choose.
 
-        Nexus validates demand for on-chain protection, while Riprap explores a different architecture: user-created, isolated mutuals rather than a protocol-centered protection marketplace.
+        Context: Nexus validates demand for on-chain protection, while Riprap explores a different architecture: user-created, isolated mutuals rather than a protocol-centered protection marketplace.
 
-        Speaker notes: event pools expire by clock; open-ended mutuals liquidate when members choose. Adjudication runs on Accord (useaccord.xyz) — staked jurors, sealed votes, appeals, slashing; each mutual configures its own jury. Status row verbatim if asked: pool built, arbitration on devnet, hanse in build, Tributary on mainnet. Audits gate mainnet capital — that is what the raise funds first.
+        Speaker notes: one mutual, one risk, a lifetime of its choosing — event pools expire by clock; open-ended mutuals liquidate when members choose. Walk the lifecycle strip: join, gather, rule, claim. Three laws: two exit doors (no discretionary signer); members judge members (Accord — useaccord.xyz — staked jurors, sealed votes, appeals, slashing); an enforced end either way. Status row verbatim if asked: pool built, arbitration on devnet, hanse in build, Tributary on mainnet. Audits gate mainnet capital — that is what the raise funds first.
 
-        **Slide 4 — the launch ("events are the door").** Deck copy, verbatim: "Blade Pool @ Breakpoint 2026: a knife-assault mutual for conference attendees, run in front of the entire Solana ecosystem." Olympia, London · 15–17 November 2026 · 8,000+ attendees (solana.com/breakpoint).
+        **Slide 5 — the pilot.** Kicker: "the pilot". Headline: "a knife-assault mutual aid for breakpoint". Deck copy, verbatim: "Blade Pool @ Breakpoint 2026: a knife-assault mutual for conference attendees, run in front of the entire Solana ecosystem." Facts card, verbatim: "Olympia, London · 15–17 November 2026 · 8,000+ attendees". Tiers — entry → payout cap: basic $10 → $1,000; standard $20 → $2,000; premium $40 → $4,000 (policy §5).
 
-        Tiers — entry → payout cap: basic $10 → $1,000; standard $20 → $2,000; premium $40 → $4,000 (policy §5).
+        Why events, why Breakpoint first — three reasons on the slide, verbatim:
 
-        Why events, why Breakpoint first — five reasons, none of them market size:
+        - **the cleanest legal surface** — crypto-native members covering each other, one bounded window.
+        - **the solana family is loyal** — breakpoint puts the whole ecosystem in one hall. the family adopts its own and talks about what ships.
+        - **covers can be sponsored** — companies or regional superteams buy covers for their members — one buyer, a whole cohort, no per-member sale.
 
-        - **the cleanest legal surface** — crypto-native members covering each other, one bounded window. The pilot crosses nothing regulated.
-        - **funds locked up briefly** — a pool lives for the event window, then pays approved claims, returns the rest, dissolves — numbers published either way.
-        - **the Solana family is loyal** — Breakpoint puts the whole ecosystem in one hall. The family adopts its own and talks about what ships, so the pilot's first audience is the space itself.
-        - **the organizer is a B2B2C channel** — one sale brings the attendee list.
-        - **covers can be sponsored** — companies or regional superteams buy covers for their members: one buyer, a whole cohort, no per-member sale.
+        Speaker notes: events are the door — five reasons, none of them market size: the cleanest legal surface (discretionary mutual, crypto-native members, bounded window — no counsel spend at pilot scale); funds locked up briefly (a pool lives for the event window, then pays approved claims, returns the rest, dissolves — numbers published either way); the Solana family is loyal (Breakpoint concentrates the ecosystem in one hall — the space adopts its own and talks about what ships, so the pilot's first audience is the space itself); the organizer is a B2B2C channel — one sale brings the attendee list; covers can be sponsored — companies or regional superteams buying for their members. The pilot itself: Blade Pool at Breakpoint, Olympia London, 15–17 Nov 2026, 8,000+ attendees (solana.com/breakpoint); tiers $10/$20/$40 capped at $1k/$2k/$4k (policy §5); worked example (policy §10): 1,000 × $20 → $20,000 pooled; 4 approved claims × $2,000 → $8,000 paid; $12,000 returned → $12 back each; quiet event: every cent returns. Then the 2027 circuit — the PMF signal and the primary milestone: organizer-initiated pools, an organizer who shows up without us.
 
-        Worked example (policy §10): 1,000 × $20 → $20,000 pooled; 4 approved claims × $2,000 → $8,000 paid; $12,000 returned → $12 back each; quiet event: every cent returns. Then the 2027 circuit — the PMF signal and the primary milestone: organizer-initiated pools, an organizer who shows up without us.
+        **Slide 6 — the business.** Kicker: "the business". Headline: "Same insurance economics with unlimited room to experiment." Ladder, verbatim:
 
-        **Slide 5 — the business ("revenue first").** Ladder:
+        - **0%** — protocol take on pool #1, the pilot exists to confirm the market
+        - **% of surplus** — take-rate, switched on with the subsequent pools, doubles as the organizer revenue-share
+        - **operating fees** — running flagship pools for sponsors who want the product but not the ops
+        - **other options** — The correct monetization should emerge from usage.
 
-        - **0%** — protocol take on pool #1. The pilot exists to publish numbers, not revenue.
-        - **% of surplus** — take-rate, switched on with the second pool; doubles as the organizer revenue-share.
-        - **fee** — operator services: running flagship pools for sponsors who want the product, not the ops.
-        - **rail share** — infrastructure capture: when anyone can launch a mutual, the share extends to pools we do not operate.
+        Footer, verbatim: "USDC end to end. No product token required."
 
-        USDC end to end. No product token required. The raise carries a token warrant over staked reserve capital — bounded to a fixed share of any future supply, terms published before the round opens; preferred end state is token-only via MetaDAO — value to the DAO, not the cap table. The warrant is the term negotiated hardest.
+        Speaker notes: revenue-first ladder: 0% take on the pilot (it exists to publish numbers); take-rate on surplus switched on with the second pool — doubles as the organizer revenue-share; operator fees for flagship deployments; at the destination, a rail share on mutuals we do not operate. USDC end to end, no product token. The raise carries a token warrant over staked reserve capital — protection yield — bounded to a fixed share of any future supply with terms published before the round opens; the preferred end state is token-only via MetaDAO — value to the DAO, not the cap table. The warrant is the term we negotiate hardest.
 
-        **Slide 6 — the market.** Deck copy, verbatim: "Millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics. We are building the infrastructure that lets those groups create their own risk pools."
+        **Slide 7 — the market.** Kicker: "the market". Headline: "Millions of communities don't fit conventional insurances". Deck copy, verbatim: "We are building the infrastructure that lets those groups create their own risk pools."
 
-        The four walls, each with its communities:
+        The four walls, verbatim:
 
-        - **too small** — a savings circle covering funerals; a sports club covering one season.
-        - **too geographically specific** — one bay's coastal homeowners; one valley's harvest failure.
-        - **too short-duration** — a three-day conference; a fishing season; a tournament.
-        - **too low-premium** — a $20 cover; the fixed cost is the product.
+        - **too small** — a savings circle to start a small business. a sports club covering rent for one season.
+        - **too geographically specific** — one bay's coastal homeowners. one valley's harvest failure.
+        - **too short-duration** — a three-day conference. a fishing season. a tournament.
+        - **too low-premium** — a one time $20 payment for a limited time cover
 
-        Evidence rows, read plainly (source): $424B annual protection gap nobody covers (Swiss Re sigma '25); 344M / 88% — covered by microinsurance / of target still uncovered (Micro Insurance Network '24); ~26¢ of every US P&C premium dollar spent before a claim is paid (Verisk/APCIA '25); $1.61T mutual premiums a year — the behavior, already formalized (ICMIF '24).
+        EVIDENCE rows, read plainly (source): $424B annual protection gap nobody covers (Swiss Re sigma '25); 344M / 88% — covered by microinsurance / of target still uncovered (Micro Insurance Network '24); ~26¢ of every US P&C premium dollar spent before a claim is paid (Verisk/APCIA '25); $1.61T mutual premiums a year — the behavior, already formalized (ICMIF '24).
 
-        Speaker notes add: $136B alternative capital wanting in, gated at ~$200k QIB-only tickets (Aon '25); on-chain, $3.4B stolen per year against a ~$104M cover sector (Chainalysis, DeFiLlama); the market scan — Nexus Mutual ($5.7M cover fees '25; $2.7M raised ever, no VC; $1B+ purchased '25) and OpenCover ($4.6M seed '22–23; $141.6M protected '25) — carried in Q&A, no longer a slide table.
+        Speaker notes: the story first, then the numbers: millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics — a $20, 3-day, single-peril cover is sub-economic by construction when ~26¢ of every US P&C premium dollar is spent before a claim is paid (Verisk/APCIA '25). We are building the infrastructure that lets those groups create their own risk pools. Then read the evidence, do not editorialize: $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); ~26¢ per premium dollar (Verisk '25); $1.61T mutual premiums — the same behavior, formalized (ICMIF '24). If asked: $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama); market scan — Nexus Mutual $5.7M cover fees '25, $2.7M raised ever, $1B+ purchased; OpenCover $4.6M seed '22–23, $141.6M protected '25. Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.
 
-        Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.
-
-        **Slide 7 — the ask ("pre-seed").** Terms:
+        **Slide 8 — the ask.** Kicker: "the ask". Headline: "raising pre-seed @ $7M post". Terms:
 
         - **$700k** — raise; range $600–800k.
         - **SAFE + warrant** — post-money; token warrant, bounded and defined pre-open.
         - **$7M post** — opening cap; 10% dilution.
         - **18 months** — runway; primary milestone: organizer-initiated pools.
 
-        Capital → de-risk → prove → unlock:
+        Stamp: "capital → de-risk → prove → unlock organizer-initiated pools". Steps:
 
         1. security — audit the arbitration layer and the pool/hanse programs;
         2. product — hanse orchestrator → SDK → end-to-end suite;
@@ -112,28 +120,17 @@
         4. legal — the structure for broader membership;
         5. growth — convert pilot traction into organizer-initiated pools.
 
-        What $100k gets an angel to: not 18 months — from an audited working product and an operational pilot to a repeatable network of organizer-initiated pools.
+        Deck copy, verbatim: "What $100k gets you to: not 18 months — from an audited working product and an operational pilot to a repeatable network of organizer-initiated pools."
 
-        **Slide 8 — the vision ("mutuals are the destination").** Deck copy, verbatim: "An open protocol for truly peer-to-peer, permissionless insurance, on chain." (The deck's one directed use of the word "insurance" — it names the destination market, never the product sold today; the licensed perimeter is entered deliberately, with carriers, where it requires it.)
+        Speaker notes: $700k on a post-money SAFE plus a bounded token warrant; range $600–800k; opening cap $7M post — 10%; 18 months; primary milestone organizer-initiated pools. The narrative: capital → de-risk → prove → unlock — security, product, proof, legal, growth. If asked what $100k gets an angel to: from an audited working product and an operational pilot to a repeatable network of organizer-initiated pools. Angel-ladder construction stays private.
 
-        Properties:
+        **Slide 9 — the team.** Kicker: "the team". Headline: "started as solo and interviewing co-founders". Personas, verbatim: Dr.-Ing. Fabian Schuh · founder — Dr.-Ing., engineering; full-time crypto since 2014; first hire paid by a blockchain, ever; BitShares escrow & treasury — built; fabian@die-schuhs.de · x.com/@xeroc. Corinna · ai agent — fact ferret; the unrelenting; number cruncher; devils advocate; on shift 24/7.
 
-        - **permissionless creation** — founding a mutual is a transaction on shared rails. Any risk, any terms, any group.
-        - **one risk per pool** — isolation is structural; a pool never cross-subsidizes unrelated risks, and mutuals stack: first loss below, the tail above.
-        - **recurring premiums** — monthly payments qualify members for payouts.
-        - **risk capital** — accept external risk into a pool for pure yield rewards.
-        - **reinsurance** — connect mutuals with each other for re-insurance across uncorrelated risks.
-        - **tranching** — offer multiple risk/yield tranches to risk capital providers.
+        Achievement wall (verbatim from the slide): Accord — on-chain arbitration · live; 2× Gold · Colosseum Frontier 2026; Tributary — Solana payment rail · mainnet; Solana Foundation grant · 2026; Riprap — pool program · built; 500M+ blocks produced; first hire by a blockchain, ever; Canon — curated-list registry on Accord; Synod — N-party escrow on Accord; BitShares escrow & worker treasury; python-bitshares — full L1 SDK; Solana Security #2 graduate; Cypherpunk · $10k · 2025; Superteam Germany grant · 2024; Advisor to MakerDAO; graphenelib — SDK for a chain family; committee seats: Steem/Hive/BTS; exits: Steemit · Streemian · Cryptonomex; RADAR · honorable mention · 2024; repo.trade — launchpad for repos; chaoscraft — 1,000 minds, 1 codebase; committee · Graphene Foundation.
 
-        The three machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built. The stack is the destination.
+        Speaker notes: who builds this — the human and the AI teammate. Left: Dr.-Ing. Fabian Schuh — full-time crypto since 2014, first person hired and paid directly by a blockchain, built the BitShares escrow and worker-proposal treasury, Solana Security #2. Right: Corinna — BD, social, analytics, on shift 24/7. The scrolling wall is ambience — twenty years of shipping, on-chain since 2014. Gesture once, don't read it.
 
-        **Slide 9 — the team.** Dr.-Ing. Fabian Schuh, founder: Dr.-Ing., engineering; full-time crypto since 2014; first hire paid by a blockchain, ever; built the BitShares escrow & worker-proposal treasury; fabian@die-schuhs.de · x.com/@xeroc. Corinna, AI agent: fact ferret; the unrelenting; number cruncher; devil's advocate; on shift 24/7.
-
-        Achievement wall (verbatim from the slide): Accord — on-chain arbitration · live; 2× Gold · Colosseum Frontier 2026; Tributary — Solana payment rail · mainnet; Solana Foundation grant · 2026; Riprap — pool program · built; 500M+ blocks produced; first hire by a blockchain, ever; Canon — curated-list registry on Accord; Synod — N-party escrow on Accord; BitShares escrow & worker treasury; python-bitshares — full L1 SDK; Solana Security #2 graduate; Cypherpunk · $10k · 2025; Superteam Germany grant · 2024; advisor to MakerDAO; graphenelib — SDK for a chain family; committee seats: Steem/Hive/BTS; exits: Steemit · Streemian · Cryptonomex; RADAR · honorable mention · 2024; repo.trade — launchpad for repos; chaoscraft — 1,000 minds, 1 codebase; committee · Graphene Foundation.
-
-        Speaker notes: who builds this — the human and the AI teammate. Left: Dr.-Ing. Fabian Schuh — full-time crypto since 2014, first person hired and paid directly by a blockchain, built the BitShares escrow and worker-proposal treasury, Solana Security #2. Right: Corinna — BD, social, analytics, on shift 24/7. The scrolling wall is ambience — twenty years of shipping, on-chain since 2014.
-
-        **Slide 10 — close.** The surfaces: riprap.xyz — the platform; useaccord.xyz — the arbitration layer; @riprapxyz — the build log. Tagline: **Pool risk peer-to-peer.**
+        **Slide 10 — close.** The surfaces: riprap.xyz — the platform; useaccord.xyz — the arbitration layer; @riprapxyz — the build log. Tagline: **Pool risk peer-to-peer.** Speaker notes: the surfaces — riprap.xyz, useaccord.xyz (the arbitration layer), the repo, the build log. Hold on the tagline: pool risk peer-to-peer. Conversations after.
 
         ## The problem — the oldest fix in finance has no on-ramp
 
@@ -316,7 +313,7 @@
 
         ## Vocabulary note
 
-        On stage and in product copy: mutual, pool, cover, contribution, member, payout, surplus, tier, claims window, juror, drawn, ruling, two exit doors, dissolve. Not used for this product: insurance, insurer, policy, premium, indemnity, underwriting, policyholder (fine when describing the traditional market). Tone law: deadpan-honest — numbers over adjectives, every number sourced, the peril named plainly and never dramatized.
+        On stage and in product copy: mutual, pool, cover, contribution, member, payout, surplus, tier, claims window, juror, drawn, ruling, two exit doors, dissolve. Not used for this product: insurance, insurer, policy, premium, indemnity, underwriting, policyholder (fine when describing the traditional market). The 2026-09-17 deck headline re-stage ("Internet Insurance", "on-chain rails for insurance contracts", "Same insurance economics…", "conventional insurances") is a deliberate, author-called exception at the headline layer only. Tone law: deadpan-honest — numbers over adjectives, every number sourced, the peril named plainly and never dramatized.
 
         ## Contact
 

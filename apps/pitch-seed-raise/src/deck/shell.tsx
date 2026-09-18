@@ -4,7 +4,7 @@ import type { FC, ReactNode } from "react";
  * SlideFrame — the shared slide layout: kicker (mono stamp, harbor-blue),
  * headline, content. Children stagger in via [data-rise]; the whole slide
  * settles on the brand curve. One idea per slide, big type, no walls of text.
- * Slide headlines on this deck are deliberately lowercase (deck law).
+ * Headlines are statements; the kicker names the slide (2026-09-17 swap).
  */
 export const SlideFrame: FC<{
   kicker?: string;
