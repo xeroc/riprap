@@ -586,18 +586,7 @@ const UNLOCK_STEPS = [
 const AskSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame
-      kicker="the ask"
-      headline={
-        <>
-          raising pre-seed @{" "}
-          <span data-num className="font-mono">
-            $7M
-          </span>{" "}
-          post
-        </>
-      }
-    >
+    <SlideFrame kicker="the ask" headline={<>raising $700k pre-seed at $7M</>}>
       <div className="flex w-full items-start gap-10" data-num>
         <div className="flex flex-1 flex-col gap-6">
           {ASK_TERMS.map((t, i) => (
@@ -640,7 +629,7 @@ const FABIAN_ROWS = [
 ];
 
 const CORINNA_ROWS = [
-  "fact ferret",
+  "centuries of experience",
   "the unrelenting",
   "number cruncher",
   "devils advocate",
@@ -699,7 +688,7 @@ const TeamSlide: FC = () => {
             the team
           </div>
           <h2 className="max-w-[24ch] text-ink [font:var(--riprap-display-xl)] [letter-spacing:var(--riprap-tracking-display)]">
-            started as solo and interviewing co-founders
+            decades of shipping in the team
           </h2>
         </div>
         <div className="flex items-start gap-20">
