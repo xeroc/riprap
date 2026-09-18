@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import { useEffect, useState } from "react";
 
 import { GlyphTile } from "../components/chrome/GlyphTile";
@@ -41,12 +42,23 @@ export function ExpansionStrip({ skipSteps = [] }: { skipSteps?: readonly number
   );
 }
 
+export interface ExpansionTileProps {
+  /** plate id — lands on the `li[data-step]` hook */
+  id: string;
+  /** ordinal, e.g. "01" — printed in the caption */
+  step: string;
+  /** plain-word concept, e.g. "money gathers" */
+  label: string;
+  /** any zero-prop kit glyph */
+  Glyph: ComponentType;
+}
+
 /**
  * One plate. While hovered, the glyph's arrival replays in a loop: each
  * tick remounts it (key bump), re-running the settle-in stagger from its
  * ENTER state. On leave it stops and stays arrived.
  */
-export function ExpansionTile({ id, step, label, Glyph }: (typeof STEPS)[number]) {
+export function ExpansionTile({ id, step, label, Glyph }: ExpansionTileProps) {
   const [hover, setHover] = useState(false);
   const [run, setRun] = useState(0);
 

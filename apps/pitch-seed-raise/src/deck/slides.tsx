@@ -1,8 +1,9 @@
 import {
   Backstop,
+  Claim,
   ExpansionTile,
   Gather,
-  LifecycleStrip,
+  Join,
   Logomark,
   Renew,
   Rule,
@@ -240,20 +241,39 @@ const ProblemSlide: FC = () => {
 
 /* 04 — the product ----------------------------------------------------------- */
 
-const PRODUCT_LAWS = [
+/** The lifecycle plates, deck-owned — the appendix pattern (VISION_STEPS):
+ * join → gather → rule → claim. The liquidate plate stays off the pitch
+ * (previously `LifecycleStrip skipSteps={[5]}`). */
+const PRODUCT_STEPS = [
   {
-    head: "written terms",
-    body: "a hash-linked document provides the terms for the pool. build the basis for the pools purpose.",
+    id: "join",
+    step: "01",
+    label: "members joining",
+    Glyph: Join,
+    body: "joining members approve a hash-linked document with the terms for the pool. build the basis for the pools purpose.",
   },
   {
-    head: "members judge members",
+    id: "gather",
+    step: "02",
+    label: "money gathers",
+    Glyph: Gather,
+    body: "a pool collects the capital for insurances individually. No money flows between insurance instances.",
+  },
+  {
+    id: "rule",
+    step: "03",
+    label: "peers decide",
+    Glyph: Rule,
     body: "claims adjudicate on-chain with staked jurors, sealed-then-revealed votes, bounded appeals, slashed incoherence.",
   },
   {
-    head: "an enforced end, either way",
-    body: "an expiring pool dissolves by clock; an open-ended one liquidates when its members choose.",
+    id: "claim",
+    step: "04",
+    label: "a claim is paid",
+    Glyph: Claim,
+    body: "after peers approve, the funds are released right away. Solana settles funds and accounting instantly.",
   },
-];
+] as const;
 
 const ProductSlide: FC = () => {
   const frame = useSlideFrame();
@@ -261,16 +281,19 @@ const ProductSlide: FC = () => {
     <SlideFrame kicker="the product" headline="on-chain rails for insurance contracts">
       <div className="flex w-full flex-col gap-8">
         <div style={rise(frame, 16)}>
-          <LifecycleStrip skipSteps={[5]} />
+          <ol data-slot="lifecycle-strip" className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {PRODUCT_STEPS.map((tile) => (
+              <ExpansionTile key={tile.id} {...tile} />
+            ))}
+          </ol>
         </div>
         <div className="flex items-start gap-6">
-          {PRODUCT_LAWS.map((l, i) => (
+          {PRODUCT_STEPS.map((l, i) => (
             <div
-              key={l.head}
+              key={l.step}
               className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
               style={rise(frame, 40 + i * 14)}
             >
-              <div className="text-ink [font:var(--riprap-title-sm)]">{l.head}</div>
               <div className="text-muted [font:var(--riprap-body-sm)]">{l.body}</div>
             </div>
           ))}
@@ -383,8 +406,8 @@ const LAUNCH_REASONS = [
     body: "breakpoint puts the whole ecosystem in one hall. the family adopts its own and talks about what ships.",
   },
   {
-    head: "covers can be sponsored",
-    body: "companies or regional superteams buy covers for their members — one buyer, a whole cohort, no per-member sale.",
+    head: "covers sponsorship",
+    body: "companies or regional teams buy covers for their members.",
   },
 ];
 
@@ -405,20 +428,18 @@ const LaunchSlide: FC = () => {
         className="max-w-[100ch] text-body [font:var(--riprap-title-md)]"
         style={rise(frame, 12)}
       >
-        <span className="text-accent [font:var(--riprap-mono-number)]">
-          Blade Pool @ Breakpoint 2026:
+        <span className="text-accent [font:var(--riprap-mono-number)] mr-6">
+          Blade Pool @ Breakpoint 2026
         </span>
-        a knife-assault mutual for conference attendees, run in front of the entire Solana
-        ecosystem.
+        run in front of the entire Solana ecosystem.
       </div>
       <div className="flex w-full items-start gap-10">
-        <div className="flex flex-1 flex-col gap-5">
-          {LAUNCH_REASONS.map((r, i) => (
-            <div key={r.head} className="flex flex-col gap-1" style={rise(frame, 24 + i * 12)}>
-              <div className="text-ink [font:var(--riprap-title-sm)]">{r.head}</div>
-              <div className="text-muted [font:var(--riprap-body-sm)]">{r.body}</div>
-            </div>
-          ))}
+        <div className="flex flex-1 flex-col gap-5 list list-disc">
+          <ol className="list-disc ml-6 flex flex-col gap-3 text-2xl">
+            {LAUNCH_REASONS.map((r, i) => (
+              <li>{r.head}</li>
+            ))}
+          </ol>
         </div>
         <div
           className="flex w-[46ch] flex-col gap-3 border border-hairline bg-(--riprap-surface-card) p-7"
@@ -429,10 +450,16 @@ const LaunchSlide: FC = () => {
             Olympia, London · 15–17 November 2026 · 8,000+ attendees
           </div>
           <div className="flex flex-col gap-1.5 border-t border-hairline pt-4">
-            <div className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
-              tiers — entry → payout cap
-            </div>
             <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-x-8 gap-y-1.5">
+              <span className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
+                tiers
+              </span>
+              <span className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
+                entry
+              </span>
+              <span className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
+                payout cap
+              </span>
               {PILOT_TIERS.flatMap((t) => [
                 <span key={t.name} className="text-body [font:var(--riprap-body-sm)]">
                   {t.name}
@@ -505,7 +532,13 @@ const BusinessSlide: FC = () => {
   return (
     <SlideFrame
       kicker="the business"
-      headline="Same insurance economics with unlimited room to experiment."
+      headline={
+        <>
+          Same insurance economics
+          <br />
+          unlimited room to experiment.
+        </>
+      }
     >
       <div className="flex w-full flex-col gap-8">
         <div className="flex flex-col gap-4" data-num>
@@ -867,12 +900,6 @@ const AppendixSlide: FC = () => {
               className="flex flex-col gap-2 border-t border-hairline pt-4"
               style={rise(frame, 52 + i * 12)}
             >
-              <div className="flex items-baseline gap-2">
-                <span data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
-                  {s.step}
-                </span>
-                <span className="text-ink [font:var(--riprap-title-sm)]">{s.head}</span>
-              </div>
               <div className="text-muted [font:var(--riprap-body-sm)]">{s.body}</div>
             </div>
           ))}
@@ -935,13 +962,6 @@ export const SLIDES: SlideDef[] = [
     component: BusinessSlide,
   },
   {
-    id: "market",
-    label: "the market",
-    notes:
-      "35s. The story first, then the numbers: millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics — a $20, 3-day, single-peril cover is sub-economic by construction when ~26¢ of every US P&C premium dollar is spent before a claim is paid (Verisk/APCIA '25). We are building the infrastructure that lets those groups create their own risk pools. Then read the evidence, do not editorialize: $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); ~26¢ per premium dollar (Verisk '25); $1.61T mutual premiums — the same behavior, formalized (ICMIF '24). If asked: $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama); market scan — Nexus Mutual $5.7M cover fees '25, $2.7M raised ever, $1B+ purchased; OpenCover $4.6M seed '22–23, $141.6M protected '25. Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
-    component: MarketSlide,
-  },
-  {
     id: "ask",
     label: "the ask",
     notes:
@@ -968,5 +988,12 @@ export const SLIDES: SlideDef[] = [
     notes:
       "Reference, not presented — the stack the vision slide carried before the 2026-09-18 re-stage. The five machines on-chain cover needs, one per plate: 01 money gathers — programmatic custody: the pool is a program, not a company, it holds USDC and nothing else; 02 peers decide — adjudication: staked members of the same pool, drawn at random, sealed votes, appeals that double the jury — Accord, honestly an arbitration oracle; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. Custody, adjudication, recurrence, reserve capital, reinsurance — everything an insurer needs, none of it a company. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built.",
     component: AppendixSlide,
+  },
+  {
+    id: "market",
+    label: "the market",
+    notes:
+      "35s. The story first, then the numbers: millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics — a $20, 3-day, single-peril cover is sub-economic by construction when ~26¢ of every US P&C premium dollar is spent before a claim is paid (Verisk/APCIA '25). We are building the infrastructure that lets those groups create their own risk pools. Then read the evidence, do not editorialize: $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); ~26¢ per premium dollar (Verisk '25); $1.61T mutual premiums — the same behavior, formalized (ICMIF '24). If asked: $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama); market scan — Nexus Mutual $5.7M cover fees '25, $2.7M raised ever, $1B+ purchased; OpenCover $4.6M seed '22–23, $141.6M protected '25. Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
+    component: MarketSlide,
   },
 ];

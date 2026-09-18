@@ -11,8 +11,8 @@ import { Rule } from "./Rule";
  * LifecycleStrip — the whole product in five single-concept plates:
  * join → gather → rule → claim → liquidate. One line of story, no
  * technical terms; each tile holds exactly one idea. `skipSteps` hides
- * plates by their printed ordinal (the pitch omits the liquidate plate:
- * `skipSteps={[5]}`); kept plates keep their ordinals, no renumbering.
+ * plates by their printed ordinal (e.g. `skipSteps={[5]}` drops the
+ * liquidate plate); kept plates keep their ordinals, no renumbering.
  */
 const STEPS = [
   { id: "join", step: "01", label: "one more member", Glyph: Join },
