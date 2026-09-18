@@ -10,7 +10,6 @@ import {
   type Address,
   createKeyPairSignerFromBytes,
   createSolanaRpc,
-  type Lamports,
 } from "@solana/kit";
 import { afterAll, beforeAll, expect, test } from "vitest";
 

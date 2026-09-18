@@ -1,4 +1,4 @@
-// /app — the member wallet surface, reads-only v1 (milestone riprap-9ehc,
+// #/app — the member wallet surface, reads-only v1 (milestone riprap-9ehc,
 // bean riprap-c1r1): wallet gate → the connected wallet's Member PDA + claims
 // against the static per-cluster mutual map (src/pool/mutual.ts). No writes.
 // Copy source: meta/marketing/03-website-copy/landing-page.md § "/app — the
@@ -11,10 +11,8 @@ import {
   Button,
   ClusterSelect,
   HexBackdrop,
-  LogoLockup,
   SectionBand,
   TextLink,
-  TopNav,
   usd,
   WalletDialog,
 } from "@riprap/ui";
@@ -27,9 +25,10 @@ import {
   type WalletConnectorId,
 } from "@solana/connector";
 import type { Address } from "@solana/kit";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 
 import { Settle } from "../components/Settle";
+import { SiteNav } from "../components/SiteNav";
 import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../pool/mutual";
 import { useMutual } from "../pool/useMutual";
 import { type ClaimsQuery, useClaims } from "./useClaims";
@@ -64,14 +63,62 @@ function AccountControls({ address }: { address: string }) {
 }
 
 /** The connect gate (copy doc § /app wallet gate) — the kit's props-driven
- * wallet picker wired to the ConnectorKit hooks. */
-function WalletGate() {
+/** Connect button + the kit's props-driven wallet picker — one wiring shared
+ * by the navbar (`Connect wallet`) and the wallet gate (copy doc § /app:
+ * `Connect a wallet`); button chrome is the caller's. */
+function ConnectWalletButton({
+  label,
+  ...buttonProps
+}: { label: string } & ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
   const connectors = useWalletConnectors();
   const { connect } = useConnectWallet();
   const { disconnect } = useDisconnectWallet();
   const { isConnected, account } = useWallet();
 
+  return (
+    <>
+      <Button {...buttonProps} onClick={() => setOpen(true)}>
+        {label}
+      </Button>
+      <WalletDialog
+        open={open}
+        onOpenChange={setOpen}
+        connectors={connectors.map((c) => ({ id: c.id, name: c.name }))}
+        onConnect={(id) => {
+          setOpen(false);
+          void connect(id as WalletConnectorId);
+        }}
+        connected={isConnected}
+        address={account ?? undefined}
+        onDisconnect={() => void disconnect()}
+      />
+    </>
+  );
+}
+
+/** The app route's navbar right side (copy doc § /app nav): the cluster
+ * select + connect — connected wallets get their address chip + Disconnect
+ * instead. Passed to SiteNav as `actions`, replacing the Open App CTA. */
+function AppNavControls() {
+  const { isConnected, account } = useWallet();
+  const connected = isConnected && account !== null;
+
+  return (
+    <div className="flex items-center gap-2">
+      <ClusterSwitch />
+      {connected && account !== null ? (
+        <AccountControls address={account} />
+      ) : (
+        <ConnectWalletButton variant="outline" label="Connect wallet" />
+      )}
+    </div>
+  );
+}
+
+/** The connect gate (copy doc § /app wallet gate): the entrance copy + the
+ * shared connect button carrying the picker. */
+function WalletGate() {
   return (
     <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)">
       <Settle>
@@ -85,22 +132,8 @@ function WalletGate() {
         </p>
       </Settle>
       <Settle delay={120}>
-        <Button size="lg" data-participate onClick={() => setOpen(true)}>
-          Connect a wallet
-        </Button>
+        <ConnectWalletButton size="lg" data-participate label="Connect a wallet" />
       </Settle>
-      <WalletDialog
-        open={open}
-        onOpenChange={setOpen}
-        connectors={connectors.map((c) => ({ id: c.id, name: c.name }))}
-        onConnect={(id) => {
-          setOpen(false);
-          void connect(id as WalletConnectorId);
-        }}
-        connected={isConnected}
-        address={account ?? undefined}
-        onDisconnect={() => void disconnect()}
-      />
     </div>
   );
 }
@@ -237,7 +270,8 @@ function MemberSurface({ wallet }: { wallet: Address }) {
       <div className="flex max-w-3xl flex-col gap-2" data-slot="not-a-member">
         <h1 className="text-ink [font:var(--riprap-body-md)]">This wallet isn't in the pool.</h1>
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          Membership opens on <TextLink href="/2026-breakpoint-blade-pool">the pool page</TextLink>.
+          Membership opens on <TextLink href="#/2026-breakpoint-blade-pool">the pool page</TextLink>
+          .
         </p>
       </div>
     );
@@ -272,15 +306,7 @@ export function AppPage() {
 
   return (
     <>
-      <TopNav
-        className="sticky top-0 z-40"
-        links={[
-          { href: "/", label: "riprap.xyz" },
-          { href: "/2026-breakpoint-blade-pool", label: "Blade Pool" },
-        ]}
-        brand={<LogoLockup size={22} />}
-        actions={connected && account !== null ? <AccountControls address={account} /> : null}
-      />
+      <SiteNav actions={<AppNavControls />} />
       <main>
         <div className="relative">
           <HexBackdrop className="pointer-events-none absolute inset-0 z-0 size-full" />

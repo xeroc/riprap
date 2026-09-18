@@ -9,8 +9,8 @@ Money leaves a pool through exactly two governed doors: spending (adjudicated cl
 ## Pages
 
 - [Platform landing](https://riprap.xyz/): what a micro mutual is, the six-step lifecycle, waitlist. The peril never appears on this page.
-- [Blade Pool @ Breakpoint 2026](https://riprap.xyz/2026-breakpoint-blade-pool): the first pool — policy fineprint, tiers, coverage window.
-- [App](https://riprap.xyz/app): the member wallet surface — join and claims, reading on-chain pool state.
+- [Blade Pool @ Breakpoint 2026](https://riprap.xyz/#/2026-breakpoint-blade-pool): the first pool — policy fineprint, tiers, coverage window. Hash route: renders client-side from the landing document.
+- [App](https://riprap.xyz/#/app): the member wallet surface — join and claims, reading on-chain pool state. Hash route: renders client-side from the landing document.
 
 ## Policy: Blade Pool @ Breakpoint 2026 (the first pool)
 

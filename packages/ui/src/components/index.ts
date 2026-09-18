@@ -46,7 +46,7 @@ export { TierCard } from "./chrome/TierCard";
 export type { TopNavLink, TopNavProps } from "./chrome/TopNav";
 export { TopNav } from "./chrome/TopNav";
 export type { TweetCardProps } from "./chrome/TweetCard";
-export { TweetCard } from "./chrome/TweetCard";
+export { TweetCard, XLogo } from "./chrome/TweetCard";
 export type { WalletConnector, WalletDialogProps } from "./chrome/WalletDialog";
 export { WalletDialog } from "./chrome/WalletDialog";
 export type { WordmarkProps } from "./chrome/Wordmark";

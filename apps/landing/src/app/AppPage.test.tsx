@@ -129,14 +129,22 @@ afterEach(() => {
 });
 
 describe("/app — wallet gate (reads-only: no chain calls until connected)", () => {
-  it("mounts with one main landmark, the wayfinding nav, and the gate copy", () => {
+  it("mounts with one main landmark, the shared nav, and the gate copy", () => {
     const { container } = renderApp();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Members' entrance");
     expect(container.querySelectorAll("main").length).toBe(1);
-    expect(screen.getByRole("link", { name: "riprap.xyz" }).getAttribute("href")).toBe("/");
-    expect(screen.getByRole("link", { name: "Blade Pool" }).getAttribute("href")).toBe(
-      "/2026-breakpoint-blade-pool",
+    // shared navbar (copy doc §0 + § /app nav): How it works → the platform
+    // mechanism section, X → the handle, and the in-app controls (cluster
+    // select + connect) instead of the Open App CTA
+    expect(screen.getByRole("link", { name: "How it works" }).getAttribute("href")).toBe(
+      "#mechanism",
     );
+    expect(screen.getByRole("link", { name: "X" }).getAttribute("href")).toBe(
+      "https://x.com/riprapxyz",
+    );
+    expect(screen.queryByRole("link", { name: "Open App" })).toBeNull();
+    expect(screen.getByRole("combobox")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Connect wallet" })).toBeTruthy();
     expect(
       screen.getByText("Connect the wallet you joined with. This surface only reads."),
     ).toBeTruthy();
@@ -161,7 +169,8 @@ describe("/app — mutual states (shared copy, verbatim with the pool page)", ()
         "The Blade Pool isn't deployed on this network. Switch networks to find it.",
       ),
     ).toBeTruthy();
-    expect(screen.getByRole("combobox")).toBeTruthy();
+    // the nav cluster select + the inline switch the not-live copy points at
+    expect(screen.getAllByRole("combobox").length).toBe(2);
     // honest empty state — no numbers, no reads attempted
     expect(mutualMock).not.toHaveBeenCalled();
   });
@@ -187,7 +196,7 @@ describe("/app — membership + claims (data-bound to the chain)", () => {
     renderApp();
     expect(await screen.findByText("This wallet isn't in the pool.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "the pool page" }).getAttribute("href")).toBe(
-      "/2026-breakpoint-blade-pool",
+      "#/2026-breakpoint-blade-pool",
     );
     expect(claimMock).not.toHaveBeenCalled();
   });

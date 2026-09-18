@@ -354,7 +354,7 @@ export function PoolHero() {
                   <BadgeStamp data-num>Covered — {tier !== null ? tier.name : PARAM}</BadgeStamp>
                   <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
                     This wallet is in the pool. Your membership and claims live in{" "}
-                    <TextLink href="/app">the app</TextLink>.
+                    <TextLink href="#/app">the app</TextLink>.
                   </p>
                 </div>
               ) : mutualQuery.depositsOpen && tier !== null ? (

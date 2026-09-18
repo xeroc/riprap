@@ -15,20 +15,32 @@ import { Container } from "./Container";
  */
 export interface TopNavLink {
   href: string;
-  label: string;
+  /** string or node — the X glyph link passes the logo + an sr-only name */
+  label: React.ReactNode;
 }
 
 export interface TopNavProps extends React.ComponentProps<"header"> {
   links: TopNavLink[];
   /** mark + wordmark lockup slot (the logo SVGs, used as-is) */
   brand?: React.ReactNode;
+  /** the brand link href — hash-routed apps pass "#/" (default "/") */
+  brandHref?: string;
   signIn?: { href: string; label: string };
   cta?: { href: string; label: string };
   /** account controls slot (wallet button, cluster picker) — rendered before Sign In */
   actions?: React.ReactNode;
 }
 
-export function TopNav({ links, brand, signIn, cta, actions, className, ...props }: TopNavProps) {
+export function TopNav({
+  links,
+  brand,
+  brandHref,
+  signIn,
+  cta,
+  actions,
+  className,
+  ...props
+}: TopNavProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -40,7 +52,7 @@ export function TopNav({ links, brand, signIn, cta, actions, className, ...props
       <Container className={cn("flex h-(--riprap-nav-h) items-center justify-between gap-6")}>
         <div className="flex min-w-0 items-center gap-8">
           {brand && (
-            <a href="/" className="flex shrink-0 items-center">
+            <a href={brandHref ?? "/"} className="flex shrink-0 items-center">
               {brand}
             </a>
           )}

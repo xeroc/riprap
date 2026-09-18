@@ -285,7 +285,7 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
 
     // the slider locks and the app link appears (copy doc § Covered)
     expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe("");
-    expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("/app");
+    expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("#/app");
 
     // the facade built against the static address + chosen tier + wallet signer
     expect(buildMock).toHaveBeenCalledWith(expect.anything(), {
@@ -388,7 +388,7 @@ describe("covered — an existing member is a state, never an error toast", () =
     expect(coveredSlot?.textContent).toContain(
       "This wallet is in the pool. Your membership and claims live in the app.",
     );
-    expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("/app");
+    expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("#/app");
     expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe("");
     // their tier line, from their on-chain member PDA
     expect(screen.getByText("Basic · $10 entry · up to $1,000 maximum payout")).toBeTruthy();

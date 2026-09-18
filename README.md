@@ -5,7 +5,7 @@ Riprap is a platform for **event-scoped mutual protection pools** on Solana: one
 ## Key Features
 
 - **`packages/ui`** — a data-bound React SVG component kit implementing the illustration language specified in [`meta/primitives/`](meta/primitives/README.md): 12 atoms, 4 composed scenes, 5 data stories, 5 motion components, Storybook 10 docs.
-- **`apps/landing`** — static Vite + React MPA (three entries: `/` platform landing, `/2026-breakpoint-blade-pool/` pool page, `/app/` member wallet surface) built from the approved copy in [`meta/marketing/03-website-copy/landing-page.md`](meta/marketing/03-website-copy/landing-page.md), consuming the UI kit.
+- **`apps/landing`** — static Vite + React site, one entry with hash routing (`/` platform landing, `#/2026-breakpoint-blade-pool` pool page, `#/app` member wallet surface) built from the approved copy in [`meta/marketing/03-website-copy/landing-page.md`](meta/marketing/03-website-copy/landing-page.md), consuming the UI kit.
 - **One design system** — semantic color tokens (`funds` = money, `deliberation` = adjudication, `peril` = the peril), one stroke width (3), one radius (12), 8px grid, no gradients.
 - **Data law** — every number rendered by a component is either doc-sourced or an explicit `{{PARAM}}` placeholder. Components never invent figures.
 - **`programs/pool` + `programs/hanse`** — the on-chain half: a generic three-track mutual-pool primitive and the bounded-lifetime event mutual built on it, each with a Codama-generated TypeScript client (`@riprap/pool`, `@riprap/hanse`) and LiteSVM test suites.
@@ -102,7 +102,7 @@ riprap/
 │   └── landing/                # @riprap/landing — static Vite + React site
 │       ├── src/
 │       │   ├── App.tsx         # page composition (sections per the approved copy)
-│       │   ├── main.tsx        # entry
+│       │   ├── main.tsx        # hash-router entry (platform default; pool/app lazy routes)
 │       │   └── index.css       # imports @riprap/ui/tokens.css + page globals
 │       └── index.html
 ├── packages/
@@ -175,7 +175,7 @@ Four laws from `meta/primitives/` that the kit enforces and reviewers should che
 
 ## Environment Variables
 
-The frontend needs no configuration to run. The landing's optional vars (see `apps/landing/.env.example`): `VITE_N8N_WEBHOOK_URL` (waitlist-form webhook, all entries) and the Solana-entry cluster config — `VITE_DEVNET_RPC` / `VITE_MAINNET_RPC` (custom RPC endpoints), `VITE_LOCALNET_MUTUAL` (Surfpool dev mutual address) — consumed only by the pool and `/app/` entries, never the platform entry. The operator CLI and the e2e suite read optional overrides, all defaulting to localnet:
+The frontend needs no configuration to run. The landing's optional vars (see `apps/landing/.env.example`): `VITE_N8N_WEBHOOK_URL` (waitlist-form webhook, every route) and the Solana-route cluster config — `VITE_DEVNET_RPC` / `VITE_MAINNET_RPC` (custom RPC endpoints), `VITE_LOCALNET_MUTUAL` (Surfpool dev mutual address) — consumed only by the pool and app routes, never the platform route. The operator CLI and the e2e suite read optional overrides, all defaulting to localnet:
 
 | Variable                           | Used by                     | Default                                           | Meaning                                          |
 | ---------------------------------- | --------------------------- | ------------------------------------------------- | ------------------------------------------------ |
@@ -265,14 +265,14 @@ Both artifacts are static — no server, no runtime.
 
 ```bash
 pnpm --filter @riprap/landing run build
-# → apps/landing/dist/  (index.html + 2026-breakpoint-blade-pool/ + app/ + hashed assets)
+# → apps/landing/dist/  (index.html + old-path redirect stubs + hashed assets)
 ```
 
 Deploy `dist/` to any static host (Vercel, Netlify, Cloudflare Pages, or your own nginx):
 
 - Build command: `pnpm --filter @riprap/landing run build`
 - Output directory: `apps/landing/dist`
-- No SPA rewrites needed (three static MPA entries, no router); if your host offers it, set `Cache-Control: immutable` for hashed assets and revalidate each entry's `index.html`.
+- No SPA rewrites needed (hash routing — every route renders from `index.html`; old MPA paths redirect via static stubs); if your host offers it, set `Cache-Control: immutable` for hashed assets and revalidate `index.html`.
 
 **Storybook (docs site):**
 

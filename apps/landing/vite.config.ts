@@ -3,30 +3,21 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-// MPA: three static entries, no SPA fallback. Each entry owns its full head
-// (title/OG/canonical/JSON-LD) in its index.html — the pool head is static so
-// crawlers see it without JS. Only the pool + app entries may ever pull in
-// @solana/*; the platform entry (index.html → src/main.tsx) stays Solana-free.
+// One static entry (index.html → src/main.tsx). The pool page and the member
+// app are hash routes (#/2026-breakpoint-blade-pool, #/app) rendered by the
+// router in src/main.tsx; their route modules are lazy imports, so the
+// platform route's chunk stays @solana/*-free. Old MPA paths redirect from
+// stubs under public/.
 export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),
     },
   },
-  appType: "mpa",
-  build: {
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, "index.html"),
-        pool: resolve(__dirname, "2026-breakpoint-blade-pool/index.html"),
-        app: resolve(__dirname, "app/index.html"),
-      },
-    },
-  },
   plugins: [react(), tailwindcss()],
   // @solana/connector's dist (walletconnect chunks) reads process.env.NODE_ENV
   // at runtime; the prod build defines it away statically, but dev serves the
-  // dep chunks raw — without this define BOTH Solana entries die silently
+  // dep chunks raw — without this define BOTH Solana routes die silently
   // ("process is not defined") before React mounts.
   define: {
     "process.env.NODE_ENV": JSON.stringify(mode),
