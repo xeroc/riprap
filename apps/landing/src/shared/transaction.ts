@@ -61,6 +61,9 @@ export class TransactionSendError extends Error {
  * carrying the program logs, so the UI can show *why* the instructions
  * failed instead of a generic send failure.
  *
+ * @param onSubmitted fires once pre-flight simulation passed and the
+ * transaction is being broadcast — the hero's "Confirming…" seam (copy doc §
+ * on-chain states). Never fires when the send throws.
  * @returns the transaction signature (base58)
  */
 export async function sendInstruction(
@@ -68,6 +71,7 @@ export async function sendInstruction(
   rpcSubscriptions: RpcSubscriptions<SolanaRpcSubscriptionsApi>,
   signer: TransactionSigner,
   instructions: Instruction[],
+  onSubmitted?: () => void,
 ): Promise<string> {
   const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
   const message = pipe(
@@ -97,6 +101,8 @@ export async function sendInstruction(
     throw new TransactionSendError(detail, logs, simulation.err);
   }
 
+  // Simulation passed — the transaction is being broadcast now.
+  onSubmitted?.();
   const sendAndConfirm = sendAndConfirmTransactionFactory({
     rpc,
     rpcSubscriptions,

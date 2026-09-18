@@ -10,6 +10,7 @@
  */
 export type { AddressChipProps } from "./chrome/AddressChip";
 export { AddressChip, shortenAddress } from "./chrome/AddressChip";
+export { BadgeStamp } from "./chrome/BadgeStamp";
 export type { ClusterOption, ClusterSelectProps } from "./chrome/ClusterSelect";
 export { ClusterSelect } from "./chrome/ClusterSelect";
 

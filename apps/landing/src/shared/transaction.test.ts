@@ -12,7 +12,7 @@ import {
   type SolanaRpcApi,
   type SolanaRpcSubscriptionsApi,
 } from "@solana/kit";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { describeError, sendInstruction, TransactionSendError } from "./transaction";
 
@@ -99,6 +99,42 @@ describe("sendInstruction", () => {
       ),
     ).rejects.toThrow(/simulation failed/);
     expect(calls).toEqual(["simulate"]);
+  });
+
+  it("fires onSubmitted between clean simulation and broadcast — the hero's Confirming… seam", async () => {
+    const calls: string[] = [];
+    const signer = await generateKeyPairSigner();
+    const events: string[] = [];
+
+    await sendInstruction(
+      mockRpc(calls, { err: null }),
+      rpcSubscriptions,
+      signer,
+      [instruction],
+      () => {
+        events.push(`submitted@${calls.join("+")}`);
+      },
+    );
+
+    expect(events).toEqual(["submitted@simulate"]); // after sim, before send
+    expect(calls).toEqual(["simulate", "send"]);
+  });
+
+  it("never fires onSubmitted when the simulation fails", async () => {
+    const calls: string[] = [];
+    const signer = await generateKeyPairSigner();
+    const onSubmitted = vi.fn();
+
+    await expect(
+      sendInstruction(
+        mockRpc(calls, { err: "AccountNotFound", logs: [] }),
+        {} as unknown as RpcSubscriptions<SolanaRpcSubscriptionsApi>,
+        signer,
+        [instruction],
+        onSubmitted,
+      ),
+    ).rejects.toThrow(/simulation failed/);
+    expect(onSubmitted).not.toHaveBeenCalled();
   });
 });
 
