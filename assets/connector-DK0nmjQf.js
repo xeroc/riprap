@@ -1,0 +1,1 @@
+var e={};throw Error(`Could not resolve "@walletconnect/universal-provider" imported by "@solana/connector". Is it installed?`);export{e as default};
