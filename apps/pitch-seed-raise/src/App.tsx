@@ -127,10 +127,11 @@ export function App() {
             aria-label={s.label}
             aria-current={i === index ? "page" : undefined}
             onClick={() => go(i)}
-            className={`relative h-1.5 outline-none after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] focus-visible:ring-3 focus-visible:ring-ring [transition:width_var(--riprap-settle),background-color_var(--riprap-settle)] ${i === index
+            className={`relative h-1.5 outline-none after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] focus-visible:ring-3 focus-visible:ring-ring [transition:width_var(--riprap-settle),background-color_var(--riprap-settle)] ${
+              i === index
                 ? "w-8 bg-accent active:bg-accent-hover"
                 : "w-3 bg-hairline-strong hover:bg-muted-soft active:bg-muted"
-              }`}
+            }`}
           />
         ))}
       </nav>

@@ -220,25 +220,25 @@ const FIELD_ROWS: {
   chain: string;
   cells: { v: string; sub?: string }[];
 }[] = [
-    {
-      name: "Nexus Mutual",
-      chain: "ethereum · arbitrum · kyc",
-      cells: [
-        { v: "$5.7M", sub: "cover fees '25" },
-        { v: "$2.7M", sub: "ever · no VC" },
-        { v: "$1B+", sub: "purchased '25" },
-      ],
-    },
-    {
-      name: "OpenCover",
-      chain: "base · ethereum · off-chain co",
-      cells: [
-        { v: "—", sub: "undisclosed" },
-        { v: "$4.6M", sub: "seed '22–23" },
-        { v: "$141.6M", sub: "protected '25" },
-      ],
-    },
-  ];
+  {
+    name: "Nexus Mutual",
+    chain: "ethereum · arbitrum · kyc",
+    cells: [
+      { v: "$5.7M", sub: "cover fees '25" },
+      { v: "$2.7M", sub: "ever · no VC" },
+      { v: "$1B+", sub: "purchased '25" },
+    ],
+  },
+  {
+    name: "OpenCover",
+    chain: "base · ethereum · off-chain co",
+    cells: [
+      { v: "—", sub: "undisclosed" },
+      { v: "$4.6M", sub: "seed '22–23" },
+      { v: "$141.6M", sub: "protected '25" },
+    ],
+  },
+];
 
 const IncumbantsProblemSlide: FC = () => {
   const frame = useSlideFrame();
@@ -268,8 +268,11 @@ const IncumbantsProblemSlide: FC = () => {
               </div>
               <span className="text-sm text-text-secondary">{r.chain}</span>
             </div>
-            {r.cells.map((c, j) => (
-              <div key={j} className="flex flex-col items-end gap-1 text-right">
+            {r.cells.map((c) => (
+              <div
+                key={`${c.v}-${c.sub ?? ""}`}
+                className="flex flex-col items-end gap-1 text-right"
+              >
                 <span className="text-xl tabular-nums text-nearwhite">{c.v}</span>
                 {c.sub ? <span className="text-sm text-text-secondary">{c.sub}</span> : null}
               </div>
