@@ -1,14 +1,255 @@
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+// /app under the on-chain binding (riprap-c1r1): reads-only. The connect
+// gate, the not-a-member state, the covered view (stamp + facts + claims rows
+// from the chain, filtered to the wallet), and the shared not-live state —
+// copy verbatim from meta/marketing/03-website-copy/landing-page.md § "/app —
+// the member wallet surface"; numbers render from the chain, never static.
 
+import {
+  type Claim,
+  ClaimStatus,
+  fetchMaybeClaimByNonce,
+  fetchMaybeMemberByOwner,
+  fetchMaybeMutual,
+  type Member,
+} from "@riprap/hanse";
+import { AppProvider, getDefaultConfig } from "@solana/connector";
+import type { Address, MaybeAccount } from "@solana/kit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { fakeMutual } from "../pool/fixtures";
 import { AppPage } from "./AppPage";
 
-afterEach(cleanup);
+// --- hoisted mock state (vi.mock factories run before the module body) -------
 
-describe("/app entry", () => {
-  it("mounts with the wayfinding nav and a single main landmark", () => {
-    const { container } = render(<AppPage />);
-    expect(screen.getByRole("link", { name: "riprap" })).toBeTruthy();
+const { walletState } = vi.hoisted(() => ({
+  walletState: { isConnected: false, account: null as string | null },
+}));
+
+// AppPage pulls ClaimStatus as a value (status stamps) — the mock needs the
+// numeric-enum reverse map or the name lookup renders undefined.
+vi.mock("@riprap/hanse", () => ({
+  ClaimStatus: {
+    Pending: 0,
+    Approved: 1,
+    Denied: 2,
+    Failed: 3,
+    Paid: 4,
+    0: "Pending",
+    1: "Approved",
+    2: "Denied",
+    3: "Failed",
+    4: "Paid",
+  },
+  fetchMaybeMutual: vi.fn(),
+  fetchMaybeMemberByOwner: vi.fn(),
+  fetchMaybeClaimByNonce: vi.fn(),
+}));
+
+vi.mock("@solana/connector", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@solana/connector")>();
+  return {
+    ...actual,
+    useWallet: () => walletState,
+    useKitTransactionSigner: () => ({ signer: null }),
+  };
+});
+
+const mutualMock = vi.mocked(fetchMaybeMutual);
+const memberMock = vi.mocked(fetchMaybeMemberByOwner);
+const claimMock = vi.mocked(fetchMaybeClaimByNonce);
+
+const MUTUAL_ADDR = "MutualXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+const WALLET = "W".repeat(32);
+const OTHER = "O".repeat(32);
+const A = "1".repeat(32) as Address;
+
+function maybe<T extends object>(data: T): MaybeAccount<T> {
+  return { exists: true, address: MUTUAL_ADDR, data } as unknown as MaybeAccount<T>;
+}
+
+function memberAccount(tier: number): MaybeAccount<Member> {
+  return maybe({
+    discriminator: new Uint8Array(8),
+    mutual: MUTUAL_ADDR as Address,
+    member: WALLET as Address,
+    tier,
+    attestation: A,
+    hasPendingClaim: false,
+    bump: 255,
+  } as Member);
+}
+
+const NOT_A_MEMBER = { exists: false, address: "M".repeat(32) } as unknown as MaybeAccount<Member>;
+
+/** A paid $2,000 claim filed 2026-11-16 10:00 UTC by `claimant`. */
+function claimAccount(claimant: string, over: Partial<Claim> = {}): MaybeAccount<Claim> {
+  return maybe({
+    discriminator: new Uint8Array(8),
+    mutual: MUTUAL_ADDR as Address,
+    member: claimant as Address,
+    claimAmount: 2_000n * 1_000_000n,
+    dispute: A,
+    feePaid: 15_000_000n,
+    status: ClaimStatus.Paid,
+    filedAt: BigInt(Date.UTC(2026, 10, 16, 10, 0) / 1000),
+    settledAt: 0n,
+    bump: 255,
+    ...over,
+  } as Claim);
+}
+
+// localnet default + a stubbed VITE_LOCALNET_MUTUAL: the resolver sees an
+// address and the (mocked) SDK fetch answers — no network in jsdom. Pass ""
+// to renderApp to exercise the no-deployment path.
+const testConfig = getDefaultConfig({ appName: "riprap-test", network: "localnet" });
+
+function renderApp(mutualAddress = MUTUAL_ADDR) {
+  vi.stubEnv("VITE_LOCALNET_MUTUAL", mutualAddress);
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AppProvider connectorConfig={testConfig}>
+        <AppPage />
+      </AppProvider>
+    </QueryClientProvider>,
+  );
+}
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllEnvs();
+  walletState.isConnected = false;
+  walletState.account = null;
+  mutualMock.mockReset();
+  memberMock.mockReset();
+  claimMock.mockReset();
+});
+
+describe("/app — wallet gate (reads-only: no chain calls until connected)", () => {
+  it("mounts with one main landmark, the wayfinding nav, and the gate copy", () => {
+    const { container } = renderApp();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Members' entrance");
     expect(container.querySelectorAll("main").length).toBe(1);
+    expect(screen.getByRole("link", { name: "riprap.xyz" }).getAttribute("href")).toBe("/");
+    expect(screen.getByRole("link", { name: "Blade Pool" }).getAttribute("href")).toBe(
+      "/2026-breakpoint-blade-pool",
+    );
+    expect(
+      screen.getByText("Connect the wallet you joined with. This surface only reads."),
+    ).toBeTruthy();
+    expect(mutualMock).not.toHaveBeenCalled();
+  });
+
+  it("'Connect a wallet' opens the picker dialog", () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: "Connect a wallet" }));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+  });
+});
+
+describe("/app — mutual states (shared copy, verbatim with the pool page)", () => {
+  it("no deployment on the cluster: not-live state with the inline cluster switch", () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    renderApp("");
+    expect(screen.getByText("Not live on this cluster")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "The Blade Pool isn't deployed on this network. Switch networks to find it.",
+      ),
+    ).toBeTruthy();
+    expect(screen.getByRole("combobox")).toBeTruthy();
+    // honest empty state — no numbers, no reads attempted
+    expect(mutualMock).not.toHaveBeenCalled();
+  });
+
+  it("cluster unreachable: retry state", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockRejectedValue(new Error("rpc down"));
+    renderApp();
+    expect(
+      await screen.findByText("Couldn't reach the cluster.", {}, { timeout: 5000 }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+  });
+});
+
+describe("/app — membership + claims (data-bound to the chain)", () => {
+  it("connected, not a member: honest state, link back to the pool page", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual()));
+    memberMock.mockResolvedValue(NOT_A_MEMBER);
+    renderApp();
+    expect(await screen.findByText("This wallet isn't in the pool.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "the pool page" }).getAttribute("href")).toBe(
+      "/2026-breakpoint-blade-pool",
+    );
+    expect(claimMock).not.toHaveBeenCalled();
+  });
+
+  it("member: Covered stamp with the on-chain tier + fee/cap facts, address chip + Disconnect in the nav", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual()));
+    memberMock.mockResolvedValue(memberAccount(1)); // Standard (policy §5 index)
+    claimMock.mockResolvedValue({ exists: false, address: "C".repeat(32) } as MaybeAccount<Claim>);
+    renderApp();
+
+    expect(await screen.findByText("Covered — Standard")).toBeTruthy();
+    expect(await screen.findByText("$20 entry · up to $2,000 maximum payout")).toBeTruthy();
+    // nav account controls: shortened address (full in title) + disconnect
+    expect(screen.getByTitle(WALLET).textContent).toContain("WWWW");
+    expect(screen.getByRole("button", { name: "Disconnect" })).toBeTruthy();
+  });
+
+  it("claims: only this wallet's claims render, every field from the chain", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual({ claimNonce: 2n })));
+    memberMock.mockResolvedValue(memberAccount(2)); // Premium
+    claimMock.mockImplementation(async (_rpc, seeds) =>
+      seeds.nonce === 0n ? claimAccount(WALLET) : claimAccount(OTHER),
+    );
+    renderApp();
+
+    expect(await screen.findByText("Covered — Premium")).toBeTruthy();
+    expect(await screen.findByText("#0 · $2,000 · PAID")).toBeTruthy();
+    expect(screen.getByText("filed 2026-11-16 10:00 UTC")).toBeTruthy();
+    // the other wallet's claim is filtered out — no second row, no nonce #1
+    expect(screen.queryByText(/#1/)).toBeNull();
+  });
+
+  it("claims loading reads as loading; empty list reads as none", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual({ claimNonce: 1n })));
+    memberMock.mockResolvedValue(memberAccount(0));
+    const { promise: claimsPromise, resolve: resolveClaims } =
+      Promise.withResolvers<MaybeAccount<Claim>>();
+    claimMock.mockReturnValue(claimsPromise);
+    renderApp();
+
+    expect(await screen.findByText("Covered — Basic")).toBeTruthy();
+    expect(await screen.findByText("Reading your claims from the chain.")).toBeTruthy();
+
+    resolveClaims({ exists: false, address: "C".repeat(32) } as MaybeAccount<Claim>);
+  });
+
+  it("claims read failure: honest retry, never invented rows", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual({ claimNonce: 1n })));
+    memberMock.mockResolvedValue(memberAccount(0));
+    claimMock.mockRejectedValue(new Error("rpc down"));
+    renderApp();
+    expect(
+      await screen.findByText("Couldn't read your claims.", {}, { timeout: 5000 }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
   });
 });
