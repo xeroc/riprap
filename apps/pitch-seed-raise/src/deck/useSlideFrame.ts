@@ -23,7 +23,11 @@ export function useSlideFrame(): number {
         last = value;
         setFrame(value);
       }
-      raf = requestAnimationFrame(tick);
+      // every rise() window in the deck ends by frame ~146 — stop the clock
+      // at 160 so settled slides (all of them, in document mode) never tick.
+      if (value < 160) {
+        raf = requestAnimationFrame(tick);
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);

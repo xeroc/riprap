@@ -9,10 +9,30 @@ import { SLIDES } from "./deck/slides";
  * letterbox bars and the dimension with surplus gets extra design units.
  * Viewport-relative units inside the canvas are container units (cqw/cqh),
  * never vw/vh — vw ignores ancestor transforms. (Layout engine ported from
- * the accord deck, 2026-09-15.) */
+ * the accord deck, 2026-09-15.)
+ *
+ * Below 900px viewport width that uniform scale drops under ~62% and the
+ * deck becomes unreadable — so narrow viewports (phones, iPad portrait,
+ * split windows) get DOCUMENT MODE instead: every slide stacked at natural
+ * size in a scrolling column, tick nav jumps between sections. The same
+ * 899px boundary drives the deck-narrow variant in index.css. */
 const CANVAS_W = 1440;
 const CANVAS_H = 900;
+const DOC_MODE_QUERY = "(max-width: 899px)";
 
+function useDocumentMode(): boolean {
+  const [doc, setDoc] = useState(
+    typeof window === "undefined" ? false : window.matchMedia(DOC_MODE_QUERY).matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(DOC_MODE_QUERY);
+    const onChange = () => setDoc(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return doc;
+}
 function useCanvasBox(): { scale: number; w: number; h: number } {
   const [box, setBox] = useState({ scale: 1, w: CANVAS_W, h: CANVAS_H });
   useEffect(() => {
@@ -56,6 +76,15 @@ export function App() {
     });
   }, []);
 
+  const docMode = useDocumentMode();
+  const sectionRefs = useRef<(HTMLElement | null)[]>([]);
+
+  useEffect(() => {
+    if (docMode) {
+      sectionRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [docMode, index]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
@@ -97,6 +126,33 @@ export function App() {
     transformOrigin: "top left",
     containerType: "size",
   };
+
+  if (docMode) {
+    return (
+      <div className="fixed inset-0 overflow-y-auto overflow-x-hidden bg-canvas">
+        <div className="pointer-events-none fixed inset-0 z-0">
+          <HexBackdrop className="size-full" />
+        </div>
+        <main className="relative z-10 flex flex-col gap-[8svh] pb-[8svh]">
+          {SLIDES.map((s, i) => {
+            const Slide = s.component;
+            return (
+              <section
+                key={s.id}
+                ref={(el) => {
+                  sectionRefs.current[i] = el;
+                }}
+                className={`slide flex flex-col *:flex-1 ${i === 0 ? "min-h-[100svh]" : "min-h-[80svh]"}`}
+                style={{ containerType: "inline-size" }}
+              >
+                <Slide />
+              </section>
+            );
+          })}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-canvas">

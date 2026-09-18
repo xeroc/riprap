@@ -13,6 +13,12 @@
 /* Utilities living in packages/ui source must be discovered by the app build. */
 @source "../../../packages/ui/src";
 
+/* Narrow viewports (max-width: 899px) switch the deck from the fixed
+ * 1440×900 presentation canvas to document mode (App.tsx matchMedia uses
+ * this same 899px boundary). Slide reflow tweaks ride the deck-narrow
+ * variant so canvas mode stays byte-identical. */
+@custom-variant deck-narrow (@media (max-width: 899px));
+
 :root {
   color-scheme: dark;
 }

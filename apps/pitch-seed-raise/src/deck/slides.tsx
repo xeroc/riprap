@@ -47,7 +47,7 @@ const rise = (frame: number, start: number, dur = 18) => {
 const TitleSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-12">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-12 deck-narrow:p-6">
       <Logomark size={160} state="assemble" />
       <div data-rise className="flex flex-col items-center gap-6">
         <Wordmark size={84} className="tracking-(--riprap-tracking-mega)" />
@@ -114,7 +114,7 @@ const VisionSlide: FC = () => {
       <div className="flex w-full flex-col gap-8">
         {/* the comparison table — same business, different rails */}
         <div className="flex w-full flex-col">
-          <div className="grid grid-cols-[minmax(0,1fr)_30ch_30ch] items-baseline pb-6">
+          <div className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_30ch_30ch] items-baseline pb-6">
             <span />
             {COMPARE_COLS.map((col) => (
               <span
@@ -128,7 +128,7 @@ const VisionSlide: FC = () => {
           {COMPARE_ROWS.map((r, i) => (
             <div
               key={r.id}
-              className="grid grid-cols-[minmax(0,1fr)_30ch_30ch] items-center border-t border-hairline py-2"
+              className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_30ch_30ch] items-center border-t border-hairline py-2"
               style={rise(frame, 4 + i * 8)}
             >
               <span className="text-ink [font:var(--riprap-title-sm)]">{r.label}</span>
@@ -184,10 +184,10 @@ const ProblemSlide: FC = () => {
     <SlideFrame kicker="the problem" headline="Insurance is a slow, expensive monolith.">
       <div className="flex w-full flex-col gap-12">
         {/* the number, very big; what it means beside it */}
-        <div className="flex items-center gap-12">
+        <div className="deck-narrow:flex-col deck-narrow:items-start deck-narrow:gap-6 flex items-center gap-12">
           <span
             data-num
-            className="text-accent font-mono text-[12rem] leading-none font-semibold tracking-(--riprap-tracking-display)"
+            className="deck-narrow:text-[5.5rem] text-accent font-mono text-[12rem] leading-none font-semibold tracking-(--riprap-tracking-display)"
             style={rise(frame, 8)}
           >
             ~26¢
@@ -246,21 +246,21 @@ const IncumbantsProblemSlide: FC = () => {
     <SlideFrame kicker="the competition" headline="there's basically no competitor.">
       <div className="flex w-full flex-col gap-12">
         <div
-          className="grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] gap-x-12 text-sm tracking-[0.2em] text-text-secondary"
+          className="deck-narrow:grid-cols-3 deck-narrow:gap-x-3 grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] gap-x-12 text-sm tracking-[0.2em] text-text-secondary"
           style={rise(frame, 16)}
         >
-          <div />
-          <div className="text-right">FEES &rsquo;25</div>
-          <div className="text-right">RAISED</div>
-          <div className="text-right">COVER</div>
+          <div className="deck-narrow:col-span-3" />
+          <div className="deck-narrow:tracking-normal text-right">FEES &rsquo;25</div>
+          <div className="deck-narrow:tracking-normal text-right">RAISED</div>
+          <div className="deck-narrow:tracking-normal text-right">COVER</div>
         </div>
         {FIELD_ROWS.map((r, i) => (
           <div
             key={r.name}
-            className="grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] items-baseline gap-x-12 border-t border-white/10 pt-5"
+            className="deck-narrow:grid-cols-3 deck-narrow:gap-x-3 grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] items-baseline gap-x-12 border-t border-white/10 pt-5"
             style={rise(frame, 28 + i * 22)}
           >
-            <div className="flex flex-col gap-1.5">
+            <div className="deck-narrow:col-span-3 flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
                 <span className="font-heading text-xl font-bold tracking-tight text-nearwhite">
                   {r.name}
@@ -273,7 +273,9 @@ const IncumbantsProblemSlide: FC = () => {
                 key={`${c.v}-${c.sub ?? ""}`}
                 className="flex flex-col items-end gap-1 text-right"
               >
-                <span className="text-xl tabular-nums text-nearwhite">{c.v}</span>
+                <span className="deck-narrow:text-base text-xl tabular-nums text-nearwhite">
+                  {c.v}
+                </span>
                 {c.sub ? <span className="text-sm text-text-secondary">{c.sub}</span> : null}
               </div>
             ))}
@@ -355,13 +357,13 @@ const ProductSlide: FC = () => {
     <SlideFrame kicker="the product" headline="on-chain rails for insurance contracts">
       <div className="flex w-full flex-col gap-8">
         <div style={rise(frame, 16)}>
-          <ol data-slot="lifecycle-strip" className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <ol data-slot="lifecycle-strip" className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {PRODUCT_STEPS.map((tile) => (
               <ExpansionTile key={tile.id} {...tile} />
             ))}
           </ol>
         </div>
-        <div className="flex items-start gap-6">
+        <div className="deck-narrow:grid deck-narrow:grid-cols-2 deck-narrow:items-start deck-narrow:gap-4 deck-narrow:md:grid-cols-4 flex items-start gap-6">
           {PRODUCT_STEPS.map((l, i) => (
             <div
               key={l.step}
@@ -443,20 +445,20 @@ const NowSlide: FC = () => {
     <SlideFrame kicker="the now" headline="all the pieces are falling together now">
       <div className="flex w-full flex-col gap-8">
         <div style={rise(frame, 16)}>
-          <ol data-slot="expansion-strip" className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <ol data-slot="expansion-strip" className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {NOW_STEPS.map((tile) => (
               <ExpansionTile key={tile.id} {...tile} />
             ))}
           </ol>
         </div>
-        <div className="flex w-full items-start gap-6">
+        <div className="deck-narrow:grid deck-narrow:grid-cols-2 deck-narrow:items-start deck-narrow:gap-4 deck-narrow:md:grid-cols-3 flex w-full items-start gap-6">
           {NOW_STEPS.map((n, i) => (
             <div
               key={n.step}
               className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
               style={rise(frame, 40 + i * 14)}
             >
-              <div className="flex items-baseline justify-between gap-3">
+              <div className="deck-narrow:flex-wrap flex items-baseline justify-between gap-3">
                 <span className="text-ink [font:var(--riprap-title-sm)]">{n.head}</span>
                 {n.ours && (
                   <span className="text-accent whitespace-nowrap uppercase [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
@@ -527,7 +529,7 @@ const MarketSlide: FC = () => {
       <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 12)}>
         We are building the infrastructure that lets those groups create their own risk pools.
       </div>
-      <div className="flex w-full items-start gap-6">
+      <div className="deck-narrow:grid deck-narrow:grid-cols-2 deck-narrow:items-start deck-narrow:gap-4 flex w-full items-start gap-6">
         {SKIPPED_COMMUNITIES.map((c, i) => (
           <div
             key={c.head}
@@ -546,10 +548,10 @@ const MarketSlide: FC = () => {
         {EVIDENCE_ROWS.map((r, i) => (
           <div
             key={r.label}
-            className="flex items-baseline gap-8 border-t border-hairline pt-3"
+            className="deck-narrow:flex-wrap deck-narrow:gap-x-6 flex items-baseline gap-8 border-t border-hairline pt-3"
             style={rise(frame, 92 + i * 12)}
           >
-            <span className="w-[24ch] text-right text-accent [font:var(--riprap-mono-number)]">
+            <span className="deck-narrow:w-[14ch] w-[24ch] text-right text-accent [font:var(--riprap-mono-number)]">
               {r.v}
             </span>
             <span className="flex-1 text-ink [font:var(--riprap-title-sm)]">{r.label}</span>
@@ -603,7 +605,7 @@ const LaunchSlide: FC = () => {
         </span>
         run in front of the entire Solana ecosystem.
       </div>
-      <div className="flex w-full items-start gap-10">
+      <div className="deck-narrow:flex-col deck-narrow:gap-8 flex w-full items-start gap-10">
         <div className="flex flex-1 flex-col gap-5 list list-disc" style={rise(frame, 30)}>
           <ol className="list-disc ml-6 flex flex-col gap-3 text-2xl">
             {LAUNCH_REASONS.map((r) => (
@@ -612,7 +614,7 @@ const LaunchSlide: FC = () => {
           </ol>
         </div>
         <div
-          className="flex w-[46ch] flex-col gap-3 border border-hairline bg-(--riprap-surface-card) p-7"
+          className="deck-narrow:w-full flex w-[46ch] flex-col gap-3 border border-hairline bg-(--riprap-surface-card) p-7"
           style={rise(frame, 48)}
           data-num
         >
@@ -715,10 +717,10 @@ const BusinessSlide: FC = () => {
           {BUSINESS_LADDER.map((r, i) => (
             <div
               key={r.v}
-              className="flex items-baseline gap-8 border-t border-hairline pt-4"
+              className="deck-narrow:flex-col deck-narrow:items-start deck-narrow:gap-1 flex items-baseline gap-8 border-t border-hairline pt-4"
               style={rise(frame, 24 + i * 16)}
             >
-              <span className="w-[18ch] text-right text-accent [font:var(--riprap-mono-number)]">
+              <span className="deck-narrow:w-auto deck-narrow:text-left w-[18ch] text-right text-accent [font:var(--riprap-mono-number)]">
                 {r.v}
               </span>
               <span className="flex-1 text-ink [font:var(--riprap-title-sm)]">{r.label}</span>
@@ -757,7 +759,10 @@ const AskSlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the ask" headline={<>raising $700k pre-seed at $7M</>}>
-      <div className="flex w-full items-start gap-10" data-num>
+      <div
+        className="deck-narrow:flex-col deck-narrow:gap-8 flex w-full items-start gap-10"
+        data-num
+      >
         <div className="flex flex-1 flex-col gap-6">
           {ASK_TERMS.map((t, i) => (
             <div key={t.v} className="flex flex-col gap-1" style={rise(frame, 20 + i * 14)}>
@@ -852,7 +857,7 @@ const TeamSlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <div className="relative h-full w-full">
-      <div className="flex h-full flex-col justify-center gap-10 pl-[7cqw] pr-[30cqw]">
+      <div className="deck-narrow:pr-[7cqw] flex h-full flex-col justify-center gap-10 pl-[7cqw] pr-[30cqw]">
         <div className="flex flex-col gap-5">
           <div className="uppercase text-accent [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
             the team
@@ -861,13 +866,13 @@ const TeamSlide: FC = () => {
             decades of shipping in the team
           </h2>
         </div>
-        <div className="flex items-start gap-20">
+        <div className="deck-narrow:flex-col deck-narrow:gap-10 flex items-start gap-20">
           {PERSONAS.map((p, pi) => (
             <figure key={p.img} className="flex flex-col gap-4" style={rise(frame, 24 + pi * 40)}>
               <img
                 src={p.img}
                 alt={p.alt}
-                className="h-[28cqh] w-auto border border-hairline object-cover"
+                className="deck-narrow:h-64 h-[28cqh] w-auto border border-hairline object-cover"
               />
               <figcaption className="text-muted [font:var(--riprap-mono-label)]">
                 {p.caption}
@@ -888,7 +893,7 @@ const TeamSlide: FC = () => {
         </div>
       </div>
       <div
-        className="absolute inset-y-0 right-0 flex w-[50ch] items-center overflow-hidden font-mono"
+        className="deck-narrow:hidden absolute inset-y-0 right-0 flex w-[50ch] items-center overflow-hidden font-mono"
         style={{
           maskImage: "linear-gradient(to bottom, transparent, black 18%, black 82%, transparent)",
           WebkitMaskImage:
@@ -985,7 +990,7 @@ const AppendixQASlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the problems" headline="The hard questions that need solving.">
-      <div className="grid w-full grid-cols-2 gap-6">
+      <div className="deck-narrow:grid-cols-1 grid w-full grid-cols-2 gap-6">
         {HARD_QUESTIONS.map((c, i) => (
           <div key={c.index} style={rise(frame, 8 + i * 10)}>
             <ProblemSolutionCard index={c.index} question={c.q} answer={c.a} />

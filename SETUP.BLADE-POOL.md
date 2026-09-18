@@ -22,10 +22,10 @@ deploy check → hanse:initialize → seed jurors (accord stake)
 
 Three programs must be deployed and live before anything else:
 
-| Program | Address (baked into the SDKs) | Built from |
-|---|---|---|
-| `pool` | `PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf` | this repo, `programs/pool` |
-| `hanse` | `hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav` | this repo, `programs/hanse` |
+| Program  | Address (baked into the SDKs)                 | Built from                                                                                     |
+| -------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `pool`   | `PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf` | this repo, `programs/pool`                                                                     |
+| `hanse`  | `hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav` | this repo, `programs/hanse`                                                                    |
 | `accord` | `cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed` | sibling repo, rev `ba91bd8b8b374091c174909b115688ffb9b231ff` (`programs/hanse/Cargo.toml` pin) |
 
 The CLI derives every PDA against these addresses — they come from `packages/{pool,hanse}/generated/` and `@useaccord/sdk`, not from flags. Therefore:
@@ -45,11 +45,11 @@ node apps/cli/bin/run.js config:balance --rpc <RPC>
 
 ### 1.2 Wallets
 
-| Wallet | Used for | Notes |
-|---|---|---|
-| **Operator/admin keypair** | `hanse:initialize` | Becomes the mutual's immutable `authority`: the payout pass-gate co-signer and the only key that can propose `set-subaccord-param` (EVENT-MUTUAL §2.10). Not recoverable or transferable later — use a dedicated operations keypair (target: Squads 2/3 multisig per §12 "Upgrade authority"), never a personal key. |
-| **Member keypairs** | `hanse:join`, `hanse:file-claim`, `hanse:claim-payout` | One per member; each is its own claim key. |
-| **Sponsor keypair (optional)** | `hanse:join --sponsor` | Pays a member's contribution, receives the residual; claim rights stay the member's. |
+| Wallet                         | Used for                                               | Notes                                                                                                                                                                                                                                                                                                                |
+| ------------------------------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operator/admin keypair**     | `hanse:initialize`                                     | Becomes the mutual's immutable `authority`: the payout pass-gate co-signer and the only key that can propose `set-subaccord-param` (EVENT-MUTUAL §2.10). Not recoverable or transferable later — use a dedicated operations keypair (target: Squads 2/3 multisig per §12 "Upgrade authority"), never a personal key. |
+| **Member keypairs**            | `hanse:join`, `hanse:file-claim`, `hanse:claim-payout` | One per member; each is its own claim key.                                                                                                                                                                                                                                                                           |
+| **Sponsor keypair (optional)** | `hanse:join --sponsor`                                 | Pays a member's contribution, receives the residual; claim rights stay the member's.                                                                                                                                                                                                                                 |
 
 Every wallet needs SOL for fees/rent. The initializer additionally pays rent for the Mutual, Pool, and fee-float accounts; each joiner (or their sponsor) pays Member + Depositor rent.
 
@@ -87,27 +87,27 @@ Shorthand below: `riprap` = `node apps/cli/bin/run.js` (built) or `pnpm --filter
 
 Ready-to-paste values. USDC = 6 decimals, so `$X` → `X_000000` raw.
 
-| Parameter | Value | Raw | Source |
-|---|---|---|---|
-| `--tier` (Basic) | $10 entry / $1,000 max payout | `10000000:1000000000` | policy §5 |
-| `--tier` (Standard) | $20 / $2,000 | `20000000:2000000000` | policy §5 |
-| `--tier` (Premium) | $40 / $4,000 | `40000000:4000000000` | policy §5 |
-| `--deposits-close-at` | 2026-11-15 08:00 UTC (doors at Olympia; join is pre-registration only) | `1794729600` | §12 |
-| `--claims-close-at` | 2026-12-01 18:00 UTC (coverage end Nov 17 18:00 + 14d lag) | `1796148000` | §12 |
-| `--min-jury-size` | 3 | `3` | §12 |
-| `--fee-per-juror` | 5 USDC (filing fee = 3 × 5 = 15 USDC) | `5000000` | §12 |
-| `--min-stake` | 10 USDC | `10000000` | §12 |
-| `--review-window` | 48h | `172800` | §12 |
-| `--commit-window` | 12h | `43200` | §12 |
-| `--reveal-window` | 12h | `43200` | §12 |
-| `--appeal-window` | 48h | `172800` | §12 |
-| `--max-appeals` | 2 (ladder 3 → 7 → 15) | `2` | §12 |
-| `--alpha-bps` | 10% | `1000` | §12 (pending accord domain-bound check) |
-| `--reveal-threshold-bps` | 2/3 | `6666` | accord default |
-| `--max-draw-attempts` | 3 | `3` | CLI example / accord bounds |
-| pull window | 180 days | — | **not a flag** — hardcoded on-chain (`PULL_WINDOW_SECS`, security review 2026-09-18) |
-| `--seed` | any unused u64 | your pick | PDA seed; collision ⇒ pick another |
-| `--evidence-operator` | operator pubkey of the encrypted-evidence pipeline | `{{EVIDENCE_OPERATOR_PUBKEY}}` | EVENT-MUTUAL §9, §11 |
+| Parameter                | Value                                                                  | Raw                            | Source                                                                               |
+| ------------------------ | ---------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------ |
+| `--tier` (Basic)         | $10 entry / $1,000 max payout                                          | `10000000:1000000000`          | policy §5                                                                            |
+| `--tier` (Standard)      | $20 / $2,000                                                           | `20000000:2000000000`          | policy §5                                                                            |
+| `--tier` (Premium)       | $40 / $4,000                                                           | `40000000:4000000000`          | policy §5                                                                            |
+| `--deposits-close-at`    | 2026-11-15 08:00 UTC (doors at Olympia; join is pre-registration only) | `1794729600`                   | §12                                                                                  |
+| `--claims-close-at`      | 2026-12-01 18:00 UTC (coverage end Nov 17 18:00 + 14d lag)             | `1796148000`                   | §12                                                                                  |
+| `--min-jury-size`        | 3                                                                      | `3`                            | §12                                                                                  |
+| `--fee-per-juror`        | 5 USDC (filing fee = 3 × 5 = 15 USDC)                                  | `5000000`                      | §12                                                                                  |
+| `--min-stake`            | 10 USDC                                                                | `10000000`                     | §12                                                                                  |
+| `--review-window`        | 48h                                                                    | `172800`                       | §12                                                                                  |
+| `--commit-window`        | 12h                                                                    | `43200`                        | §12                                                                                  |
+| `--reveal-window`        | 12h                                                                    | `43200`                        | §12                                                                                  |
+| `--appeal-window`        | 48h                                                                    | `172800`                       | §12                                                                                  |
+| `--max-appeals`          | 2 (ladder 3 → 7 → 15)                                                  | `2`                            | §12                                                                                  |
+| `--alpha-bps`            | 10%                                                                    | `1000`                         | §12 (pending accord domain-bound check)                                              |
+| `--reveal-threshold-bps` | 2/3                                                                    | `6666`                         | accord default                                                                       |
+| `--max-draw-attempts`    | 3                                                                      | `3`                            | CLI example / accord bounds                                                          |
+| pull window              | 180 days                                                               | —                              | **not a flag** — hardcoded on-chain (`PULL_WINDOW_SECS`, security review 2026-09-18) |
+| `--seed`                 | any unused u64                                                         | your pick                      | PDA seed; collision ⇒ pick another                                                   |
+| `--evidence-operator`    | operator pubkey of the encrypted-evidence pipeline                     | `{{EVIDENCE_OPERATOR_PUBKEY}}` | EVENT-MUTUAL §9, §11                                                                 |
 
 Timeline sanity (§12): a claim filed at the last minute (Dec 1) resolves through the full ladder ≈ Dec 16 → settlement ≈ Dec 16 → pulls close ≈ 2027-06-14 — inside the fixed 180-day window with margin.
 
@@ -142,6 +142,25 @@ riprap hanse:initialize \
   --reveal-threshold-bps 6666 --max-draw-attempts 3 \
   --evidence-operator {{EVIDENCE_OPERATOR_PUBKEY}} \
   --dry-run
+```
+
+Concrete example for devnet:
+
+```bash
+riprap hanse:initialize \
+  --seed 0 \
+  --deposit-mint 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU --fee-mint 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU \
+  --tier 10000000:1000000000 --tier 20000000:2000000000 --tier 40000000:4000000000 \
+  --policy-hash {{POLICY_HASH}} \
+  --deposits-close-at $(date +%s -d "2026-11-14T00:00:00") \
+  --claims-close-at $(date +%s -d "2026-11-24T00:00:00") \
+  --min-stake 100000000 --alpha-bps 2500 \
+  --review-window 172800 --commit-window 86400 --reveal-window 86400 \
+  --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 50000000 \
+  --reveal-threshold-bps 6666 --max-draw-attempts 3 \
+  --evidence-operator 8EVBvLDVhJUw1nkAUp73mPyxviVFK9Wza5ba1GRANEw1 \
+  --dry-run
+
 ```
 
 Inspect the printed accounts: the instruction must carry `hanse`, `pool`, and `accord` program ids matching §1.1.
