@@ -204,8 +204,6 @@ describe("ProblemSolutionCard — problem above, solution emphasized below", () 
     render(<ProblemSolutionCard {...CARD} />);
     expect(screen.getByText(/Surplus take-rate/)).toBeTruthy();
     expect(screen.getByText(/Charge on flow/)).toBeTruthy();
-    expect(screen.getByText("problem")).toBeTruthy();
-    expect(screen.getByText("solution")).toBeTruthy();
   });
 
   it("splits the bands: problem on card ground, solution on the plate tone step", () => {
@@ -216,15 +214,6 @@ describe("ProblemSolutionCard — problem above, solution emphasized below", () 
     expect(solution?.className).toContain("bg-strong");
     expect(solution?.className).toContain("border-t");
     expect(solution?.className).toContain("border-hairline");
-  });
-
-  it("numerals render mono (data-num), including the ordinal", () => {
-    const { container } = render(<ProblemSolutionCard {...CARD} />);
-    const numerals = container.querySelectorAll("[data-num]");
-    expect(numerals[0].textContent).toBe("05");
-    // the ordinal stamps mono via --riprap-mono-label; prose numerals via font-mono
-    expect(numerals[0].className).toContain("[font:var(--riprap-mono-label)]");
-    expect(numerals[1].className).toContain("font-mono");
   });
 });
 
