@@ -17,9 +17,9 @@ import { useSlideFrame } from "./useSlideFrame";
 /**
  * The seed-raise deck — 10 slides + appendix, copy from meta/PITCH.md (the
  * law for every string and number below; citations ride along in mono — the
- * 2026-09-17 headline re-stage and the 2026-09-18 vision re-stage below are
- * not yet mirrored there). The destination leads: the vision right after the
- * title — why the world is ripe for internet insurance (smart contracts are
+ * 2026-09-17 headline re-stage and the 2026-09-18 vision/problem re-stages
+ * below are not yet mirrored there). The destination leads: the vision right
+ * after the title — why the world is ripe for internet insurance (smart
  * well-understood business logic on 24/7/365 rails; the tradinsure/web3
  * comparison table) — then the walk back down to today — the problem → the
  * product → the pilot (events are the door, Breakpoint first) → the business
@@ -146,11 +146,26 @@ const VisionSlide: FC = () => {
 };
 
 /* 03 — the problem ----------------------------------------------------------- */
-/** The 2020–22 autopsy: one card per named failure, the error in three
+
+/** The monolith re-staged (2026-09-18 off
+ * meta/marketing/07-brand-assets/why-on-chain.md; not yet mirrored in
+ * meta/PITCH.md): one number carried very large — ~26¢ of every premium
+ * dollar spent before a claim is paid — its meaning set beside it, source
+ * riding along in mono. The solvency and jurisdiction rows were retired in
+ * the same re-stage; the vision table still carries those ✗. */
+
+/** The 2020–22 autopsy: one chip per named failure, the error in three
  * words or fewer. Each maps to a structural fix in Hanse (one risk per
  * pool, staked jury, surplus to members) — the Q&A answer to "why has
  * nobody built this?" */
 const MISTAKES: { name: string; error: string }[] = [
+  {
+    name: "",
+    error: "governance token required",
+  },
+  { name: "", error: "on-chain events only" },
+  { name: "", error: "one pool for every risk" },
+  { name: "", error: "none are permissionless" },
   { name: "Neptune Mutual", error: "upfront lump sum" },
   { name: "Cover Protocol", error: "exploited itself" },
   { name: "Solace", error: "shared idle pool" },
@@ -162,99 +177,60 @@ const MISTAKES: { name: string; error: string }[] = [
   { name: "Risk Harbor", error: "wLUNA collateral" },
 ];
 
-/** The incumbents' four structural issues (PITCH.md §10, the Nexus et al.
- * row): every existing on-chain mutual shares them; none of them fixes them.
- * Each inverts into a product law on the next slide. */
-const INCUMBENT_ISSUES = [
-  {
-    head: "token required",
-    body: "governance-token ownership sits inside the operational path. joining, claiming, and exiting all route through the token.",
-  },
-  {
-    head: "on-chain events only",
-    body: "exploits, hacks, theft. if an oracle cannot read the event, the mutual cannot cover it.",
-  },
-  {
-    head: "one pool for every risk",
-    body: "a single shared treasury instead of one treasury per mutual. risks cross-subsidize, members cannot see their own money.",
-  },
-  {
-    head: "none are permissionless",
-    body: "no existing mutual lets a US corporation and a farmer in Bangladesh found one on the same rails.",
-  },
-];
-
 const ProblemSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame
-      kicker="the problem"
-      headline={
-        <>
-          <span data-num className="font-mono">
-            ~16%
-          </span>{" "}
-          of premiums vanish for admin
-        </>
-      }
-    >
-      <div className="flex w-full flex-col gap-8">
-        <div
-          className="max-w-[62ch] text-ink [font:var(--riprap-title-md)]"
-          style={rise(frame, 16)}
-        >
-          <p className="max-w-[80ch] text-2xl leading-snug text-body" style={rise(frame, 22)}>
-            Mutual risk pools are the oldest form of pooled protection on earth.
-            <br />
-            Its members manage the payouts (Nexus Mutual, Lloyd's Evertas, Opencover, etc.).
-          </p>
+    <SlideFrame kicker="the problem" headline="Insurance is a slow, expensive monolith.">
+      <div className="flex w-full flex-col gap-12">
+        {/* the number, very big; what it means beside it */}
+        <div className="flex items-center gap-12">
+          <span
+            data-num
+            className="text-accent font-mono text-[12rem] leading-none font-semibold tracking-(--riprap-tracking-display)"
+            style={rise(frame, 8)}
+          >
+            ~26¢
+          </span>
+          <span className="flex max-w-[42ch] flex-col gap-3" style={rise(frame, 24)}>
+            <span className="text-ink [font:var(--riprap-display-sm)]">
+              of every premium dollar is spent before a claim is paid.
+            </span>
+            <ol className="list-disc ml-6">
+              <li>and it still takes 30 to 60 days on average</li>
+              <li>microinsurances often infeasible</li>
+            </ol>
+            <span className="text-muted-soft [font:var(--riprap-mono-label)]">
+              Verisk/APCIA '25
+            </span>
+          </span>
         </div>
-      </div>
-      <div className="flex w-full flex-col gap-3">
-        <div className="flex items-baseline font-mono" style={rise(frame, 44)}>
-          <span className="text-sm tracking-[0.2em] text-text-secondary">THE INCUMBENTS</span>
-        </div>
-        <div className="flex items-start gap-6">
-          {INCUMBENT_ISSUES.map((issue, i) => (
-            <div
-              key={issue.head}
-              className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
-              style={rise(frame, 56 + i * 12)}
-            >
-              <div className="text-ink [font:var(--riprap-title-sm)]">{issue.head}</div>
-              <div className="text-muted [font:var(--riprap-body-sm)]">{issue.body}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="flex w-full flex-col gap-3 font-mono">
-        <div className="flex items-baseline mt-6" style={rise(frame, 116)}>
-          <span className="text-sm tracking-[0.2em] text-text-secondary">OTHER LIMITATIONS</span>
-        </div>
-        <div
-          className="relative overflow-hidden py-1"
-          style={{
-            ...rise(frame, 136),
-            maskImage: "linear-gradient(to right, transparent, black 4%, black 96%, transparent)",
-            WebkitMaskImage:
-              "linear-gradient(to right, transparent, black 4%, black 96%, transparent)",
-          }}
-        >
-          <div className="mistakes-track flex w-max">
-            {[0, 1].flatMap((copy) =>
-              MISTAKES.map((m, i) => (
-                <div
-                  key={`${copy}-${i}`}
-                  className="mr-4 flex shrink-0 flex-col gap-1 rounded-lg border border-white/10 px-6 py-4"
-                >
-                  <span className="text-sm text-text-secondary">{m.name}</span>
-                  <span className="font-heading text-2xl font-bold tracking-tight text-nearwhite">
-                    <span className="text-slash">✗ </span>
-                    {m.error}
+
+        {/* the graveyard — one chip per named failure */}
+        <div className="flex w-full flex-col gap-3">
+          <div
+            className="uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]"
+            style={rise(frame, 48)}
+          >
+            why every on-chain attempt so far failed
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {MISTAKES.map((m, i) => (
+              <span
+                key={`${m.name}-${m.error}`}
+                className="flex items-baseline gap-2 border border-hairline px-3 py-1"
+                style={rise(frame, 56 + i * 4)}
+              >
+                <span data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
+                  ✗
+                </span>
+                <span className="text-muted [font:var(--riprap-body-sm)]">{m.error}</span>
+                {m.name && (
+                  <span className="text-muted-soft [font:var(--riprap-mono-label)]">
+                    ({m.name})
                   </span>
-                </div>
-              )),
-            )}
+                )}
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -927,14 +903,14 @@ export const SLIDES: SlideDef[] = [
     id: "vision",
     label: "the vision",
     notes:
-      "25s. Why the world is ripe for internet insurance. Call a smart contract what it is: business logic that runs 24/7/365 — autonomous, permissionless, transparent. No surprise defi trading works great on-chain — it is well-understood business logic. You know what else is well-understood business logic? Insurance. Then the table, top to bottom: the first two rows are the business — tradinsure pools money and decides payouts, and so does web3 insure; every row below is the rails — transparent (the balance is a public number — solvency provable, not asserted), fast (payouts in minutes, not days), global & 24/7/365, permissionless (anyone with a wallet), composable (pools stack into tranched capital) — web3 only. Overhead dies on the way: the ~16% admin slice becomes transaction fees. The five-machine destination stack moved to the appendix — walk it there if asked. Segue: so why doesn't on-chain insurance exist today — the problem, next slide.",
+      "25s. Why the world is ripe for internet insurance. Call a smart contract what it is: business logic that runs 24/7/365 — autonomous, permissionless, transparent. No surprise defi trading works great on-chain — it is well-understood business logic. You know what else is well-understood business logic? Insurance. Then the table, top to bottom: the first two rows are the business — tradinsure pools money and decides payouts, and so does web3 insure; every row below is the rails — transparent (the balance is a public number — solvency provable, not asserted), fast (payouts in minutes, not days), global & 24/7/365, permissionless (anyone with a wallet), composable (pools stack into tranched capital) — web3 only. Overhead dies on the way: the ~26¢-per-dollar back office becomes transaction fees. The five-machine destination stack moved to the appendix — walk it there if asked. Segue: so why doesn't on-chain insurance exist today — the problem, next slide.",
     component: VisionSlide,
   },
   {
     id: "problem",
     label: "the problem",
     notes:
-      "40s. Mutual protection is the oldest fix — farmers, fishers, shipowners, savings groups, gig workers, clubs. The formal version is $1.61T and winning (ICMIF '24). The informal version dies of opacity, disputes, and scale — which is exactly why the friendly societies became licensed mutuals: formalization fixed trust at the price of the charter. The on-chain incumbents — Nexus et al. — carry four structural issues: a governance token wired into the operational hot path, cover for on-chain events only, one shared pool where each mutual should hold its own treasury, and permissioned entry end to end — none of them lets a US corporation and a Bangladeshi farmer found one on the same rails. The 2020–22 graveyard scrolling below is the same lesson at company scale. Today the choice is a WhatsApp group with a cash box or a decade of licensing. Land: the behavior is universal, the on-ramp does not exist.",
+      "30s. The frame: traditional insurance is a slow, expensive monolith. One number, very big: ~26¢ of every US premium dollar is spent before a claim is paid (Verisk/APCIA '25) — the fixed-cost back office; at that floor microinsurance is often infeasible. Then the cloud, gesture once, don't read it: the 2020–22 graveyard, one named failure per project — Neptune Mutual (upfront lump sum; token-vote claims), Cover Protocol (exploited itself), Solace (shared idle pool), OpenCover (web3 portfolio cover), Unslashed (no float income), InsurAce (twenty thin chains), Bridge Mutual (farmed, not mutual), Risk Harbor (wLUNA collateral). Same lesson at company scale: the rails were never the whole machine — custody without adjudication, one pool, or permissioning is just a slower bank. If asked, the mutual-history backing: pooled protection is the oldest fix — the formal version is $1.61T and winning (ICMIF '24); the informal version dies of opacity, disputes, and scale, which is why the friendly societies became licensed mutuals — formalization fixed trust at the price of the charter. The solvency and jurisdiction pains stay in Q&A — the vision table carries those ✗. Land: the behavior is universal, the on-ramp does not exist. Segue: the product — the rails that remove each ✗, next slide.",
     component: ProblemSlide,
   },
   {
