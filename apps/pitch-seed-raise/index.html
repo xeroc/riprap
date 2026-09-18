@@ -14,13 +14,13 @@
           title="Riprap Pre-Seed Pitch Deck - LLM context">
         # Riprap — pre-seed pitch (full text)
 
-        > Riprap is peer-to-peer risk pooling on Solana: members chip in, drawn peers adjudicate claims, payouts come from the shared pool, and whatever goes unclaimed comes back when the pool ends. The machinery is built bottom-up — arbitration live on devnet, the pool program built, first pools launching through events in Q4 2026 — and events are just the door: the destination is permissionless mutuals for any risk, a $1.6 trillion sector that still runs on paper. This file is self-contained: the complete pre-seed pitch (all 10 slides with copy and speaker notes) plus the investor context behind them. Nothing needs to be fetched elsewhere.
+        > Riprap is peer-to-peer risk pooling on Solana: members chip in, drawn peers adjudicate claims, payouts come from the shared pool, and whatever goes unclaimed comes back when the pool ends. The machinery is built bottom-up — arbitration live on devnet, the pool program built, first pools launching through events in Q4 2026 — and events are just the door: the destination is permissionless mutuals for any risk, a $1.6 trillion sector that still runs on paper. This file is self-contained: the complete pre-seed pitch (all 11 slides with copy and speaker notes) plus the investor context behind them. Nothing needs to be fetched elsewhere.
 
         Notes for agents reading this file:
 
         - The website at this URL is a JavaScript single-page app; this file reproduces its entire content and adds the context an investor needs. Treat it as the authoritative pitch text.
         - Deck copy is quoted verbatim from the slides. Context sections come from the company's pitch master document; every number carries its source.
-        - Vocabulary: the product is a discretionary mutual, not insurance. The word "insurance" is reserved for the traditional market and the destination the protocol points at — never the product sold today. (Exception: the 2026-09-17 deck headline re-stage uses it in four slide headlines by authorial call — vision, product, business, market.)
+        - Vocabulary: the product is a discretionary mutual, not insurance. The word "insurance" is reserved for the traditional market and the destination the protocol points at — never the product sold today. (Exception: the 2026-09-17 deck headline re-stage uses it in four slide headlines by authorial call — vision, product, business, market. The 2026-09-18 vision re-stage adds the comparison-table labels "tradinsure" / "web3 insure" on the same call.)
 
         ## The pitch in one sentence
 
@@ -32,21 +32,30 @@
 
         > Anyone should be able to found a mutual for anything — farmers sharing a harvest failure, fishers pooling an engine loss, a village savings group covering funerals, shipowners, coastal homeowners, gig workers, a local sports club. Today the informal version dies of opacity and the formal one costs a charter. We built the three machines a mutual needs as open protocols, and we enter through the cleanest legal door: events.
 
-        ## The deck — 10 slides, full content
+        ## The deck — 11 slides, full content
 
         Staging (re-staged 2026-09-17): each slide leads with a small kicker naming the slide and one large statement headline. On-slide copy below is verbatim from the slides, typos included; each slide's speaker notes follow it in full. Nothing on the slides is omitted here.
 
         **Slide 1 — title.** Riprap (logomark + wordmark). Deck copy, verbatim: "Real-World Risk Protection on Solana." Stamp: "pre-seed raise · 2026". Speaker notes: Riprap — real-world risk protection on Solana. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Pre-Seed raise, 2026.
 
-        **Slide 2 — the vision.** Kicker: "the vision". Headline: "Internet Insurance". Deck copy, verbatim: "An open protocol for truly peer-to-peer, permissionless insurance, on chain." Below it an ExpansionStrip of five plates, one step per machine — copy verbatim:
+        **Slide 2 — the vision.** Kicker: "the vision". Headline: "Internet Insurance". Deck copy, verbatim: "A smart contract is business logic that runs 24/7/365 — autonomous, permissionless, transparent." Two cells, verbatim:
 
-        - **01 money gathers** — the pool is **a program, not a company** — it holds usdc and nothing else. members chip in, one pool per defined risk.
-        - **02 peers decide** — claims are judged by staked members of the same pool — drawn at random, sealed votes, appeals double the jury. adjudication by **accord**, honestly an arbitration oracle.
-        - **03 cover renews** — contributions recur through the pull payments rail. We've alreday built that with **tributary.so**.
-        - **04 a backstop grows** — **external risk capital** stakes a reserve beneath the pool and earns a rule-set share of its surplus.
-        - **05 pools cover pools** — mutuals cover each other: first loss below, the tail above. **reinsurance and tranching**.
+        - **defi trading** — well-understood business logic — no surprise it runs great as smart contracts. proven at scale.
+        - **insurance** — also well-understood business logic: pool money, decide payouts. everything past that is the rails.
 
-        Speaker notes: the destination leads — set it before the diagnosis; the rest of the deck walks from today's build back up to this stack. The destination is mutuals as an open protocol on Solana — true peer-to-peer, permissionless insurance, on-chain. This is the one slide that says the word: it names where the machine goes, not what we sell today — everywhere else the vocabulary law holds, and the licensed perimeter is entered deliberately, with carriers, where it requires it. Walk the strip — the five machines on-chain cover needs, one per plate: 01 money gathers — programmatic custody: the pool is a program, not a company, it holds USDC and nothing else; 02 peers decide — adjudication: staked members of the same pool, drawn at random, sealed votes, appeals that double the jury — Accord, honestly an arbitration oracle; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. Custody, adjudication, recurrence, reserve capital, reinsurance — everything an insurer needs, none of it a company. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built. The stack is the destination. Segue: why doesn't it exist today — the problem, next slide.
+        Comparison table — columns "tradinsure" / "web3 insure", one ✓/✗ mark per cell:
+
+        | | tradinsure | web3 insure |
+        | --- | --- | --- |
+        | pool money | ✓ | ✓ |
+        | decide payouts | ✓ | ✓ |
+        | transparent | ✗ | ✓ |
+        | fast | ✗ | ✓ |
+        | global & 24/7/365 | ✗ | ✓ |
+        | permissionless | ✗ | ✓ |
+        | composable | ✗ | ✓ |
+
+        Speaker notes: why the world is ripe for internet insurance. Call a smart contract what it is: business logic that runs 24/7/365 — autonomous, permissionless, transparent. No surprise defi trading works great on-chain — it is well-understood business logic. You know what else is well-understood business logic? Insurance. Then the table, top to bottom: the first two rows are the business — tradinsure pools money and decides payouts, and so does web3 insure; every row below is the rails — transparent (the balance is a public number — solvency provable, not asserted), fast (payouts in minutes, not days), global & 24/7/365, permissionless (anyone with a wallet), composable (pools stack into tranched capital) — web3 only. Overhead dies on the way: the ~16% admin slice becomes transaction fees. The five-machine destination stack moved to the appendix — walk it there if asked. Segue: so why doesn't on-chain insurance exist today — the problem, next slide.
 
         **Slide 3 — the problem.** Kicker: "the problem". Headline: "~16% of premiums vanish for admin". Deck copy, verbatim: "Mutual risk pools are the oldest form of pooled protection on earth. Its members manage the payouts (Nexus Mutual, Lloyd's Evertas, Opencover, etc.)."
 
@@ -131,6 +140,16 @@
         Speaker notes: who builds this — the human and the AI teammate. Left: Dr.-Ing. Fabian Schuh — full-time crypto since 2014, first person hired and paid directly by a blockchain, built the BitShares escrow and worker-proposal treasury, Solana Security #2. Right: Corinna — BD, social, analytics, on shift 24/7. The scrolling wall is ambience — twenty years of shipping, on-chain since 2014. Gesture once, don't read it.
 
         **Slide 10 — close.** The surfaces: riprap.xyz — the platform; useaccord.xyz — the arbitration layer; @riprapxyz — the build log. Tagline: **Pool risk peer-to-peer.** Speaker notes: the surfaces — riprap.xyz, useaccord.xyz (the arbitration layer), the repo, the build log. Hold on the tagline: pool risk peer-to-peer. Conversations after.
+
+        **Slide 11 — appendix.** Kicker: "appendix". Headline: "the destination stack". Deck copy, verbatim: "An open protocol for insurance, on chain." Below it an ExpansionStrip of five plates, one step per machine — copy verbatim (this strip was the vision slide's content before the 2026-09-18 re-stage):
+
+        - **01 money gathers** — the pool is **a program, not a company** — it holds usdc and nothing else. members chip in, one pool per defined risk.
+        - **02 peers decide** — claims are judged by staked members of the same pool — drawn at random, sealed votes, appeals double the jury. adjudication by **accord**, honestly an arbitration oracle.
+        - **03 cover renews** — contributions recur through the pull payments rail. We've alreday built that with **tributary.so**.
+        - **04 a backstop grows** — **external risk capital** stakes a reserve beneath the pool and earns a rule-set share of its surplus.
+        - **05 pools cover pools** — mutuals cover each other: first loss below, the tail above. **reinsurance and tranching**.
+
+        Speaker notes: reference, not presented — the stack the vision slide carried before the 2026-09-18 re-stage. The five machines on-chain cover needs, one per plate: 01 money gathers — programmatic custody: the pool is a program, not a company, it holds USDC and nothing else; 02 peers decide — adjudication: staked members of the same pool, drawn at random, sealed votes, appeals that double the jury — Accord, honestly an arbitration oracle; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. Custody, adjudication, recurrence, reserve capital, reinsurance — everything an insurer needs, none of it a company. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built.
 
         ## The problem — the oldest fix in finance has no on-ramp
 
@@ -313,7 +332,7 @@
 
         ## Vocabulary note
 
-        On stage and in product copy: mutual, pool, cover, contribution, member, payout, surplus, tier, claims window, juror, drawn, ruling, two exit doors, dissolve. Not used for this product: insurance, insurer, policy, premium, indemnity, underwriting, policyholder (fine when describing the traditional market). The 2026-09-17 deck headline re-stage ("Internet Insurance", "on-chain rails for insurance contracts", "Same insurance economics…", "conventional insurances") is a deliberate, author-called exception at the headline layer only. Tone law: deadpan-honest — numbers over adjectives, every number sourced, the peril named plainly and never dramatized.
+        On stage and in product copy: mutual, pool, cover, contribution, member, payout, surplus, tier, claims window, juror, drawn, ruling, two exit doors, dissolve. Not used for this product: insurance, insurer, policy, premium, indemnity, underwriting, policyholder (fine when describing the traditional market). The 2026-09-17 deck headline re-stage ("Internet Insurance", "on-chain rails for insurance contracts", "Same insurance economics…", "conventional insurances") is a deliberate, author-called exception at the headline layer only; the 2026-09-18 vision re-stage adds the comparison-table labels "tradinsure" / "web3 insure" on the same call. Tone law: deadpan-honest — numbers over adjectives, every number sourced, the peril named plainly and never dramatized.
 
         ## Contact
 

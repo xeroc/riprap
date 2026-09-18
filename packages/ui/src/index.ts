@@ -11,7 +11,7 @@
 export * from "./components";
 export { Backstop } from "./illustrations/Backstop";
 export { Claim } from "./illustrations/Claim";
-export { ExpansionStrip } from "./illustrations/ExpansionStrip";
+export { ExpansionStrip, ExpansionTile } from "./illustrations/ExpansionStrip";
 export { Found } from "./illustrations/Found";
 export { Gather } from "./illustrations/Gather";
 export type { GlyphClock } from "./illustrations/Glyph";

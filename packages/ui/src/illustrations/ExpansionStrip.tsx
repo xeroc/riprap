@@ -46,7 +46,7 @@ export function ExpansionStrip({ skipSteps = [] }: { skipSteps?: readonly number
  * tick remounts it (key bump), re-running the settle-in stagger from its
  * ENTER state. On leave it stops and stays arrived.
  */
-function ExpansionTile({ id, step, label, Glyph }: (typeof STEPS)[number]) {
+export function ExpansionTile({ id, step, label, Glyph }: (typeof STEPS)[number]) {
   const [hover, setHover] = useState(false);
   const [run, setRun] = useState(0);
 
