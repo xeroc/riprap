@@ -795,7 +795,7 @@ const FABIAN_ROWS = [
   "full-time crypto since 2014",
   "first hire paid by a blockchain, ever",
   "BitShares escrow & treasury — built",
-  "fabian@die-schuhs.de · x.com/@xeroc",
+  "fabian@chainsquad.com · x.com/@xeroc",
 ];
 
 const CORINNA_ROWS = [
