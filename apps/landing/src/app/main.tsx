@@ -4,13 +4,16 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "../index.css";
+import { SolanaProviders } from "../shared/providers.tsx";
 import { AppPage } from "./AppPage.tsx";
 
 const root = document.getElementById("root");
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      <AppPage />
+      <SolanaProviders>
+        <AppPage />
+      </SolanaProviders>
     </StrictMode>,
   );
 }
