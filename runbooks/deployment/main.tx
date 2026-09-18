@@ -16,7 +16,10 @@ action "deploy_pool" "svm::deploy_program" {
     # account on a local Surfnet (port of the accord runbook pairing —
     # `anchor test` starts Surfpool, which runs this manifest and has the
     # workspace programs live before the [scripts] jest runner fires).
-    instant_surfnet_deployment = true
+    # Gated to localnet: a real mainnet/devnet deploy must go through the
+    # real buffer→upgrade path, never the cheatcode (security review
+    # 2026-09-18).
+    instant_surfnet_deployment = input.network_id == "localnet"
 }
 
 action "deploy_hanse" "svm::deploy_program" {
@@ -24,5 +27,5 @@ action "deploy_hanse" "svm::deploy_program" {
     program = svm::get_program_from_anchor_project("hanse")
     authority = signer.authority
     payer = signer.payer
-    instant_surfnet_deployment = true
+    instant_surfnet_deployment = input.network_id == "localnet"
 }

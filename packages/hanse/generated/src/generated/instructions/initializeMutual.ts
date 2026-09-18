@@ -137,7 +137,6 @@ export type InitializeMutualInstructionData = {
   policyHash: ReadonlyUint8Array;
   depositsCloseAt: bigint;
   claimsCloseAt: bigint;
-  pullWindow: bigint;
   subaccord: SubaccordConfig;
 };
 
@@ -149,7 +148,6 @@ export type InitializeMutualInstructionDataArgs = {
   policyHash: ReadonlyUint8Array;
   depositsCloseAt: number | bigint;
   claimsCloseAt: number | bigint;
-  pullWindow: number | bigint;
   subaccord: SubaccordConfigArgs;
 };
 
@@ -162,7 +160,6 @@ export function getInitializeMutualInstructionDataEncoder(): FixedSizeEncoder<In
       ["policyHash", fixEncoderSize(getBytesEncoder(), 32)],
       ["depositsCloseAt", getI64Encoder()],
       ["claimsCloseAt", getI64Encoder()],
-      ["pullWindow", getI64Encoder()],
       ["subaccord", getSubaccordConfigEncoder()],
     ]),
     (value) => ({ ...value, discriminator: INITIALIZE_MUTUAL_DISCRIMINATOR }),
@@ -177,7 +174,6 @@ export function getInitializeMutualInstructionDataDecoder(): FixedSizeDecoder<In
     ["policyHash", fixDecoderSize(getBytesDecoder(), 32)],
     ["depositsCloseAt", getI64Decoder()],
     ["claimsCloseAt", getI64Decoder()],
-    ["pullWindow", getI64Decoder()],
     ["subaccord", getSubaccordConfigDecoder()],
   ]);
 }
@@ -259,7 +255,6 @@ export type InitializeMutualAsyncInput<
   policyHash: InitializeMutualInstructionDataArgs["policyHash"];
   depositsCloseAt: InitializeMutualInstructionDataArgs["depositsCloseAt"];
   claimsCloseAt: InitializeMutualInstructionDataArgs["claimsCloseAt"];
-  pullWindow: InitializeMutualInstructionDataArgs["pullWindow"];
   subaccordArg: InitializeMutualInstructionDataArgs["subaccord"];
 };
 
@@ -497,7 +492,6 @@ export type InitializeMutualInput<
   policyHash: InitializeMutualInstructionDataArgs["policyHash"];
   depositsCloseAt: InitializeMutualInstructionDataArgs["depositsCloseAt"];
   claimsCloseAt: InitializeMutualInstructionDataArgs["claimsCloseAt"];
-  pullWindow: InitializeMutualInstructionDataArgs["pullWindow"];
   subaccordArg: InitializeMutualInstructionDataArgs["subaccord"];
 };
 

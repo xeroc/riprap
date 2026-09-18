@@ -207,7 +207,8 @@ fn sponsored_join_residual_settles_to_sponsor() {
 
     // Member enrolled; position bound to the member, residual to the sponsor.
     let d: pool::Depositor = anchor_lang::AccountDeserialize::try_deserialize(
-        &mut &env.svm
+        &mut &env
+            .svm
             .get_account(&pool_depositor(&pool, &member.pubkey()))
             .unwrap()
             .data[..],
@@ -240,7 +241,10 @@ fn sponsored_join_residual_settles_to_sponsor() {
         )],
         &mut [&cranker_kp],
     );
-    warp_clock(&mut env.svm, cfg.claims_close_at + cfg.pull_window + 2);
+    warp_clock(
+        &mut env.svm,
+        cfg.claims_close_at + hanse::PULL_WINDOW_SECS + 2,
+    );
     send(
         &mut env.svm,
         &[Instruction::new_with_bytes(
@@ -272,8 +276,7 @@ fn sponsored_join_residual_settles_to_sponsor() {
                 destination: sponsor_ata,
                 treasury: pool_treasury(&pool, &env.mint),
                 token_program: spl_token_interface::ID,
-                associated_token_program:
-                    spl_associated_token_account_interface::program::ID,
+                associated_token_program: spl_associated_token_account_interface::program::ID,
             }
             .to_account_metas(None),
         )],
@@ -292,15 +295,12 @@ fn join_rent_sponsored_by_third_party() {
     let (mut env, cfg) = setup_with_mutual(1);
     let (member, member_ata) = member_with(&mut env, 20_000_000);
     let sponsor = cranker(&mut env);
-    let before = env
-        .svm
-        .get_account(&sponsor.pubkey())
-        .unwrap()
-        .lamports;
+    let before = env.svm.get_account(&sponsor.pubkey()).unwrap().lamports;
     join_tx_paying(&mut env, &cfg, &member, &member_ata, 1, &sponsor).unwrap();
 
     let m: hanse::Member = anchor_lang::AccountDeserialize::try_deserialize(
-        &mut &env.svm
+        &mut &env
+            .svm
             .get_account(&member_pda(&mutual_pda(1), &member.pubkey()))
             .unwrap()
             .data[..],
@@ -308,11 +308,7 @@ fn join_rent_sponsored_by_third_party() {
     .unwrap();
     assert_eq!(m.member, member.pubkey(), "sponsor is not the member");
     assert_eq!(m.tier, 1);
-    let after = env
-        .svm
-        .get_account(&sponsor.pubkey())
-        .unwrap()
-        .lamports;
+    let after = env.svm.get_account(&sponsor.pubkey()).unwrap().lamports;
     assert!(after < before, "sponsor paid the rent");
 }
 

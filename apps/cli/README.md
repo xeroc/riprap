@@ -44,6 +44,8 @@ hanse:   initialize, join, file-claim, settle-claim, settle-pool, claim-payout,
 - **pool** — the three-track mutual-pool primitive (`@riprap/pool`).
 - **hanse** — the event-mutual orchestrator (`@riprap/hanse`); `hanse:quote` is the offline §8 payout calculator.
 
+`hanse:initialize` constraints (security review 2026-09-18): `--deposit-mint` must equal `--fee-mint` (the program rejects mixed mints), and there is no `--pull-window` flag — the payout window is fixed on-chain at 180 days.
+
 Per-command docs: `riprap <topic>:<command> --help`.
 
 ### Offline `--dry-run`

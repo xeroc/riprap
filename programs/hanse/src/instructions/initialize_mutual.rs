@@ -32,7 +32,10 @@ pub struct SubaccordConfig {
 }
 
 /// Everything `initialize_mutual` needs (EVENT-MUTUAL §7). Timestamps are
-/// unix seconds read against the Clock at execution.
+/// unix seconds read against the Clock at execution. The payout pull window
+/// is NOT here: it is fixed at [`crate::PULL_WINDOW_SECS`] (security review
+/// 2026-09-18 — a config-supplied window could overflow settlement and
+/// strand the pool).
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct InitializeMutualConfig {
     /// Mutual PDA seed; the pool takes the same seed.
@@ -42,7 +45,6 @@ pub struct InitializeMutualConfig {
     pub policy_hash: [u8; 32],
     pub deposits_close_at: i64,
     pub claims_close_at: i64,
-    pub pull_window: i64,
     pub subaccord: SubaccordConfig,
 }
 
@@ -158,7 +160,16 @@ impl<'info> InitializeMutual<'info> {
             config.claims_close_at > config.deposits_close_at && config.deposits_close_at > now,
             HanseError::InvalidConfiguration
         );
-        require!(config.pull_window > 0, HanseError::InvalidConfiguration);
+        // Single-asset MVP (security review 2026-09-18): claims are
+        // deposit_mint-denominated and settlement adds claim and fee amounts
+        // as raw integers — a mixed-mint mutual would pay fee-mint units out
+        // of the deposit treasury. Separate-asset settlement needs its own
+        // ledgers and conversion; rejected here until that exists.
+        require_keys_eq!(
+            ctx.accounts.deposit_mint.key(),
+            ctx.accounts.fee_mint.key(),
+            HanseError::InvalidConfiguration
+        );
         for t in &config.tiers {
             require!(
                 t.contribution > 0 && t.max_payout >= t.contribution,
@@ -252,7 +263,7 @@ impl<'info> InitializeMutual<'info> {
             m.tiers = config.tiers;
             m.deposits_close_at = config.deposits_close_at;
             m.claims_close_at = config.claims_close_at;
-            m.pull_window = config.pull_window;
+            m.pull_window = crate::PULL_WINDOW_SECS;
             m.seed = config.seed;
             m.phase = Phase::Active;
             m.pull_close_at = 0;

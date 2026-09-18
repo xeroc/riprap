@@ -51,7 +51,7 @@ function mutualFixture(): Mutual {
     ],
     depositsCloseAt: 1_763_174_400n,
     claimsCloseAt: 1_793_469_600n,
-    pullWindow: 2_592_000n,
+    pullWindow: 15_552_000n, // fixed on-chain: 180d (security review 2026-09-18)
     seed: 7n,
     phase: Phase.Settled,
     pullCloseAt: 1_800_000_000n,

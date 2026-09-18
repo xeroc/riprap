@@ -166,7 +166,11 @@ fn payout_attacked(
     try_send(&mut env.svm, &[ix], &mut [claimant, authority])
 }
 
-fn settle_claim_attacked(env: &mut Env, mutual_addr: Pubkey, claim_addr: Pubkey) -> Result<(), String> {
+fn settle_claim_attacked(
+    env: &mut Env,
+    mutual_addr: Pubkey,
+    claim_addr: Pubkey,
+) -> Result<(), String> {
     let crank = cranker(env);
     let c: hanse::Claim = anchor_lang::AccountDeserialize::try_deserialize(
         &mut &env.svm.get_account(&claim_addr).unwrap().data[..],
@@ -424,8 +428,7 @@ fn s7_settle_claim_foreign_claim() {
     env.svm.expire_blockhash();
     file_claim_raw(&mut env, &cfg1, &member, CLAIM).unwrap();
     assert_custom_err(
-        settle_claim_attacked(
-        &mut env, mutual_pda(2), claim_pda(&mutual_pda(1), 0)),
+        settle_claim_attacked(&mut env, mutual_pda(2), claim_pda(&mutual_pda(1), 0)),
         hanse::HanseError::NotMember,
     );
 }
@@ -572,8 +575,7 @@ fn s14_settle_claim_non_terminal() {
     let (mut env, cfg, _cfg2, member) = setup_two_mutuals();
     file_claim_raw(&mut env, &cfg, &member, CLAIM).unwrap();
     assert_custom_err(
-        settle_claim_attacked(
-        &mut env, mutual_pda(1), claim_pda(&mutual_pda(1), 0)),
+        settle_claim_attacked(&mut env, mutual_pda(1), claim_pda(&mutual_pda(1), 0)),
         hanse::HanseError::DisputeNotFinal,
     );
 }
