@@ -8,11 +8,11 @@
 
 import {
   combineCodec,
+  getEnumDecoder,
+  getEnumEncoder,
   type FixedSizeCodec,
   type FixedSizeDecoder,
   type FixedSizeEncoder,
-  getEnumDecoder,
-  getEnumEncoder,
 } from "@solana/kit";
 
 /**
@@ -38,6 +38,9 @@ export function getAggregationDecoder(): FixedSizeDecoder<Aggregation> {
   return getEnumDecoder(Aggregation);
 }
 
-export function getAggregationCodec(): FixedSizeCodec<AggregationArgs, Aggregation> {
+export function getAggregationCodec(): FixedSizeCodec<
+  AggregationArgs,
+  Aggregation
+> {
   return combineCodec(getAggregationEncoder(), getAggregationDecoder());
 }

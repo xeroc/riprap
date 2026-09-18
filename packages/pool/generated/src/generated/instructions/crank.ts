@@ -7,29 +7,29 @@
  */
 
 import {
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
   combineCodec,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
+  transformEncoder,
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
   type TransactionSigner,
-  transformEncoder,
   type WritableAccount,
 } from "@solana/kit";
 import {
@@ -56,27 +56,34 @@ export type CrankInstruction<
   TAccountOwner extends string | AccountMeta<string> = string,
   TAccountDestination extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends
-    | string
-    | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-  TAccountAssociatedTokenProgram extends
-    | string
-    | AccountMeta<string> = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+  TAccountTokenProgram extends string | AccountMeta<string> =
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  TAccountAssociatedTokenProgram extends string | AccountMeta<string> =
+    "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
-      TAccountPool extends string ? ReadonlyAccount<TAccountPool> : TAccountPool,
+      TAccountPool extends string
+        ? ReadonlyAccount<TAccountPool>
+        : TAccountPool,
       TAccountCranker extends string
-        ? ReadonlySignerAccount<TAccountCranker> & AccountSignerMeta<TAccountCranker>
+        ? ReadonlySignerAccount<TAccountCranker> &
+            AccountSignerMeta<TAccountCranker>
         : TAccountCranker,
-      TAccountDepositor extends string ? WritableAccount<TAccountDepositor> : TAccountDepositor,
-      TAccountOwner extends string ? ReadonlyAccount<TAccountOwner> : TAccountOwner,
+      TAccountDepositor extends string
+        ? WritableAccount<TAccountDepositor>
+        : TAccountDepositor,
+      TAccountOwner extends string
+        ? ReadonlyAccount<TAccountOwner>
+        : TAccountOwner,
       TAccountDestination extends string
         ? WritableAccount<TAccountDestination>
         : TAccountDestination,
-      TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
+      TAccountTreasury extends string
+        ? WritableAccount<TAccountTreasury>
+        : TAccountTreasury,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
@@ -99,14 +106,19 @@ export function getCrankInstructionDataEncoder(): FixedSizeEncoder<CrankInstruct
 }
 
 export function getCrankInstructionDataDecoder(): FixedSizeDecoder<CrankInstructionData> {
-  return getStructDecoder([["discriminator", fixDecoderSize(getBytesDecoder(), 8)]]);
+  return getStructDecoder([
+    ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
+  ]);
 }
 
 export function getCrankInstructionDataCodec(): FixedSizeCodec<
   CrankInstructionDataArgs,
   CrankInstructionData
 > {
-  return combineCodec(getCrankInstructionDataEncoder(), getCrankInstructionDataDecoder());
+  return combineCodec(
+    getCrankInstructionDataEncoder(),
+    getCrankInstructionDataDecoder(),
+  );
 }
 
 export type CrankAsyncInput<
@@ -202,8 +214,14 @@ export async function getCrankInstructionAsync<
   if (!accounts.depositor.value) {
     accounts.depositor.value = await findDepositorPda(
       {
-        pool: getAddressFromResolvedInstructionAccount("pool", accounts.pool.value),
-        owner: getAddressFromResolvedInstructionAccount("owner", accounts.owner.value),
+        pool: getAddressFromResolvedInstructionAccount(
+          "pool",
+          accounts.pool.value,
+        ),
+        owner: getAddressFromResolvedInstructionAccount(
+          "owner",
+          accounts.owner.value,
+        ),
       },
       { programAddress },
     );
@@ -407,10 +425,13 @@ export function parseCrankInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedCrankInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 8) {
-    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
-      actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 8,
-    });
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 8,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

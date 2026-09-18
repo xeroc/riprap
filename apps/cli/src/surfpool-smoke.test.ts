@@ -55,7 +55,7 @@ beforeAll(async () => {
   const probe = spawnSync("solana", ["cluster-version", "--url", RPC], { encoding: "utf8" });
   if (probe.status !== 0) return;
   const account = await createSolanaRpc(RPC)
-    .getAccountInfo("63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1" as Address)
+    .getAccountInfo("PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf" as Address)
     .send();
   live = account.value !== null;
   if (!live) return;
@@ -143,6 +143,6 @@ test("Surfpool smoke: pool:init → deposit → spend --dry-run (skips without a
   ]);
   expect(spend.status, spend.stderr).toBe(0);
   expect(JSON.parse(spend.stdout).programAddress).toBe(
-    "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1",
+    "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf",
   );
 });

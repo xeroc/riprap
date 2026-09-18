@@ -7,18 +7,10 @@
  */
 
 import {
-  type Account,
-  type Address,
   assertAccountExists,
   assertAccountsExist,
   combineCodec,
   decodeAccount,
-  type EncodedAccount,
-  type FetchAccountConfig,
-  type FetchAccountsConfig,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fetchEncodedAccount,
   fetchEncodedAccounts,
   fixDecoderSize,
@@ -31,20 +23,28 @@ import {
   getI64Encoder,
   getStructDecoder,
   getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
   getU64Decoder,
   getU64Encoder,
+  getU8Decoder,
+  getU8Encoder,
+  transformEncoder,
+  type Account,
+  type Address,
+  type EncodedAccount,
+  type FetchAccountConfig,
+  type FetchAccountsConfig,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type MaybeAccount,
   type MaybeEncodedAccount,
   type ReadonlyUint8Array,
-  transformEncoder,
 } from "@solana/kit";
 import {
-  type ClaimStatus,
-  type ClaimStatusArgs,
   getClaimStatusDecoder,
   getClaimStatusEncoder,
+  type ClaimStatus,
+  type ClaimStatusArgs,
 } from "../types";
 
 export const CLAIM_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
@@ -135,7 +135,10 @@ export function decodeClaim<TAddress extends string = string>(
 export function decodeClaim<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>,
 ): Account<Claim, TAddress> | MaybeAccount<Claim, TAddress> {
-  return decodeAccount(encodedAccount as MaybeEncodedAccount<TAddress>, getClaimDecoder());
+  return decodeAccount(
+    encodedAccount as MaybeEncodedAccount<TAddress>,
+    getClaimDecoder(),
+  );
 }
 
 export async function fetchClaim<TAddress extends string = string>(

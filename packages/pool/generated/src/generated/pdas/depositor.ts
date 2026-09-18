@@ -7,10 +7,10 @@
  */
 
 import {
-  type Address,
   getAddressEncoder,
   getBytesEncoder,
   getProgramDerivedAddress,
+  type Address,
   type ProgramDerivedAddress,
 } from "@solana/kit";
 
@@ -24,12 +24,14 @@ export async function findDepositorPda(
   config: { programAddress?: Address | undefined } = {},
 ): Promise<ProgramDerivedAddress> {
   const {
-    programAddress = "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1" as Address<"63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1">,
+    programAddress = "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf" as Address<"PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf">,
   } = config;
   return await getProgramDerivedAddress({
     programAddress,
     seeds: [
-      getBytesEncoder().encode(new Uint8Array([100, 101, 112, 111, 115, 105, 116, 111, 114])),
+      getBytesEncoder().encode(
+        new Uint8Array([100, 101, 112, 111, 115, 105, 116, 111, 114]),
+      ),
       getAddressEncoder().encode(seeds.pool),
       getAddressEncoder().encode(seeds.owner),
     ],

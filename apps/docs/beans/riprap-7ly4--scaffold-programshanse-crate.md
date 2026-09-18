@@ -25,7 +25,7 @@ Checklist:
 ## Summary of Changes
 
 - `programs/hanse/Cargo.toml`: anchor 1.0.2-floor crate (cdylib+lib, full anchor feature set, `init-if-needed`), dev-deps mirroring `programs/pool` (litesvm 0.10 set), accord pinned to rev `ba91bd8` with the deliberate-rev / `[patch]`-override comment.
-- `programs/hanse/src/lib.rs`: doc header citing EVENT-MUTUAL §2.2–§2.7 + layout law; empty `error`/`events`/`instructions`/`state` mods; `declare_id!("DTSwUuWC1SpZP8LcJ1EJ4HtUxAczqwrsgqNYnR1QXK3p")`; empty `#[program] mod hanse` — no stubs.
+- `programs/hanse/src/lib.rs`: doc header citing EVENT-MUTUAL §2.2–§2.7 + layout law; empty `error`/`events`/`instructions`/`state` mods; `declare_id!("hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav")`; empty `#[program] mod hanse` — no stubs.
 - Keypair at `target/deploy/hanse-keypair.json` (gitignore whitelist added), `Anchor.toml [programs.localnet] hanse` entry.
 - Lock resolution findings (documented in Cargo.toml comments):
   - accord rev requires anchor-lang **1.1.x** at compile time (`anchor_lang::__private` moved) — workspace lock unifies anchor-lang/anchor-spl to 1.1.2; pool+hanse+accord all green on it.

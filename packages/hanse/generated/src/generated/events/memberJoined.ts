@@ -7,12 +7,8 @@
  */
 
 import {
-  type Address,
   combineCodec,
   containsBytes,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -23,19 +19,24 @@ import {
   getHiddenPrefixEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
   getU64Decoder,
   getU64Encoder,
+  getU8Decoder,
+  getU8Encoder,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 
-export const MEMBER_JOINED_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
-  156, 199, 149, 88, 193, 203, 191, 210,
-]);
+export const MEMBER_JOINED_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
+  new Uint8Array([156, 199, 149, 88, 193, 203, 191, 210]);
 
 export function getMemberJoinedEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(MEMBER_JOINED_EVENT_DISCRIMINATOR);
+  return fixEncoderSize(getBytesEncoder(), 8).encode(
+    MEMBER_JOINED_EVENT_DISCRIMINATOR,
+  );
 }
 
 export type MemberJoinedEvent = {
@@ -83,13 +84,20 @@ export function getMemberJoinedEventCodec(): FixedSizeCodec<
   MemberJoinedEventArgs,
   MemberJoinedEvent
 > {
-  return combineCodec(getMemberJoinedEventEncoder(), getMemberJoinedEventDecoder());
+  return combineCodec(
+    getMemberJoinedEventEncoder(),
+    getMemberJoinedEventDecoder(),
+  );
 }
 
 /** Parses the provided bytes into {@link MemberJoinedEvent} event data. */
-export function parseMemberJoinedEvent(data: ReadonlyUint8Array | Uint8Array): MemberJoinedEvent {
+export function parseMemberJoinedEvent(
+  data: ReadonlyUint8Array | Uint8Array,
+): MemberJoinedEvent {
   if (containsBytes(data, MEMBER_JOINED_EVENT_DISCRIMINATOR, 0)) {
     return getMemberJoinedEventDecoder().decode(data);
   }
-  throw new Error('The provided data does not match the "MemberJoinedEvent" event discriminators.');
+  throw new Error(
+    'The provided data does not match the "MemberJoinedEvent" event discriminators.',
+  );
 }

@@ -6,14 +6,16 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-pool = "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1"
-hanse = "DTSwUuWC1SpZP8LcJ1EJ4HtUxAczqwrsgqNYnR1QXK3p"
+hanse = "hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav"
+pool = "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf"
 
-# Mainnet: fill after generating offline deploy keypairs (README § "Mainnet
-# deployment"); these IDs become the programs' permanent on-chain identities.
-# [programs.mainnet]
-# pool = "<pool mainnet program id>"
-# hanse = "<hanse mainnet program id>"
+[programs.devnet]
+hanse = "hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav"
+pool = "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf"
+
+[programs.mainnet]
+hanse = "hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav"
+pool = "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf"
 
 [provider]
 cluster = "localnet"

@@ -7,12 +7,8 @@
  */
 
 import {
-  type Address,
   combineCodec,
   containsBytes,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -23,20 +19,31 @@ import {
   getHiddenPrefixEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU64Decoder,
-  getU64Encoder,
   getU128Decoder,
   getU128Encoder,
+  getU64Decoder,
+  getU64Encoder,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
-import { getTrackDecoder, getTrackEncoder, type Track, type TrackArgs } from "../types";
+import {
+  getTrackDecoder,
+  getTrackEncoder,
+  type Track,
+  type TrackArgs,
+} from "../types";
 
 export const BURNED_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
   207, 37, 251, 154, 239, 229, 14, 67,
 ]);
 
 export function getBurnedEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(BURNED_EVENT_DISCRIMINATOR);
+  return fixEncoderSize(getBytesEncoder(), 8).encode(
+    BURNED_EVENT_DISCRIMINATOR,
+  );
 }
 
 export type BurnedEvent = {
@@ -84,14 +91,21 @@ export function getBurnedEventDecoder(): FixedSizeDecoder<BurnedEvent> {
 }
 
 /** Gets the codec for {@link BurnedEvent} event data. */
-export function getBurnedEventCodec(): FixedSizeCodec<BurnedEventArgs, BurnedEvent> {
+export function getBurnedEventCodec(): FixedSizeCodec<
+  BurnedEventArgs,
+  BurnedEvent
+> {
   return combineCodec(getBurnedEventEncoder(), getBurnedEventDecoder());
 }
 
 /** Parses the provided bytes into {@link BurnedEvent} event data. */
-export function parseBurnedEvent(data: ReadonlyUint8Array | Uint8Array): BurnedEvent {
+export function parseBurnedEvent(
+  data: ReadonlyUint8Array | Uint8Array,
+): BurnedEvent {
   if (containsBytes(data, BURNED_EVENT_DISCRIMINATOR, 0)) {
     return getBurnedEventDecoder().decode(data);
   }
-  throw new Error('The provided data does not match the "BurnedEvent" event discriminators.');
+  throw new Error(
+    'The provided data does not match the "BurnedEvent" event discriminators.',
+  );
 }

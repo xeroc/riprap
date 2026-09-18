@@ -7,11 +7,11 @@
  */
 
 import {
-  type Address,
   getAddressEncoder,
   getBytesEncoder,
   getProgramDerivedAddress,
   getU64Encoder,
+  type Address,
   type ProgramDerivedAddress,
 } from "@solana/kit";
 
@@ -25,7 +25,7 @@ export async function findClaimPda(
   config: { programAddress?: Address | undefined } = {},
 ): Promise<ProgramDerivedAddress> {
   const {
-    programAddress = "DTSwUuWC1SpZP8LcJ1EJ4HtUxAczqwrsgqNYnR1QXK3p" as Address<"DTSwUuWC1SpZP8LcJ1EJ4HtUxAczqwrsgqNYnR1QXK3p">,
+    programAddress = "hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav" as Address<"hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav">,
   } = config;
   return await getProgramDerivedAddress({
     programAddress,

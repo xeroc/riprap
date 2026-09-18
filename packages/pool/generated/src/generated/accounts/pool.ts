@@ -7,18 +7,10 @@
  */
 
 import {
-  type Account,
-  type Address,
   assertAccountExists,
   assertAccountsExist,
   combineCodec,
   decodeAccount,
-  type EncodedAccount,
-  type FetchAccountConfig,
-  type FetchAccountsConfig,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fetchEncodedAccount,
   fetchEncodedAccounts,
   fixDecoderSize,
@@ -29,16 +21,24 @@ import {
   getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
-  getU64Decoder,
-  getU64Encoder,
   getU128Decoder,
   getU128Encoder,
+  getU64Decoder,
+  getU64Encoder,
+  getU8Decoder,
+  getU8Encoder,
+  transformEncoder,
+  type Account,
+  type Address,
+  type EncodedAccount,
+  type FetchAccountConfig,
+  type FetchAccountsConfig,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type MaybeAccount,
   type MaybeEncodedAccount,
   type ReadonlyUint8Array,
-  transformEncoder,
 } from "@solana/kit";
 import {
   getPoolStateDecoder,
@@ -179,7 +179,10 @@ export function decodePool<TAddress extends string = string>(
 export function decodePool<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>,
 ): Account<Pool, TAddress> | MaybeAccount<Pool, TAddress> {
-  return decodeAccount(encodedAccount as MaybeEncodedAccount<TAddress>, getPoolDecoder());
+  return decodeAccount(
+    encodedAccount as MaybeEncodedAccount<TAddress>,
+    getPoolDecoder(),
+  );
 }
 
 export async function fetchPool<TAddress extends string = string>(

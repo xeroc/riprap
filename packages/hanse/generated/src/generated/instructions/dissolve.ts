@@ -7,29 +7,29 @@
  */
 
 import {
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
   combineCodec,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
+  transformEncoder,
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
   type TransactionSigner,
-  transformEncoder,
   type WritableAccount,
 } from "@solana/kit";
 import {
@@ -55,26 +55,31 @@ export type DissolveInstruction<
   TAccountOwnershipAuthority extends string | AccountMeta<string> = string,
   TAccountPool extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends
-    | string
-    | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-  TAccountPoolProgram extends
-    | string
-    | AccountMeta<string> = "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1",
+  TAccountTokenProgram extends string | AccountMeta<string> =
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  TAccountPoolProgram extends string | AccountMeta<string> =
+    "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
       TAccountCranker extends string
-        ? ReadonlySignerAccount<TAccountCranker> & AccountSignerMeta<TAccountCranker>
+        ? ReadonlySignerAccount<TAccountCranker> &
+            AccountSignerMeta<TAccountCranker>
         : TAccountCranker,
-      TAccountMutual extends string ? WritableAccount<TAccountMutual> : TAccountMutual,
+      TAccountMutual extends string
+        ? WritableAccount<TAccountMutual>
+        : TAccountMutual,
       TAccountOwnershipAuthority extends string
         ? ReadonlyAccount<TAccountOwnershipAuthority>
         : TAccountOwnershipAuthority,
-      TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
-      TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
+      TAccountPool extends string
+        ? WritableAccount<TAccountPool>
+        : TAccountPool,
+      TAccountTreasury extends string
+        ? WritableAccount<TAccountTreasury>
+        : TAccountTreasury,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
@@ -97,14 +102,19 @@ export function getDissolveInstructionDataEncoder(): FixedSizeEncoder<DissolveIn
 }
 
 export function getDissolveInstructionDataDecoder(): FixedSizeDecoder<DissolveInstructionData> {
-  return getStructDecoder([["discriminator", fixDecoderSize(getBytesDecoder(), 8)]]);
+  return getStructDecoder([
+    ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
+  ]);
 }
 
 export function getDissolveInstructionDataCodec(): FixedSizeCodec<
   DissolveInstructionDataArgs,
   DissolveInstructionData
 > {
-  return combineCodec(getDissolveInstructionDataEncoder(), getDissolveInstructionDataDecoder());
+  return combineCodec(
+    getDissolveInstructionDataEncoder(),
+    getDissolveInstructionDataDecoder(),
+  );
 }
 
 export type DissolveAsyncInput<
@@ -190,7 +200,10 @@ export async function getDissolveInstructionAsync<
   if (!accounts.ownershipAuthority.value) {
     accounts.ownershipAuthority.value = await findOwnershipAuthorityPda(
       {
-        mutual: getAddressFromResolvedInstructionAccount("mutual", accounts.mutual.value),
+        mutual: getAddressFromResolvedInstructionAccount(
+          "mutual",
+          accounts.mutual.value,
+        ),
       },
       { programAddress },
     );
@@ -201,7 +214,7 @@ export async function getDissolveInstructionAsync<
   }
   if (!accounts.poolProgram.value) {
     accounts.poolProgram.value =
-      "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1" as Address<"63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1">;
+      "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf" as Address<"PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf">;
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
@@ -313,7 +326,7 @@ export function getDissolveInstruction<
   }
   if (!accounts.poolProgram.value) {
     accounts.poolProgram.value =
-      "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1" as Address<"63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1">;
+      "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf" as Address<"PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf">;
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
@@ -375,10 +388,13 @@ export function parseDissolveInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedDissolveInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 7) {
-    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
-      actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 7,
-    });
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 7,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

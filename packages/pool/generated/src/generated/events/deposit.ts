@@ -7,12 +7,8 @@
  */
 
 import {
-  type Address,
   combineCodec,
   containsBytes,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -23,20 +19,31 @@ import {
   getHiddenPrefixEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU64Decoder,
-  getU64Encoder,
   getU128Decoder,
   getU128Encoder,
+  getU64Decoder,
+  getU64Encoder,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
-import { getTrackDecoder, getTrackEncoder, type Track, type TrackArgs } from "../types";
+import {
+  getTrackDecoder,
+  getTrackEncoder,
+  type Track,
+  type TrackArgs,
+} from "../types";
 
 export const DEPOSIT_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
   62, 205, 242, 175, 244, 169, 136, 52,
 ]);
 
 export function getDepositEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(DEPOSIT_EVENT_DISCRIMINATOR);
+  return fixEncoderSize(getBytesEncoder(), 8).encode(
+    DEPOSIT_EVENT_DISCRIMINATOR,
+  );
 }
 
 export type DepositEvent = {
@@ -84,14 +91,21 @@ export function getDepositEventDecoder(): FixedSizeDecoder<DepositEvent> {
 }
 
 /** Gets the codec for {@link DepositEvent} event data. */
-export function getDepositEventCodec(): FixedSizeCodec<DepositEventArgs, DepositEvent> {
+export function getDepositEventCodec(): FixedSizeCodec<
+  DepositEventArgs,
+  DepositEvent
+> {
   return combineCodec(getDepositEventEncoder(), getDepositEventDecoder());
 }
 
 /** Parses the provided bytes into {@link DepositEvent} event data. */
-export function parseDepositEvent(data: ReadonlyUint8Array | Uint8Array): DepositEvent {
+export function parseDepositEvent(
+  data: ReadonlyUint8Array | Uint8Array,
+): DepositEvent {
   if (containsBytes(data, DEPOSIT_EVENT_DISCRIMINATOR, 0)) {
     return getDepositEventDecoder().decode(data);
   }
-  throw new Error('The provided data does not match the "DepositEvent" event discriminators.');
+  throw new Error(
+    'The provided data does not match the "DepositEvent" event discriminators.',
+  );
 }

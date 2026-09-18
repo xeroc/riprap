@@ -7,12 +7,8 @@
  */
 
 import {
-  type Address,
   combineCodec,
   containsBytes,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -25,15 +21,20 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 
-export const PAYOUT_CLAIMED_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
-  200, 39, 105, 112, 116, 63, 58, 149,
-]);
+export const PAYOUT_CLAIMED_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
+  new Uint8Array([200, 39, 105, 112, 116, 63, 58, 149]);
 
 export function getPayoutClaimedEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(PAYOUT_CLAIMED_EVENT_DISCRIMINATOR);
+  return fixEncoderSize(getBytesEncoder(), 8).encode(
+    PAYOUT_CLAIMED_EVENT_DISCRIMINATOR,
+  );
 }
 
 export type PayoutClaimedEvent = {
@@ -81,11 +82,16 @@ export function getPayoutClaimedEventCodec(): FixedSizeCodec<
   PayoutClaimedEventArgs,
   PayoutClaimedEvent
 > {
-  return combineCodec(getPayoutClaimedEventEncoder(), getPayoutClaimedEventDecoder());
+  return combineCodec(
+    getPayoutClaimedEventEncoder(),
+    getPayoutClaimedEventDecoder(),
+  );
 }
 
 /** Parses the provided bytes into {@link PayoutClaimedEvent} event data. */
-export function parsePayoutClaimedEvent(data: ReadonlyUint8Array | Uint8Array): PayoutClaimedEvent {
+export function parsePayoutClaimedEvent(
+  data: ReadonlyUint8Array | Uint8Array,
+): PayoutClaimedEvent {
   if (containsBytes(data, PAYOUT_CLAIMED_EVENT_DISCRIMINATOR, 0)) {
     return getPayoutClaimedEventDecoder().decode(data);
   }

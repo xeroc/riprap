@@ -24,8 +24,8 @@ Three programs must be deployed and live before anything else:
 
 | Program | Address (baked into the SDKs) | Built from |
 |---|---|---|
-| `pool` | `63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1` | this repo, `programs/pool` |
-| `hanse` | `DTSwUuWC1SpZP8LcJ1EJ4HtUxAczqwrsgqNYnR1QXK3p` | this repo, `programs/hanse` |
+| `pool` | `PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf` | this repo, `programs/pool` |
+| `hanse` | `hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav` | this repo, `programs/hanse` |
 | `accord` | `cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed` | sibling repo, rev `ba91bd8b8b374091c174909b115688ffb9b231ff` (`programs/hanse/Cargo.toml` pin) |
 
 The CLI derives every PDA against these addresses — they come from `packages/{pool,hanse}/generated/` and `@useaccord/sdk`, not from flags. Therefore:

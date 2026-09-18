@@ -7,11 +7,7 @@
  */
 
 import {
-  type Address,
   combineCodec,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getAddressDecoder,
@@ -20,23 +16,27 @@ import {
   getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU8Decoder,
-  getU8Encoder,
   getU16Decoder,
   getU16Encoder,
   getU32Decoder,
   getU32Encoder,
   getU64Decoder,
   getU64Encoder,
+  getU8Decoder,
+  getU8Encoder,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 import {
-  type Aggregation,
-  type AggregationArgs,
   getAggregationDecoder,
   getAggregationEncoder,
   getShortfallPolicyDecoder,
   getShortfallPolicyEncoder,
+  type Aggregation,
+  type AggregationArgs,
   type ShortfallPolicy,
   type ShortfallPolicyArgs,
 } from ".";

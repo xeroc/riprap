@@ -7,13 +7,7 @@
  */
 
 import {
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
   combineCodec,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getBytesDecoder,
@@ -22,16 +16,22 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
+  transformEncoder,
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
   type TransactionSigner,
-  transformEncoder,
   type WritableAccount,
 } from "@solana/kit";
 import {
@@ -54,20 +54,23 @@ export type SpendInstruction<
   TAccountRightsAuthority extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
   TAccountDestination extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends
-    | string
-    | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  TAccountTokenProgram extends string | AccountMeta<string> =
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
-      TAccountPool extends string ? ReadonlyAccount<TAccountPool> : TAccountPool,
+      TAccountPool extends string
+        ? ReadonlyAccount<TAccountPool>
+        : TAccountPool,
       TAccountRightsAuthority extends string
         ? ReadonlySignerAccount<TAccountRightsAuthority> &
             AccountSignerMeta<TAccountRightsAuthority>
         : TAccountRightsAuthority,
-      TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
+      TAccountTreasury extends string
+        ? WritableAccount<TAccountTreasury>
+        : TAccountTreasury,
       TAccountDestination extends string
         ? WritableAccount<TAccountDestination>
         : TAccountDestination,
@@ -106,7 +109,10 @@ export function getSpendInstructionDataCodec(): FixedSizeCodec<
   SpendInstructionDataArgs,
   SpendInstructionData
 > {
-  return combineCodec(getSpendInstructionDataEncoder(), getSpendInstructionDataDecoder());
+  return combineCodec(
+    getSpendInstructionDataEncoder(),
+    getSpendInstructionDataDecoder(),
+  );
 }
 
 export type SpendInput<
@@ -192,7 +198,9 @@ export function getSpendInstruction<
       getAccountMeta("destination", accounts.destination),
       getAccountMeta("tokenProgram", accounts.tokenProgram),
     ],
-    data: getSpendInstructionDataEncoder().encode(args as SpendInstructionDataArgs),
+    data: getSpendInstructionDataEncoder().encode(
+      args as SpendInstructionDataArgs,
+    ),
     programAddress,
   } as SpendInstruction<
     TProgramAddress,
@@ -235,10 +243,13 @@ export function parseSpendInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedSpendInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 5) {
-    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
-      actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 5,
-    });
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 5,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

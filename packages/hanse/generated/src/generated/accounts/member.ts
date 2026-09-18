@@ -7,18 +7,10 @@
  */
 
 import {
-  type Account,
-  type Address,
   assertAccountExists,
   assertAccountsExist,
   combineCodec,
   decodeAccount,
-  type EncodedAccount,
-  type FetchAccountConfig,
-  type FetchAccountsConfig,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fetchEncodedAccount,
   fetchEncodedAccounts,
   fixDecoderSize,
@@ -33,10 +25,18 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  transformEncoder,
+  type Account,
+  type Address,
+  type EncodedAccount,
+  type FetchAccountConfig,
+  type FetchAccountsConfig,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type MaybeAccount,
   type MaybeEncodedAccount,
   type ReadonlyUint8Array,
-  transformEncoder,
 } from "@solana/kit";
 
 export const MEMBER_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
@@ -123,7 +123,10 @@ export function decodeMember<TAddress extends string = string>(
 export function decodeMember<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>,
 ): Account<Member, TAddress> | MaybeAccount<Member, TAddress> {
-  return decodeAccount(encodedAccount as MaybeEncodedAccount<TAddress>, getMemberDecoder());
+  return decodeAccount(
+    encodedAccount as MaybeEncodedAccount<TAddress>,
+    getMemberDecoder(),
+  );
 }
 
 export async function fetchMember<TAddress extends string = string>(

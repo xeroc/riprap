@@ -7,29 +7,29 @@
  */
 
 import {
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
   combineCodec,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
+  transformEncoder,
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
   type TransactionSigner,
-  transformEncoder,
   type WritableAccount,
 } from "@solana/kit";
 import {
@@ -57,10 +57,15 @@ export type SettlePoolInstruction<
   InstructionWithAccounts<
     [
       TAccountCranker extends string
-        ? ReadonlySignerAccount<TAccountCranker> & AccountSignerMeta<TAccountCranker>
+        ? ReadonlySignerAccount<TAccountCranker> &
+            AccountSignerMeta<TAccountCranker>
         : TAccountCranker,
-      TAccountMutual extends string ? WritableAccount<TAccountMutual> : TAccountMutual,
-      TAccountTreasury extends string ? ReadonlyAccount<TAccountTreasury> : TAccountTreasury,
+      TAccountMutual extends string
+        ? WritableAccount<TAccountMutual>
+        : TAccountMutual,
+      TAccountTreasury extends string
+        ? ReadonlyAccount<TAccountTreasury>
+        : TAccountTreasury,
       ...TRemainingAccounts,
     ]
   >;
@@ -77,14 +82,19 @@ export function getSettlePoolInstructionDataEncoder(): FixedSizeEncoder<SettlePo
 }
 
 export function getSettlePoolInstructionDataDecoder(): FixedSizeDecoder<SettlePoolInstructionData> {
-  return getStructDecoder([["discriminator", fixDecoderSize(getBytesDecoder(), 8)]]);
+  return getStructDecoder([
+    ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
+  ]);
 }
 
 export function getSettlePoolInstructionDataCodec(): FixedSizeCodec<
   SettlePoolInstructionDataArgs,
   SettlePoolInstructionData
 > {
-  return combineCodec(getSettlePoolInstructionDataEncoder(), getSettlePoolInstructionDataDecoder());
+  return combineCodec(
+    getSettlePoolInstructionDataEncoder(),
+    getSettlePoolInstructionDataDecoder(),
+  );
 }
 
 export type SettlePoolInput<
@@ -112,7 +122,12 @@ export function getSettlePoolInstruction<
 >(
   input: SettlePoolInput<TAccountCranker, TAccountMutual, TAccountTreasury>,
   config?: { programAddress?: TProgramAddress },
-): SettlePoolInstruction<TProgramAddress, TAccountCranker, TAccountMutual, TAccountTreasury> {
+): SettlePoolInstruction<
+  TProgramAddress,
+  TAccountCranker,
+  TAccountMutual,
+  TAccountTreasury
+> {
   // Program address.
   const programAddress = config?.programAddress ?? HANSE_PROGRAM_ADDRESS;
 
@@ -136,7 +151,12 @@ export function getSettlePoolInstruction<
     ],
     data: getSettlePoolInstructionDataEncoder().encode({}),
     programAddress,
-  } as SettlePoolInstruction<TProgramAddress, TAccountCranker, TAccountMutual, TAccountTreasury>);
+  } as SettlePoolInstruction<
+    TProgramAddress,
+    TAccountCranker,
+    TAccountMutual,
+    TAccountTreasury
+  >);
 }
 
 export type ParsedSettlePoolInstruction<
@@ -168,10 +188,13 @@ export function parseSettlePoolInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedSettlePoolInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
-    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
-      actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 3,
-    });
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 3,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

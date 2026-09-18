@@ -7,12 +7,8 @@
  */
 
 import {
-  type Address,
   combineCodec,
   containsBytes,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -23,15 +19,20 @@ import {
   getHiddenPrefixEncoder,
   getStructDecoder,
   getStructEncoder,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 
-export const LIQUIDATED_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
-  231, 57, 55, 75, 0, 170, 246, 68,
-]);
+export const LIQUIDATED_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
+  new Uint8Array([231, 57, 55, 75, 0, 170, 246, 68]);
 
 export function getLiquidatedEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(LIQUIDATED_EVENT_DISCRIMINATOR);
+  return fixEncoderSize(getBytesEncoder(), 8).encode(
+    LIQUIDATED_EVENT_DISCRIMINATOR,
+  );
 }
 
 export type LiquidatedEvent = { pool: Address };
@@ -40,27 +41,36 @@ export type LiquidatedEventArgs = LiquidatedEvent;
 
 /** Gets the encoder for {@link LiquidatedEventArgs} event data. */
 export function getLiquidatedEventEncoder(): FixedSizeEncoder<LiquidatedEventArgs> {
-  return getHiddenPrefixEncoder(getStructEncoder([["pool", getAddressEncoder()]]), [
-    getConstantEncoder(LIQUIDATED_EVENT_DISCRIMINATOR),
-  ]);
+  return getHiddenPrefixEncoder(
+    getStructEncoder([["pool", getAddressEncoder()]]),
+    [getConstantEncoder(LIQUIDATED_EVENT_DISCRIMINATOR)],
+  );
 }
 
 /** Gets the decoder for {@link LiquidatedEvent} event data. */
 export function getLiquidatedEventDecoder(): FixedSizeDecoder<LiquidatedEvent> {
-  return getHiddenPrefixDecoder(getStructDecoder([["pool", getAddressDecoder()]]), [
-    getConstantDecoder(LIQUIDATED_EVENT_DISCRIMINATOR),
-  ]);
+  return getHiddenPrefixDecoder(
+    getStructDecoder([["pool", getAddressDecoder()]]),
+    [getConstantDecoder(LIQUIDATED_EVENT_DISCRIMINATOR)],
+  );
 }
 
 /** Gets the codec for {@link LiquidatedEvent} event data. */
-export function getLiquidatedEventCodec(): FixedSizeCodec<LiquidatedEventArgs, LiquidatedEvent> {
+export function getLiquidatedEventCodec(): FixedSizeCodec<
+  LiquidatedEventArgs,
+  LiquidatedEvent
+> {
   return combineCodec(getLiquidatedEventEncoder(), getLiquidatedEventDecoder());
 }
 
 /** Parses the provided bytes into {@link LiquidatedEvent} event data. */
-export function parseLiquidatedEvent(data: ReadonlyUint8Array | Uint8Array): LiquidatedEvent {
+export function parseLiquidatedEvent(
+  data: ReadonlyUint8Array | Uint8Array,
+): LiquidatedEvent {
   if (containsBytes(data, LIQUIDATED_EVENT_DISCRIMINATOR, 0)) {
     return getLiquidatedEventDecoder().decode(data);
   }
-  throw new Error('The provided data does not match the "LiquidatedEvent" event discriminators.');
+  throw new Error(
+    'The provided data does not match the "LiquidatedEvent" event discriminators.',
+  );
 }

@@ -18,7 +18,7 @@ pub use error::PoolError;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1");
+declare_id!("PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf");
 
 #[program]
 pub mod pool {

@@ -30,7 +30,7 @@ pub use state::*;
 
 use anchor_lang::prelude::*;
 
-declare_id!("DTSwUuWC1SpZP8LcJ1EJ4HtUxAczqwrsgqNYnR1QXK3p");
+declare_id!("hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav");
 
 #[program]
 pub mod hanse {

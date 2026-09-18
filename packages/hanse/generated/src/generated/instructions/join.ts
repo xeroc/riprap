@@ -7,13 +7,7 @@
  */
 
 import {
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
   combineCodec,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getBytesDecoder,
@@ -22,15 +16,21 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
+  transformEncoder,
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
   type TransactionSigner,
-  transformEncoder,
   type WritableAccount,
   type WritableSignerAccount,
 } from "@solana/kit";
@@ -62,35 +62,47 @@ export type JoinInstruction<
   TAccountRentPayer extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
   TAccountDepositMint extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends
-    | string
-    | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-  TAccountSystemProgram extends string | AccountMeta<string> = "11111111111111111111111111111111",
-  TAccountPoolProgram extends
-    | string
-    | AccountMeta<string> = "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1",
+  TAccountTokenProgram extends string | AccountMeta<string> =
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  TAccountSystemProgram extends string | AccountMeta<string> =
+    "11111111111111111111111111111111",
+  TAccountPoolProgram extends string | AccountMeta<string> =
+    "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
       TAccountMember extends string
-        ? WritableSignerAccount<TAccountMember> & AccountSignerMeta<TAccountMember>
+        ? WritableSignerAccount<TAccountMember> &
+            AccountSignerMeta<TAccountMember>
         : TAccountMember,
       TAccountFunder extends string
-        ? WritableSignerAccount<TAccountFunder> & AccountSignerMeta<TAccountFunder>
+        ? WritableSignerAccount<TAccountFunder> &
+            AccountSignerMeta<TAccountFunder>
         : TAccountFunder,
       TAccountMemberAccount extends string
         ? WritableAccount<TAccountMemberAccount>
         : TAccountMemberAccount,
-      TAccountMutual extends string ? ReadonlyAccount<TAccountMutual> : TAccountMutual,
-      TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
-      TAccountDepositor extends string ? WritableAccount<TAccountDepositor> : TAccountDepositor,
-      TAccountOwnerAta extends string ? WritableAccount<TAccountOwnerAta> : TAccountOwnerAta,
+      TAccountMutual extends string
+        ? ReadonlyAccount<TAccountMutual>
+        : TAccountMutual,
+      TAccountPool extends string
+        ? WritableAccount<TAccountPool>
+        : TAccountPool,
+      TAccountDepositor extends string
+        ? WritableAccount<TAccountDepositor>
+        : TAccountDepositor,
+      TAccountOwnerAta extends string
+        ? WritableAccount<TAccountOwnerAta>
+        : TAccountOwnerAta,
       TAccountRentPayer extends string
-        ? WritableSignerAccount<TAccountRentPayer> & AccountSignerMeta<TAccountRentPayer>
+        ? WritableSignerAccount<TAccountRentPayer> &
+            AccountSignerMeta<TAccountRentPayer>
         : TAccountRentPayer,
-      TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
+      TAccountTreasury extends string
+        ? WritableAccount<TAccountTreasury>
+        : TAccountTreasury,
       TAccountDepositMint extends string
         ? ReadonlyAccount<TAccountDepositMint>
         : TAccountDepositMint,
@@ -135,7 +147,10 @@ export function getJoinInstructionDataCodec(): FixedSizeCodec<
   JoinInstructionDataArgs,
   JoinInstructionData
 > {
-  return combineCodec(getJoinInstructionDataEncoder(), getJoinInstructionDataDecoder());
+  return combineCodec(
+    getJoinInstructionDataEncoder(),
+    getJoinInstructionDataDecoder(),
+  );
 }
 
 export type JoinAsyncInput<
@@ -276,8 +291,14 @@ export async function getJoinInstructionAsync<
   if (!accounts.memberAccount.value) {
     accounts.memberAccount.value = await findJoinMemberAccountPda(
       {
-        mutual: getAddressFromResolvedInstructionAccount("mutual", accounts.mutual.value),
-        member: getAddressFromResolvedInstructionAccount("member", accounts.member.value),
+        mutual: getAddressFromResolvedInstructionAccount(
+          "mutual",
+          accounts.mutual.value,
+        ),
+        member: getAddressFromResolvedInstructionAccount(
+          "member",
+          accounts.member.value,
+        ),
       },
       { programAddress },
     );
@@ -292,7 +313,7 @@ export async function getJoinInstructionAsync<
   }
   if (!accounts.poolProgram.value) {
     accounts.poolProgram.value =
-      "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1" as Address<"63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1">;
+      "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf" as Address<"PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf">;
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
@@ -312,7 +333,9 @@ export async function getJoinInstructionAsync<
       getAccountMeta("systemProgram", accounts.systemProgram),
       getAccountMeta("poolProgram", accounts.poolProgram),
     ],
-    data: getJoinInstructionDataEncoder().encode(args as JoinInstructionDataArgs),
+    data: getJoinInstructionDataEncoder().encode(
+      args as JoinInstructionDataArgs,
+    ),
     programAddress,
   } as JoinInstruction<
     TProgramAddress,
@@ -475,7 +498,7 @@ export function getJoinInstruction<
   }
   if (!accounts.poolProgram.value) {
     accounts.poolProgram.value =
-      "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1" as Address<"63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1">;
+      "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf" as Address<"PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf">;
   }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
@@ -495,7 +518,9 @@ export function getJoinInstruction<
       getAccountMeta("systemProgram", accounts.systemProgram),
       getAccountMeta("poolProgram", accounts.poolProgram),
     ],
-    data: getJoinInstructionDataEncoder().encode(args as JoinInstructionDataArgs),
+    data: getJoinInstructionDataEncoder().encode(
+      args as JoinInstructionDataArgs,
+    ),
     programAddress,
   } as JoinInstruction<
     TProgramAddress,
@@ -573,10 +598,13 @@ export function parseJoinInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedJoinInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 13) {
-    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
-      actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 13,
-    });
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 13,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {
@@ -586,7 +614,9 @@ export function parseJoinInstruction<
   };
   const getNextOptionalAccount = () => {
     const accountMeta = getNextAccount();
-    return accountMeta.address === HANSE_PROGRAM_ADDRESS ? undefined : accountMeta;
+    return accountMeta.address === HANSE_PROGRAM_ADDRESS
+      ? undefined
+      : accountMeta;
   };
   return {
     programAddress: instruction.programAddress,

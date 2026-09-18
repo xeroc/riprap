@@ -7,13 +7,7 @@
  */
 
 import {
-  type Address,
-  type Codec,
   combineCodec,
-  type Decoder,
-  type Encoder,
-  type GetDiscriminatedUnionVariant,
-  type GetDiscriminatedUnionVariantContent,
   getAddressDecoder,
   getAddressEncoder,
   getDiscriminatedUnionDecoder,
@@ -22,12 +16,18 @@ import {
   getStructEncoder,
   getTupleDecoder,
   getTupleEncoder,
-  getU8Decoder,
-  getU8Encoder,
   getU16Decoder,
   getU16Encoder,
   getU64Decoder,
   getU64Encoder,
+  getU8Decoder,
+  getU8Encoder,
+  type Address,
+  type Codec,
+  type Decoder,
+  type Encoder,
+  type GetDiscriminatedUnionVariant,
+  type GetDiscriminatedUnionVariantContent,
 } from "@solana/kit";
 
 /**
@@ -66,78 +66,189 @@ export type UpdatePayloadArgs =
 
 export function getUpdatePayloadEncoder(): Encoder<UpdatePayloadArgs> {
   return getDiscriminatedUnionEncoder([
-    ["MinStake", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
-    ["AlphaBps", getStructEncoder([["fields", getTupleEncoder([getU16Encoder()])]])],
-    ["ReviewWindow", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
-    ["CommitWindow", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
-    ["RevealWindow", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
-    ["AppealWindow", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
-    ["MaxAppeals", getStructEncoder([["fields", getTupleEncoder([getU8Encoder()])]])],
-    ["FeePerJuror", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
-    ["Authority", getStructEncoder([["fields", getTupleEncoder([getAddressEncoder()])]])],
-    ["EvidenceOperator", getStructEncoder([["fields", getTupleEncoder([getAddressEncoder()])]])],
-    ["RevealThresholdBps", getStructEncoder([["fields", getTupleEncoder([getU16Encoder()])]])],
-    ["MaxDrawAttempts", getStructEncoder([["fields", getTupleEncoder([getU8Encoder()])]])],
+    [
+      "MinStake",
+      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
+    ],
+    [
+      "AlphaBps",
+      getStructEncoder([["fields", getTupleEncoder([getU16Encoder()])]]),
+    ],
+    [
+      "ReviewWindow",
+      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
+    ],
+    [
+      "CommitWindow",
+      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
+    ],
+    [
+      "RevealWindow",
+      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
+    ],
+    [
+      "AppealWindow",
+      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
+    ],
+    [
+      "MaxAppeals",
+      getStructEncoder([["fields", getTupleEncoder([getU8Encoder()])]]),
+    ],
+    [
+      "FeePerJuror",
+      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
+    ],
+    [
+      "Authority",
+      getStructEncoder([["fields", getTupleEncoder([getAddressEncoder()])]]),
+    ],
+    [
+      "EvidenceOperator",
+      getStructEncoder([["fields", getTupleEncoder([getAddressEncoder()])]]),
+    ],
+    [
+      "RevealThresholdBps",
+      getStructEncoder([["fields", getTupleEncoder([getU16Encoder()])]]),
+    ],
+    [
+      "MaxDrawAttempts",
+      getStructEncoder([["fields", getTupleEncoder([getU8Encoder()])]]),
+    ],
   ]);
 }
 
 export function getUpdatePayloadDecoder(): Decoder<UpdatePayload> {
   return getDiscriminatedUnionDecoder([
-    ["MinStake", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
-    ["AlphaBps", getStructDecoder([["fields", getTupleDecoder([getU16Decoder()])]])],
-    ["ReviewWindow", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
-    ["CommitWindow", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
-    ["RevealWindow", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
-    ["AppealWindow", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
-    ["MaxAppeals", getStructDecoder([["fields", getTupleDecoder([getU8Decoder()])]])],
-    ["FeePerJuror", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
-    ["Authority", getStructDecoder([["fields", getTupleDecoder([getAddressDecoder()])]])],
-    ["EvidenceOperator", getStructDecoder([["fields", getTupleDecoder([getAddressDecoder()])]])],
-    ["RevealThresholdBps", getStructDecoder([["fields", getTupleDecoder([getU16Decoder()])]])],
-    ["MaxDrawAttempts", getStructDecoder([["fields", getTupleDecoder([getU8Decoder()])]])],
+    [
+      "MinStake",
+      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
+    ],
+    [
+      "AlphaBps",
+      getStructDecoder([["fields", getTupleDecoder([getU16Decoder()])]]),
+    ],
+    [
+      "ReviewWindow",
+      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
+    ],
+    [
+      "CommitWindow",
+      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
+    ],
+    [
+      "RevealWindow",
+      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
+    ],
+    [
+      "AppealWindow",
+      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
+    ],
+    [
+      "MaxAppeals",
+      getStructDecoder([["fields", getTupleDecoder([getU8Decoder()])]]),
+    ],
+    [
+      "FeePerJuror",
+      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
+    ],
+    [
+      "Authority",
+      getStructDecoder([["fields", getTupleDecoder([getAddressDecoder()])]]),
+    ],
+    [
+      "EvidenceOperator",
+      getStructDecoder([["fields", getTupleDecoder([getAddressDecoder()])]]),
+    ],
+    [
+      "RevealThresholdBps",
+      getStructDecoder([["fields", getTupleDecoder([getU16Decoder()])]]),
+    ],
+    [
+      "MaxDrawAttempts",
+      getStructDecoder([["fields", getTupleDecoder([getU8Decoder()])]]),
+    ],
   ]);
 }
 
-export function getUpdatePayloadCodec(): Codec<UpdatePayloadArgs, UpdatePayload> {
+export function getUpdatePayloadCodec(): Codec<
+  UpdatePayloadArgs,
+  UpdatePayload
+> {
   return combineCodec(getUpdatePayloadEncoder(), getUpdatePayloadDecoder());
 }
 
 // Data Enum Helpers.
 export function updatePayload(
   kind: "MinStake",
-  data: GetDiscriminatedUnionVariantContent<UpdatePayloadArgs, "__kind", "MinStake">["fields"],
+  data: GetDiscriminatedUnionVariantContent<
+    UpdatePayloadArgs,
+    "__kind",
+    "MinStake"
+  >["fields"],
 ): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "MinStake">;
 export function updatePayload(
   kind: "AlphaBps",
-  data: GetDiscriminatedUnionVariantContent<UpdatePayloadArgs, "__kind", "AlphaBps">["fields"],
+  data: GetDiscriminatedUnionVariantContent<
+    UpdatePayloadArgs,
+    "__kind",
+    "AlphaBps"
+  >["fields"],
 ): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "AlphaBps">;
 export function updatePayload(
   kind: "ReviewWindow",
-  data: GetDiscriminatedUnionVariantContent<UpdatePayloadArgs, "__kind", "ReviewWindow">["fields"],
+  data: GetDiscriminatedUnionVariantContent<
+    UpdatePayloadArgs,
+    "__kind",
+    "ReviewWindow"
+  >["fields"],
 ): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "ReviewWindow">;
 export function updatePayload(
   kind: "CommitWindow",
-  data: GetDiscriminatedUnionVariantContent<UpdatePayloadArgs, "__kind", "CommitWindow">["fields"],
+  data: GetDiscriminatedUnionVariantContent<
+    UpdatePayloadArgs,
+    "__kind",
+    "CommitWindow"
+  >["fields"],
 ): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "CommitWindow">;
 export function updatePayload(
   kind: "RevealWindow",
-  data: GetDiscriminatedUnionVariantContent<UpdatePayloadArgs, "__kind", "RevealWindow">["fields"],
+  data: GetDiscriminatedUnionVariantContent<
+    UpdatePayloadArgs,
+    "__kind",
+    "RevealWindow"
+  >["fields"],
 ): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "RevealWindow">;
 export function updatePayload(
   kind: "AppealWindow",
-  data: GetDiscriminatedUnionVariantContent<UpdatePayloadArgs, "__kind", "AppealWindow">["fields"],
+  data: GetDiscriminatedUnionVariantContent<
+    UpdatePayloadArgs,
+    "__kind",
+    "AppealWindow"
+  >["fields"],
 ): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "AppealWindow">;
 export function updatePayload(
   kind: "MaxAppeals",
-  data: GetDiscriminatedUnionVariantContent<UpdatePayloadArgs, "__kind", "MaxAppeals">["fields"],
+  data: GetDiscriminatedUnionVariantContent<
+    UpdatePayloadArgs,
+    "__kind",
+    "MaxAppeals"
+  >["fields"],
 ): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "MaxAppeals">;
 export function updatePayload(
   kind: "FeePerJuror",
-  data: GetDiscriminatedUnionVariantContent<UpdatePayloadArgs, "__kind", "FeePerJuror">["fields"],
+  data: GetDiscriminatedUnionVariantContent<
+    UpdatePayloadArgs,
+    "__kind",
+    "FeePerJuror"
+  >["fields"],
 ): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "FeePerJuror">;
 export function updatePayload(
   kind: "Authority",
-  data: GetDiscriminatedUnionVariantContent<UpdatePayloadArgs, "__kind", "Authority">["fields"],
+  data: GetDiscriminatedUnionVariantContent<
+    UpdatePayloadArgs,
+    "__kind",
+    "Authority"
+  >["fields"],
 ): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "Authority">;
 export function updatePayload(
   kind: "EvidenceOperator",
@@ -146,7 +257,11 @@ export function updatePayload(
     "__kind",
     "EvidenceOperator"
   >["fields"],
-): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "EvidenceOperator">;
+): GetDiscriminatedUnionVariant<
+  UpdatePayloadArgs,
+  "__kind",
+  "EvidenceOperator"
+>;
 export function updatePayload(
   kind: "RevealThresholdBps",
   data: GetDiscriminatedUnionVariantContent<
@@ -154,7 +269,11 @@ export function updatePayload(
     "__kind",
     "RevealThresholdBps"
   >["fields"],
-): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "RevealThresholdBps">;
+): GetDiscriminatedUnionVariant<
+  UpdatePayloadArgs,
+  "__kind",
+  "RevealThresholdBps"
+>;
 export function updatePayload(
   kind: "MaxDrawAttempts",
   data: GetDiscriminatedUnionVariantContent<
@@ -163,8 +282,13 @@ export function updatePayload(
     "MaxDrawAttempts"
   >["fields"],
 ): GetDiscriminatedUnionVariant<UpdatePayloadArgs, "__kind", "MaxDrawAttempts">;
-export function updatePayload<K extends UpdatePayloadArgs["__kind"], Data>(kind: K, data?: Data) {
-  return Array.isArray(data) ? { __kind: kind, fields: data } : { __kind: kind, ...(data ?? {}) };
+export function updatePayload<K extends UpdatePayloadArgs["__kind"], Data>(
+  kind: K,
+  data?: Data,
+) {
+  return Array.isArray(data)
+    ? { __kind: kind, fields: data }
+    : { __kind: kind, ...(data ?? {}) };
 }
 
 export function isUpdatePayload<K extends UpdatePayload["__kind"]>(
