@@ -10,7 +10,7 @@ import { Container } from "./Container";
  */
 export interface FooterLink {
   href: string;
-  label: string;
+  label: React.ReactNode;
 }
 
 export interface FooterColumn {

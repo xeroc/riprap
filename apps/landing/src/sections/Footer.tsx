@@ -1,4 +1,4 @@
-import { FooterBand, LogoLockup } from "@riprap/ui";
+import { FooterBand, LogoLockup, XLogo } from "@riprap/ui";
 
 import { X_URL } from "./shared";
 
@@ -22,7 +22,17 @@ export function Footer() {
         },
         {
           heading: "follow",
-          links: [{ href: X_URL, label: "@riprapxyz" }],
+          links: [
+            {
+              href: X_URL,
+              label: (
+                <>
+                  <XLogo className="mr-1.5 inline size-3.5" />
+                  @riprapxyz
+                </>
+              ),
+            },
+          ],
         },
       ]}
       closing="© 2026 Riprap · riprap.xyz"

@@ -6,11 +6,10 @@
  */
 import { Flags } from "@oclif/core";
 import { fetchMutual, getSettlePoolInstruction } from "@riprap/hanse";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { groupBigInt, isoFromUnixSeconds } from "../../lib/format";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 export default class HanseSettlePool extends ChainCommand {
   static summary = "Freeze the settlement ratio + arm the pull window (permissionless)";

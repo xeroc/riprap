@@ -17,11 +17,10 @@ import {
   getSetSubaccordParamInstructionDataDecoder,
   HANSE_PROGRAM_ADDRESS,
 } from "@riprap/hanse";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import { type Address, createKeyPairSignerFromBytes } from "@solana/kit";
 import { findPendingUpdatePda } from "@useaccord/sdk";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 /**
  * Dry-run instruction snapshots for every hanse:* command that can build

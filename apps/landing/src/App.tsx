@@ -1,26 +1,19 @@
-// The lean landing composition — copy doc §0–§7.
-import { BreakpointPage } from "./pages/BreakpointPage";
+// The platform landing (the default route) — copy doc §0–§7. Instance
+// surfaces are hash routes (#/2026-breakpoint-blade-pool, #/app — lazy
+// modules in src/pool/ and src/app/); this route stays Solana-free forever.
 
+import { SiteNav } from "./components/SiteNav";
 import { Audience } from "./sections/Audience";
 import { FinalCta } from "./sections/FinalCta";
 import { Footer } from "./sections/Footer";
 import { Heritage } from "./sections/Heritage";
 import { Hero } from "./sections/Hero";
 import { Mechanism } from "./sections/Mechanism";
-import { Nav } from "./sections/Nav";
 
 export function App() {
-  // static host serves index.html for every path (SPA fallback); the pool
-  // page is one route off the platform landing — no router dependency
-  if (
-    typeof window !== "undefined" &&
-    window.location.pathname.startsWith("/2026-breakpoint-blade-pool")
-  ) {
-    return <BreakpointPage />;
-  }
   return (
     <>
-      <Nav />
+      <SiteNav />
       <main>
         <Hero />
         <Mechanism />

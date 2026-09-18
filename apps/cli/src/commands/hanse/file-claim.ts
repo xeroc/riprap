@@ -13,14 +13,13 @@ import {
   findFeeFloatPda,
   getFileClaimInstructionAsync,
 } from "@riprap/hanse";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address, Instruction, KeyPairSigner } from "@solana/kit";
 import { fetchSubaccord, findAccordStatePda, findDisputePda, type Subaccord } from "@useaccord/sdk";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { groupBigInt } from "../../lib/format";
 import { hexToBytes32, juryFee } from "../../lib/hanse-args";
 import { toBigInt } from "../../lib/pool-args";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 /** The live fee inputs file-claim needs off the subaccord (§2.6). */
 export interface FeeSource {

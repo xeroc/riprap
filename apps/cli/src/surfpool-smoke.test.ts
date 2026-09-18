@@ -5,15 +5,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { ed25519 } from "@noble/curves/ed25519";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import {
   type Address,
   createKeyPairSignerFromBytes,
   createSolanaRpc,
-  type Lamports,
 } from "@solana/kit";
 import { afterAll, beforeAll, expect, test } from "vitest";
-
-import { findAssociatedTokenAddress } from "./lib/token";
 
 /**
  * Optional Surfpool smoke (bean riprap-7b4e): one happy chain through the
@@ -59,12 +57,26 @@ beforeAll(async () => {
     .send();
   live = account.value !== null;
   if (!live) return;
-
   const wallet = await createKeyPairSignerFromBytes(WALLET_SECRET);
   const rpc = createSolanaRpc(RPC);
   const { value: lamports } = await rpc.getBalance(wallet.address).send();
   if (lamports < 100_000_000n) {
-    await rpc.requestAirdrop(wallet.address, 2_000_000_000n as Lamports).send();
+    // Fund via the solana CLI, NOT kit requestAirdrop: on Surfpool the RPC
+    // airdrop credits through an internal program that takes account
+    // ownership — the wallet then can't pay fees (InvalidAccountForFee).
+    // The CLI airdrop lands a normal system account. Same dev-tooling
+    // exception as the spl-token rig below.
+    const airdrop = spawnSync("solana", ["airdrop", "2", "--url", RPC, wallet.address], {
+      encoding: "utf8",
+    });
+    expect(airdrop.status, airdrop.stderr).toBe(0);
+    // Integration exception to no-real-timers: the signal is on-chain state
+    // (lamports landing), no event to await — poll with backoff.
+    for (let i = 0; i < 50; i++) {
+      const { value: l } = await rpc.getBalance(wallet.address).send();
+      if (l >= 100_000_000n) break;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
   }
 });
 function cli(args: string[]): { status: number | null; stdout: string; stderr: string } {

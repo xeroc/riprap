@@ -4,12 +4,10 @@
  * while open; frozen liquidation balance once liquidated).
  */
 import { Flags } from "@oclif/core";
-import { fetchPool, type Pool, PoolState } from "@riprap/pool";
+import { fetchPool, findAssociatedTokenAddress, type Pool, PoolState } from "@riprap/pool";
 import type { Address, Commitment, Rpc, SolanaRpcApi } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { groupBigInt, truncateAddress } from "../../lib/format";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 export interface PoolView {
   pool: Pool;

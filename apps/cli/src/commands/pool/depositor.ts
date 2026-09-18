@@ -8,16 +8,15 @@ import {
   type Depositor,
   fetchMaybeDepositorByOwner,
   fetchPool,
+  findAssociatedTokenAddress,
   findDepositorPda,
   type Pool,
   PoolState,
 } from "@riprap/pool";
 import type { Address, Commitment, Rpc, SolanaRpcApi } from "@solana/kit";
-
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 import { groupBigInt, truncateAddress } from "../../lib/format";
 import { moneyWeightedPayout } from "../../lib/pool-math";
-import { findAssociatedTokenAddress } from "../../lib/token";
 
 /** Pubkey::default() on-chain — an unset residual beneficiary. */
 const NO_BENEFICIARY = "11111111111111111111111111111111" as Address;

@@ -15,18 +15,32 @@ import { Container } from "./Container";
  */
 export interface TopNavLink {
   href: string;
-  label: string;
+  /** string or node — the X glyph link passes the logo + an sr-only name */
+  label: React.ReactNode;
 }
 
 export interface TopNavProps extends React.ComponentProps<"header"> {
   links: TopNavLink[];
   /** mark + wordmark lockup slot (the logo SVGs, used as-is) */
   brand?: React.ReactNode;
+  /** the brand link href — hash-routed apps pass "#/" (default "/") */
+  brandHref?: string;
   signIn?: { href: string; label: string };
   cta?: { href: string; label: string };
+  /** account controls slot (wallet button, cluster picker) — rendered before Sign In */
+  actions?: React.ReactNode;
 }
 
-export function TopNav({ links, brand, signIn, cta, className, ...props }: TopNavProps) {
+export function TopNav({
+  links,
+  brand,
+  brandHref,
+  signIn,
+  cta,
+  actions,
+  className,
+  ...props
+}: TopNavProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -38,7 +52,7 @@ export function TopNav({ links, brand, signIn, cta, className, ...props }: TopNa
       <Container className={cn("flex h-(--riprap-nav-h) items-center justify-between gap-6")}>
         <div className="flex min-w-0 items-center gap-8">
           {brand && (
-            <a href="/" className="flex shrink-0 items-center">
+            <a href={brandHref ?? "/"} className="flex shrink-0 items-center">
               {brand}
             </a>
           )}
@@ -56,6 +70,11 @@ export function TopNav({ links, brand, signIn, cta, className, ...props }: TopNa
         </div>
 
         <div className="flex items-center gap-2">
+          {actions && (
+            <div data-slot="top-nav-actions" className="flex items-center gap-2">
+              {actions}
+            </div>
+          )}
           {signIn && (
             <Button variant="link" asChild className="hidden md:inline-flex">
               <a href={signIn.href}>{signIn.label}</a>

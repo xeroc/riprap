@@ -2,7 +2,7 @@ import type * as React from "react";
 import { cn } from "../../lib/utils";
 
 /** The X glyph — currentColor; sized/colored by its parent. */
-function XLogo({ className }: { className?: string }) {
+export function XLogo({ className }: { className?: string }) {
   return (
     <svg
       className={className}

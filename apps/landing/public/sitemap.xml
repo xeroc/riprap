@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Hash routes (#/2026-breakpoint-blade-pool, #/app) are not sitemap-addressable:
+     they render client-side from this root document. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://riprap.xyz/</loc>
-  </url>
-  <url>
-    <loc>https://riprap.xyz/breakpoint-2026</loc>
   </url>
 </urlset>

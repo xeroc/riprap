@@ -1,11 +1,11 @@
 ---
 # riprap-9ehc
 title: 'Landing on-chain: MPA entries, ConnectorKit, one-tx chip-in join'
-status: todo
+status: completed
 type: milestone
 priority: high
 created_at: 2026-09-17T14:05:14Z
-updated_at: 2026-09-17T14:05:14Z
+updated_at: 2026-09-18T08:30:28Z
 ---
 
 Landing site becomes the pool app: three static entries under one Vite app, ConnectorKit wallet/cluster, on-chain single source of truth, one-transaction chip-in join. Locked in two grill sessions on 2026-09-17.
