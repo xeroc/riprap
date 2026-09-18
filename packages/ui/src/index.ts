@@ -39,6 +39,8 @@ export { Return } from "./illustrations/Return";
 export { Rule } from "./illustrations/Rule";
 export { Stack } from "./illustrations/Stack";
 // lib
+export type { NumeralSegment } from "./lib/numeral";
+export { numeralSegments } from "./lib/numeral";
 export type { Tier, TierName } from "./lib/poolMath";
 export { fillHeight, proRataShare, scaledPayout, TIERS, tierFor, usd } from "./lib/poolMath";
 export { cubicBezier, easeInOut, settleAt } from "./lib/settle";

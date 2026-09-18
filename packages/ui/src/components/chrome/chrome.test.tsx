@@ -8,6 +8,7 @@ import { DissolutionBand } from "./DissolutionBand";
 import { FeatureCard } from "./FeatureCard";
 import { FooterBand } from "./FooterBand";
 import { MechanismCard } from "./MechanismCard";
+import { ProblemSolutionCard } from "./ProblemSolutionCard";
 import { SectionBand } from "./SectionBand";
 import { StampBadge } from "./StampBadge";
 import { TextLink } from "./TextLink";
@@ -189,6 +190,41 @@ describe("MechanismCard", () => {
     const label = screen.getByText("two doors");
     expect(label.className).toContain("[font:var(--riprap-mono-label)]");
     expect(screen.getByTestId("diagram")).toBeTruthy();
+  });
+});
+
+describe("ProblemSolutionCard — problem above, solution emphasized below", () => {
+  const CARD = {
+    index: "05",
+    question: "Surplus take-rate yields zero revenue at 0% loss.",
+    answer: "Charge on flow, not surplus: take on entry survives every loss ratio.",
+  };
+
+  it("renders verbatim question and answer with both band stamps", () => {
+    render(<ProblemSolutionCard {...CARD} />);
+    expect(screen.getByText(/Surplus take-rate/)).toBeTruthy();
+    expect(screen.getByText(/Charge on flow/)).toBeTruthy();
+    expect(screen.getByText("problem")).toBeTruthy();
+    expect(screen.getByText("solution")).toBeTruthy();
+  });
+
+  it("splits the bands: problem on card ground, solution on the plate tone step", () => {
+    const { container } = render(<ProblemSolutionCard {...CARD} />);
+    const problem = container.querySelector('[data-slot="ps-problem"]');
+    const solution = container.querySelector('[data-slot="ps-solution"]');
+    expect(problem?.className).not.toContain("bg-strong");
+    expect(solution?.className).toContain("bg-strong");
+    expect(solution?.className).toContain("border-t");
+    expect(solution?.className).toContain("border-hairline");
+  });
+
+  it("numerals render mono (data-num), including the ordinal", () => {
+    const { container } = render(<ProblemSolutionCard {...CARD} />);
+    const numerals = container.querySelectorAll("[data-num]");
+    expect(numerals[0].textContent).toBe("05");
+    // the ordinal stamps mono via --riprap-mono-label; prose numerals via font-mono
+    expect(numerals[0].className).toContain("[font:var(--riprap-mono-label)]");
+    expect(numerals[1].className).toContain("font-mono");
   });
 });
 

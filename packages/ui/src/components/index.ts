@@ -28,6 +28,8 @@ export { BLUE_INDEX, GAP_INDEX, Logomark, RING_SEEDS, slotPosition } from "./chr
 export type { MechanismCardProps } from "./chrome/MechanismCard";
 export { MechanismCard } from "./chrome/MechanismCard";
 export { PlateTicks } from "./chrome/PlateTicks";
+export type { ProblemSolutionCardProps } from "./chrome/ProblemSolutionCard";
+export { ProblemSolutionCard } from "./chrome/ProblemSolutionCard";
 export type { SectionBandProps } from "./chrome/SectionBand";
 export { SectionBand } from "./chrome/SectionBand";
 export type { StampBadgeProps } from "./chrome/StampBadge";
