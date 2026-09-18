@@ -13,9 +13,8 @@ export const SlideFrame: FC<{
   align?: "left" | "center";
 }> = ({ kicker, headline, children, align = "left" }) => (
   <div
-    className={`flex h-full w-full flex-col justify-center gap-10 px-[7cqw]${
-      align === "center" ? " items-center text-center" : ""
-    }`}
+    className={`flex h-full w-full flex-col justify-center gap-10 px-[7cqw]${align === "center" ? " items-center text-center" : ""
+      }`}
   >
     <div
       data-rise
@@ -27,7 +26,7 @@ export const SlideFrame: FC<{
           {kicker}
         </div>
       ) : null}
-      <h2 className="max-w-[24ch] text-ink [font:var(--riprap-display-xl)] [letter-spacing:var(--riprap-tracking-display)]">
+      <h2 className="max-w-[32ch] text-ink [font:var(--riprap-display-xl)] [letter-spacing:var(--riprap-tracking-display)]">
         {headline}
       </h2>
     </div>

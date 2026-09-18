@@ -73,25 +73,11 @@ const TitleSlide: FC = () => {
  * The comparison table lands it: both worlds do the two core jobs, only one
  * has the rail properties. The five-machine destination strip this slide
  * carried before the re-stage lives on in the appendix below. */
-const RIPE_CELLS = [
-  {
-    head: "defi trading",
-    body: "well-understood business logic — no surprise it runs great as smart contracts. proven at scale.",
-  },
-  {
-    head: "insurance",
-    body: "also well-understood business logic: pool money, decide payouts. everything past that is the rails.",
-  },
-];
-
-const COMPARE_COLS = ["tradinsure", "web3 insure"] as const;
+const COMPARE_COLS = ["traditional insurance", "web3 insurance"] as const;
 
 /** One cell mark — a check or a cross, mono, nothing else in the cell. */
 const Mark: FC<{ yes: boolean }> = ({ yes }) => (
-  <span
-    data-num
-    className={`${yes ? "text-accent" : "text-muted-soft"} [font:var(--riprap-mono-number)]`}
-  >
+  <span data-num className={`${yes ? "text-accent" : "text-muted-soft"} text-3xl`}>
     {yes ? "✓" : "✗"}
   </span>
 );
@@ -125,33 +111,9 @@ const VisionSlide: FC = () => {
   return (
     <SlideFrame kicker="the vision" headline="Internet Insurance">
       <div className="flex w-full flex-col gap-8">
-        <div
-          className="max-w-[62ch] text-ink [font:var(--riprap-title-md)]"
-          style={rise(frame, 16)}
-        >
-          A smart contract is business logic that runs{" "}
-          <span data-num className="font-mono">
-            24/7/365
-          </span>{" "}
-          — autonomous, permissionless, transparent.
-        </div>
-
-        <div className="flex items-start gap-6">
-          {RIPE_CELLS.map((c, i) => (
-            <div
-              key={c.head}
-              className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
-              style={rise(frame, 28 + i * 12)}
-            >
-              <div className="text-ink [font:var(--riprap-title-sm)]">{c.head}</div>
-              <div className="text-muted [font:var(--riprap-body-sm)]">{c.body}</div>
-            </div>
-          ))}
-        </div>
-
         {/* the comparison table — same business, different rails */}
         <div className="flex w-full flex-col">
-          <div className="grid grid-cols-[minmax(0,1fr)_14ch_14ch] items-baseline pb-1">
+          <div className="grid grid-cols-[minmax(0,1fr)_20ch_20ch] items-baseline pb-1">
             <span />
             {COMPARE_COLS.map((col) => (
               <span
@@ -165,8 +127,8 @@ const VisionSlide: FC = () => {
           {COMPARE_ROWS.map((r, i) => (
             <div
               key={r.id}
-              className="grid grid-cols-[minmax(0,1fr)_14ch_14ch] items-baseline border-t border-hairline py-2"
-              style={rise(frame, 44 + i * 8)}
+              className="grid grid-cols-[minmax(0,1fr)_20ch_20ch] items-center border-t border-hairline py-2"
+              style={rise(frame, 4 + i * 8)}
             >
               <span className="text-ink [font:var(--riprap-title-sm)]">{r.label}</span>
               <span className="text-center">
