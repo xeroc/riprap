@@ -19,6 +19,7 @@ import {
   Button,
   ClusterSelect,
   HexBackdrop,
+  JurorUpsellDialog,
   SectionBand,
   Slider,
   StampBadge,
@@ -42,6 +43,7 @@ import { useHanseEnv } from "../../shared/rpc";
 import { describeError, sendInstruction, TransactionSendError } from "../../shared/transaction";
 import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../mutual";
 import { useJoinContext } from "../useJoinContext";
+import { useMinStake } from "../useMinStake";
 import { useMutual } from "../useMutual";
 import { JoinPrecheck } from "./JoinPrecheck";
 
@@ -113,6 +115,10 @@ function ConnectWalletCta() {
 export function PoolHero() {
   const [tierIndex, setTierIndex] = useState(DEFAULT_TIER);
   const [phase, setPhase] = useState<Phase>("idle");
+  // Fires exactly once per wallet per pool — on join confirmation only
+  // (copy doc § juror modal): one join per mutual means no persistence
+  // machinery; a reload re-enters via alreadyMember and never re-fires.
+  const [jurorUpsell, setJurorUpsell] = useState(false);
   const mutualQuery = useMutual();
   const joinQuery = useJoinContext();
   const hanseEnv = useHanseEnv();
@@ -122,6 +128,7 @@ export function PoolHero() {
 
   const tiers = mutualQuery.state === "ready" ? poolTiers(mutualQuery.mutual) : null;
   const context = joinQuery.state === "ready" ? joinQuery.context : null;
+  const minStake = useMinStake(context?.mutual.data.subaccord ?? null);
   // alreadyMember is a STATE (copy doc § Covered): the Member PDA's tier wins;
   // between confirmation and the context refetch, the tier just joined shows.
   const memberTier = context?.alreadyMember ?? (phase === "covered" ? { tier: tierIndex } : null);
@@ -169,6 +176,7 @@ export function PoolHero() {
         () => setPhase("confirming"),
       );
       setPhase("covered");
+      setJurorUpsell(true);
     } catch (err) {
       toast.error(joinFailureMessage(err));
       setPhase("idle");
@@ -382,6 +390,25 @@ export function PoolHero() {
               </Button>
             ) : null}
           </Settle>
+          {/* Juror upsell — copy doc § juror modal (D2): fires once, on join
+            confirmation; OK (or Escape / overlay) is the only exit. */}
+          <JurorUpsellDialog
+            open={jurorUpsell}
+            onOk={() => setJurorUpsell(false)}
+            minStake={minStake}
+            title="The pool needs jurors."
+            body={
+              <>
+                Claims are settled by members who stake{" "}
+                <span data-num className="font-mono">
+                  {minStake}
+                </span>{" "}
+                USDC and get drawn to read the evidence. Coherent jurors get paid; incoherent ones
+                get slashed. You can unstake anytime. Staking will open in the app.
+              </>
+            }
+            okLabel="Noted"
+          />
         </div>
       </SectionBand>
     </div>

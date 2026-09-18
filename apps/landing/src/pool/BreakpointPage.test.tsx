@@ -18,7 +18,8 @@ import { AppProvider, getDefaultConfig } from "@solana/connector";
 import type { Address, Instruction, MaybeAccount, TransactionSigner } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendInstruction, TransactionSendError } from "../shared/transaction";
 import { BreakpointPage } from "./BreakpointPage";
 import { fakeMutual, POLICY_TIERS } from "./fixtures";
@@ -50,13 +51,15 @@ vi.mock("../shared/transaction", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../shared/transaction")>();
   return { ...actual, sendInstruction: vi.fn() };
 });
-
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: toastError }) }));
+
+vi.mock("@useaccord/sdk", () => ({ fetchSubaccordMaybe: vi.fn() }));
 
 const fetchMock = vi.mocked(fetchMaybeMutual);
 const joinMock = vi.mocked(getJoinContext);
 const buildMock = vi.mocked(buildJoinInstructions);
 const sendMock = vi.mocked(sendInstruction);
+const subaccordMock = vi.mocked(fetchSubaccordMaybe);
 
 type Maybe = MaybeAccount<Mutual>;
 
@@ -66,7 +69,17 @@ const WALLET = "W".repeat(32);
 function maybe(mutual: Mutual): Maybe {
   return { exists: true, address: MUTUAL_ADDR, data: mutual } as unknown as Maybe;
 }
+
 const NOT_FOUND = { exists: false, address: MUTUAL_ADDR } as unknown as Maybe;
+
+/** The subaccord stake floor (policy §12 / messaging-guide Numbers: $10). */
+function subaccord(minStake = 10n * 1_000_000n): MaybeAccount<Subaccord> {
+  return {
+    exists: true,
+    address: "S".repeat(32) as Address,
+    data: { minStake },
+  } as unknown as MaybeAccount<Subaccord>;
+}
 
 const joinIx = {
   programAddress: "J".repeat(32) as Address,
@@ -108,6 +121,13 @@ function renderPoolPage(mutualAddress = MUTUAL_ADDR) {
   );
 }
 
+// Default: the subaccord answers with the policy §12 floor ($10). Connected
+// tests that don't care still get a well-formed min-stake read — an unset
+// vi.fn() returns undefined and TanStack rejects the query.
+beforeEach(() => {
+  subaccordMock.mockResolvedValue(subaccord());
+});
+
 afterEach(() => {
   cleanup();
   vi.unstubAllEnvs();
@@ -118,6 +138,7 @@ afterEach(() => {
   buildMock.mockReset();
   sendMock.mockReset();
   toastError.mockClear();
+  subaccordMock.mockReset();
 });
 
 describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, policy §5)", () => {
@@ -222,6 +243,7 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
     walletState.account = WALLET;
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
     joinMock.mockResolvedValue(joinCtx());
+    subaccordMock.mockResolvedValue(subaccord());
     let resolveBuild!: (v: Instruction[]) => void;
     buildMock.mockReturnValue(
       new Promise<Instruction[]>((resolve) => {
@@ -249,6 +271,18 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
     resolveSend("sig");
 
     expect(await screen.findByText("Covered — Standard")).toBeTruthy();
+
+    // the juror upsell fires on confirmation, once — copy verbatim (copy doc
+    // § juror modal), min_stake bound from the subaccord in mono. Assert and
+    // dismiss it FIRST: an open Radix dialog aria-hides the rest of the page.
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog.textContent).toContain("The pool needs jurors.");
+    await waitFor(() => expect(dialog.textContent).toContain("who stake $10 USDC"));
+    expect(dialog.querySelector('[data-slot="juror-min-stake"]')?.textContent).toBe("$10");
+    expect(dialog.textContent).toContain("Staking will open in the app.");
+    fireEvent.click(screen.getByRole("button", { name: "Noted" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
     // the slider locks and the app link appears (copy doc § Covered)
     expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe("");
     expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("/app");
@@ -358,7 +392,8 @@ describe("covered — an existing member is a state, never an error toast", () =
     expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe("");
     // their tier line, from their on-chain member PDA
     expect(screen.getByText("Basic · $10 entry · up to $1,000 maximum payout")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: /Chip in/ })).toBeNull();
+    // reload path: no juror modal — it fires only on join confirmation
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
 

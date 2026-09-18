@@ -31,7 +31,7 @@ Riprap is a platform for event-scoped mutual protection pools on Solana (first d
 |Governing docs|`meta/` (symlink → the Obsidian spec vault), root `DESIGN.md`, `PROJECT.md`, `CONTEXT.md`, `README.md`|Must describe the code as it is; the spec-wins rules in Project Overview make several of them law.|
 |Decisions & ledger|`apps/docs/adr/`, `apps/docs/beans/` (`.beans.yml`)|ADRs for architectural calls; beans task ledger.|
 |CI / deploy|`.github/workflows/landing-page.yaml`|Builds `apps/landing` and deploys to GitHub Pages (`riprap.xyz`) on push to `main`.|
-|Cross-repo pin|`programs/hanse/Cargo.toml` (accord `rev`, see Completion Gate), `@useaccord/sdk@0.1.0` (`apps/cli` + `tests`), `ACCORD_SO` artifact|The sibling accord checkout is an external dependency of both the program and the TS workspace.|
+|Cross-repo pin|`programs/hanse/Cargo.toml` (accord `rev`, see Completion Gate), `@useaccord/sdk@0.1.0` (`apps/cli` + `tests` + `apps/landing` pool page — the juror-stake read off the mutual's subaccord), `ACCORD_SO` artifact|The sibling accord checkout is an external dependency of both the program and the TS workspace.|
 
 ### When you change X, also touch Y
 
