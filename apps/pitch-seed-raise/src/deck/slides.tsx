@@ -220,25 +220,25 @@ const FIELD_ROWS: {
   chain: string;
   cells: { v: string; sub?: string }[];
 }[] = [
-  {
-    name: "Nexus Mutual",
-    chain: "ethereum · arbitrum · kyc",
-    cells: [
-      { v: "$5.7M", sub: "cover fees '25" },
-      { v: "$2.7M", sub: "ever · no VC" },
-      { v: "$1B+", sub: "purchased '25" },
-    ],
-  },
-  {
-    name: "OpenCover",
-    chain: "base · ethereum · off-chain co",
-    cells: [
-      { v: "—", sub: "undisclosed" },
-      { v: "$4.6M", sub: "seed '22–23" },
-      { v: "$141.6M", sub: "protected '25" },
-    ],
-  },
-];
+    {
+      name: "Nexus Mutual",
+      chain: "ethereum · arbitrum · kyc",
+      cells: [
+        { v: "$5.7M", sub: "cover fees '25" },
+        { v: "$2.7M", sub: "ever · no VC" },
+        { v: "$1B+", sub: "purchased '25" },
+      ],
+    },
+    {
+      name: "OpenCover",
+      chain: "base · ethereum · off-chain co",
+      cells: [
+        { v: "—", sub: "undisclosed" },
+        { v: "$4.6M", sub: "seed '22–23" },
+        { v: "$141.6M", sub: "protected '25" },
+      ],
+    },
+  ];
 
 const IncumbantsProblemSlide: FC = () => {
   const frame = useSlideFrame();
@@ -576,7 +576,7 @@ const LAUNCH_REASONS = [
     body: "breakpoint puts the whole ecosystem in one hall. the family adopts its own and talks about what ships.",
   },
   {
-    head: "covers sponsorship",
+    head: "cover sponsorships (e.g. regional superteams)",
     body: "companies or regional teams buy covers for their members.",
   },
 ];
