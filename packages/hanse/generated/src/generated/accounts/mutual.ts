@@ -89,7 +89,10 @@ export type Mutual = {
   depositsCloseAt: bigint;
   /** Coverage end plus reporting lag; file_claim reverts at/after it (§2.7). */
   claimsCloseAt: bigint;
-  /** Duration after settlement; unpaid amounts revert to the residual (§2.5). */
+  /**
+   * Duration after settlement; unpaid amounts revert to the residual
+   * (§2.5). Fixed: always [`PULL_WINDOW_SECS`] — not initializer config.
+   */
   pullWindow: bigint;
   /**
    * Restated from the PDA seeds — the mutual PDA signs the create_dispute
@@ -138,7 +141,10 @@ export type MutualArgs = {
   depositsCloseAt: number | bigint;
   /** Coverage end plus reporting lag; file_claim reverts at/after it (§2.7). */
   claimsCloseAt: number | bigint;
-  /** Duration after settlement; unpaid amounts revert to the residual (§2.5). */
+  /**
+   * Duration after settlement; unpaid amounts revert to the residual
+   * (§2.5). Fixed: always [`PULL_WINDOW_SECS`] — not initializer config.
+   */
   pullWindow: number | bigint;
   /**
    * Restated from the PDA seeds — the mutual PDA signs the create_dispute

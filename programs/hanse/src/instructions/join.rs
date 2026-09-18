@@ -93,11 +93,7 @@ impl<'info> Join<'info> {
                     pool: ctx.accounts.pool.to_account_info(),
                     depositor: ctx.accounts.depositor.to_account_info(),
                     owner: ctx.accounts.member.to_account_info(),
-                    funder: ctx
-                        .accounts
-                        .funder
-                        .as_ref()
-                        .map(|f| f.to_account_info()),
+                    funder: ctx.accounts.funder.as_ref().map(|f| f.to_account_info()),
                     owner_ata: ctx.accounts.owner_ata.to_account_info(),
                     rent_payer: ctx.accounts.rent_payer.to_account_info(),
                     treasury: ctx.accounts.treasury.to_account_info(),

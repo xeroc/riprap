@@ -77,8 +77,8 @@ fn solvent_settles_at_full_ratio() {
     assert_eq!(phase, hanse::state::Phase::Settled);
     assert_eq!(
         pull_close,
-        before + cfg.pull_window,
-        "pull_close_at = settled_at + pull_window (§2.5)"
+        before + hanse::PULL_WINDOW_SECS,
+        "pull_close_at = settled_at + PULL_WINDOW_SECS (§2.5)"
     );
 }
 

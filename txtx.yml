@@ -9,3 +9,12 @@ environments:
   localnet:
       network_id: localnet
       rpc_api_url: http://127.0.0.1:8899
+  # Mainnet deploys use the same runbook; the Surfnet-only cheatcode is gated
+  # off via input.network_id in runbooks/deployment/main.tx. Provide your own
+  # RPC (a paid endpoint — the public one rate-limits program writes), and the
+  # expected signer addresses enforced by signers.mainnet.txt.
+  mainnet:
+      network_id: mainnet
+      rpc_api_url: https://api.mainnet-beta.solana.com
+      expected_payer_address: SET_ME_BEFORE_MAINNET_DEPLOY
+      expected_authority_address: SET_ME_BEFORE_MAINNET_DEPLOY

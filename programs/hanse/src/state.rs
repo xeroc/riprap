@@ -33,6 +33,13 @@ pub struct Tier {
     pub max_payout: u64,
 }
 
+/// Payout pull window, fixed for v1 (security review 2026-09-18): 180 days
+/// (six 30-day months) after settlement; unpaid amounts then revert to the
+/// residual. Deliberately NOT initializer config — an operator-supplied
+/// window could overflow settlement's `now + pull_window` (i64::MAX) and
+/// strand the pool in Active with no recovery path. 15_552_000 s.
+pub const PULL_WINDOW_SECS: i64 = 180 * 86_400;
+
 /// The orchestrator account (EVENT-MUTUAL §6, PDA ["mutual", seed]). Holds
 /// the immutable event configuration and — once settle_pool runs — the
 /// frozen settlement ratio every payout reads. Custodies no money itself.
@@ -60,7 +67,8 @@ pub struct Mutual {
     pub deposits_close_at: i64,
     /// Coverage end plus reporting lag; file_claim reverts at/after it (§2.7).
     pub claims_close_at: i64,
-    /// Duration after settlement; unpaid amounts revert to the residual (§2.5).
+    /// Duration after settlement; unpaid amounts revert to the residual
+    /// (§2.5). Fixed: always [`PULL_WINDOW_SECS`] — not initializer config.
     pub pull_window: i64,
     /// Restated from the PDA seeds — the mutual PDA signs the create_dispute
     /// CPI (and later pool CPIs), which requires seeds and bump at signing

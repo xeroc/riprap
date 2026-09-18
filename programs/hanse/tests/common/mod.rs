@@ -395,7 +395,6 @@ pub fn default_config(seed: u64) -> hanse::instructions::InitializeMutualConfig 
         policy_hash: [7u8; 32],
         deposits_close_at: INIT_TEST_NOW + 86_400,
         claims_close_at: INIT_TEST_NOW + 2 * 86_400,
-        pull_window: 7 * 86_400,
         subaccord: SubaccordConfig {
             fee_per_juror: 1_000_000,
             min_stake: 10_000_000,

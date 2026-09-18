@@ -283,6 +283,25 @@ pnpm --filter @riprap/ui run build-storybook
 
 Ship as a second static site (e.g. `design.riprap.xyz` or `/design` on the same host).
 
+### On-chain programs — MVP restrictions (security review 2026-09-18)
+
+`hanse:initialize` enforces three things operators cannot get wrong:
+
+- **One mint.** `--deposit-mint` and `--fee-mint` must be the same mint — the program rejects mixed mints (`InvalidConfiguration`). Settlement adds claim and fee amounts as raw integers, so two different assets would corrupt payout math (ADR-0002).
+- **Fixed payout pull window.** 180 days after settlement, hardcoded on-chain (`PULL_WINDOW_SECS` = 15 552 000 s) — there is no `--pull-window` flag. Unpaid amounts revert to the residual when the window closes.
+- **Classic SPL Token only.** Token-2022 mints are not supported by the programs' token constraints; init rejects them by construction.
+
+### Mainnet deployment
+
+The Surfpool runbook (`runbooks/deployment/`, wired by `txtx.yml`) deploys both programs. The Surfnet-only instant-deploy cheatcode is gated to `localnet`; a mainnet run goes through the real deploy path. Once per program lifetime:
+
+1. **Generate the program keypairs offline** (`solana-keygen new --no-passphrase -o pool-mainnet.json`, likewise `hanse-mainnet.json`) — keep them off this machine; the upgrade authority below is what matters day-to-day. Record the derived addresses in `Anchor.toml`'s commented `[programs.mainnet]` block.
+2. **Pin the environment** in `txtx.yml` (`mainnet`): your RPC URL and the `expected_payer_address` / `expected_authority_address` values. `runbooks/deployment/signers.mainnet.txt` *enforces* both — a mismatched wallet fails the run. The authority should be the 2/3 Squads multisig (EVENT-MUTUAL §12), not a single key.
+3. **Gate:** `pnpm verify` green, plus the live e2e (`anchor test`) against a mainnet-forked surfnet with the exact accord artifact pinned in `programs/hanse/Cargo.toml`.
+4. **Deploy:** `surfpool run deployment --environment mainnet` (or the Surfpool Studio equivalent).
+5. **Verify the deployment before announcing it:** for each program, `solana program show <id> --url mainnet` (owner = BPFLoaderUpgradeab1e, `ProgramData` authority = the multisig), then `solana program dump <id> dumped.so --url mainnet` and compare `sha256sum dumped.so target/deploy/<p>.so` — the deployed bytes must match the reviewed build. A mismatch is a stop-ship.
+
+
 > [!IMPORTANT]
 > There is no CI pipeline in the repo yet. Until one exists, `pnpm verify` is the release gate — run it before every push that touches `packages/`, `apps/`, `programs/`, or `tests/`.
 

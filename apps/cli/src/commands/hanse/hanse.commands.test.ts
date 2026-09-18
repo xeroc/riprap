@@ -37,7 +37,7 @@ const devJs = join(cliRoot, "bin", "dev.js");
 
 const POOL_OVERRIDE = "9xQeWvG816bUx9EPa7X8ZyNYBE6yW8zH2XUFmfYqjEEx" as Address;
 const DEPOSIT_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address;
-const FEE_MINT = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM" as Address;
+const FEE_MINT = DEPOSIT_MINT; // single-asset MVP: program rejects mixed mints
 const EVIDENCE_OPERATOR = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" as Address;
 const POLICY_HASH = createHash("sha256").update("policy").digest("hex");
 const SEED = 7n;
@@ -127,8 +127,6 @@ const INIT_ARGS = [
   "1763174400",
   "--claims-close-at",
   "1793469600",
-  "--pull-window",
-  "2592000",
   "--deposit-mint",
   DEPOSIT_MINT,
   "--fee-mint",
@@ -203,7 +201,6 @@ describe("hanse:initialize --dry-run", () => {
     expect(decoded.policyHash).toEqual(decodeHex(POLICY_HASH));
     expect(decoded.depositsCloseAt).toBe(1_763_174_400n);
     expect(decoded.claimsCloseAt).toBe(1_793_469_600n);
-    expect(decoded.pullWindow).toBe(2_592_000n);
     expect(decoded.subaccord.minJurySize).toBe(3);
     expect(decoded.subaccord.feePerJuror).toBe(5_000_000n);
     expect(decoded.subaccord.alphaBps).toBe(1000);

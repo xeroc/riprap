@@ -34,11 +34,12 @@ export default class HanseInitialize extends ChainCommand {
     "seed — rights 1:1 under the mutual_auth PDA, ownership disabled under " +
     "mutual_own), its Accord subaccord (creator = this wallet, authority = " +
     "the mutual PDA, stake-only jurors), and the fee float ATA. Exactly " +
-    "three --tier flags, in Basic/Standard/Premium order. Pilot numbers: " +
+    "three --tier flags, in Basic/Standard/Premium order. The payout pull " +
+    "window is fixed on-chain at 180 days — no flag. Pilot numbers: " +
     "EVENT-MUTUAL §12.";
 
   static examples = [
-    "<%= config.bin %> hanse:initialize --seed 7 --deposit-mint EPjF… --fee-mint EPjF… --tier 10000000:1000000000 --tier 20000000:2000000000 --tier 40000000:4000000000 --policy-hash <hex64> --deposits-close-at 1763174400 --claims-close-at 1793469600 --pull-window 2592000 --min-stake 10000000 --alpha-bps 1000 --review-window 172800 --commit-window 43200 --reveal-window 43200 --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 5000000 --reveal-threshold-bps 6666 --max-draw-attempts 3 --evidence-operator 9xQe…",
+    "<%= config.bin %> hanse:initialize --seed 7 --deposit-mint EPjF… --fee-mint EPjF… --tier 10000000:1000000000 --tier 20000000:2000000000 --tier 40000000:4000000000 --policy-hash <hex64> --deposits-close-at 1763174400 --claims-close-at 1793469600 --min-stake 10000000 --alpha-bps 1000 --review-window 172800 --commit-window 43200 --reveal-window 43200 --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 5000000 --reveal-threshold-bps 6666 --max-draw-attempts 3 --evidence-operator 9xQe…",
   ];
 
   static flags = {
@@ -62,16 +63,14 @@ export default class HanseInitialize extends ChainCommand {
       description: "Filing deadline, unix seconds (§2.7)",
       required: true,
     }),
-    "pull-window": Flags.string({
-      description: "Payout window after settlement, seconds (§2.5)",
-      required: true,
-    }),
     "deposit-mint": Flags.string({
-      description: "Contribution + payout mint (USDC for the pilot)",
+      description:
+        "Contribution + payout mint (USDC for the pilot); must equal --fee-mint — the program rejects mixed mints (single-asset MVP)",
       required: true,
     }),
     "fee-mint": Flags.string({
-      description: "Juror-fee mint (USDC for the pilot)",
+      description:
+        "Juror-fee mint; must equal --deposit-mint. Classic SPL Token only (no Token-2022)",
       required: true,
     }),
     // ── Subaccord economics (mirrors useaccord lifecycle:create-subaccord) ──
@@ -170,7 +169,6 @@ export default class HanseInitialize extends ChainCommand {
       policyHash,
       depositsCloseAt: toBigInt("deposits-close-at", flags["deposits-close-at"], 64),
       claimsCloseAt: toBigInt("claims-close-at", flags["claims-close-at"], 64),
-      pullWindow: toBigInt("pull-window", flags["pull-window"], 64),
       subaccordArg: subaccordConfig,
     });
 

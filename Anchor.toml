@@ -9,6 +9,12 @@ skip-lint = false
 pool = "63EvHuWaMRSZhD9EPXd7UeW5YFFv41GQUHpv7LpY6wm1"
 hanse = "DTSwUuWC1SpZP8LcJ1EJ4HtUxAczqwrsgqNYnR1QXK3p"
 
+# Mainnet: fill after generating offline deploy keypairs (README § "Mainnet
+# deployment"); these IDs become the programs' permanent on-chain identities.
+# [programs.mainnet]
+# pool = "<pool mainnet program id>"
+# hanse = "<hanse mainnet program id>"
+
 [provider]
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"

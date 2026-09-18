@@ -71,7 +71,6 @@ export interface MutualFixture {
   feeVault: Address;
   depositsClose: bigint;
   claimsClose: bigint;
-  pullWindow: bigint;
   members: KeyPairSigner[];
   memberAtas: Address[];
   /** The last 3 members, staked as jurors (draw fixture wraps them). */
@@ -116,7 +115,6 @@ export async function setupMutualCohort(
   const now0 = (await readClock(env)).unixTimestamp;
   const depositsClose = now0 + 3_600n;
   const claimsClose = now0 + 7_200n;
-  const pullWindow = 3_600n;
 
   const { mint } = await createMint(env, 6);
   // Nanosecond clock + entropy: mutual/pool PDAs collide across back-to-back
@@ -150,7 +148,6 @@ export async function setupMutualCohort(
     policyHash,
     depositsCloseAt: depositsClose,
     claimsCloseAt: claimsClose,
-    pullWindow,
     subaccordArg: {
       feePerJuror,
       minStake: 10_000_000n,
@@ -221,7 +218,6 @@ export async function setupMutualCohort(
     feeVault: await ataOf(mint, subaccord),
     depositsClose,
     claimsClose,
-    pullWindow,
     members,
     memberAtas,
     jurorSigners,

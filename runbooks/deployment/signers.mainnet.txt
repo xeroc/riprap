@@ -1,0 +1,17 @@
+
+// For mainnet deployment, use web wallets, hardware wallets or multisig to improve key security.
+// Addresses are ENFORCED: runbook inputs (txtx.yml `mainnet` environment)
+// `expected_payer_address` / `expected_authority_address` must match the
+// wallets that sign, or the run fails (security review 2026-09-18). The
+// authority should be a 2/3 Squads multisig (EVENT-MUTUAL §12).
+
+signer "payer" "svm::web_wallet" {
+    description = "Pays fees for program deployments and operations"
+    expected_address = input.expected_payer_address
+}
+
+signer "authority" "svm::web_wallet" {
+    description = "Can upgrade programs and manage critical ops"
+    expected_address = input.expected_authority_address
+    // See documentation for other options (squads, etc): https://docs.surfpool.run/iac/svm/signers
+}

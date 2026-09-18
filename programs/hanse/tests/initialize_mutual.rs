@@ -17,6 +17,17 @@ fn config(seed: u64) -> hanse::instructions::InitializeMutualConfig {
 }
 
 fn init_tx(env: &mut Env, cfg: &hanse::instructions::InitializeMutualConfig) -> Result<(), String> {
+    let fee_mint = env.mint;
+    init_tx_with_fee_mint(env, cfg, &fee_mint)
+}
+
+/// [`init_tx`] with the fee mint overridden — `mixed_mints_revert` needs a
+/// second real SPL mint.
+fn init_tx_with_fee_mint(
+    env: &mut Env,
+    cfg: &hanse::instructions::InitializeMutualConfig,
+    fee_mint: &Pubkey,
+) -> Result<(), String> {
     use anchor_lang::solana_program::instruction::Instruction;
     let mutual = mutual_pda(cfg.seed);
     let pool = pool_pda(cfg.seed);
@@ -44,8 +55,8 @@ fn init_tx(env: &mut Env, cfg: &hanse::instructions::InitializeMutualConfig) -> 
             treasury: pool_treasury(&pool, &env.mint),
             subaccord,
             deposit_mint: env.mint,
-            fee_mint: env.mint,
-            fee_float: ata(&mutual, &env.mint),
+            fee_mint: *fee_mint,
+            fee_float: ata(&mutual, fee_mint),
             token_program: spl_token_interface::ID,
             associated_token_program: spl_associated_token_account_interface::program::ID,
             system_program: anchor_lang::solana_program::system_program::ID,
@@ -87,7 +98,7 @@ fn initialize_mutual_wires_pool_subaccord_and_float() {
     assert_eq!(m.tiers, cfg.tiers);
     assert_eq!(m.deposits_close_at, cfg.deposits_close_at);
     assert_eq!(m.claims_close_at, cfg.claims_close_at);
-    assert_eq!(m.pull_window, cfg.pull_window);
+    assert_eq!(m.pull_window, hanse::PULL_WINDOW_SECS);
     assert_eq!(m.phase, hanse::state::Phase::Active);
     assert_eq!(
         (m.claims_filed, m.claims_resolved, m.claim_nonce),
@@ -178,12 +189,42 @@ fn bad_timestamps_revert() {
         init_tx(&mut env, &cfg),
         hanse::HanseError::InvalidConfiguration,
     );
+}
 
+/// Security review 2026-09-18: deposit and fee mint must match. Settlement
+/// adds claim (deposit-mint) and fee (fee-mint) amounts as raw integers, so
+/// a mixed-mint mutual would pay fee-mint units out of the deposit treasury.
+/// Rejected even when both mints share decimals — the gate is mint identity.
+#[test]
+fn mixed_mints_revert() {
     let mut env = setup();
-    let mut cfg = config(3);
-    cfg.pull_window = 0;
+
+    // A second real 6-decimal SPL mint.
+    let mint_b = solana_keypair::Keypair::new();
+    send(
+        &mut env.svm,
+        &[
+            create_account(
+                &env.payer,
+                &mint_b,
+                10_000_000_000,
+                82,
+                &spl_token_interface::ID,
+            ),
+            spl_token_interface::instruction::initialize_mint2(
+                &spl_token_interface::ID,
+                &mint_b.pubkey(),
+                &env.payer.pubkey(),
+                None,
+                6,
+            )
+            .unwrap(),
+        ],
+        &mut [&env.payer, &mint_b],
+    );
+
     assert_custom_err(
-        init_tx(&mut env, &cfg),
+        init_tx_with_fee_mint(&mut env, &config(6), &mint_b.pubkey()),
         hanse::HanseError::InvalidConfiguration,
     );
 }
