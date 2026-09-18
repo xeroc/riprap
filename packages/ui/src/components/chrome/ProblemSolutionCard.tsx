@@ -50,10 +50,12 @@ export function ProblemSolutionCard({
 }: ProblemSolutionCardProps) {
   return (
     <Card data-slot="problem-solution-card" className={cn("gap-0 p-0", className)} {...props}>
-      <div data-slot="ps-problem" className="flex flex-1 flex-col gap-3 p-6">
+      <div data-slot="ps-problem" className="flex flex-1 flex-col gap-3 p-2">
         <div className="flex items-center justify-between gap-4">
-          <span className="inline-flex items-center border border-hairline px-2.5 py-1 uppercase tracking-(--riprap-tracking-stamp) text-stone [font:var(--riprap-mono-label)]">
-            problem
+          <span className="inline-flex items-center px-2.5 py-1 text-stone">
+            <p className="text-muted-foreground [font:var(--riprap-body-md)]">
+              {numerals(question)}
+            </p>
           </span>
           {index ? (
             <span data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
@@ -61,16 +63,12 @@ export function ProblemSolutionCard({
             </span>
           ) : null}
         </div>
-        <p className="text-muted-foreground [font:var(--riprap-body-md)]">{numerals(question)}</p>
       </div>
       <div
         data-slot="ps-solution"
         className="flex flex-1 flex-col gap-3 border-t border-hairline bg-strong p-6"
       >
-        <span className="inline-flex w-fit items-center border border-hairline-strong px-2.5 py-1 uppercase tracking-(--riprap-tracking-stamp) text-(--riprap-accent) [font:var(--riprap-mono-label)]">
-          solution
-        </span>
-        <p className="text-ink [font:var(--riprap-body-strong)]">{numerals(answer)}</p>
+        <p>{numerals(answer)}</p>
       </div>
     </Card>
   );

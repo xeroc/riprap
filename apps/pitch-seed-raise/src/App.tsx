@@ -112,7 +112,7 @@ export function App() {
       {/* presenter chrome: slide counter + notes (N) — mono stamps, hairline */}
       <div className="absolute bottom-6 left-[7cqw] z-30 flex items-center gap-4 text-muted-soft [font:var(--riprap-mono-label)]">
         <span data-num>
-          {String(index + 1).padStart(2, "0")} / {String(SLIDES.length - 2).padStart(2, "0")}
+          {String(index + 1).padStart(2, "0")} / {String(SLIDES.length - 3).padStart(2, "0")}
         </span>
         <span className="uppercase [letter-spacing:var(--riprap-tracking-stamp)]">
           {slide.label}

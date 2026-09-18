@@ -10,18 +10,9 @@ export const SlideFrame: FC<{
   kicker?: string;
   headline: ReactNode;
   children?: ReactNode;
-  align?: "left" | "center";
-}> = ({ kicker, headline, children, align = "left" }) => (
-  <div
-    className={`flex h-full w-full flex-col justify-center gap-10 px-[7cqw]${
-      align === "center" ? " items-center text-center" : ""
-    }`}
-  >
-    <div
-      data-rise
-      className="flex flex-col gap-5"
-      style={align === "center" ? { alignItems: "center" } : undefined}
-    >
+}> = ({ kicker, headline, children }) => (
+  <div className={`flex h-full w-full flex-col justify-center gap-10 px-[7cqw]`}>
+    <div data-rise className="flex flex-col gap-5">
       {kicker ? (
         <div className="uppercase text-accent [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
           {kicker}

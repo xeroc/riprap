@@ -14,7 +14,7 @@
           title="Riprap Pre-Seed Pitch Deck - LLM context">
         # Riprap — pre-seed pitch (full text)
 
-        > Riprap is peer-to-peer risk pooling on Solana: members chip in, drawn peers adjudicate claims, payouts come from the shared pool, and whatever goes unclaimed comes back when the pool ends. The machinery is built bottom-up — arbitration live on devnet, the pool program built, first pools launching through events in Q4 2026 — and events are just the door: the destination is permissionless mutuals for any risk, a $1.6 trillion sector that still runs on paper. This file is self-contained: the complete pre-seed pitch (all 11 slides with copy and speaker notes) plus the investor context behind them. Nothing needs to be fetched elsewhere.
+        > Riprap is peer-to-peer risk pooling on Solana: members chip in, drawn peers adjudicate claims, payouts come from the shared pool, unclaimed money returns when the pool ends. Machinery status: pool program built, arbitration live on devnet, first pools launching through events in Q4 2026. Events are the door; permissionless mutuals for any risk are the destination. This file is self-contained: the pitch plus the investor context behind it. Nothing needs to be fetched elsewhere.
 
         Notes for agents reading this file:
 
@@ -32,9 +32,9 @@
 
         > Anyone should be able to found a mutual for anything — farmers sharing a harvest failure, fishers pooling an engine loss, a village savings group covering funerals, shipowners, coastal homeowners, gig workers, a local sports club. Today the informal version dies of opacity and the formal one costs a charter. We built the three machines a mutual needs as open protocols, and we enter through the cleanest legal door: events.
 
-        ## The deck — 11 slides, full content
+        ## The deck — full content
 
-        Staging (re-staged 2026-09-17): each slide leads with a small kicker naming the slide and one large statement headline. On-slide copy below is verbatim from the slides, typos included; each slide's speaker notes follow it in full. Nothing on the slides is omitted here.
+        Staging (re-staged 2026-09-17): each slide leads with a small kicker naming the slide and one large statement headline. On-slide copy below is verbatim from the slides, typos included; each slide's speaker notes follow it in full, as of the 2026-09-18 re-stages. Not yet transcribed: a "why now" slide. The appendix now opens with the hard-questions slide, answered under "The hard questions" below.
 
         **Slide 1 — title.** Riprap (logomark + wordmark). Deck copy, verbatim: "Real-World Risk Protection on Solana." Stamp: "pre-seed raise · 2026". Speaker notes: Riprap — real-world risk protection on Solana. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Pre-Seed raise, 2026.
 
@@ -150,18 +150,18 @@
 
         ## The problem — the oldest fix in finance has no on-ramp
 
-        Mutual protection is what people do wherever no company will sell them cover, and it predates the companies: farmers share harvest failure, fishers pool an engine loss, village savings groups cover a funeral, shipowners pooled hull losses centuries before Lloyd's was anything more than a coffee house, gig workers cover a bad week, coastal homeowners club together against the storm, local sports clubs cover a broken season. The formal version of this behavior is enormous and winning — $1.61T in premiums, 4,700+ societies, 26.1% of world insurance, a record year (ICMIF 2026). The informal version — ROSCAs, stokvels, tontines, burial societies, group chats with a cash box — spans continents and centuries.
+        Mutual protection is what people do wherever no company will sell them cover, and it predates the companies: farmers share a harvest failure, fishers pool an engine loss, village savings groups cover a funeral. The formal version is $1.61T a year in premiums across 4,700+ societies — 26.1% of world insurance, a record year (ICMIF 2026). The informal version — ROSCAs, stokvels, tontines, burial societies, group chats with a cash box — spans continents and centuries.
 
         Between the two sits nothing usable:
 
-        - **The informal pool fails the same ways everywhere.** It runs on trust, cash, and a spreadsheet: opacity kills it (the "where did the pot go" run), the first serious dispute kills it (no adjudication), and scale kills it (opportunism arrives with strangers). These are not exotic failure modes; they are why the friendly societies and fraternal orders of the 19th century became the licensed mutuals of the 20th — the formalization fixed trust at the price of the charter.
-        - **Founding a formal mutual is an institutional project.** Charter, license, capital, actuarial staff, distribution — the same fixed-cost wall that keeps insurers from $20 products (US P&C spends ~26 cents of every premium dollar before a claim is paid; Verisk/APCIA 2025, III) keeps every farmer group, fishing crew, savings circle, and club from founding their own. The minimum ticket to start a mutual is an institution.
+        - The informal pool fails the same ways everywhere. It runs on trust, cash, and a spreadsheet: opacity kills it (the "where did the pot go" run), the first serious dispute kills it (no adjudication), and scale kills it (opportunism arrives with strangers). This is why the friendly societies and fraternal orders of the 19th century became the licensed mutuals of the 20th — the formalization fixed trust at the price of the charter.
+        - Founding a formal mutual is an institutional project. Charter, license, capital, actuarial staff, distribution — the same fixed-cost wall that keeps insurers from $20 products (US P&C spends ~26 cents of every premium dollar before a claim is paid; Verisk/APCIA 2025, III) keeps every farmer group, fishing crew, savings circle, and club from founding their own. The minimum ticket to start a mutual is an institution.
 
         So the behavior is universal and the infrastructure for doing it credibly does not exist. Anyone who wants to pool one specific risk with one specific community today chooses between a WhatsApp group with a cash box and a decade of licensing.
 
         The reframe: move the pool on-chain. A mutual becomes a transaction — terms in code, custody in a program with two exit doors, adjudication by staked peers, surplus back by rule, death by crank. The informal group keeps its scale and gets the formal sector's credibility; neither the cash box nor the charter survives.
 
-        PMF discipline, stated before it is asked: pre-revenue and pre-launch; the wedge measured first is deliberately small — event-scoped pools, one event, one price ($10/$20/$40), a 3-day coverage window, the cleanest legal surface. Join rate, claim rate, adjudication quality, renewal, and organizer-initiated demand are real numbers within weeks of the first pool closing. Events are the measurement instrument and the channel, never the market — every cohort named above is the market, and each arrives as its own pool on the same rails the moment a sponsor, association, or group of two wants it.
+        PMF discipline, stated before it is asked: pre-revenue and pre-launch; the first wedge is small by design — event-scoped pools, one event, one price ($10/$20/$40), a 3-day coverage window, the cleanest legal surface. Join rate, claim rate, adjudication quality, renewal, and organizer-initiated demand are real numbers within weeks of the first pool closing. Events are the measurement instrument and the channel; every cohort named above is the market, and each arrives as its own pool the moment a sponsor, association, or group of two wants it.
 
         ## The product — one mutual, one risk, a lifetime of its choosing
 
@@ -175,10 +175,10 @@
 
         ## Claims — the cover terms are the contract, the jury applies them
 
-        A licensed insurer's claims look objective because a policy existed before the incident. Mutual claims work the same way, minus the insurer: the rules are written first, the judgment comes after. Two layers, deliberately separate:
+        A licensed insurer's claims look objective because a policy existed before the incident. Mutual claims work the same way, minus the insurer: the rules are written first, the judgment comes after. Two layers, kept separate:
 
         - **The cover terms are the contract.** Every mutual is founded with its own written agreement — the cover terms — hash-committed on chain before the first member joins: the peril, the window, the place, the tiers and caps, the exclusions, and what a claim must carry. For a serious mutual it may as well be drafted as a legal contract; for the pilot it is a public document (the Blade Pool policy). Jurors answer one question: did the event that actually happened fall inside the written rules?
-        - **The protocol is policy-agnostic.** What counts as proof — a police report, a medical record, witness attestations, on-chain facts — is a term among terms, chosen by the founders of that mutual and readable by anyone before joining. One mutual may require a police report within 24 hours; another may accept two witnessed statements; the machinery is identical either way. The detail lives in the document, not the code — which is why a mutual's rules can sharpen without anyone shipping a smart-contract change.
+        - **The protocol is policy-agnostic.** What counts as proof — a police report, a medical record, witness attestations, on-chain facts — is a term among terms, chosen by the founders of that mutual and readable by anyone before joining. One mutual may require a police report within 24 hours; another may accept two witnessed statements; the machinery is identical either way. The detail lives in the document, not the code, so a mutual's rules can sharpen without anyone shipping a smart-contract change.
 
         The questions a claims process has to survive, and where each one is answered:
 
@@ -189,7 +189,7 @@
         - **Injury surfaced 12 hours later?** The window binds the incident, not its discovery — the claims window stays open past coverage end (the pilot: 14 days) so late-manifesting injuries can still be filed and judged.
         - **Manufactured evidence?** Evidence goes encrypted to the drawn jurors only, hash-committed on chain, watermarked per juror. Beyond the plumbing it is the jury's judgment — and the pilot's attack bounty pays anyone who lands a fraudulent claim through the jury.
         - **Jurors know the claimant? The attacker is also a member?** The draw is random at dispute time — panels cannot be groomed in advance — and conflicts are the terms' problem to define and the jury's to weigh. Not solved; bounded.
-        - **A $2,000 claim against a $20 juror stake?** The sharpest open question, answered honestly: juror economics are **not finalized**. The mechanism is fixed — stake-gated draws, sealed votes, slashed incoherence, a bounded appeal ladder, claimant-paid fees that junk filings must eat. The parameters — stake relative to claim size, slash depth, appeal cost — are deliberately unfrozen until the pilot produces real numbers: draw turnout, deliberation quality, cost to attack. The design constraint is written down: juror skin must scale with the treasury it guards, and the stake base and its concentration are public on chain, so a reviewer can check rather than take it on faith.
+        - **A $2,000 claim against a $20 juror stake?** The sharpest open question, answered honestly: juror economics are **not finalized**. The mechanism is fixed — stake-gated draws, sealed votes, slashed incoherence, a bounded appeal ladder, claimant-paid fees that junk filings must eat. The parameters — stake relative to claim size, slash depth, appeal cost — stay unfrozen until the pilot produces real numbers: draw turnout, deliberation quality, cost to attack. The design constraint is written down: juror skin must scale with the treasury it guards, and the stake base and its concentration are public on chain, so a reviewer can check rather than take it on faith.
 
         The protocol makes the mechanism decentralized and auditable. The cover terms make the truth question answerable — in writing, in advance, per mutual. Neither layer makes judgment automatic; both make it accountable.
 
@@ -203,7 +203,7 @@
         - Claims department, adjusters, SIU → peer adjudication: staked jurors paid per dispute, claimant pre-pays the fee, incoherent jurors are slashed.
         - Solvency assurance, brand, trust → the pool balance is a public number; every contribution, verdict, and payout is a public fact.
 
-        The test the category demands — cheaper and faster, structurally: the licensed sector's 20–40 cents of admin per collected dollar becomes transaction fees; settlement becomes minutes instead of days; solvency becomes readable instead of asserted. And the audience is already there: conference attendees hold wallets and USDC natively — the distribution rail and the payment rail are the same object.
+        The category test is structural: the licensed sector's 20–40 cents of admin per collected dollar becomes transaction fees; settlement becomes minutes instead of days; solvency becomes readable instead of asserted. And the audience is already there: conference attendees hold wallets and USDC natively — the distribution rail and the payment rail are the same object.
 
         Why Solana specifically: the covered community is Solana-native (Breakpoint: 8,000+ attendees per solana.com/breakpoint), the arbitration layer is Solana-native, and sub-cent settlement is what makes a $20 product's unit economics exist at all.
 
@@ -219,9 +219,9 @@
         | The capital that wants in | Alternative reinsurance capital $136B (+18% in 2025); cat bonds $60.7B outstanding, index +11.4%, spreads ~5–6.7% — and every seat gated (144A, QIB-only, ~$200k tickets) | Aon; Artemis; Swiss Re; IFB |
         | On-chain cover (the crypto corner) | >$3.4B stolen in 2025 vs ~$104M sector TVL, 84% in one player | Chainalysis; DeFiLlama |
 
-        One machine addresses all rows: a mutual becomes a transaction (one risk per pool, no charter), surplus returns by rule instead of board favor, the back office is the chain, and mutuals stack into tranched capital. That is where this company is heading: anyone founding a mutual for anything — the farmers, fishers, shipowners, coastal homeowners, gig workers, village savings groups, and clubs, plus the microinsurance distributors and the capital staking upper layers. Not only events: permissionless mutuals, eventually on-chain insurance in partnership with licensed carriers where the perimeter requires it.
+        The same machine addresses every row: one risk per pool, no charter; surplus returns by rule instead of board favor; the back office is the chain; mutuals stack into tranched capital. That is where this company is heading: anyone founding a mutual for anything, plus the microinsurance distributors and the capital staking the upper layers. Not only events: permissionless mutuals, eventually on-chain insurance in partnership with licensed carriers where the perimeter requires it.
 
-        The GTM wedge — event-scoped pools — chosen for three reasons, none of them market size: (1) the cleanest legal surface — crypto-native members covering each other for a bounded window, no counsel spend at pilot scale; (2) distribution mechanics — the organizer is a B2B2C channel and the event is its own juror pool; (3) measurability — every pool closes in weeks and publishes its numbers.
+        The GTM wedge — event-scoped pools — chosen for three reasons, none of them market size: (1) the cleanest legal surface — crypto-native members covering each other for a bounded window, no counsel spend at pilot scale; (2) distribution mechanics. the event is its own juror pool; (3) measurability — every pool closes in weeks and publishes its numbers.
 
         Pilot unit economics (worked example, not TAM): 1,000 Standard members × $20 = $20,000 pool; 4 approved claims × $2,000 = $8,000 paid; $12,000 returns pro-rata ($12 each); pool dissolves. Zero claims: every cent returns. Numbers per policy §5/§10 — the demonstration that the economics clear at the smallest possible scale.
 
@@ -246,15 +246,15 @@
 
         ## Distribution — the event is the channel
 
-        **B2B2C, one sale brings N wallets.** The organizer/sponsor founds a pool and brings their attendee list; organizers already sell attach-products at checkout (badges, merch, upsells) and an offer this concrete attaches. Selling one organizer = acquiring a cohort, with the organizer's own comms as the funnel.
+        B2B2C: one sale brings N wallets. The organizer/sponsor founds a pool and brings their attendee list; organizers already sell attach-products at checkout (badges, merch, upsells) and an offer this concrete attaches. Selling one organizer = acquiring a cohort, with the organizer's own comms as the funnel.
 
-        **The product distributes itself.** Members become paid jurors (earnings, not points). Payouts and verdicts are public trust artifacts. The pool page is engineered for group-chat screenshots — a shareable object, and "chip in $20" is an impulse-priced ask. Urgency is native: deposits close when doors open.
+        The product distributes itself: members become paid jurors (earnings, not points), payouts and verdicts are public trust artifacts, and the pool page is engineered for group-chat screenshots — "chip in $20" is an impulse-priced ask. Urgency is native: deposits close when doors open.
 
-        **Crypto-native lanes, chosen for repeatability:** the Solana conference circuit (each event is customer, channel, and juror pool simultaneously — Breakpoint, then the 2027 calendar), Superteam DE/UK, CT, the foundation relationships. No paid web2 acquisition, no airdrop — the pool's own economics are the incentive.
+        Crypto-native lanes, chosen for repeatability: the Solana conference circuit (each event is customer, channel, and juror pool at once — Breakpoint, then the 2027 calendar), Superteam DE/UK, CT, the foundation relationships. No paid web2 acquisition, no airdrop; the pool's own economics are the incentive.
 
-        **The KPI ladder that defines PMF:** waitlist → join rate per event → renewal at the next event → **organizer-initiated pools** (a sponsor shows up without us). The last one is the signal the wedge is working; the take-rate exists to share it — a revenue-share parameter for organizers, activated with the second sponsor.
+        The KPI ladder that defines PMF: waitlist → join rate per event → renewal at the next event → **organizer-initiated pools** (a sponsor shows up without us). That last one is the signal the wedge is working; the take-rate exists to share it, a revenue-share parameter for organizers activated with the second sponsor.
 
-        **Where distribution goes at scale:** the same pitch to communities, associations, and microinsurance distributors — whose documented growth drivers (smartphones, automated underwriting, rapid claims, mobile money) map one-for-one onto the protocol's native properties. Events prove the machine; the mutual economy adopts it.
+        Where distribution goes at scale: the same pitch to communities, associations, and microinsurance distributors, whose documented growth drivers (smartphones, automated underwriting, rapid claims, mobile money) map one-for-one onto the protocol's native properties. Events prove the machine; the mutual economy adopts it.
 
         ## Business model — revenue first, token as warrant
 
@@ -266,7 +266,7 @@
         2. **Operator fees** — running flagship pools and deployments for sponsors who want the product without the operations.
         3. **Infrastructure capture at the destination** — when anyone can launch a mutual on the rails, the protocol's share extends to pools we do not operate. The expansion story, not the near-term revenue line.
 
-        Token stance — business first, token as warrant: v1 runs on USDC end to end — entry fees, juror stake, juror fees, payouts — no product token, no governance theater. The raise carries a bounded token warrant over the one honest future role: staked reserve capital earning transparent protection yield — the asset class the $136B alternative-capital market already pays banks for access to, with a $200k ticket and quarterly reporting, opened here to any wallet size with a live vault instead. Bounded means: a fixed share of any future supply, at a struck price, with the terms published before the round opens — no open-ended claim on the network. The warrant is deliberately the hardest-negotiated term in the round: a seemingly attractive equity cap becomes expensive if the warrant gives away a meaningful chunk of the future network. Separately, the preferred eventual structure is a token-only raise via MetaDAO, moving all value into the DAO and making the equity meaningless — a future round's decision, not this one's.
+        Token stance — business first, token as warrant: v1 runs on USDC end to end — entry fees, juror stake, juror fees, payouts — no product token, no governance theater. The raise carries a bounded token warrant over the one honest future role: staked reserve capital earning transparent protection yield — the asset class the $136B alternative-capital market already pays banks for access to, with a $200k ticket and quarterly reporting, opened here to any wallet size with a live vault instead. Bounded means: a fixed share of any future supply, at a struck price, with the terms published before the round opens — no open-ended claim on the network. The warrant is the hardest-negotiated term in the round: a seemingly attractive equity cap becomes expensive if the warrant gives away a meaningful chunk of the future network. Separately, the preferred eventual structure is a token-only raise via MetaDAO, moving all value into the DAO and making the equity meaningless — a future round's decision, not this one's.
 
         ## The ask
 
@@ -289,7 +289,7 @@
 
         ## Objections — prepared, not improvised
 
-        - **"Is this regulated insurance?"** It is a discretionary mutual — member-funded cover, the established form for members covering each other. The event wedge is the cleanest legal entry surface, not a claimed zero; expansion crosses perimeters deliberately, with licenses or licensed partners.
+        - **"Is this regulated insurance?"** It is a discretionary mutual — member-funded cover, the established form for members covering each other. The event wedge is the cleanest legal entry surface, not a claimed zero; expansion crosses perimeters with licenses or licensed partners.
         - **"The numbers are toys — $20 × 1,000 people?"** Correct, deliberately. The pilot is a measurement instrument for unit economics and adjudication quality at the smallest scale. We are not raising on event-pool revenue; we are raising on the machine the events prove.
         - **"Why not Nexus / an insurer / GoFundMe?"** Three different jobs. Nexus proves demand and demonstrates the committee ceiling; insurers are sub-economic at this price; crowdfunding is the post-hoc behavior we replace.
         - **"Would financially interested members adjudicate honestly?"** Jurors stake and lose capital for voting against the evident truth; the draw is random at dispute time so panels cannot be groomed; appeals re-examine with larger juries; the claimant pre-pays juror fees so frivolous filings are priced out. Honest limit: unproven under adversarial load until real claims run — the pilot includes a public attack bounty (file fraudulent claims; the jury denies them; a landed one pays the finder).
@@ -297,19 +297,28 @@
         - **"Why Solana?"** The covered community, the arbitration layer, and the cost floor are all Solana-native.
         - **"What stops a funded team from copying you?"** They get the code, not the jurors, the data, or a decade of treasury-operating scar tissue.
 
+        ## The hard questions — straight answers
+
+        The four questions every diligence conversation reaches. Answers as the appendix slide gives them (added 2026-09-18):
+
+        - **Can you legally do this?** The mutual is limited in scope and time to avoid UK insurance regulation. Regulations are reviewed step by step as we progress.
+        - **Can strangers adjudicate claims?** Adjudication is the company risk. Optimal parameters are set case by case; they are defined for the pilot, and the metric set — turnout, time to verdict, appeal and reversal rates, cost per claim — publishes from Blade Pool onward.
+        - **Why the hardest claims first?** Blade Pool is the cheapest place to find adjudication failures: capped payouts ($1k–4k), tiny stakes ($10–40), bounded lifetime, one venue.
+        - **Who builds the company?** Started solo, became a real business. None of this would've happened without mtnDAO. On-chain insurance has been on our minds for half a decade.
+
         ## Build status — honest ledger (2026-09)
 
         - Pool program (custody, two doors, pro-rata liquidation): **built** — LiteSVM suite green.
         - Arbitration layer (Accord: juror pools, commit-reveal, appeals): **live on devnet**, full dispute lifecycle; two consumer programs built (curated list, N-party escrow).
         - Event-mutual orchestrator (hanse: tiers, claims, settlement ratio): **planned into implementation** — spec grilled and frozen; full bean tree cut.
         - Recurring-payment rail (Tributary): **live on Solana mainnet** — dependency for recurring contributions later, not needed for one-time event pools.
-        - First pool (Blade Pool @ Breakpoint 2026): landing live, waitlist open; pool launches with the event (Nov 15–17, London).
+        - First pool (Blade Pool @ Breakpoint 2026): landing live, waitlist open; pool launches with the event (Nov 15–17, London). Clarification: The Pool is not created by the organizers of the conference but us as 3rd party!
 
         Not claimed: audits, mainnet capital on the arbitration layer, production dispute volume, revenue. Audits gate mainnet capital — that is the stated next spend, not hand-waving.
 
         ## Legal posture — one paragraph
 
-        The product is a discretionary mutual — member-funded cover, payouts at the pool's discretion — the legally established form for members covering each other. The event wedge is chosen first because it is the cleanest legal entry surface, not a claimed zero: crypto-native members, covering each other, for a bounded window, promising nothing beyond the pool — and the pilot itself carries no counsel spend. The build order runs from the cleanest legal surface outward; wherever the product crosses into regulated lines, the license is taken or a licensed carrier partnered with, deliberately. Never frame the appeal as "no license"; the appeal is granularity, transparency, cost structure, composability.
+        The product is a discretionary mutual — member-funded cover, payouts at the pool's discretion — the legally established form for members covering each other. The event wedge is chosen first because it is the cleanest legal entry surface, not a claimed zero: crypto-native members, covering each other, for a bounded window, promising nothing beyond the pool — and the pilot itself carries no counsel spend. The build order runs from the cleanest legal surface outward; wherever the product crosses into regulated lines, the license is taken or a licensed carrier partnered with. Never frame the appeal as "no license"; the appeal is granularity, transparency, cost structure, composability.
 
         ## Numbers ledger — every number above, with its source
 

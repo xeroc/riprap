@@ -1,10 +1,10 @@
 import {
-  Backstop,
   Claim,
   ExpansionTile,
   Gather,
   Join,
   Logomark,
+  ProblemSolutionCard,
   Renew,
   Rule,
   Stack,
@@ -110,7 +110,7 @@ const COMPARE_ROWS: { id: string; label: ReactNode; trad: boolean; web3: boolean
 const VisionSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the vision" headline="Internet Insurance">
+    <SlideFrame kicker="the vision" headline="DeFi broke finance. Insurance is next.">
       <div className="flex w-full flex-col gap-8">
         {/* the comparison table — same business, different rails */}
         <div className="flex w-full flex-col">
@@ -205,6 +205,77 @@ const ProblemSlide: FC = () => {
             </span>
           </span>
         </div>
+      </div>
+    </SlideFrame>
+  );
+};
+
+/** The competitive set: fees / raise / cover per player, chain in tiny
+ * type — every row reads ethereum or off-chain, so the empty Solana
+ * column is the argument. Numbers are report-pinned (Nexus '25 report,
+ * evertas.com, OpenCover '25 recap). The 2020–22 cohort is no longer a
+ * row — it lives below as the named mistakes carousel. */
+const FIELD_ROWS: {
+  name: string;
+  chain: string;
+  cells: { v: string; sub?: string }[];
+}[] = [
+    {
+      name: "Nexus Mutual",
+      chain: "ethereum · arbitrum · kyc",
+      cells: [
+        { v: "$5.7M", sub: "cover fees '25" },
+        { v: "$2.7M", sub: "ever · no VC" },
+        { v: "$1B+", sub: "purchased '25" },
+      ],
+    },
+    {
+      name: "OpenCover",
+      chain: "base · ethereum · off-chain co",
+      cells: [
+        { v: "—", sub: "undisclosed" },
+        { v: "$4.6M", sub: "seed '22–23" },
+        { v: "$141.6M", sub: "protected '25" },
+      ],
+    },
+  ];
+
+const IncumbantsProblemSlide: FC = () => {
+  const frame = useSlideFrame();
+  return (
+    <SlideFrame kicker="the competition" headline="there's basically no competitor.">
+      <div className="flex w-full flex-col gap-12">
+        <div
+          className="grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] gap-x-12 text-sm tracking-[0.2em] text-text-secondary"
+          style={rise(frame, 16)}
+        >
+          <div />
+          <div className="text-right">FEES &rsquo;25</div>
+          <div className="text-right">RAISED</div>
+          <div className="text-right">COVER</div>
+        </div>
+        {FIELD_ROWS.map((r, i) => (
+          <div
+            key={r.name}
+            className="grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] items-baseline gap-x-12 border-t border-white/10 pt-5"
+            style={rise(frame, 28 + i * 22)}
+          >
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <span className="font-heading text-xl font-bold tracking-tight text-nearwhite">
+                  {r.name}
+                </span>
+              </div>
+              <span className="text-sm text-text-secondary">{r.chain}</span>
+            </div>
+            {r.cells.map((c, j) => (
+              <div key={j} className="flex flex-col items-end gap-1 text-right">
+                <span className="text-xl tabular-nums text-nearwhite">{c.v}</span>
+                {c.sub ? <span className="text-sm text-text-secondary">{c.sub}</span> : null}
+              </div>
+            ))}
+          </div>
+        ))}
 
         {/* the graveyard — one chip per named failure */}
         <div className="flex w-full flex-col gap-3">
@@ -877,122 +948,167 @@ const CloseSlide: FC = () => {
   );
 };
 
-/* A1 — appendix (the destination stack the vision slide carried pre-re-stage) */
+/* A0 — appendix Q&A (the GP review's four hard questions) ------------------ */
 
-/** The five machines on-chain cover needs, one per step, ordinals matching
- * the plates (n ↔ tile step): custody, adjudication, recurrence, reserve
- * capital, reinsurance. Copy per meta/PITCH.md §12 (destination
- * vocabulary). Presented as the vision slide before the 2026-09-18
- * re-stage; kept as the deck's reference ending. */
-const VISION_STEPS = [
+/** The four questions every IC asks, one ProblemSolutionCard each — copy
+ * verbatim from apps/pitch-seed-raise/PROBLEMS.md (2026-09-18 GP teardown →
+ * founder answers; not yet mirrored in meta/PITCH.md). Questions condensed
+ * to under seven words; answers as spoken. First slide of the appendix: the
+ * reference half of the deck opens by naming its own weakest points. */
+const HARD_QUESTIONS: { index: string; q: string; a: string }[] = [
   {
-    id: "gather",
-    step: "01",
-    head: "money gathers",
-    body: (
-      <>
-        the pool is <span className="font-extrabold text-white/80">a program, not a company</span> —
-        it holds usdc and nothing else. members chip in, one pool per defined risk.
-      </>
-    ),
-    label: "money gathers",
-    Glyph: Gather,
+    index: "01",
+    q: "Can you legally do this?",
+    a: "The mutual is limited in scope and time to avoid UK insurance regulation. We review regulations step by step as we progress. For full-fledged insurance, regulations might apply. The extend: unknown.",
   },
   {
-    id: "rule",
-    step: "02",
-    head: "peers decide",
-    body: (
-      <>
-        claims are judged by staked members of the same pool — drawn at random, sealed votes,
-        appeals double the jury. adjudication by{" "}
-        <span className="font-extrabold text-white/80">accord</span>, honestly an arbitration
-        oracle.
-      </>
-    ),
-    label: "peers decide",
-    Glyph: Rule,
+    index: "02",
+    q: "Can strangers adjudicate claims?",
+    a: "Adjudication is key; optimal parameters must be set case by case. We've defined them for the pilot. For pilot, clear no! Foundation has been layed out to integrate Solana's Attestation system. That allows specifying jurors clearly.",
   },
   {
-    id: "renew",
-    step: "03",
-    head: "cover renews",
-    body: (
-      <>
-        contributions recur through the pull payments rail. We've alreday built that with{" "}
-        <span className="font-extrabold text-white/80"> tributary.so</span>.
-      </>
-    ),
-    label: "cover renews",
-    Glyph: Renew,
+    index: "03",
+    q: "Why the such a pilot first?",
+    a: "The cheapest place to find adjudication failures: capped payouts ($1k–4k), tiny stakes ($10–40), bounded lifetime, one venue. Go to market quickly, with least regulatory risk and attrack attention.",
   },
   {
-    id: "backstop",
-    step: "04",
-    head: "a backstop grows",
-    body: (
-      <>
-        <span className="font-extrabold text-white/80">external risk capital</span> stakes a reserve
-        beneath the pool and earns a rule-set share of its surplus.
-      </>
-    ),
-    label: "a backstop grows",
-    Glyph: Backstop,
+    index: "04",
+    q: "Who builds the company?",
+    a: "Started solo, became a real business. None of this would've happened without mtnDAO. On-chain insurance has been on our minds for half a decade. Aiming for insurance/regulatory counsel as advisor and a risk/legal hire post-raise. ",
   },
-  {
-    id: "stack",
-    step: "05",
-    head: "pools cover pools",
-    body: (
-      <>
-        mutuals cover each other: first loss below, the tail above.{" "}
-        <span className="font-extrabold text-white/80">reinsurance and tranching</span>.
-      </>
-    ),
-    label: "pools cover pools",
-    Glyph: Stack,
-  },
-] as const;
+];
 
-const AppendixSlide: FC = () => {
+const AppendixQASlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="appendix" headline="the destination stack">
-      <div className="flex w-full flex-col gap-8">
-        <div
-          className="max-w-[62ch] text-ink [font:var(--riprap-title-md)]"
-          style={rise(frame, 16)}
-        >
-          An open protocol for insurance, on chain.
-        </div>
-
-        <div style={rise(frame, 32)}>
-          <ol
-            data-slot="expansion-strip"
-            className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
-          >
-            {VISION_STEPS.map((tile) => (
-              <ExpansionTile key={tile.step} {...tile} />
-            ))}
-          </ol>
-        </div>
-
-        {/* same grid template as the strip — column i elaborates plate i */}
-        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          {VISION_STEPS.map((s, i) => (
-            <div
-              key={s.step}
-              className="flex flex-col gap-2 border-t border-hairline pt-4"
-              style={rise(frame, 52 + i * 12)}
-            >
-              <div className="text-muted [font:var(--riprap-body-sm)]">{s.body}</div>
-            </div>
-          ))}
-        </div>
+    <SlideFrame kicker="the problems" headline="The hard questions that need solving.">
+      <div className="grid w-full grid-cols-2 gap-6">
+        {HARD_QUESTIONS.map((c, i) => (
+          <div key={c.index} style={rise(frame, 8 + i * 10)}>
+            <ProblemSolutionCard index={c.index} question={c.q} answer={c.a} />
+          </div>
+        ))}
       </div>
     </SlideFrame>
   );
 };
+
+///* A1 — appendix (the destination stack the vision slide carried pre-re-stage) */
+//
+///** The five machines on-chain cover needs, one per step, ordinals matching
+// * the plates (n ↔ tile step): custody, adjudication, recurrence, reserve
+// * capital, reinsurance. Copy per meta/PITCH.md §12 (destination
+// * vocabulary). Presented as the vision slide before the 2026-09-18
+// * re-stage; kept as the deck's reference ending. */
+//const VISION_STEPS = [
+//  {
+//    id: "gather",
+//    step: "01",
+//    head: "money gathers",
+//    body: (
+//      <>
+//        the pool is <span className="font-extrabold text-white/80">a program, not a company</span> —
+//        it holds usdc and nothing else. members chip in, one pool per defined risk.
+//      </>
+//    ),
+//    label: "money gathers",
+//    Glyph: Gather,
+//  },
+//  {
+//    id: "rule",
+//    step: "02",
+//    head: "peers decide",
+//    body: (
+//      <>
+//        claims are judged by staked members of the same pool — drawn at random, sealed votes,
+//        appeals double the jury. adjudication by{" "}
+//        <span className="font-extrabold text-white/80">accord</span>, honestly an arbitration
+//        oracle.
+//      </>
+//    ),
+//    label: "peers decide",
+//    Glyph: Rule,
+//  },
+//  {
+//    id: "renew",
+//    step: "03",
+//    head: "cover renews",
+//    body: (
+//      <>
+//        contributions recur through the pull payments rail. We've alreday built that with{" "}
+//        <span className="font-extrabold text-white/80"> tributary.so</span>.
+//      </>
+//    ),
+//    label: "cover renews",
+//    Glyph: Renew,
+//  },
+//  {
+//    id: "backstop",
+//    step: "04",
+//    head: "a backstop grows",
+//    body: (
+//      <>
+//        <span className="font-extrabold text-white/80">external risk capital</span> stakes a reserve
+//        beneath the pool and earns a rule-set share of its surplus.
+//      </>
+//    ),
+//    label: "a backstop grows",
+//    Glyph: Backstop,
+//  },
+//  {
+//    id: "stack",
+//    step: "05",
+//    head: "pools cover pools",
+//    body: (
+//      <>
+//        mutuals cover each other: first loss below, the tail above.{" "}
+//        <span className="font-extrabold text-white/80">reinsurance and tranching</span>.
+//      </>
+//    ),
+//    label: "pools cover pools",
+//    Glyph: Stack,
+//  },
+//] as const;
+//
+//const AppendixSlide: FC = () => {
+//  const frame = useSlideFrame();
+//  return (
+//    <SlideFrame kicker="appendix" headline="the destination stack">
+//      <div className="flex w-full flex-col gap-8">
+//        <div
+//          className="max-w-[62ch] text-ink [font:var(--riprap-title-md)]"
+//          style={rise(frame, 16)}
+//        >
+//          An open protocol for insurance, on chain.
+//        </div>
+//
+//        <div style={rise(frame, 32)}>
+//          <ol
+//            data-slot="expansion-strip"
+//            className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
+//          >
+//            {VISION_STEPS.map((tile) => (
+//              <ExpansionTile key={tile.step} {...tile} />
+//            ))}
+//          </ol>
+//        </div>
+//
+//        {/* same grid template as the strip — column i elaborates plate i */}
+//        <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+//          {VISION_STEPS.map((s, i) => (
+//            <div
+//              key={s.step}
+//              className="flex flex-col gap-2 border-t border-hairline pt-4"
+//              style={rise(frame, 52 + i * 12)}
+//            >
+//              <div className="text-muted [font:var(--riprap-body-sm)]">{s.body}</div>
+//            </div>
+//          ))}
+//        </div>
+//      </div>
+//    </SlideFrame>
+//  );
+//};
 
 /* ---- registry ---------------------------------------------------------------- */
 
@@ -1012,18 +1128,18 @@ export const SLIDES: SlideDef[] = [
     component: TitleSlide,
   },
   {
+    id: "problem",
+    label: "the problem",
+    notes:
+      "30s. The frame: traditional insurance is a slow, expensive monolith. One number, very big: ~26¢ of every US premium dollar is spent before a claim is paid (Verisk/APCIA '25) — the fixed-cost back office; at that floor microinsurance is often infeasible.",
+    component: ProblemSlide,
+  },
+  {
     id: "vision",
     label: "the vision",
     notes:
       "25s. Why the world is ripe for internet insurance. Call a smart contract what it is: business logic that runs 24/7/365 — autonomous, permissionless, transparent. No surprise defi trading works great on-chain — it is well-understood business logic. You know what else is well-understood business logic? Insurance. Then the table, top to bottom: the first two rows are the business — tradinsure pools money and decides payouts, and so does web3 insure; every row below is the rails — transparent (the balance is a public number — solvency provable, not asserted), fast (payouts in minutes, not days), global & 24/7/365, permissionless (anyone with a wallet), composable (pools stack into tranched capital) — web3 only. Overhead dies on the way: the ~26¢-per-dollar back office becomes transaction fees. The five-machine destination stack moved to the appendix — walk it there if asked. Segue: so why doesn't on-chain insurance exist today — the problem, next slide.",
     component: VisionSlide,
-  },
-  {
-    id: "problem",
-    label: "the problem",
-    notes:
-      "30s. The frame: traditional insurance is a slow, expensive monolith. One number, very big: ~26¢ of every US premium dollar is spent before a claim is paid (Verisk/APCIA '25) — the fixed-cost back office; at that floor microinsurance is often infeasible. Then the cloud, gesture once, don't read it: the 2020–22 graveyard, one named failure per project — Neptune Mutual (upfront lump sum; token-vote claims), Cover Protocol (exploited itself), Solace (shared idle pool), OpenCover (web3 portfolio cover), Unslashed (no float income), InsurAce (twenty thin chains), Bridge Mutual (farmed, not mutual), Risk Harbor (wLUNA collateral). Same lesson at company scale: the rails were never the whole machine — custody without adjudication, one pool, or permissioning is just a slower bank. If asked, the mutual-history backing: pooled protection is the oldest fix — the formal version is $1.61T and winning (ICMIF '24); the informal version dies of opacity, disputes, and scale, which is why the friendly societies became licensed mutuals — formalization fixed trust at the price of the charter. The solvency and jurisdiction pains stay in Q&A — the vision table carries those ✗. Land: the behavior is universal, the on-ramp does not exist. Segue: the product — the rails that remove each ✗, next slide.",
-    component: ProblemSlide,
   },
   {
     id: "product",
@@ -1075,17 +1191,31 @@ export const SLIDES: SlideDef[] = [
     component: CloseSlide,
   },
   {
-    id: "appendix",
-    label: "appendix — the destination",
+    id: "appendix-qa",
+    label: "appendix — the hard questions",
     notes:
-      "Reference, not presented — the stack the vision slide carried before the 2026-09-18 re-stage. The five machines on-chain cover needs, one per plate: 01 money gathers — programmatic custody: the pool is a program, not a company, it holds USDC and nothing else; 02 peers decide — adjudication: staked members of the same pool, drawn at random, sealed votes, appeals that double the jury — Accord, honestly an arbitration oracle; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. Custody, adjudication, recurrence, reserve capital, reinsurance — everything an insurer needs, none of it a company. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built.",
-    component: AppendixSlide,
+      "15s. The appendix opens with the four questions every IC asks, one card each — problem on top, our answer on the plate. Legal: the mutual is deliberately limited in scope and time to stay outside UK insurance regulation; scope widens step by step as we progress. Adjudication: the company risk, owned — parameters are case by case and defined for the pilot; the metric set publishes from Blade Pool onward. Blade Pool: the cheapest place to find adjudication failures — payouts capped $1k–4k, stakes $10–40, one venue, a bounded lifetime. Team: started solo, became a real business — none of it without mtnDAO, and on-chain insurance has been on our minds for half a decade.",
+    component: AppendixQASlide,
   },
+  // {
+  //   id: "appendix",
+  //   label: "appendix — the destination",
+  //   notes:
+  //     "Reference, not presented — the stack the vision slide carried before the 2026-09-18 re-stage. The five machines on-chain cover needs, one per plate: 01 money gathers — programmatic custody: the pool is a program, not a company, it holds USDC and nothing else; 02 peers decide — adjudication: staked members of the same pool, drawn at random, sealed votes, appeals that double the jury — Accord, honestly an arbitration oracle; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. Custody, adjudication, recurrence, reserve capital, reinsurance — everything an insurer needs, none of it a company. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built.",
+  //   component: AppendixSlide,
+  // },
   {
     id: "market",
     label: "the market",
     notes:
       "35s. The story first, then the numbers: millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics — a $20, 3-day, single-peril cover is sub-economic by construction when ~26¢ of every US P&C premium dollar is spent before a claim is paid (Verisk/APCIA '25). We are building the infrastructure that lets those groups create their own risk pools. Then read the evidence, do not editorialize: $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); ~26¢ per premium dollar (Verisk '25); $1.61T mutual premiums — the same behavior, formalized (ICMIF '24). If asked: $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama); market scan — Nexus Mutual $5.7M cover fees '25, $2.7M raised ever, $1B+ purchased; OpenCover $4.6M seed '22–23, $141.6M protected '25. Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
     component: MarketSlide,
+  },
+  {
+    id: "Competitors",
+    label: "Competitors",
+    notes:
+      "30s. Gesture once, don't read it: the 2020–22 graveyard, one named failure per project — Neptune Mutual (upfront lump sum; token-vote claims), Cover Protocol (exploited itself), Solace (shared idle pool), OpenCover (web3 portfolio cover), Unslashed (no float income), InsurAce (twenty thin chains), Bridge Mutual (farmed, not mutual), Risk Harbor (wLUNA collateral). Same lesson at company scale: the rails were never the whole machine — custody without adjudication, one pool, or permissioning is just a slower bank. If asked, the mutual-history backing: pooled protection is the oldest fix — the formal version is $1.61T and winning (ICMIF '24); the informal version dies of opacity, disputes, and scale, which is why the friendly societies became licensed mutuals — formalization fixed trust at the price of the charter. The solvency and jurisdiction pains stay in Q&A — the vision table carries those ✗. Land: the behavior is universal, the on-ramp does not exist. Segue: the product — the rails that remove each ✗, next slide.",
+    component: IncumbantsProblemSlide,
   },
 ];
