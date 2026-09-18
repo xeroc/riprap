@@ -7,7 +7,7 @@ import { defineConfig } from "vite";
 // (title/OG/canonical/JSON-LD) in its index.html — the pool head is static so
 // crawlers see it without JS. Only the pool + app entries may ever pull in
 // @solana/*; the platform entry (index.html → src/main.tsx) stays Solana-free.
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),
@@ -24,4 +24,11 @@ export default defineConfig({
     },
   },
   plugins: [react(), tailwindcss()],
-});
+  // @solana/connector's dist (walletconnect chunks) reads process.env.NODE_ENV
+  // at runtime; the prod build defines it away statically, but dev serves the
+  // dep chunks raw — without this define BOTH Solana entries die silently
+  // ("process is not defined") before React mounts.
+  define: {
+    "process.env.NODE_ENV": JSON.stringify(mode),
+  },
+}));
