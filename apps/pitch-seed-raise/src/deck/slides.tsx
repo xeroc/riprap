@@ -16,14 +16,14 @@ import { SlideFrame } from "./shell";
 import { useSlideFrame } from "./useSlideFrame";
 
 /**
- * The seed-raise deck — 10 slides + appendix, copy from meta/PITCH.md (the
+ * The seed-raise deck — 11 slides + appendix, copy from meta/PITCH.md (the
  * law for every string and number below; citations ride along in mono — the
  * 2026-09-17 headline re-stage and the 2026-09-18 vision/problem re-stages
  * below are not yet mirrored there). The destination leads: the vision right
  * after the title — why the world is ripe for internet insurance (smart
  * well-understood business logic on 24/7/365 rails; the tradinsure/web3
  * comparison table) — then the walk back down to today — the problem → the
- * product → the pilot (events are the door, Breakpoint first) → the business
+ * product → the now → the pilot (events are the door, Breakpoint first) → the business
  * → the market → the ask → the team → close → the appendix (the five-machine
  * destination stack the vision slide carried before the re-stage).
  *
@@ -303,7 +303,103 @@ const ProductSlide: FC = () => {
   );
 };
 
-/* 05 — the market ------------------------------------------------------------ */
+/* 05 — the now ----------------------------------------------------------------- */
+
+/** The why-now slide (added 2026-09-18; not yet mirrored in meta/PITCH.md):
+ * three pieces landing at once — a stablecoin settlement layer deep enough
+ * to denominate premiums and claims in, and the two infrastructure rails a
+ * real insurance contract needs, both ours: pull payments (Tributary) and
+ * on-chain adjudication (Accord). The ✓ stamp is the point — two of the
+ * three prerequisites are built by us. */
+const NOW_STEPS = [
+  {
+    id: "stablecoin-settlement",
+    step: "01",
+    label: "premiums settle stable",
+    Glyph: Stack,
+    head: "stablecoin settlement on solana",
+    body: (
+      <>
+        Premiums and claims must settle in something people actually want to hold, like USDC.
+        There's now a much bigger institutional distribution layer than there was 12 months ago.
+        Meanwhile regulatory clarity has been established in the US (GENIUS Act) and the EU (MiCA).
+      </>
+    ),
+    ours: false,
+  },
+  {
+    id: "pull-payments",
+    step: "02",
+    label: "recurring premiums pull",
+    Glyph: Renew,
+    head: "pull payments on solana",
+    body: (
+      <>
+        recurring premium payments must be convenient and reliable — which they cannot be without
+        pull payment support on Solana.{" "}
+        <a href="https://tributary.so" data-num className="text-accent font-mono">
+          tributary.so
+        </a>
+      </>
+    ),
+    ours: true,
+  },
+  {
+    id: "adjudication",
+    step: "03",
+    label: "claims adjudicate",
+    Glyph: Rule,
+    head: "claims adjudication on-chain",
+    body: (
+      <>
+        with the recent development of Accord for on-chain dispute resolution and adjudication, the
+        required tool now exists for permissionless and decentralized claims adjudication.{" "}
+        <a href="https://useaccord.xyz" data-num className="text-accent font-mono">
+          useaccord.xyz
+        </a>
+      </>
+    ),
+    ours: true,
+  },
+] as const;
+
+const NowSlide: FC = () => {
+  const frame = useSlideFrame();
+  return (
+    <SlideFrame kicker="the now" headline="all the pieces are falling together now">
+      <div className="flex w-full flex-col gap-8">
+        <div style={rise(frame, 16)}>
+          <ol data-slot="expansion-strip" className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {NOW_STEPS.map((tile) => (
+              <ExpansionTile key={tile.id} {...tile} />
+            ))}
+          </ol>
+        </div>
+        <div className="flex w-full items-start gap-6">
+          {NOW_STEPS.map((n, i) => (
+            <div
+              key={n.step}
+              className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
+              style={rise(frame, 40 + i * 14)}
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-ink [font:var(--riprap-title-sm)]">{n.head}</span>
+                {n.ours && (
+                  <span className="text-accent whitespace-nowrap uppercase [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
+                    ✓ built by us
+                  </span>
+                )}
+              </div>
+              <div className="text-muted [font:var(--riprap-body-sm)]">{n.body}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SlideFrame>
+  );
+};
+
+/* 06 — the market ------------------------------------------------------------ */
 
 /** The market story (rewritten 2026-09-16): not "insurance is a $1.6T
  * market" — the communities conventional insurance economics cannot serve.
@@ -391,7 +487,7 @@ const MarketSlide: FC = () => {
   );
 };
 
-/* 06 — the pilot ------------------------------------------------------------- */
+/* 07 — the pilot ------------------------------------------------------------- */
 
 /** Why events, why Breakpoint first (PITCH.md §5/§8 + the 2026-09-15
  * additions: the Solana family's loyalty, sponsored covers). None of these
@@ -436,7 +532,7 @@ const LaunchSlide: FC = () => {
       <div className="flex w-full items-start gap-10">
         <div className="flex flex-1 flex-col gap-5 list list-disc">
           <ol className="list-disc ml-6 flex flex-col gap-3 text-2xl">
-            {LAUNCH_REASONS.map((r, i) => (
+            {LAUNCH_REASONS.map((r) => (
               <li>{r.head}</li>
             ))}
           </ol>
@@ -508,7 +604,7 @@ const LaunchSlide: FC = () => {
   );
 };
 
-/* 07 — the business ---------------------------------------------------------- */
+/* 08 — the business ---------------------------------------------------------- */
 
 const BUSINESS_LADDER = [
   { v: "0%", label: "protocol take on pool #1, the pilot exists to confirm the market" },
@@ -566,7 +662,7 @@ const BusinessSlide: FC = () => {
   );
 };
 
-/* 08 — the ask --------------------------------------------------------------- */
+/* 09 — the ask --------------------------------------------------------------- */
 
 const ASK_TERMS = [
   { v: "$700k", sub: "raise · range $600–800k" },
@@ -618,7 +714,7 @@ const AskSlide: FC = () => {
   );
 };
 
-/* 09 — the team (layout copied from the accord deck's builder slide) --------- */
+/* 10 — the team (layout copied from the accord deck's builder slide) --------- */
 
 const FABIAN_ROWS = [
   "Dr.-Ing., engineering",
@@ -743,7 +839,7 @@ const TeamSlide: FC = () => {
   );
 };
 
-/* 10 — close ------------------------------------------------------------------ */
+/* 11 — close ------------------------------------------------------------------ */
 
 const LINKS = [
   { url: "riprap.xyz", note: "the platform" },
@@ -935,6 +1031,13 @@ export const SLIDES: SlideDef[] = [
     notes:
       "35s. One mutual, one risk, a lifetime of its choosing — event pools expire by clock; open-ended mutuals liquidate when members choose. Walk the lifecycle strip: join, gather, rule, claim. Three laws: two exit doors (no discretionary signer); members judge members (Accord — useaccord.xyz — staked jurors, sealed votes, appeals, slashing); an enforced end either way. Status row verbatim if asked: pool built, arbitration on devnet, hanse in build, Tributary on mainnet. Audits gate mainnet capital — that is what the raise funds first.",
     component: ProductSlide,
+  },
+  {
+    id: "now",
+    label: "the now",
+    notes:
+      "25s. Why now — three pieces landing together. First: settlement — insurance has one hard requirement: premiums and claims must be denominated and paid in an asset people actually want to hold; SOL's volatility against the underlying risk never qualified, and Solana's stablecoin layer is now deep enough to rely on — $16.3B supply Q2 2026 vs $11B a year earlier (founder's market brief 2026-09-18; mirror with a named source in PITCH.md before shipping), Visa settling USDC since late 2025, Western Union launching USDPT in 2026, GENIUS Act federal framework making the layer institutionally usable. No FX conversion, no correspondent banking, no T+2 — the chain becomes the payment rail for the insurance contract. Second: recurring premiums need pull payments — Tributary, live on mainnet, built by us. Third: permissionless, decentralized claims adjudication — Accord, live, built by us. Land: two of the three prerequisites are already ours — settlement arrived on its own, the rails underneath are built. Segue: the pilot — where the machine first runs for real, next slide.",
+    component: NowSlide,
   },
   {
     id: "launch",
