@@ -66,7 +66,6 @@ function useSprites(open: boolean) {
       confetti: Array.from({ length: 16 }, (_, i) => ({
         x: Math.random() * 260 - 130,
         y: 80 + Math.random() * 90,
-        rot: Math.random() * 540 - 270,
         color: [
           "var(--riprap-ink)",
           "var(--riprap-accent)",
@@ -137,12 +136,13 @@ function Scene({ open, ringOn }: { open: boolean; ringOn: boolean }) {
         ))}
       </svg>
 
-      {/* the peril diamond: flies in, rotating, and shatters on the shield */}
+      {/* the peril diamond: flies in straight (no spin — the logo's stones
+          don't rotate and neither does the scene) and shatters on the shield */}
       <motion.span
         data-slot="covered-threat"
         className="absolute left-0 top-1/2 block size-[34px]"
-        initial={{ x: "-40px", y: "-50%", opacity: 0, rotate: 20, scale: 0.8 }}
-        animate={{ x: "63px", opacity: [0, 1, 1, 0], rotate: 380, scale: [0.8, 1, 1, 1.6] }}
+        initial={{ x: "-40px", y: "-50%", opacity: 0, scale: 0.8 }}
+        animate={{ x: "63px", opacity: [0, 1, 1, 0], scale: [0.8, 1, 1, 1.6] }}
         transition={{
           duration: 0.87,
           delay: T.diamond,
@@ -233,7 +233,7 @@ function Scene({ open, ringOn }: { open: boolean; ringOn: boolean }) {
           className="absolute left-1/2 top-1/2 z-5 block h-[10px] w-[6px]"
           style={{ background: c.color }}
           initial={{ opacity: 1 }}
-          animate={{ opacity: [1, 0], x: [0, c.x], y: [0, c.y], rotate: [0, c.rot] }}
+          animate={{ opacity: [1, 0], x: [0, c.x], y: [0, c.y] }}
           transition={{ duration: 1.3, delay: T.confetti, ease: "easeOut" }}
         />
       ))}
@@ -315,8 +315,11 @@ export function CoveredOverlay({
                 <span
                   data-slot="covered-headline"
                   style={{
-                    textShadow:
-                      "0 0 24px color-mix(in srgb, var(--riprap-accent) 45%, transparent)",
+                    textShadow: [
+                      "0 0 10px color-mix(in srgb, var(--riprap-accent) 70%, transparent)",
+                      "0 0 32px color-mix(in srgb, var(--riprap-accent) 55%, transparent)",
+                      "0 0 72px color-mix(in srgb, var(--riprap-accent) 35%, transparent)",
+                    ].join(", "),
                   }}
                 >
                   {headline}
@@ -325,29 +328,32 @@ export function CoveredOverlay({
             </DialogPrimitive.Title>
             {/* the stamp is the screen-reader context for the moment */}
             <DialogPrimitive.Description className="sr-only">{stamp}</DialogPrimitive.Description>
-            <div className="flex flex-col gap-(--riprap-space-xs)" data-slot="covered-figures">
+            <div
+              className="flex max-w-[26rem] flex-wrap items-baseline justify-center gap-x-4 gap-y-1"
+              data-slot="covered-figures"
+            >
               {figures.map((figure, i) => (
                 <Arrive
                   key={i}
                   at={figuresStart + i * FIGURE_STEP}
-                  className="text-body [font:var(--riprap-body-md)]"
+                  className="inline-block text-body [font:var(--riprap-body-sm)]"
                 >
                   {figure}
                 </Arrive>
               ))}
             </div>
-            <Arrive at={afterFigures} className="w-full">
+            <Arrive at={afterFigures}>
               <div
                 data-slot="covered-juror"
-                className="flex flex-col items-center gap-(--riprap-space-sm) rounded-none border border-hairline bg-strong px-4 py-4"
+                className="flex flex-col items-center gap-2 rounded-none border border-hairline px-3 py-2.5"
               >
                 <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
                   {juror.label}
                 </p>
-                <p className="leading-relaxed text-body [font:var(--riprap-body-sm)]">
+                <p className="max-w-[22rem] leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
                   {juror.body}
                 </p>
-                <Button variant="outline" asChild>
+                <Button size="sm" variant="outline" asChild>
                   <a href={juror.href}>{juror.action}</a>
                 </Button>
               </div>
