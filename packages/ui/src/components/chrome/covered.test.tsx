@@ -97,7 +97,11 @@ describe("CoveredOverlay — the join moment, copy-free, settle-only", () => {
     expect(scene?.querySelector('[data-slot="covered-shield"]')).toBeTruthy();
     expect(scene?.querySelector('[data-slot="covered-threat"]')).toBeTruthy();
     expect(scene?.querySelectorAll('[data-slot="covered-shard"]').length).toBe(10);
-    expect(scene?.querySelectorAll('[data-slot="covered-confetti"]').length).toBe(16);
+    // confetti escapes the scene: a fullscreen layer, 24 bits across the viewport
+    expect(document.querySelectorAll('[data-slot="covered-confetti"]').length).toBe(24);
+    expect(document.querySelector('[data-slot="covered-confetti-layer"]')?.className).toContain(
+      "inset-0",
+    );
     // the ring mounts late (1.5s) — the scene's payoff after the deflect
     await waitFor(() => expect(scene?.querySelector('[data-slot="covered-ring"]')).toBeTruthy(), {
       timeout: 2500,
@@ -120,7 +124,7 @@ describe("CoveredOverlay — the join moment, copy-free, settle-only", () => {
     render(<CoveredOverlay open onDismiss={() => {}} {...PROPS} />);
     const scene = document.querySelector('[data-slot="covered-scene"]');
     expect(scene?.querySelector('[data-slot="covered-shield"]')).toBeNull();
-    expect(scene?.querySelector('[data-slot="covered-confetti"]')).toBeNull();
+    expect(document.querySelector('[data-slot="covered-confetti"]')).toBeNull();
     // copy is all present immediately — the final state, no arrival waits
     expect(screen.getAllByText(PROPS.stamp).length).toBe(2);
     expect(screen.getByRole("heading", { name: PROPS.headline })).toBeTruthy();

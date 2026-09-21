@@ -55,27 +55,64 @@ const BOUNCE = [0.2, 1.4, 0.4, 1] as const;
 /** The demo's threat easing: accelerating, no mercy. */
 const HURDLE = [0.5, 0, 0.75, 0] as const;
 
-/** Sprites regenerate per open — every replay is a different shatter. */
-function useSprites(open: boolean) {
+/** Shard sprites regenerate per open — every replay is a different shatter. */
+function useShards(open: boolean) {
   return useMemo(
-    () => ({
-      shards: Array.from({ length: 10 }, () => ({
+    () =>
+      Array.from({ length: 10 }, () => ({
         angle: Math.random() * 70 - 35,
         dist: 50 + Math.random() * 40,
       })),
-      confetti: Array.from({ length: 16 }, (_, i) => ({
-        x: Math.random() * 260 - 130,
-        y: 80 + Math.random() * 90,
-        color: [
-          "var(--riprap-ink)",
-          "var(--riprap-accent)",
-          "var(--riprap-stone)",
-          "var(--riprap-muted)",
-        ][i % 4],
-      })),
-    }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [open],
+  );
+}
+
+/** Confetti escapes the scene: bits fly from the impact point across the
+ *  whole viewport — a fullscreen, pointer-events-none layer above the copy. */
+const CONFETTI_COUNT = 24;
+const CONFETTI_COLORS = [
+  "var(--riprap-ink)",
+  "var(--riprap-accent)",
+  "var(--riprap-stone)",
+  "var(--riprap-muted)",
+] as const;
+
+function ConfettiBurst({ open }: { open: boolean }) {
+  const bits = useMemo(
+    () =>
+      Array.from({ length: CONFETTI_COUNT }, (_, i) => {
+        const vw = typeof window === "undefined" ? 1024 : window.innerWidth;
+        const vh = typeof window === "undefined" ? 768 : window.innerHeight;
+        const angle = Math.random() * Math.PI * 2;
+        const reach = 0.45 + Math.random() * 0.55;
+        return {
+          x: Math.cos(angle) * (vw / 2 - 24) * reach,
+          y: Math.sin(angle) * (vh / 2 - 24) * reach,
+          color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+        };
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [open],
+  );
+  return (
+    <div
+      aria-hidden="true"
+      data-slot="covered-confetti-layer"
+      className="pointer-events-none absolute inset-0 z-10"
+    >
+      {bits.map((c, i) => (
+        <motion.span
+          key={`confetti-${i}`}
+          data-slot="covered-confetti"
+          className="absolute left-1/2 top-[45%] block h-[10px] w-[6px]"
+          style={{ background: c.color }}
+          initial={{ opacity: 1 }}
+          animate={{ opacity: [1, 0], x: [0, c.x], y: [0, c.y] }}
+          transition={{ duration: 1.3, delay: T.confetti, ease: "easeOut" }}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -107,11 +144,11 @@ function Arrive({
   );
 }
 
-/** The scene: rings, shield, diamond, flash, shards, confetti — aria-hidden
- *  decoration; the ring is the payoff and renders last. */
+/** The scene: rings, shield, diamond, flash, shards — aria-hidden
+ *  decoration; the ring is the payoff and renders last. Confetti lives in
+ *  its own fullscreen layer (ConfettiBurst), not in this box. */
 function Scene({ open, ringOn }: { open: boolean; ringOn: boolean }) {
-  const { shards, confetti } = useSprites(open);
-
+  const shards = useShards(open);
   return (
     <div
       aria-hidden="true"
@@ -225,19 +262,6 @@ function Scene({ open, ringOn }: { open: boolean; ringOn: boolean }) {
         />
       ))}
 
-      {/* confetti — ink, accent, stone, muted; sharp engineering bits */}
-      {confetti.map((c, i) => (
-        <motion.span
-          key={`confetti-${i}`}
-          data-slot="covered-confetti"
-          className="absolute left-1/2 top-1/2 z-5 block h-[10px] w-[6px]"
-          style={{ background: c.color }}
-          initial={{ opacity: 1 }}
-          animate={{ opacity: [1, 0], x: [0, c.x], y: [0, c.y] }}
-          transition={{ duration: 1.3, delay: T.confetti, ease: "easeOut" }}
-        />
-      ))}
-
       {/* the closing circle — the payoff; mounts once the action settles */}
       {ringOn ? (
         <motion.span
@@ -303,6 +327,7 @@ export function CoveredOverlay({
             ) : (
               <Scene open={open} ringOn={ringOn} />
             )}
+            {!reduce && <ConfettiBurst open={open} />}
             <Arrive at={T.stamp}>
               <BadgeStamp data-num>{stamp}</BadgeStamp>
             </Arrive>
