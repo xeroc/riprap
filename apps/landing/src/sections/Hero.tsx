@@ -1,7 +1,6 @@
-// §1 — hero: platform one-liner, waitlist. The first-pool stamp is retired
-// (2026-09-15); the pool page is reached by URL until an instances surface
-// exists.
-import { HexBackdrop, Logomark, SectionBand } from "@riprap/ui";
+// §1 — hero: platform one-liner, waitlist. First-pool stamp: retired
+// 2026-09-15, returned 2026-09-21 (links the pool page).
+import { HexBackdrop, Logomark, SectionBand, StampBadge } from "@riprap/ui";
 import { Settle } from "../components/Settle";
 import { Waitlist } from "../components/Waitlist";
 
@@ -43,6 +42,20 @@ export function Hero() {
             </Settle>
             <Settle delay={180} className="pt-(--riprap-space-sm)">
               <Waitlist />
+            </Settle>
+            <Settle delay={240}>
+              <div className="flex flex-wrap items-center gap-3 pt-(--riprap-space-sm)">
+                <a
+                  href="#/2026-breakpoint-blade-pool"
+                  aria-label="Blade Pool at Breakpoint 2026 — policy and participation"
+                  className="outline-none transition-opacity duration-[160ms] ease-out hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring"
+                >
+                  <StampBadge pool="Blade Pool" event="Breakpoint" />
+                </a>
+                <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
+                  First pool · Olympia Convention Centre, London · 15-17 November 2026
+                </p>
+              </div>
             </Settle>
           </div>
           <div className="hidden lg:block">
