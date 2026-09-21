@@ -30,6 +30,7 @@ import { type ComponentProps, useState } from "react";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
 import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../pool/mutual";
+import { useMinStake } from "../pool/useMinStake";
 import { useMutual } from "../pool/useMutual";
 import { type ClaimsQuery, useClaims } from "./useClaims";
 import { useMembership } from "./useMembership";
@@ -210,6 +211,7 @@ function MemberSurface({ wallet }: { wallet: Address }) {
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const mutualAddress = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
   const mutualQuery = useMutual();
+  const minStake = useMinStake(mutualQuery.state === "ready" ? mutualQuery.mutual.subaccord : null);
   const membership = useMembership();
   const member = membership.state === "ready" ? membership.member : null;
   const claims = useClaims(
@@ -295,6 +297,26 @@ function MemberSurface({ wallet }: { wallet: Address }) {
       </Settle>
       <Settle delay={120}>
         <ClaimsBlock claims={claims} />
+      </Settle>
+      <Settle delay={180}>
+        {/* juror panel (copy doc § /app): the covered overlay's destination */}
+        <div
+          id="jurors"
+          data-slot="jurors"
+          className="flex max-w-[36rem] scroll-mt-24 flex-col gap-2"
+        >
+          <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
+            Jurors
+          </p>
+          <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-sm)]">
+            Claims are settled by members who stake{" "}
+            <span data-num className="font-mono">
+              {minStake}
+            </span>{" "}
+            USDC and get drawn to read the evidence. Coherent jurors get paid; incoherent ones get
+            slashed. Unstake anytime. <span className="text-ink">Staking opens here.</span>
+          </p>
+        </div>
       </Settle>
     </div>
   );

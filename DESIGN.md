@@ -182,7 +182,7 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 - **Assemble (hero load, pool opens):** the ring's stones drop-settle in clockwise sequence, ~40ms stagger, the harbor-blue newest member last. Position only — no rotation, no scale.
 - **Numbers arrive one at a time.** In worked-example bands each mono figure settles before the next appears.
 - **Dissolve (claims window close, dead-pool pages):** stones scatter off-frame and the composition dereferences. Favicon and print are always the settled state.
-- Reduced-motion: all settle/dissolve animation collapses to static states.
+- **Exception — the covered overlay (2026-09-21, Fabian's call):** the one sanctioned departure. The join moment (`CoveredOverlay`, kit) borrows the demo choreography: bounce-in shield, one glow flash at impact (shield halo + headline halo), an ambient hairline ring emission loop while open, confetti in brand tokens (ink/accent/stone/muted), and a blurred fullscreen scrim. The scene runs peril-token diamond → deflection → the ring closes (settle law) → copy. Reduced motion renders the settled composite; everywhere else the settle law above is unchanged and absolute.
 
 ## Do's and Don'ts
 

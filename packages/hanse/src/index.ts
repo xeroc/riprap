@@ -1,5 +1,7 @@
+export type { Pool } from "@riprap/pool";
 export {
   ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+  fetchPool,
   findAssociatedTokenAddress,
   getCreateAssociatedTokenIdempotentInstruction,
   getCreateAssociatedTokenIdempotentInstructionAsync,

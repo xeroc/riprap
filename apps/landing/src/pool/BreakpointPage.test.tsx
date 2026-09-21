@@ -10,12 +10,14 @@
 import {
   buildJoinInstructions,
   fetchMaybeMutual,
+  fetchPool,
   getJoinContext,
   type JoinContext,
   type Mutual,
+  type Pool,
 } from "@riprap/hanse";
 import { AppProvider, getDefaultConfig } from "@solana/connector";
-import type { Address, Instruction, MaybeAccount, TransactionSigner } from "@solana/kit";
+import type { Account, Address, Instruction, MaybeAccount, TransactionSigner } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
@@ -34,6 +36,7 @@ const { walletState, signerStub, toastError } = vi.hoisted(() => ({
 
 vi.mock("@riprap/hanse", () => ({
   fetchMaybeMutual: vi.fn(),
+  fetchPool: vi.fn(),
   getJoinContext: vi.fn(),
   buildJoinInstructions: vi.fn(),
 }));
@@ -66,6 +69,7 @@ const joinMock = vi.mocked(getJoinContext);
 const buildMock = vi.mocked(buildJoinInstructions);
 const sendMock = vi.mocked(sendInstruction);
 const subaccordMock = vi.mocked(fetchSubaccordMaybe);
+const poolMock = vi.mocked(fetchPool);
 
 type Maybe = MaybeAccount<Mutual>;
 
@@ -85,6 +89,11 @@ function subaccord(minStake = 10n * 1_000_000n): MaybeAccount<Subaccord> {
     address: "S".repeat(32) as Address,
     data: { minStake },
   } as unknown as MaybeAccount<Subaccord>;
+}
+
+/** The pool account: total_amount sums member contributions (micro-USDC). */
+function poolAccount(totalAmount = 4020n * 1_000_000n) {
+  return { address: "P".repeat(32) as Address, data: { totalAmount } } as unknown as Account<Pool>;
 }
 
 const joinIx = {
@@ -132,6 +141,10 @@ function renderPoolPage(mutualAddress = MUTUAL_ADDR) {
 // vi.fn() returns undefined and TanStack rejects the query.
 beforeEach(() => {
   subaccordMock.mockResolvedValue(subaccord());
+  poolMock.mockResolvedValue(poolAccount());
+  // the covered overlay gates once per wallet per session (copy doc §
+  // Covered overlay) — every test starts with the moment available
+  sessionStorage.clear();
 });
 
 afterEach(() => {
@@ -292,19 +305,27 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
 
     expect(await screen.findByText("Covered — Standard")).toBeTruthy();
 
-    // the juror upsell fires on confirmation, once — copy verbatim (copy doc
-    // § juror modal), min_stake bound from the subaccord in mono. Assert and
-    // dismiss it FIRST: an open Radix dialog aria-hides the rest of the page.
+    // the covered overlay fires on confirmation — the join moment (copy doc
+    // § Covered overlay): stamp, headline, the three figures (total last,
+    // chain-formatted), the juror field, Continue. Assert and dismiss FIRST:
+    // an open Radix dialog aria-hides the rest of the page.
     const dialog = await screen.findByRole("dialog");
-    expect(dialog.textContent).toContain("The pool needs jurors.");
-    await waitFor(() => expect(dialog.textContent).toContain("who stake $10 USDC"));
-    expect(dialog.querySelector('[data-slot="juror-min-stake"]')?.textContent).toBe("$10");
-    expect(dialog.textContent).toContain("Staking will open in the app.");
-    fireEvent.click(screen.getByRole("button", { name: "Noted" }));
+    expect(dialog.textContent).toContain("You're in the ring.");
+    expect(dialog.textContent).toContain("$20");
+    expect(dialog.textContent).toContain("up to $2,000");
+    await waitFor(() => expect(dialog.textContent).toContain("pool holds $4,020"));
+    expect(dialog.textContent).toContain(
+      "get drawn to read the evidence, get paid when coherent. Unstake anytime.",
+    );
+    expect(dialog.querySelector('[data-slot="covered-juror"] a')?.getAttribute("href")).toBe(
+      "#/app#jurors",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
     // the slider locks and the app link appears (copy doc § Covered)
-    expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe("");
+    // Radix restores page aria-hidden a tick after unmount — wait it out
+    await waitFor(() => expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe(""));
     expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("#/app");
 
     // the facade built against the static address + chosen tier + wallet signer
@@ -403,16 +424,50 @@ describe("covered — an existing member is a state, never an error toast", () =
     );
 
     renderPoolPage();
+
+    // a connecting member gets the moment too — the overlay fires on the
+    // session's first covered read (copy doc § Covered overlay). Dismiss it
+    // first: an open dialog aria-hides the inline state.
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog.textContent).toContain("Covered — Basic");
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
     expect(await screen.findByText("Covered — Basic")).toBeTruthy();
-    const coveredSlot = screen.getByText("Covered — Basic").closest('[data-slot="covered"]');
-    expect(coveredSlot?.textContent).toContain(
-      "This wallet is in the pool. Your membership and claims live in the app.",
-    );
+    const coveredSlot = screen
+      .getAllByText("Covered — Basic")
+      .map((el) => el.closest('[data-slot="covered"]'));
+    expect(
+      coveredSlot.some((slot) =>
+        slot?.textContent?.includes(
+          "This wallet is in the pool. Your membership and claims live in the app.",
+        ),
+      ),
+    ).toBe(true);
     expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("#/app");
-    expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe("");
+    await waitFor(() => expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe(""));
     // their tier line, from their on-chain member PDA
     expect(screen.getByText("Basic · $10 entry · up to $1,000 maximum payout")).toBeTruthy();
-    // reload path: no juror modal — it fires only on join confirmation
+    // the session gate is set — the moment already happened for this wallet
+    expect(sessionStorage.getItem(`riprap:covered:${WALLET}`)).toBe("1");
+  });
+
+  it("the moment is once per session: a second covered read opens no overlay", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    joinMock.mockResolvedValue(
+      joinCtx({ alreadyMember: { tier: 1 }, canJoin: false, reason: "already-member" }),
+    );
+
+    const first = renderPoolPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Continue" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    first.unmount();
+
+    // same session, same wallet: the inline state only, no second moment
+    renderPoolPage();
+    expect(await screen.findByText("Covered — Standard")).toBeTruthy();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

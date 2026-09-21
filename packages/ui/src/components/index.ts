@@ -15,6 +15,8 @@ export type { ClusterOption, ClusterSelectProps } from "./chrome/ClusterSelect";
 export { ClusterSelect } from "./chrome/ClusterSelect";
 
 export { Container } from "./chrome/Container";
+export type { CoveredOverlayProps } from "./chrome/CoveredOverlay";
+export { CoveredOverlay } from "./chrome/CoveredOverlay";
 export type { CTABandProps } from "./chrome/CTABand";
 export { CTABand } from "./chrome/CTABand";
 export type { DissolutionBandProps } from "./chrome/DissolutionBand";
@@ -25,8 +27,6 @@ export type { FooterBandProps, FooterColumn, FooterLink } from "./chrome/FooterB
 export { FooterBand } from "./chrome/FooterBand";
 export type { GlyphTileProps } from "./chrome/GlyphTile";
 export { GlyphTile } from "./chrome/GlyphTile";
-export type { JurorUpsellDialogProps } from "./chrome/JurorUpsellDialog";
-export { JurorUpsellDialog } from "./chrome/JurorUpsellDialog";
 // brand
 export type { LogoLockupProps } from "./chrome/LogoLockup";
 export { LogoLockup } from "./chrome/LogoLockup";

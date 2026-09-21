@@ -18,8 +18,8 @@ import {
   BadgeStamp,
   Button,
   ClusterSelect,
+  CoveredOverlay,
   HexBackdrop,
-  JurorUpsellDialog,
   SectionBand,
   Slider,
   StampBadge,
@@ -35,7 +35,8 @@ import {
   useWalletConnectors,
   type WalletConnectorId,
 } from "@solana/connector";
-import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Settle } from "../../components/Settle";
@@ -45,6 +46,7 @@ import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../mutua
 import { useJoinContext } from "../useJoinContext";
 import { useMinStake } from "../useMinStake";
 import { useMutual } from "../useMutual";
+import { usePoolTotal } from "../usePoolTotal";
 import { JoinPrecheck } from "./JoinPrecheck";
 
 // Policy §5 default: Standard is the middle tier (index 1 of exactly three).
@@ -115,20 +117,23 @@ function ConnectWalletCta() {
 export function PoolHero() {
   const [tierIndex, setTierIndex] = useState(DEFAULT_TIER);
   const [phase, setPhase] = useState<Phase>("idle");
-  // Fires exactly once per wallet per pool — on join confirmation only
-  // (copy doc § juror modal): one join per mutual means no persistence
-  // machinery; a reload re-enters via alreadyMember and never re-fires.
-  const [jurorUpsell, setJurorUpsell] = useState(false);
-  const mutualQuery = useMutual();
-  const joinQuery = useJoinContext();
+  // Covered overlay (copy doc § Covered overlay): fires on the first covered
+  // read of a browser session per wallet — a fresh join confirmation or a
+  // connecting member's first read; once per session (sessionStorage gate),
+  // then Escape/Continue dismisses to the inline covered state.
+  const [coveredOverlay, setCoveredOverlay] = useState(false);
   const hanseEnv = useHanseEnv();
-  const { isConnected } = useWallet();
+  const queryClient = useQueryClient();
+  const joinQuery = useJoinContext();
+  const mutualQuery = useMutual();
+  const { account, isConnected } = useWallet();
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const mutualAddress = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
 
   const tiers = mutualQuery.state === "ready" ? poolTiers(mutualQuery.mutual) : null;
   const context = joinQuery.state === "ready" ? joinQuery.context : null;
   const minStake = useMinStake(context?.mutual.data.subaccord ?? null);
+  const poolTotal = usePoolTotal(context?.mutual.data.pool ?? null);
   // alreadyMember is a STATE (copy doc § Covered): the Member PDA's tier wins;
   // between confirmation and the context refetch, the tier just joined shows.
   const memberTier = context?.alreadyMember ?? (phase === "covered" ? { tier: tierIndex } : null);
@@ -176,13 +181,25 @@ export function PoolHero() {
         () => setPhase("confirming"),
       );
       setPhase("covered");
-      setJurorUpsell(true);
+      // the overlay's "pool holds" figure must include this deposit —
+      // invalidate before the covered effect opens the moment.
+      void queryClient.invalidateQueries({ queryKey: ["pool-total"] });
     } catch (err) {
       toast.error(joinFailureMessage(err));
       setPhase("idle");
       joinQuery.refetch();
     }
   }
+
+  // The overlay trigger (copy doc § Covered overlay): join confirmation and
+  // the connecting-member read both land here — covered flips true.
+  useEffect(() => {
+    if (!covered || !isConnected || account === null) return;
+    const key = `riprap:covered:${account}`;
+    if (sessionStorage.getItem(key) !== null) return;
+    sessionStorage.setItem(key, "1");
+    setCoveredOverlay(true);
+  }, [covered, isConnected, account]);
 
   const phaseLabel: Record<Exclude<Phase, "idle" | "covered">, string> = {
     building: "Building…",
@@ -202,20 +219,7 @@ export function PoolHero() {
         <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)">
           <Settle>
             <div className="flex flex-wrap items-center gap-3">
-              {/* prominence pulse — two accent hairline rings emanate from the stamp's
-                  border box (2.8s, staggered); pure opacity/scale overlay, and the
-                  stamp itself never moves. Reduced motion: rings never show. */}
-              <span className="relative inline-flex" data-slot="stamp-pulse">
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 rounded-none border border-(--riprap-accent) opacity-0 motion-safe:animate-[stamp-pulse_2800ms_cubic-bezier(0,0,0.2,1)_infinite]"
-                />
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 rounded-none border border-(--riprap-accent) opacity-0 motion-safe:animate-[stamp-pulse_2800ms_cubic-bezier(0,0,0.2,1)_infinite_1400ms]"
-                />
-                <StampBadge pool="Blade Pool" event="Breakpoint" />
-              </span>
+              <StampBadge pool="Blade Pool" event="Breakpoint" />
               <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
                 Olympia Convention Centre, London · 15-17 November 2026
               </p>
@@ -402,24 +406,48 @@ export function PoolHero() {
               </Button>
             ) : null}
           </Settle>
-          {/* Juror upsell — copy doc § juror modal (D2): fires once, on join
-            confirmation; OK (or Escape / overlay) is the only exit. */}
-          <JurorUpsellDialog
-            open={jurorUpsell}
-            onOk={() => setJurorUpsell(false)}
-            minStake={minStake}
-            title="The pool needs jurors."
-            body={
-              <>
-                Claims are settled by members who stake{" "}
+          {/* Covered overlay — copy doc § Covered overlay: the join moment;
+            copy renders verbatim, figures chain-formatted, total last. */}
+          <CoveredOverlay
+            open={coveredOverlay}
+            onDismiss={() => setCoveredOverlay(false)}
+            stamp={`Covered — ${tier !== null ? tier.name : PARAM}`}
+            headline="You're in the ring."
+            figures={[
+              <span key="fee">
                 <span data-num className="font-mono">
-                  {minStake}
+                  {tier !== null ? usd(tier.fee) : PARAM}
                 </span>{" "}
-                USDC and get drawn to read the evidence. Coherent jurors get paid; incoherent ones
-                get slashed. You can unstake anytime. Staking will open in the app.
-              </>
-            }
-            okLabel="Noted"
+                in
+              </span>,
+              <span key="cap">
+                up to{" "}
+                <span data-num className="font-mono">
+                  {tier !== null ? usd(tier.cap) : PARAM}
+                </span>{" "}
+                out
+              </span>,
+              <span key="total">
+                pool holds{" "}
+                <span data-num className="font-mono">
+                  {poolTotal}
+                </span>
+              </span>,
+            ]}
+            juror={{
+              label: "Juror",
+              body: (
+                <>
+                  Stake{" "}
+                  <span data-num className="font-mono">
+                    {minStake}
+                  </span>
+                  , get drawn to read the evidence, get paid when coherent. Unstake anytime.
+                </>
+              ),
+              action: "Become a juror",
+              href: "#/app#jurors",
+            }}
           />
         </div>
       </SectionBand>

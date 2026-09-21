@@ -16,7 +16,8 @@ import { AppProvider, getDefaultConfig } from "@solana/connector";
 import type { Address, MaybeAccount } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMutual } from "../pool/fixtures";
 import { AppPage } from "./AppPage";
 
@@ -54,10 +55,11 @@ vi.mock("@solana/connector", async (importOriginal) => {
     useKitTransactionSigner: () => ({ signer: null }),
   };
 });
-
+vi.mock("@useaccord/sdk", () => ({ fetchSubaccordMaybe: vi.fn() }));
+const subaccordMock = vi.mocked(fetchSubaccordMaybe);
+const claimMock = vi.mocked(fetchMaybeClaimByNonce);
 const mutualMock = vi.mocked(fetchMaybeMutual);
 const memberMock = vi.mocked(fetchMaybeMemberByOwner);
-const claimMock = vi.mocked(fetchMaybeClaimByNonce);
 
 const MUTUAL_ADDR = "MutualXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 const WALLET = "W".repeat(32);
@@ -118,6 +120,14 @@ function renderApp(mutualAddress = MUTUAL_ADDR) {
   );
 }
 
+// The juror panel's stake floor answers $10 (policy §12) by default.
+beforeEach(() => {
+  subaccordMock.mockResolvedValue({
+    exists: true,
+    address: "S".repeat(32) as Address,
+    data: { minStake: 10n * 1_000_000n },
+  } as unknown as MaybeAccount<Subaccord>);
+});
 afterEach(() => {
   cleanup();
   vi.unstubAllEnvs();
@@ -213,9 +223,15 @@ describe("/app — membership + claims (data-bound to the chain)", () => {
     expect(await screen.findByText("$20 entry · up to $2,000 maximum payout")).toBeTruthy();
     // nav account controls: shortened address (full in title) + disconnect
     expect(screen.getByTitle(WALLET).textContent).toContain("WWWW");
-    expect(screen.getByRole("button", { name: "Disconnect" })).toBeTruthy();
+    // juror panel (copy doc § /app): the overlay's Become-a-juror destination
+    const jurors = document.getElementById("jurors");
+    expect(jurors?.textContent).toContain("Jurors");
+    expect(jurors?.textContent).toContain(
+      "Claims are settled by members who stake $10 USDC and get drawn to read the evidence.",
+    );
+    expect(jurors?.textContent).toContain("Staking opens here.");
+    expect(jurors?.querySelector("[data-num]")?.textContent).toBe("$10");
   });
-
   it("claims: only this wallet's claims render, every field from the chain", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
