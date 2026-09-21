@@ -6,11 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { ed25519 } from "@noble/curves/ed25519";
 import { findAssociatedTokenAddress } from "@riprap/pool";
-import {
-  type Address,
-  createKeyPairSignerFromBytes,
-  createSolanaRpc,
-} from "@solana/kit";
+import { type Address, createKeyPairSignerFromBytes, createSolanaRpc } from "@solana/kit";
 import { afterAll, beforeAll, expect, test } from "vitest";
 
 /**
