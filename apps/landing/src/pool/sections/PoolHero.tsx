@@ -146,15 +146,15 @@ export function PoolHero() {
   const precheck =
     isConnected && context !== null && tiers !== null && tier !== null
       ? {
-          needsUsdc:
-            context.depositBalance <
-            (context.mutual.data.tiers[Math.min(shownIndex, context.mutual.data.tiers.length - 1)]
-              ?.contribution ?? 0n),
-          balanceUsd: microToUsd(context.depositBalance),
-          tierName: tier.name,
-          feeUsd: tier.fee,
-          insufficientSol: context.reason === "insufficient-sol",
-        }
+        needsUsdc:
+          context.depositBalance <
+          (context.mutual.data.tiers[Math.min(shownIndex, context.mutual.data.tiers.length - 1)]
+            ?.contribution ?? 0n),
+        balanceUsd: microToUsd(context.depositBalance),
+        tierName: tier.name,
+        feeUsd: tier.fee,
+        insufficientSol: context.reason === "insufficient-sol",
+      }
       : null;
   const blocked = precheck !== null && (precheck.needsUsdc || precheck.insufficientSol);
 
@@ -260,48 +260,12 @@ export function PoolHero() {
             </div>
           </Settle>
           <Settle delay={180} className="pt-(--riprap-space-sm)">
-            <div className="flex flex-col gap-4" data-slot="tier-picker">
+            <div className="flex flex-col gap-4 mb-4" data-slot="tier-picker">
               <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-                Choose your coverage — policy §5
+                Choose your coverage
               </p>
               {mutualQuery.state === "ready" && tier !== null ? (
-                <>
-                  {/* three stops, exactly tiers.length; value is a tier index;
-                      locked once this wallet is covered (copy doc § Covered) */}
-                  <Slider
-                    disabled={covered}
-                    value={[Math.min(shownIndex, tiers === null ? 0 : tiers.length - 1)]}
-                    min={0}
-                    max={(tiers ?? []).length - 1}
-                    step={1}
-                    aria-label="Coverage tier"
-                    onValueChange={(v) => setTierIndex(v[0] ?? DEFAULT_TIER)}
-                    className="max-w-[36rem]"
-                  />
-                  <div className="flex max-w-[36rem] justify-between">
-                    {(tiers ?? []).map((t, i) => (
-                      <span
-                        key={t.name}
-                        data-num
-                        className={`font-mono text-sm transition-colors duration-[160ms] ease-out ${
-                          i === shownIndex ? "text-ink" : "text-muted-soft"
-                        }`}
-                      >
-                        {usd(t.fee)}
-                      </span>
-                    ))}
-                  </div>
-                  <p data-num className="font-mono text-base text-ink">
-                    {tier.name} · {usd(tier.fee)} entry · up to {usd(tier.cap)} maximum payout
-                  </p>
-                  <p className="text-muted-soft [font:var(--riprap-mono-label)]">
-                    {TIER_NOTES[Math.min(shownIndex, TIER_NOTES.length - 1)]}
-                  </p>
-                  {/* deposits window — deposits_close_at, chain truth */}
-                  <p data-num className="font-mono text-xs text-muted-foreground">
-                    entry closes {formatUtc(mutualQuery.mutual.depositsCloseAt)}
-                  </p>
-                </>
+                <></>
               ) : mutualQuery.state === "loading" ? (
                 <>
                   <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
@@ -346,8 +310,6 @@ export function PoolHero() {
                 </>
               )}
             </div>
-          </Settle>
-          <Settle delay={240}>
             {mutualQuery.state === "ready" ? (
               covered ? (
                 <div className="flex max-w-[36rem] flex-col gap-3" data-slot="covered">
@@ -359,19 +321,56 @@ export function PoolHero() {
                 </div>
               ) : mutualQuery.depositsOpen && tier !== null ? (
                 isConnected ? (
-                  <div className="flex max-w-[36rem] flex-col gap-3">
-                    <Button
-                      size="lg"
-                      data-participate
-                      disabled={phase !== "idle" || blocked}
-                      onClick={() => void onChipIn()}
-                    >
-                      {phase === "idle" || phase === "covered"
-                        ? `Chip in ${usd(tier.fee)}`
-                        : phaseLabel[phase]}
-                    </Button>
-                    {precheck !== null && <JoinPrecheck isDevnet={isDevnet} {...precheck} />}
-                  </div>
+                  <>
+                    {/* three stops, exactly tiers.length; value is a tier index;
+                      locked once this wallet is covered (copy doc § Covered) */}
+                    <Slider
+                      disabled={covered}
+                      value={[Math.min(shownIndex, tiers === null ? 0 : tiers.length - 1)]}
+                      min={0}
+                      max={(tiers ?? []).length - 1}
+                      step={1}
+                      aria-label="Coverage tier"
+                      onValueChange={(v) => setTierIndex(v[0] ?? DEFAULT_TIER)}
+                      className="max-w-[36rem]"
+                    />
+                    <div className="flex max-w-[36rem] justify-between">
+                      {(tiers ?? []).map((t, i) => (
+                        <span
+                          key={t.name}
+                          data-num
+                          className={`font-mono text-sm transition-colors duration-[160ms] ease-out ${i === shownIndex ? "text-ink" : "text-muted-soft"
+                            }`}
+                        >
+                          {usd(t.fee)}
+                        </span>
+                      ))}
+                    </div>
+                    <p data-num className="font-mono text-base text-ink">
+                      {tier.name} · {usd(tier.fee)} entry · up to {usd(tier.cap)} maximum payout
+                    </p>
+                    <p className="text-muted-soft [font:var(--riprap-mono-label)]">
+                      {TIER_NOTES[Math.min(shownIndex, TIER_NOTES.length - 1)]}
+                    </p>
+                    {/* deposits window — deposits_close_at, chain truth */}
+                    <p data-num className="font-mono text-xs text-muted-foreground">
+                      entry closes {formatUtc(mutualQuery.mutual.depositsCloseAt)}
+                    </p>
+
+                    <div className="flex max-w-[36rem] flex-col gap-3">
+                      <Button
+                        size="lg"
+                        data-participate
+                        disabled={phase !== "idle" || blocked}
+                        onClick={() => void onChipIn()}
+                      >
+                        {phase === "idle" || phase === "covered"
+                          ? `Chip in ${usd(tier.fee)}`
+                          : phaseLabel[phase]}
+                      </Button>
+                      {precheck !== null && <JoinPrecheck isDevnet={isDevnet} {...precheck} />}
+                    </div>
+                  </>
                 ) : (
                   <ConnectWalletCta />
                 )

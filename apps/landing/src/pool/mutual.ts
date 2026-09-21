@@ -9,17 +9,6 @@ import type { Mutual } from "@riprap/hanse";
 import type { Address } from "@solana/kit";
 
 /**
- * Per-cluster deployment addresses of the Blade Pool mutual — the future
- * multi-pool seam. devnet ships first; the mainnet-beta entry lands when the
- * deployment exists. A cluster without an entry renders the honest
- * "Not live on this cluster" state, never static tiers.
- */
-const MUTUAL_BY_CLUSTER: Record<"devnet" | "mainnet-beta", Address | undefined> = {
-  devnet: undefined,
-  "mainnet-beta": undefined,
-};
-
-/**
  * Resolve the mutual address for the active cluster. localnet reads
  * VITE_LOCALNET_MUTUAL lazily (inside the function) so dev and tests can
  * point at a Surfpool surfnet without a rebuild.
@@ -33,8 +22,14 @@ export function resolveMutualAddress(clusters: {
     const local = import.meta.env.VITE_LOCALNET_MUTUAL as string | undefined;
     return local ? (local as Address) : undefined;
   }
-  if (clusters.isMainnet) return MUTUAL_BY_CLUSTER["mainnet-beta"];
-  if (clusters.isDevnet) return MUTUAL_BY_CLUSTER.devnet;
+  if (clusters.isMainnet) {
+    const mainnet = import.meta.env.VITE_MAINNET_MUTUAL as string | undefined;
+    return mainnet ? (mainnet as Address) : undefined;
+  }
+  if (clusters.isDevnet) {
+    const devnet = import.meta.env.VITE_DEVNET_MUTUAL as string | undefined;
+    return devnet ? (devnet as Address) : undefined;
+  }
   return undefined;
 }
 
