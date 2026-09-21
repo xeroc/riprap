@@ -9,7 +9,7 @@ import { fetchMutual, type Mutual } from "@riprap/hanse";
 import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address, Commitment, Rpc, SolanaRpcApi } from "@solana/kit";
 import { ChainCommand, chainFlags } from "../../lib/base-command";
-import { groupBigInt, isoFromUnixSeconds, truncateAddress } from "../../lib/format";
+import { groupBigInt, isoFromUnixSeconds } from "../../lib/format";
 
 export interface MutualView {
   mutual: Mutual;
@@ -70,15 +70,15 @@ export default class HanseShow extends ChainCommand {
         primary: flags.mutual,
         human: [
           `phase       : ${m.phase === 0 ? "Active" : m.phase === 1 ? "Settled" : "Dissolved"}`,
-          `pool        : ${truncateAddress(view.pool)}`,
-          `subaccord   : ${truncateAddress(view.subaccord)}`,
-          `deposits    : ${m.depositMint === m.feeMint ? truncateAddress(m.depositMint) : `${truncateAddress(m.depositMint)} (fee ${truncateAddress(m.feeMint)})`}`,
+          `pool        : ${view.pool}`,
+          `subaccord   : ${view.subaccord}`,
+          `deposits    : ${m.depositMint === m.feeMint ? m.depositMint : `${m.depositMint} (fee ${m.feeMint})`}`,
           `ratio_1e9   : ${groupBigInt(m.ratio1e9)} / 1_000_000_000`,
           `obligations : ${groupBigInt(m.obligations)}  fee refunds: ${groupBigInt(m.feeRefunds)}`,
           `claims      : ${m.claimsFiled} filed / ${m.claimsResolved} resolved`,
           `deposits end ${isoFromUnixSeconds(m.depositsCloseAt)} · claims end ${isoFromUnixSeconds(m.claimsCloseAt)}`,
           `pull closes : ${isoFromUnixSeconds(m.pullCloseAt) ?? "— (not settled)"}`,
-          `treasury    : ${truncateAddress(view.treasury)} — ${groupBigInt(view.treasuryBalance)}`,
+          `treasury    : ${view.treasury} — ${groupBigInt(view.treasuryBalance)}`,
         ],
       },
     );
