@@ -54,6 +54,12 @@ vi.mock("../shared/transaction", async (importOriginal) => {
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: toastError }) }));
 
 vi.mock("@useaccord/sdk", () => ({ fetchSubaccordMaybe: vi.fn() }));
+// The anchored-terms band fetches from the evidence daemon — keep page tests
+// off the network; the band's own suite covers its states.
+vi.mock("../usePolicyDoc", () => ({
+  evidenceBaseUrl: () => "https://api.useaccord.xyz",
+  usePolicyDoc: vi.fn(() => ({ state: "idle", refetch: () => {} })),
+}));
 
 const fetchMock = vi.mocked(fetchMaybeMutual);
 const joinMock = vi.mocked(getJoinContext);
@@ -240,6 +246,8 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     expect(stampLinks[0].getAttribute("title")).toBe("1".repeat(32));
     expect(stampLinks[0].textContent).toContain("1111…1111");
     expect(container.textContent).toContain("ADJUDICATION · SUBACCORD");
+    // the anchored-terms band is wired under the fineprint
+    expect(container.textContent).toContain("The terms as anchored on-chain.");
     // §7/§12: discretion and liability stated plainly — counsel recs 2 and 3
     expect(container.textContent).toContain("enforceable right to any payment");
     expect(container.textContent).toContain("no limited liability");

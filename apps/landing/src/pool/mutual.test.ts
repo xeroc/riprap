@@ -54,7 +54,10 @@ describe("resolveMutualAddress — the one static pool constant", () => {
   });
 
   it("localnet without the env var, and clusters without a deployment, stay honest", () => {
-    vi.stubEnv("VITE_LOCALNET_MUTUAL", "");
+    // a developer's real .env may carry deployments — the honest-state cases
+    // must assert the resolver, not the local machine
+    vi.stubEnv("VITE_DEVNET_MUTUAL", "");
+    vi.stubEnv("VITE_MAINNET_MUTUAL", "");
     expect(
       resolveMutualAddress({ isLocal: true, isMainnet: false, isDevnet: false }),
     ).toBeUndefined();

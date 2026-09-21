@@ -7,6 +7,7 @@
 
 import { SiteNav } from "../components/SiteNav";
 import { Footer } from "../sections/Footer";
+import { AnchoredTerms } from "./sections/AnchoredTerms";
 import { PolicyFineprint } from "./sections/PolicyFineprint";
 import { PoolHero } from "./sections/PoolHero";
 
@@ -17,6 +18,7 @@ export function BreakpointPage() {
       <main>
         <PoolHero />
         <PolicyFineprint />
+        <AnchoredTerms />
       </main>
       <Footer />
     </>

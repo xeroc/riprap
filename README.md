@@ -175,7 +175,7 @@ Four laws from `meta/primitives/` that the kit enforces and reviewers should che
 
 ## Environment Variables
 
-The frontend needs no configuration to run. The landing's optional vars (see `apps/landing/.env.example`): `VITE_N8N_WEBHOOK_URL` (waitlist-form webhook, every route) and the Solana-route cluster config — `VITE_DEVNET_RPC` / `VITE_MAINNET_RPC` (custom RPC endpoints), `VITE_LOCALNET_MUTUAL` (Surfpool dev mutual address) — consumed only by the pool and app routes, never the platform route. The operator CLI and the e2e suite read optional overrides, all defaulting to localnet:
+The frontend needs no configuration to run. The landing's optional vars (see `apps/landing/.env.example`): `VITE_N8N_WEBHOOK_URL` (waitlist-form webhook, every route) and the Solana-route cluster config — `VITE_DEVNET_RPC` / `VITE_MAINNET_RPC` (custom RPC endpoints), `VITE_LOCALNET_MUTUAL` (Surfpool dev mutual address), `VITE_EVIDENCE_URL` (Accord evidence daemon serving the anchored cover terms; defaults to https://api.useaccord.xyz) — consumed only by the pool and app routes, never the platform route. The operator CLI and the e2e suite read optional overrides, all defaulting to localnet:
 
 | Variable                           | Used by                     | Default                                           | Meaning                                          |
 | ---------------------------------- | --------------------------- | ------------------------------------------------- | ------------------------------------------------ |
