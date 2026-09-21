@@ -7,8 +7,12 @@
  */
 
 import {
+  type Address,
   combineCodec,
   containsBytes,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -21,20 +25,15 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 
-export const CLAIM_FILED_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([78, 228, 214, 247, 197, 67, 130, 19]);
+export const CLAIM_FILED_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  78, 228, 214, 247, 197, 67, 130, 19,
+]);
 
 export function getClaimFiledEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    CLAIM_FILED_EVENT_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(CLAIM_FILED_EVENT_DISCRIMINATOR);
 }
 
 export type ClaimFiledEvent = {
@@ -88,21 +87,14 @@ export function getClaimFiledEventDecoder(): FixedSizeDecoder<ClaimFiledEvent> {
 }
 
 /** Gets the codec for {@link ClaimFiledEvent} event data. */
-export function getClaimFiledEventCodec(): FixedSizeCodec<
-  ClaimFiledEventArgs,
-  ClaimFiledEvent
-> {
+export function getClaimFiledEventCodec(): FixedSizeCodec<ClaimFiledEventArgs, ClaimFiledEvent> {
   return combineCodec(getClaimFiledEventEncoder(), getClaimFiledEventDecoder());
 }
 
 /** Parses the provided bytes into {@link ClaimFiledEvent} event data. */
-export function parseClaimFiledEvent(
-  data: ReadonlyUint8Array | Uint8Array,
-): ClaimFiledEvent {
+export function parseClaimFiledEvent(data: ReadonlyUint8Array | Uint8Array): ClaimFiledEvent {
   if (containsBytes(data, CLAIM_FILED_EVENT_DISCRIMINATOR, 0)) {
     return getClaimFiledEventDecoder().decode(data);
   }
-  throw new Error(
-    'The provided data does not match the "ClaimFiledEvent" event discriminators.',
-  );
+  throw new Error('The provided data does not match the "ClaimFiledEvent" event discriminators.');
 }

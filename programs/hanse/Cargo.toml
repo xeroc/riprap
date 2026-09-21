@@ -12,15 +12,19 @@ name = "hanse"
 default = []
 cpi = ["no-entrypoint"]
 no-entrypoint = []
-idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", "accord/idl-build"]
+idl-build = [
+    "anchor-lang/idl-build",
+    "anchor-spl/idl-build",
+    "accord/idl-build",
+]
 no-log-ix-name = []
 anchor-debug = []
 custom-heap = []
 custom-panic = []
 
 [dependencies]
-anchor-lang = { version = "1.0.2", features = ["init-if-needed"] }
-anchor-spl = "1.0.2"
+anchor-lang = { version = "1.2.0", features = ["init-if-needed"] }
+anchor-spl = "1.2.0"
 # anchor-lang floor is 1.0.2 (house version, matches anchor-cli 1.0.2), but the
 # pinned accord rev only compiles against 1.1.x (`anchor_lang::__private` moved),
 # so the workspace lockfile unifies anchor-lang/anchor-spl to 1.1.2. Verified:
@@ -33,7 +37,9 @@ anchor-spl = "1.0.2"
 # 3.1.x fails E0277. The lock pins that edge; a blind `cargo update` can regress it.
 pool = { path = "../pool", features = ["cpi"] }
 solana-program = "3"
-accord = { git = "ssh://git@github.com/xeroc/accord.git", rev = "ba91bd8b8b374091c174909b115688ffb9b231ff", features = ["cpi"] }
+accord = { git = "ssh://git@github.com/xeroc/accord.git", rev = "ba91bd8b8b374091c174909b115688ffb9b231ff", features = [
+    "cpi",
+] }
 
 [dev-dependencies]
 litesvm = "0.10.0"
@@ -50,4 +56,6 @@ solana-keypair = "3.0.1"
 hanse = { path = ".", features = ["no-entrypoint"] }
 
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(target_os, values("solana"))',
+] }

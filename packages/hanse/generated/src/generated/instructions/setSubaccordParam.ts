@@ -7,7 +7,13 @@
  */
 
 import {
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
+  type Codec,
   combineCodec,
+  type Decoder,
+  type Encoder,
   fixDecoderSize,
   fixEncoderSize,
   getBytesDecoder,
@@ -16,21 +22,15 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type Codec,
-  type Decoder,
-  type Encoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   type TransactionSigner,
+  transformEncoder,
   type WritableAccount,
   type WritableSignerAccount,
 } from "@solana/kit";
@@ -46,13 +46,12 @@ import {
   type SubaccordParamArgs,
 } from "../types";
 
-export const SET_SUBACCORD_PARAM_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([194, 228, 14, 180, 185, 218, 5, 26]);
+export const SET_SUBACCORD_PARAM_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  194, 228, 14, 180, 185, 218, 5, 26,
+]);
 
 export function getSetSubaccordParamDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    SET_SUBACCORD_PARAM_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(SET_SUBACCORD_PARAM_DISCRIMINATOR);
 }
 
 export type SetSubaccordParamInstruction<
@@ -62,29 +61,23 @@ export type SetSubaccordParamInstruction<
   TAccountMutual extends string | AccountMeta<string> = string,
   TAccountSubaccord extends string | AccountMeta<string> = string,
   TAccountPendingUpdate extends string | AccountMeta<string> = string,
-  TAccountSystemProgram extends string | AccountMeta<string> =
-    "11111111111111111111111111111111",
-  TAccountAccordProgram extends string | AccountMeta<string> =
-    "cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed",
+  TAccountSystemProgram extends string | AccountMeta<string> = "11111111111111111111111111111111",
+  TAccountAccordProgram extends
+    | string
+    | AccountMeta<string> = "cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
       TAccountAuthority extends string
-        ? WritableSignerAccount<TAccountAuthority> &
-            AccountSignerMeta<TAccountAuthority>
+        ? WritableSignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
         : TAccountAuthority,
       TAccountRentPayer extends string
-        ? WritableSignerAccount<TAccountRentPayer> &
-            AccountSignerMeta<TAccountRentPayer>
+        ? WritableSignerAccount<TAccountRentPayer> & AccountSignerMeta<TAccountRentPayer>
         : TAccountRentPayer,
-      TAccountMutual extends string
-        ? ReadonlyAccount<TAccountMutual>
-        : TAccountMutual,
-      TAccountSubaccord extends string
-        ? ReadonlyAccount<TAccountSubaccord>
-        : TAccountSubaccord,
+      TAccountMutual extends string ? ReadonlyAccount<TAccountMutual> : TAccountMutual,
+      TAccountSubaccord extends string ? ReadonlyAccount<TAccountSubaccord> : TAccountSubaccord,
       TAccountPendingUpdate extends string
         ? WritableAccount<TAccountPendingUpdate>
         : TAccountPendingUpdate,
@@ -290,13 +283,10 @@ export function parseSetSubaccordParamInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedSetSubaccordParamInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 7) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 7,
-      },
-    );
+    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+      actualAccountMetas: instruction.accounts.length,
+      expectedAccountMetas: 7,
+    });
   }
   let accountIndex = 0;
   const getNextAccount = () => {

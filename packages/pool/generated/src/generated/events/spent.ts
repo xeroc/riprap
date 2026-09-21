@@ -7,8 +7,12 @@
  */
 
 import {
+  type Address,
   combineCodec,
   containsBytes,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -21,10 +25,6 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 
@@ -73,21 +73,14 @@ export function getSpentEventDecoder(): FixedSizeDecoder<SpentEvent> {
 }
 
 /** Gets the codec for {@link SpentEvent} event data. */
-export function getSpentEventCodec(): FixedSizeCodec<
-  SpentEventArgs,
-  SpentEvent
-> {
+export function getSpentEventCodec(): FixedSizeCodec<SpentEventArgs, SpentEvent> {
   return combineCodec(getSpentEventEncoder(), getSpentEventDecoder());
 }
 
 /** Parses the provided bytes into {@link SpentEvent} event data. */
-export function parseSpentEvent(
-  data: ReadonlyUint8Array | Uint8Array,
-): SpentEvent {
+export function parseSpentEvent(data: ReadonlyUint8Array | Uint8Array): SpentEvent {
   if (containsBytes(data, SPENT_EVENT_DISCRIMINATOR, 0)) {
     return getSpentEventDecoder().decode(data);
   }
-  throw new Error(
-    'The provided data does not match the "SpentEvent" event discriminators.',
-  );
+  throw new Error('The provided data does not match the "SpentEvent" event discriminators.');
 }

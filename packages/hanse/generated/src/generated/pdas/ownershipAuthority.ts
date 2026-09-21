@@ -7,10 +7,10 @@
  */
 
 import {
+  type Address,
   getAddressEncoder,
   getBytesEncoder,
   getProgramDerivedAddress,
-  type Address,
   type ProgramDerivedAddress,
 } from "@solana/kit";
 
@@ -28,9 +28,7 @@ export async function findOwnershipAuthorityPda(
   return await getProgramDerivedAddress({
     programAddress,
     seeds: [
-      getBytesEncoder().encode(
-        new Uint8Array([109, 117, 116, 117, 97, 108, 95, 111, 119, 110]),
-      ),
+      getBytesEncoder().encode(new Uint8Array([109, 117, 116, 117, 97, 108, 95, 111, 119, 110])),
       getAddressEncoder().encode(seeds.mutual),
     ],
   });

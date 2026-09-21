@@ -7,7 +7,13 @@
  */
 
 import {
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
   combineCodec,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getAddressDecoder,
@@ -16,21 +22,15 @@ import {
   getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   type TransactionSigner,
+  transformEncoder,
   type WritableAccount,
 } from "@solana/kit";
 import {
@@ -38,20 +38,14 @@ import {
   type ResolvedInstructionAccount,
 } from "@solana/program-client-core";
 import { POOL_PROGRAM_ADDRESS } from "../programs";
-import {
-  getTrackDecoder,
-  getTrackEncoder,
-  type Track,
-  type TrackArgs,
-} from "../types";
+import { getTrackDecoder, getTrackEncoder, type Track, type TrackArgs } from "../types";
 
-export const UPDATE_AUTHORITY_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([32, 46, 64, 28, 149, 75, 243, 88]);
+export const UPDATE_AUTHORITY_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  32, 46, 64, 28, 149, 75, 243, 88,
+]);
 
 export function getUpdateAuthorityDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    UPDATE_AUTHORITY_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(UPDATE_AUTHORITY_DISCRIMINATOR);
 }
 
 export type UpdateAuthorityInstruction<
@@ -63,12 +57,9 @@ export type UpdateAuthorityInstruction<
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
-      TAccountPool extends string
-        ? WritableAccount<TAccountPool>
-        : TAccountPool,
+      TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
       TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            AccountSignerMeta<TAccountAuthority>
+        ? ReadonlySignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
         : TAccountAuthority,
       ...TRemainingAccounts,
     ]
@@ -131,11 +122,7 @@ export function getUpdateAuthorityInstruction<
 >(
   input: UpdateAuthorityInput<TAccountPool, TAccountAuthority>,
   config?: { programAddress?: TProgramAddress },
-): UpdateAuthorityInstruction<
-  TProgramAddress,
-  TAccountPool,
-  TAccountAuthority
-> {
+): UpdateAuthorityInstruction<TProgramAddress, TAccountPool, TAccountAuthority> {
   // Program address.
   const programAddress = config?.programAddress ?? POOL_PROGRAM_ADDRESS;
 
@@ -162,11 +149,7 @@ export function getUpdateAuthorityInstruction<
       args as UpdateAuthorityInstructionDataArgs,
     ),
     programAddress,
-  } as UpdateAuthorityInstruction<
-    TProgramAddress,
-    TAccountPool,
-    TAccountAuthority
-  >);
+  } as UpdateAuthorityInstruction<TProgramAddress, TAccountPool, TAccountAuthority>);
 }
 
 export type ParsedUpdateAuthorityInstruction<
@@ -190,13 +173,10 @@ export function parseUpdateAuthorityInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedUpdateAuthorityInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 2) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 2,
-      },
-    );
+    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+      actualAccountMetas: instruction.accounts.length,
+      expectedAccountMetas: 2,
+    });
   }
   let accountIndex = 0;
   const getNextAccount = () => {

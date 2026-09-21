@@ -7,25 +7,25 @@
  */
 
 import {
+  type Address,
   assertIsInstructionWithAccounts,
+  type ClientWithRpc,
+  type ClientWithTransactionPlanning,
+  type ClientWithTransactionSending,
   containsBytes,
+  type ExtendedClient,
   extendClient,
   fixEncoderSize,
+  type GetAccountInfoApi,
+  type GetMultipleAccountsApi,
   getBytesEncoder,
+  type Instruction,
+  type InstructionWithData,
+  type ReadonlyUint8Array,
   SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_ACCOUNT,
   SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
   SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
   SolanaError,
-  type Address,
-  type ClientWithRpc,
-  type ClientWithTransactionPlanning,
-  type ClientWithTransactionSending,
-  type ExtendedClient,
-  type GetAccountInfoApi,
-  type GetMultipleAccountsApi,
-  type Instruction,
-  type InstructionWithData,
-  type ReadonlyUint8Array,
 } from "@solana/kit";
 import {
   addSelfFetchFunctions,
@@ -34,17 +34,20 @@ import {
   type SelfPlanAndSendFunctions,
 } from "@solana/program-client-core";
 import {
+  type Claim,
+  type ClaimArgs,
   getClaimCodec,
   getMemberCodec,
   getMutualCodec,
-  type Claim,
-  type ClaimArgs,
   type Member,
   type MemberArgs,
   type Mutual,
   type MutualArgs,
 } from "../accounts";
 import {
+  type ClaimPayoutAsyncInput,
+  type DissolveAsyncInput,
+  type FileClaimAsyncInput,
   getClaimPayoutInstructionAsync,
   getDissolveInstructionAsync,
   getFileClaimInstructionAsync,
@@ -53,17 +56,6 @@ import {
   getSetSubaccordParamInstruction,
   getSettleClaimInstructionAsync,
   getSettlePoolInstruction,
-  parseClaimPayoutInstruction,
-  parseDissolveInstruction,
-  parseFileClaimInstruction,
-  parseInitializeMutualInstruction,
-  parseJoinInstruction,
-  parseSetSubaccordParamInstruction,
-  parseSettleClaimInstruction,
-  parseSettlePoolInstruction,
-  type ClaimPayoutAsyncInput,
-  type DissolveAsyncInput,
-  type FileClaimAsyncInput,
   type InitializeMutualAsyncInput,
   type JoinAsyncInput,
   type ParsedClaimPayoutInstruction,
@@ -74,6 +66,14 @@ import {
   type ParsedSetSubaccordParamInstruction,
   type ParsedSettleClaimInstruction,
   type ParsedSettlePoolInstruction,
+  parseClaimPayoutInstruction,
+  parseDissolveInstruction,
+  parseFileClaimInstruction,
+  parseInitializeMutualInstruction,
+  parseJoinInstruction,
+  parseSetSubaccordParamInstruction,
+  parseSettleClaimInstruction,
+  parseSettlePoolInstruction,
   type SetSubaccordParamInput,
   type SettleClaimAsyncInput,
   type SettlePoolInput,
@@ -132,10 +132,10 @@ export function identifyHanseAccount(
   ) {
     return HanseAccount.Mutual;
   }
-  throw new SolanaError(
-    SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_ACCOUNT,
-    { accountData: data, programName: "hanse" },
-  );
+  throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_ACCOUNT, {
+    accountData: data,
+    programName: "hanse",
+  });
 }
 
 export enum HanseEvent {
@@ -241,9 +241,7 @@ export function identifyHanseEvent(
   ) {
     return HanseEvent.SubaccordParamSet;
   }
-  throw new Error(
-    "The provided event could not be identified as a hanse event.",
-  );
+  throw new Error("The provided event could not be identified as a hanse event.");
 }
 
 export enum HanseInstruction {
@@ -349,10 +347,10 @@ export function identifyHanseInstruction(
   ) {
     return HanseInstruction.SettlePool;
   }
-  throw new SolanaError(
-    SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
-    { instructionData: data, programName: "hanse" },
-  );
+  throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION, {
+    instructionData: data,
+    programName: "hanse",
+  });
 }
 
 export type ParsedHanseInstruction<
@@ -445,10 +443,10 @@ export function parseHanseInstruction<TProgram extends string>(
       };
     }
     default:
-      throw new SolanaError(
-        SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
-        { instructionType: instructionType as string, programName: "hanse" },
-      );
+      throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE, {
+        instructionType: instructionType as string,
+        programName: "hanse",
+      });
   }
 }
 
@@ -462,42 +460,33 @@ export type HansePlugin = {
 };
 
 export type HansePluginAccounts = {
-  claim: ReturnType<typeof getClaimCodec> &
-    SelfFetchFunctions<ClaimArgs, Claim>;
-  member: ReturnType<typeof getMemberCodec> &
-    SelfFetchFunctions<MemberArgs, Member>;
-  mutual: ReturnType<typeof getMutualCodec> &
-    SelfFetchFunctions<MutualArgs, Mutual>;
+  claim: ReturnType<typeof getClaimCodec> & SelfFetchFunctions<ClaimArgs, Claim>;
+  member: ReturnType<typeof getMemberCodec> & SelfFetchFunctions<MemberArgs, Member>;
+  mutual: ReturnType<typeof getMutualCodec> & SelfFetchFunctions<MutualArgs, Mutual>;
 };
 
 export type HansePluginInstructions = {
   claimPayout: (
     input: ClaimPayoutAsyncInput,
-  ) => ReturnType<typeof getClaimPayoutInstructionAsync> &
-    SelfPlanAndSendFunctions;
+  ) => ReturnType<typeof getClaimPayoutInstructionAsync> & SelfPlanAndSendFunctions;
   dissolve: (
     input: DissolveAsyncInput,
-  ) => ReturnType<typeof getDissolveInstructionAsync> &
-    SelfPlanAndSendFunctions;
+  ) => ReturnType<typeof getDissolveInstructionAsync> & SelfPlanAndSendFunctions;
   fileClaim: (
     input: FileClaimAsyncInput,
-  ) => ReturnType<typeof getFileClaimInstructionAsync> &
-    SelfPlanAndSendFunctions;
+  ) => ReturnType<typeof getFileClaimInstructionAsync> & SelfPlanAndSendFunctions;
   initializeMutual: (
     input: InitializeMutualAsyncInput,
-  ) => ReturnType<typeof getInitializeMutualInstructionAsync> &
-    SelfPlanAndSendFunctions;
+  ) => ReturnType<typeof getInitializeMutualInstructionAsync> & SelfPlanAndSendFunctions;
   join: (
     input: JoinAsyncInput,
   ) => ReturnType<typeof getJoinInstructionAsync> & SelfPlanAndSendFunctions;
   setSubaccordParam: (
     input: SetSubaccordParamInput,
-  ) => ReturnType<typeof getSetSubaccordParamInstruction> &
-    SelfPlanAndSendFunctions;
+  ) => ReturnType<typeof getSetSubaccordParamInstruction> & SelfPlanAndSendFunctions;
   settleClaim: (
     input: SettleClaimAsyncInput,
-  ) => ReturnType<typeof getSettleClaimInstructionAsync> &
-    SelfPlanAndSendFunctions;
+  ) => ReturnType<typeof getSettleClaimInstructionAsync> & SelfPlanAndSendFunctions;
   settlePool: (
     input: SettlePoolInput,
   ) => ReturnType<typeof getSettlePoolInstruction> & SelfPlanAndSendFunctions;
@@ -511,9 +500,7 @@ export type HansePluginPdas = {
   joinMemberAccount: typeof findJoinMemberAccountPda;
 };
 
-export type HansePluginRequirements = ClientWithRpc<
-  GetAccountInfoApi & GetMultipleAccountsApi
-> &
+export type HansePluginRequirements = ClientWithRpc<GetAccountInfoApi & GetMultipleAccountsApi> &
   ClientWithTransactionPlanning &
   ClientWithTransactionSending;
 
@@ -530,42 +517,20 @@ export function hanseProgram() {
         },
         instructions: {
           claimPayout: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getClaimPayoutInstructionAsync(input),
-            ),
+            addSelfPlanAndSendFunctions(client, getClaimPayoutInstructionAsync(input)),
           dissolve: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getDissolveInstructionAsync(input),
-            ),
+            addSelfPlanAndSendFunctions(client, getDissolveInstructionAsync(input)),
           fileClaim: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getFileClaimInstructionAsync(input),
-            ),
+            addSelfPlanAndSendFunctions(client, getFileClaimInstructionAsync(input)),
           initializeMutual: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getInitializeMutualInstructionAsync(input),
-            ),
-          join: (input) =>
-            addSelfPlanAndSendFunctions(client, getJoinInstructionAsync(input)),
+            addSelfPlanAndSendFunctions(client, getInitializeMutualInstructionAsync(input)),
+          join: (input) => addSelfPlanAndSendFunctions(client, getJoinInstructionAsync(input)),
           setSubaccordParam: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getSetSubaccordParamInstruction(input),
-            ),
+            addSelfPlanAndSendFunctions(client, getSetSubaccordParamInstruction(input)),
           settleClaim: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getSettleClaimInstructionAsync(input),
-            ),
+            addSelfPlanAndSendFunctions(client, getSettleClaimInstructionAsync(input)),
           settlePool: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getSettlePoolInstruction(input),
-            ),
+            addSelfPlanAndSendFunctions(client, getSettlePoolInstruction(input)),
         },
         pdas: {
           rightsAuthority: findRightsAuthorityPda,

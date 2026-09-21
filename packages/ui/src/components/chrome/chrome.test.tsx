@@ -41,9 +41,9 @@ class IntersectionObserverStub implements IntersectionObserver {
     });
   }
   readonly scrollMargin = "";
-  observe() { }
-  unobserve() { }
-  disconnect() { }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
   takeRecords(): IntersectionObserverEntry[] {
     return [];
   }

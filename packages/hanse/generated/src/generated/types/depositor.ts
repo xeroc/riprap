@@ -7,21 +7,21 @@
  */
 
 import {
+  type Address,
   combineCodec,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   getAddressDecoder,
   getAddressEncoder,
   getBooleanDecoder,
   getBooleanEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU128Decoder,
-  getU128Encoder,
   getU64Decoder,
   getU64Encoder,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
+  getU128Decoder,
+  getU128Encoder,
 } from "@solana/kit";
 
 /** One depositor position per pool per party (CONTEXT.md, Depositor). */

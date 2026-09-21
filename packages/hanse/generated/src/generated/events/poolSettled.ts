@@ -7,8 +7,12 @@
  */
 
 import {
+  type Address,
   combineCodec,
   containsBytes,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -23,20 +27,15 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 
-export const POOL_SETTLED_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([71, 220, 136, 147, 65, 185, 90, 47]);
+export const POOL_SETTLED_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  71, 220, 136, 147, 65, 185, 90, 47,
+]);
 
 export function getPoolSettledEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    POOL_SETTLED_EVENT_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(POOL_SETTLED_EVENT_DISCRIMINATOR);
 }
 
 export type PoolSettledEvent = {
@@ -84,24 +83,14 @@ export function getPoolSettledEventDecoder(): FixedSizeDecoder<PoolSettledEvent>
 }
 
 /** Gets the codec for {@link PoolSettledEvent} event data. */
-export function getPoolSettledEventCodec(): FixedSizeCodec<
-  PoolSettledEventArgs,
-  PoolSettledEvent
-> {
-  return combineCodec(
-    getPoolSettledEventEncoder(),
-    getPoolSettledEventDecoder(),
-  );
+export function getPoolSettledEventCodec(): FixedSizeCodec<PoolSettledEventArgs, PoolSettledEvent> {
+  return combineCodec(getPoolSettledEventEncoder(), getPoolSettledEventDecoder());
 }
 
 /** Parses the provided bytes into {@link PoolSettledEvent} event data. */
-export function parsePoolSettledEvent(
-  data: ReadonlyUint8Array | Uint8Array,
-): PoolSettledEvent {
+export function parsePoolSettledEvent(data: ReadonlyUint8Array | Uint8Array): PoolSettledEvent {
   if (containsBytes(data, POOL_SETTLED_EVENT_DISCRIMINATOR, 0)) {
     return getPoolSettledEventDecoder().decode(data);
   }
-  throw new Error(
-    'The provided data does not match the "PoolSettledEvent" event discriminators.',
-  );
+  throw new Error('The provided data does not match the "PoolSettledEvent" event discriminators.');
 }

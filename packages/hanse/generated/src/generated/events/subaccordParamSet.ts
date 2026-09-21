@@ -7,8 +7,12 @@
  */
 
 import {
+  type Address,
+  type Codec,
   combineCodec,
   containsBytes,
+  type Decoder,
+  type Encoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -21,10 +25,6 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  type Address,
-  type Codec,
-  type Decoder,
-  type Encoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 import {
@@ -34,13 +34,12 @@ import {
   type UpdatePayloadArgs,
 } from "../types";
 
-export const SUBACCORD_PARAM_SET_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([10, 116, 179, 207, 178, 147, 130, 200]);
+export const SUBACCORD_PARAM_SET_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  10, 116, 179, 207, 178, 147, 130, 200,
+]);
 
 export function getSubaccordParamSetEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    SUBACCORD_PARAM_SET_EVENT_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(SUBACCORD_PARAM_SET_EVENT_DISCRIMINATOR);
 }
 
 export type SubaccordParamSetEvent = {
@@ -88,10 +87,7 @@ export function getSubaccordParamSetEventCodec(): Codec<
   SubaccordParamSetEventArgs,
   SubaccordParamSetEvent
 > {
-  return combineCodec(
-    getSubaccordParamSetEventEncoder(),
-    getSubaccordParamSetEventDecoder(),
-  );
+  return combineCodec(getSubaccordParamSetEventEncoder(), getSubaccordParamSetEventDecoder());
 }
 
 /** Parses the provided bytes into {@link SubaccordParamSetEvent} event data. */

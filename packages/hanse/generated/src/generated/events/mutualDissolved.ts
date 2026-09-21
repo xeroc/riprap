@@ -7,8 +7,12 @@
  */
 
 import {
+  type Address,
   combineCodec,
   containsBytes,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -19,20 +23,15 @@ import {
   getHiddenPrefixEncoder,
   getStructDecoder,
   getStructEncoder,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 
-export const MUTUAL_DISSOLVED_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([108, 30, 186, 67, 83, 235, 199, 67]);
+export const MUTUAL_DISSOLVED_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  108, 30, 186, 67, 83, 235, 199, 67,
+]);
 
 export function getMutualDissolvedEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    MUTUAL_DISSOLVED_EVENT_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(MUTUAL_DISSOLVED_EVENT_DISCRIMINATOR);
 }
 
 export type MutualDissolvedEvent = { mutual: Address };
@@ -41,18 +40,16 @@ export type MutualDissolvedEventArgs = MutualDissolvedEvent;
 
 /** Gets the encoder for {@link MutualDissolvedEventArgs} event data. */
 export function getMutualDissolvedEventEncoder(): FixedSizeEncoder<MutualDissolvedEventArgs> {
-  return getHiddenPrefixEncoder(
-    getStructEncoder([["mutual", getAddressEncoder()]]),
-    [getConstantEncoder(MUTUAL_DISSOLVED_EVENT_DISCRIMINATOR)],
-  );
+  return getHiddenPrefixEncoder(getStructEncoder([["mutual", getAddressEncoder()]]), [
+    getConstantEncoder(MUTUAL_DISSOLVED_EVENT_DISCRIMINATOR),
+  ]);
 }
 
 /** Gets the decoder for {@link MutualDissolvedEvent} event data. */
 export function getMutualDissolvedEventDecoder(): FixedSizeDecoder<MutualDissolvedEvent> {
-  return getHiddenPrefixDecoder(
-    getStructDecoder([["mutual", getAddressDecoder()]]),
-    [getConstantDecoder(MUTUAL_DISSOLVED_EVENT_DISCRIMINATOR)],
-  );
+  return getHiddenPrefixDecoder(getStructDecoder([["mutual", getAddressDecoder()]]), [
+    getConstantDecoder(MUTUAL_DISSOLVED_EVENT_DISCRIMINATOR),
+  ]);
 }
 
 /** Gets the codec for {@link MutualDissolvedEvent} event data. */
@@ -60,10 +57,7 @@ export function getMutualDissolvedEventCodec(): FixedSizeCodec<
   MutualDissolvedEventArgs,
   MutualDissolvedEvent
 > {
-  return combineCodec(
-    getMutualDissolvedEventEncoder(),
-    getMutualDissolvedEventDecoder(),
-  );
+  return combineCodec(getMutualDissolvedEventEncoder(), getMutualDissolvedEventDecoder());
 }
 
 /** Parses the provided bytes into {@link MutualDissolvedEvent} event data. */

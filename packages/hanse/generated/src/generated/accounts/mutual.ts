@@ -7,10 +7,18 @@
  */
 
 import {
+  type Account,
+  type Address,
   assertAccountExists,
   assertAccountsExist,
   combineCodec,
   decodeAccount,
+  type EncodedAccount,
+  type FetchAccountConfig,
+  type FetchAccountsConfig,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fetchEncodedAccount,
   fetchEncodedAccounts,
   fixDecoderSize,
@@ -25,24 +33,16 @@ import {
   getI64Encoder,
   getStructDecoder,
   getStructEncoder,
+  getU8Decoder,
+  getU8Encoder,
   getU32Decoder,
   getU32Encoder,
   getU64Decoder,
   getU64Encoder,
-  getU8Decoder,
-  getU8Encoder,
-  transformEncoder,
-  type Account,
-  type Address,
-  type EncodedAccount,
-  type FetchAccountConfig,
-  type FetchAccountsConfig,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type MaybeAccount,
   type MaybeEncodedAccount,
   type ReadonlyUint8Array,
+  transformEncoder,
 } from "@solana/kit";
 import {
   getPhaseDecoder,
@@ -239,10 +239,7 @@ export function decodeMutual<TAddress extends string = string>(
 export function decodeMutual<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>,
 ): Account<Mutual, TAddress> | MaybeAccount<Mutual, TAddress> {
-  return decodeAccount(
-    encodedAccount as MaybeEncodedAccount<TAddress>,
-    getMutualDecoder(),
-  );
+  return decodeAccount(encodedAccount as MaybeEncodedAccount<TAddress>, getMutualDecoder());
 }
 
 export async function fetchMutual<TAddress extends string = string>(

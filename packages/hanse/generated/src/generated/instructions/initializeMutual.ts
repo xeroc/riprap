@@ -7,7 +7,13 @@
  */
 
 import {
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
   combineCodec,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getAddressEncoder,
@@ -22,21 +28,15 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   type TransactionSigner,
+  transformEncoder,
   type WritableAccount,
   type WritableSignerAccount,
 } from "@solana/kit";
@@ -57,13 +57,12 @@ import {
   type TierArgs,
 } from "../types";
 
-export const INITIALIZE_MUTUAL_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([31, 122, 129, 228, 13, 102, 93, 250]);
+export const INITIALIZE_MUTUAL_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  31, 122, 129, 228, 13, 102, 93, 250,
+]);
 
 export function getInitializeMutualDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    INITIALIZE_MUTUAL_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(INITIALIZE_MUTUAL_DISCRIMINATOR);
 }
 
 export type InitializeMutualInstruction<
@@ -77,50 +76,39 @@ export type InitializeMutualInstruction<
   TAccountDepositMint extends string | AccountMeta<string> = string,
   TAccountFeeMint extends string | AccountMeta<string> = string,
   TAccountFeeFloat extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends string | AccountMeta<string> =
-    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-  TAccountAssociatedTokenProgram extends string | AccountMeta<string> =
-    "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
-  TAccountSystemProgram extends string | AccountMeta<string> =
-    "11111111111111111111111111111111",
-  TAccountPoolProgram extends string | AccountMeta<string> =
-    "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf",
-  TAccountAccordProgram extends string | AccountMeta<string> =
-    "cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed",
+  TAccountTokenProgram extends
+    | string
+    | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  TAccountAssociatedTokenProgram extends
+    | string
+    | AccountMeta<string> = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+  TAccountSystemProgram extends string | AccountMeta<string> = "11111111111111111111111111111111",
+  TAccountPoolProgram extends
+    | string
+    | AccountMeta<string> = "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf",
+  TAccountAccordProgram extends
+    | string
+    | AccountMeta<string> = "cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
       TAccountAuthority extends string
-        ? WritableSignerAccount<TAccountAuthority> &
-            AccountSignerMeta<TAccountAuthority>
+        ? WritableSignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
         : TAccountAuthority,
       TAccountRentPayer extends string
-        ? WritableSignerAccount<TAccountRentPayer> &
-            AccountSignerMeta<TAccountRentPayer>
+        ? WritableSignerAccount<TAccountRentPayer> & AccountSignerMeta<TAccountRentPayer>
         : TAccountRentPayer,
-      TAccountMutual extends string
-        ? WritableAccount<TAccountMutual>
-        : TAccountMutual,
-      TAccountPool extends string
-        ? WritableAccount<TAccountPool>
-        : TAccountPool,
-      TAccountTreasury extends string
-        ? WritableAccount<TAccountTreasury>
-        : TAccountTreasury,
-      TAccountSubaccord extends string
-        ? WritableAccount<TAccountSubaccord>
-        : TAccountSubaccord,
+      TAccountMutual extends string ? WritableAccount<TAccountMutual> : TAccountMutual,
+      TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
+      TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
+      TAccountSubaccord extends string ? WritableAccount<TAccountSubaccord> : TAccountSubaccord,
       TAccountDepositMint extends string
         ? ReadonlyAccount<TAccountDepositMint>
         : TAccountDepositMint,
-      TAccountFeeMint extends string
-        ? ReadonlyAccount<TAccountFeeMint>
-        : TAccountFeeMint,
-      TAccountFeeFloat extends string
-        ? WritableAccount<TAccountFeeFloat>
-        : TAccountFeeFloat,
+      TAccountFeeMint extends string ? ReadonlyAccount<TAccountFeeMint> : TAccountFeeMint,
+      TAccountFeeFloat extends string ? WritableAccount<TAccountFeeFloat> : TAccountFeeFloat,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
@@ -361,23 +349,16 @@ export async function getInitializeMutualInstructionAsync<
         "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" as Address<"ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL">,
       seeds: [
         getAddressEncoder().encode(
-          getAddressFromResolvedInstructionAccount(
-            "mutual",
-            accounts.mutual.value,
-          ),
+          getAddressFromResolvedInstructionAccount("mutual", accounts.mutual.value),
         ),
         getBytesEncoder().encode(
           new Uint8Array([
-            6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235,
-            121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133,
-            126, 255, 0, 169,
+            6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180,
+            133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169,
           ]),
         ),
         getAddressEncoder().encode(
-          getAddressFromResolvedInstructionAccount(
-            "feeMint",
-            accounts.feeMint.value,
-          ),
+          getAddressFromResolvedInstructionAccount("feeMint", accounts.feeMint.value),
         ),
       ],
     });
@@ -724,13 +705,10 @@ export function parseInitializeMutualInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedInitializeMutualInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 14) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 14,
-      },
-    );
+    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+      actualAccountMetas: instruction.accounts.length,
+      expectedAccountMetas: 14,
+    });
   }
   let accountIndex = 0;
   const getNextAccount = () => {

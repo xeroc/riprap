@@ -7,25 +7,25 @@
  */
 
 import {
+  type Address,
   assertIsInstructionWithAccounts,
+  type ClientWithRpc,
+  type ClientWithTransactionPlanning,
+  type ClientWithTransactionSending,
   containsBytes,
+  type ExtendedClient,
   extendClient,
   fixEncoderSize,
+  type GetAccountInfoApi,
+  type GetMultipleAccountsApi,
   getBytesEncoder,
+  type Instruction,
+  type InstructionWithData,
+  type ReadonlyUint8Array,
   SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_ACCOUNT,
   SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
   SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
   SolanaError,
-  type Address,
-  type ClientWithRpc,
-  type ClientWithTransactionPlanning,
-  type ClientWithTransactionSending,
-  type ExtendedClient,
-  type GetAccountInfoApi,
-  type GetMultipleAccountsApi,
-  type Instruction,
-  type InstructionWithData,
-  type ReadonlyUint8Array,
 } from "@solana/kit";
 import {
   addSelfFetchFunctions,
@@ -34,14 +34,17 @@ import {
   type SelfPlanAndSendFunctions,
 } from "@solana/program-client-core";
 import {
-  getDepositorCodec,
-  getPoolCodec,
   type Depositor,
   type DepositorArgs,
+  getDepositorCodec,
+  getPoolCodec,
   type Pool,
   type PoolArgs,
 } from "../accounts";
 import {
+  type BurnAsyncInput,
+  type CrankAsyncInput,
+  type DepositAsyncInput,
   getBurnInstructionAsync,
   getCrankInstructionAsync,
   getDepositInstructionAsync,
@@ -49,16 +52,6 @@ import {
   getLiquidateInstruction,
   getSpendInstruction,
   getUpdateAuthorityInstruction,
-  parseBurnInstruction,
-  parseCrankInstruction,
-  parseDepositInstruction,
-  parseInitInstruction,
-  parseLiquidateInstruction,
-  parseSpendInstruction,
-  parseUpdateAuthorityInstruction,
-  type BurnAsyncInput,
-  type CrankAsyncInput,
-  type DepositAsyncInput,
   type InitAsyncInput,
   type LiquidateInput,
   type ParsedBurnInstruction,
@@ -68,6 +61,13 @@ import {
   type ParsedLiquidateInstruction,
   type ParsedSpendInstruction,
   type ParsedUpdateAuthorityInstruction,
+  parseBurnInstruction,
+  parseCrankInstruction,
+  parseDepositInstruction,
+  parseInitInstruction,
+  parseLiquidateInstruction,
+  parseSpendInstruction,
+  parseUpdateAuthorityInstruction,
   type SpendInput,
   type UpdateAuthorityInput,
 } from "../instructions";
@@ -107,10 +107,10 @@ export function identifyPoolAccount(
   ) {
     return PoolAccount.Pool;
   }
-  throw new SolanaError(
-    SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_ACCOUNT,
-    { accountData: data, programName: "pool" },
-  );
+  throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_ACCOUNT, {
+    accountData: data,
+    programName: "pool",
+  });
 }
 
 export enum PoolEvent {
@@ -192,9 +192,7 @@ export function identifyPoolEvent(
   ) {
     return PoolEvent.Spent;
   }
-  throw new Error(
-    "The provided event could not be identified as a pool event.",
-  );
+  throw new Error("The provided event could not be identified as a pool event.");
 }
 
 export enum PoolInstruction {
@@ -288,10 +286,10 @@ export function identifyPoolInstruction(
   ) {
     return PoolInstruction.UpdateAuthority;
   }
-  throw new SolanaError(
-    SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
-    { instructionData: data, programName: "pool" },
-  );
+  throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION, {
+    instructionData: data,
+    programName: "pool",
+  });
 }
 
 export type ParsedPoolInstruction<
@@ -374,10 +372,10 @@ export function parsePoolInstruction<TProgram extends string>(
       };
     }
     default:
-      throw new SolanaError(
-        SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
-        { instructionType: instructionType as string, programName: "pool" },
-      );
+      throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE, {
+        instructionType: instructionType as string,
+        programName: "pool",
+      });
   }
 }
 
@@ -391,8 +389,7 @@ export type PoolPlugin = {
 };
 
 export type PoolPluginAccounts = {
-  depositor: ReturnType<typeof getDepositorCodec> &
-    SelfFetchFunctions<DepositorArgs, Depositor>;
+  depositor: ReturnType<typeof getDepositorCodec> & SelfFetchFunctions<DepositorArgs, Depositor>;
   pool: ReturnType<typeof getPoolCodec> & SelfFetchFunctions<PoolArgs, Pool>;
 };
 
@@ -412,27 +409,20 @@ export type PoolPluginInstructions = {
   liquidate: (
     input: LiquidateInput,
   ) => ReturnType<typeof getLiquidateInstruction> & SelfPlanAndSendFunctions;
-  spend: (
-    input: SpendInput,
-  ) => ReturnType<typeof getSpendInstruction> & SelfPlanAndSendFunctions;
+  spend: (input: SpendInput) => ReturnType<typeof getSpendInstruction> & SelfPlanAndSendFunctions;
   updateAuthority: (
     input: UpdateAuthorityInput,
-  ) => ReturnType<typeof getUpdateAuthorityInstruction> &
-    SelfPlanAndSendFunctions;
+  ) => ReturnType<typeof getUpdateAuthorityInstruction> & SelfPlanAndSendFunctions;
 };
 
 export type PoolPluginPdas = { depositor: typeof findDepositorPda };
 
-export type PoolPluginRequirements = ClientWithRpc<
-  GetAccountInfoApi & GetMultipleAccountsApi
-> &
+export type PoolPluginRequirements = ClientWithRpc<GetAccountInfoApi & GetMultipleAccountsApi> &
   ClientWithTransactionPlanning &
   ClientWithTransactionSending;
 
 export function poolProgram() {
-  return <T extends PoolPluginRequirements>(
-    client: T,
-  ): ExtendedClient<T, { pool: PoolPlugin }> => {
+  return <T extends PoolPluginRequirements>(client: T): ExtendedClient<T, { pool: PoolPlugin }> => {
     return extendClient(client, {
       pool: <PoolPlugin>{
         accounts: {
@@ -440,29 +430,15 @@ export function poolProgram() {
           pool: addSelfFetchFunctions(client, getPoolCodec()),
         },
         instructions: {
-          burn: (input) =>
-            addSelfPlanAndSendFunctions(client, getBurnInstructionAsync(input)),
-          crank: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getCrankInstructionAsync(input),
-            ),
+          burn: (input) => addSelfPlanAndSendFunctions(client, getBurnInstructionAsync(input)),
+          crank: (input) => addSelfPlanAndSendFunctions(client, getCrankInstructionAsync(input)),
           deposit: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getDepositInstructionAsync(input),
-            ),
-          init: (input) =>
-            addSelfPlanAndSendFunctions(client, getInitInstructionAsync(input)),
-          liquidate: (input) =>
-            addSelfPlanAndSendFunctions(client, getLiquidateInstruction(input)),
-          spend: (input) =>
-            addSelfPlanAndSendFunctions(client, getSpendInstruction(input)),
+            addSelfPlanAndSendFunctions(client, getDepositInstructionAsync(input)),
+          init: (input) => addSelfPlanAndSendFunctions(client, getInitInstructionAsync(input)),
+          liquidate: (input) => addSelfPlanAndSendFunctions(client, getLiquidateInstruction(input)),
+          spend: (input) => addSelfPlanAndSendFunctions(client, getSpendInstruction(input)),
           updateAuthority: (input) =>
-            addSelfPlanAndSendFunctions(
-              client,
-              getUpdateAuthorityInstruction(input),
-            ),
+            addSelfPlanAndSendFunctions(client, getUpdateAuthorityInstruction(input)),
         },
         pdas: { depositor: findDepositorPda },
         identifyAccount: identifyPoolAccount,

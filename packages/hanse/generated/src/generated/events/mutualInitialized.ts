@@ -7,8 +7,12 @@
  */
 
 import {
+  type Address,
   combineCodec,
   containsBytes,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -19,20 +23,15 @@ import {
   getHiddenPrefixEncoder,
   getStructDecoder,
   getStructEncoder,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 
-export const MUTUAL_INITIALIZED_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([75, 247, 226, 213, 201, 185, 70, 202]);
+export const MUTUAL_INITIALIZED_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  75, 247, 226, 213, 201, 185, 70, 202,
+]);
 
 export function getMutualInitializedEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    MUTUAL_INITIALIZED_EVENT_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(MUTUAL_INITIALIZED_EVENT_DISCRIMINATOR);
 }
 
 export type MutualInitializedEvent = {
@@ -75,10 +74,7 @@ export function getMutualInitializedEventCodec(): FixedSizeCodec<
   MutualInitializedEventArgs,
   MutualInitializedEvent
 > {
-  return combineCodec(
-    getMutualInitializedEventEncoder(),
-    getMutualInitializedEventDecoder(),
-  );
+  return combineCodec(getMutualInitializedEventEncoder(), getMutualInitializedEventDecoder());
 }
 
 /** Parses the provided bytes into {@link MutualInitializedEvent} event data. */

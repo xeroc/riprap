@@ -7,7 +7,11 @@
  */
 
 import {
+  type Address,
+  type Codec,
   combineCodec,
+  type Decoder,
+  type Encoder,
   fixDecoderSize,
   fixEncoderSize,
   getAddressDecoder,
@@ -20,14 +24,10 @@ import {
   getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU64Decoder,
-  getU64Encoder,
   getU8Decoder,
   getU8Encoder,
-  type Address,
-  type Codec,
-  type Decoder,
-  type Encoder,
+  getU64Decoder,
+  getU64Encoder,
   type Option,
   type OptionOrNullable,
   type ReadonlyUint8Array,

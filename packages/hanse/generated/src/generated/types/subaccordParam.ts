@@ -7,7 +7,12 @@
  */
 
 import {
+  type Codec,
   combineCodec,
+  type Decoder,
+  type Encoder,
+  type GetDiscriminatedUnionVariant,
+  type GetDiscriminatedUnionVariantContent,
   getDiscriminatedUnionDecoder,
   getDiscriminatedUnionEncoder,
   getStructDecoder,
@@ -18,11 +23,6 @@ import {
   getU16Encoder,
   getU64Decoder,
   getU64Encoder,
-  type Codec,
-  type Decoder,
-  type Encoder,
-  type GetDiscriminatedUnionVariant,
-  type GetDiscriminatedUnionVariantContent,
 } from "@solana/kit";
 
 /**
@@ -54,141 +54,63 @@ export type SubaccordParamArgs =
 
 export function getSubaccordParamEncoder(): Encoder<SubaccordParamArgs> {
   return getDiscriminatedUnionEncoder([
-    [
-      "MinStake",
-      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
-    ],
-    [
-      "FeePerJuror",
-      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
-    ],
-    [
-      "AlphaBps",
-      getStructEncoder([["fields", getTupleEncoder([getU16Encoder()])]]),
-    ],
-    [
-      "ReviewWindow",
-      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
-    ],
-    [
-      "CommitWindow",
-      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
-    ],
-    [
-      "RevealWindow",
-      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
-    ],
-    [
-      "AppealWindow",
-      getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]]),
-    ],
+    ["MinStake", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
+    ["FeePerJuror", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
+    ["AlphaBps", getStructEncoder([["fields", getTupleEncoder([getU16Encoder()])]])],
+    ["ReviewWindow", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
+    ["CommitWindow", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
+    ["RevealWindow", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
+    ["AppealWindow", getStructEncoder([["fields", getTupleEncoder([getU64Encoder()])]])],
   ]);
 }
 
 export function getSubaccordParamDecoder(): Decoder<SubaccordParam> {
   return getDiscriminatedUnionDecoder([
-    [
-      "MinStake",
-      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
-    ],
-    [
-      "FeePerJuror",
-      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
-    ],
-    [
-      "AlphaBps",
-      getStructDecoder([["fields", getTupleDecoder([getU16Decoder()])]]),
-    ],
-    [
-      "ReviewWindow",
-      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
-    ],
-    [
-      "CommitWindow",
-      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
-    ],
-    [
-      "RevealWindow",
-      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
-    ],
-    [
-      "AppealWindow",
-      getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]]),
-    ],
+    ["MinStake", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
+    ["FeePerJuror", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
+    ["AlphaBps", getStructDecoder([["fields", getTupleDecoder([getU16Decoder()])]])],
+    ["ReviewWindow", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
+    ["CommitWindow", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
+    ["RevealWindow", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
+    ["AppealWindow", getStructDecoder([["fields", getTupleDecoder([getU64Decoder()])]])],
   ]);
 }
 
-export function getSubaccordParamCodec(): Codec<
-  SubaccordParamArgs,
-  SubaccordParam
-> {
+export function getSubaccordParamCodec(): Codec<SubaccordParamArgs, SubaccordParam> {
   return combineCodec(getSubaccordParamEncoder(), getSubaccordParamDecoder());
 }
 
 // Data Enum Helpers.
 export function subaccordParam(
   kind: "MinStake",
-  data: GetDiscriminatedUnionVariantContent<
-    SubaccordParamArgs,
-    "__kind",
-    "MinStake"
-  >["fields"],
+  data: GetDiscriminatedUnionVariantContent<SubaccordParamArgs, "__kind", "MinStake">["fields"],
 ): GetDiscriminatedUnionVariant<SubaccordParamArgs, "__kind", "MinStake">;
 export function subaccordParam(
   kind: "FeePerJuror",
-  data: GetDiscriminatedUnionVariantContent<
-    SubaccordParamArgs,
-    "__kind",
-    "FeePerJuror"
-  >["fields"],
+  data: GetDiscriminatedUnionVariantContent<SubaccordParamArgs, "__kind", "FeePerJuror">["fields"],
 ): GetDiscriminatedUnionVariant<SubaccordParamArgs, "__kind", "FeePerJuror">;
 export function subaccordParam(
   kind: "AlphaBps",
-  data: GetDiscriminatedUnionVariantContent<
-    SubaccordParamArgs,
-    "__kind",
-    "AlphaBps"
-  >["fields"],
+  data: GetDiscriminatedUnionVariantContent<SubaccordParamArgs, "__kind", "AlphaBps">["fields"],
 ): GetDiscriminatedUnionVariant<SubaccordParamArgs, "__kind", "AlphaBps">;
 export function subaccordParam(
   kind: "ReviewWindow",
-  data: GetDiscriminatedUnionVariantContent<
-    SubaccordParamArgs,
-    "__kind",
-    "ReviewWindow"
-  >["fields"],
+  data: GetDiscriminatedUnionVariantContent<SubaccordParamArgs, "__kind", "ReviewWindow">["fields"],
 ): GetDiscriminatedUnionVariant<SubaccordParamArgs, "__kind", "ReviewWindow">;
 export function subaccordParam(
   kind: "CommitWindow",
-  data: GetDiscriminatedUnionVariantContent<
-    SubaccordParamArgs,
-    "__kind",
-    "CommitWindow"
-  >["fields"],
+  data: GetDiscriminatedUnionVariantContent<SubaccordParamArgs, "__kind", "CommitWindow">["fields"],
 ): GetDiscriminatedUnionVariant<SubaccordParamArgs, "__kind", "CommitWindow">;
 export function subaccordParam(
   kind: "RevealWindow",
-  data: GetDiscriminatedUnionVariantContent<
-    SubaccordParamArgs,
-    "__kind",
-    "RevealWindow"
-  >["fields"],
+  data: GetDiscriminatedUnionVariantContent<SubaccordParamArgs, "__kind", "RevealWindow">["fields"],
 ): GetDiscriminatedUnionVariant<SubaccordParamArgs, "__kind", "RevealWindow">;
 export function subaccordParam(
   kind: "AppealWindow",
-  data: GetDiscriminatedUnionVariantContent<
-    SubaccordParamArgs,
-    "__kind",
-    "AppealWindow"
-  >["fields"],
+  data: GetDiscriminatedUnionVariantContent<SubaccordParamArgs, "__kind", "AppealWindow">["fields"],
 ): GetDiscriminatedUnionVariant<SubaccordParamArgs, "__kind", "AppealWindow">;
-export function subaccordParam<K extends SubaccordParamArgs["__kind"], Data>(
-  kind: K,
-  data?: Data,
-) {
-  return Array.isArray(data)
-    ? { __kind: kind, fields: data }
-    : { __kind: kind, ...(data ?? {}) };
+export function subaccordParam<K extends SubaccordParamArgs["__kind"], Data>(kind: K, data?: Data) {
+  return Array.isArray(data) ? { __kind: kind, fields: data } : { __kind: kind, ...(data ?? {}) };
 }
 
 export function isSubaccordParam<K extends SubaccordParam["__kind"]>(

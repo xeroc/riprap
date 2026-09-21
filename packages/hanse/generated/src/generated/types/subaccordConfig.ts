@@ -7,23 +7,23 @@
  */
 
 import {
+  type Address,
   combineCodec,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   getAddressDecoder,
   getAddressEncoder,
   getStructDecoder,
   getStructEncoder,
+  getU8Decoder,
+  getU8Encoder,
   getU16Decoder,
   getU16Encoder,
   getU32Decoder,
   getU32Encoder,
   getU64Decoder,
   getU64Encoder,
-  getU8Decoder,
-  getU8Encoder,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
 } from "@solana/kit";
 
 /**
@@ -109,9 +109,6 @@ export function getSubaccordConfigDecoder(): FixedSizeDecoder<SubaccordConfig> {
   ]);
 }
 
-export function getSubaccordConfigCodec(): FixedSizeCodec<
-  SubaccordConfigArgs,
-  SubaccordConfig
-> {
+export function getSubaccordConfigCodec(): FixedSizeCodec<SubaccordConfigArgs, SubaccordConfig> {
   return combineCodec(getSubaccordConfigEncoder(), getSubaccordConfigDecoder());
 }

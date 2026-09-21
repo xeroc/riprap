@@ -7,7 +7,13 @@
  */
 
 import {
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
   combineCodec,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getBytesDecoder,
@@ -16,22 +22,16 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   type TransactionSigner,
+  transformEncoder,
   type WritableAccount,
 } from "@solana/kit";
 import {
@@ -41,12 +41,7 @@ import {
 } from "@solana/program-client-core";
 import { findDepositorPda } from "../pdas";
 import { POOL_PROGRAM_ADDRESS } from "../programs";
-import {
-  getTrackDecoder,
-  getTrackEncoder,
-  type Track,
-  type TrackArgs,
-} from "../types";
+import { getTrackDecoder, getTrackEncoder, type Track, type TrackArgs } from "../types";
 
 export const BURN_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
   116, 110, 29, 56, 107, 219, 42, 93,
@@ -67,19 +62,12 @@ export type BurnInstruction<
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
-      TAccountPool extends string
-        ? WritableAccount<TAccountPool>
-        : TAccountPool,
+      TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
       TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            AccountSignerMeta<TAccountAuthority>
+        ? ReadonlySignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
         : TAccountAuthority,
-      TAccountDepositor extends string
-        ? WritableAccount<TAccountDepositor>
-        : TAccountDepositor,
-      TAccountOwner extends string
-        ? ReadonlyAccount<TAccountOwner>
-        : TAccountOwner,
+      TAccountDepositor extends string ? WritableAccount<TAccountDepositor> : TAccountDepositor,
+      TAccountOwner extends string ? ReadonlyAccount<TAccountOwner> : TAccountOwner,
       ...TRemainingAccounts,
     ]
   >;
@@ -118,10 +106,7 @@ export function getBurnInstructionDataCodec(): FixedSizeCodec<
   BurnInstructionDataArgs,
   BurnInstructionData
 > {
-  return combineCodec(
-    getBurnInstructionDataEncoder(),
-    getBurnInstructionDataDecoder(),
-  );
+  return combineCodec(getBurnInstructionDataEncoder(), getBurnInstructionDataDecoder());
 }
 
 export type BurnAsyncInput<
@@ -154,12 +139,7 @@ export async function getBurnInstructionAsync<
   TAccountOwner extends string,
   TProgramAddress extends Address = typeof POOL_PROGRAM_ADDRESS,
 >(
-  input: BurnAsyncInput<
-    TAccountPool,
-    TAccountAuthority,
-    TAccountDepositor,
-    TAccountOwner
-  >,
+  input: BurnAsyncInput<TAccountPool, TAccountAuthority, TAccountDepositor, TAccountOwner>,
   config?: { programAddress?: TProgramAddress },
 ): Promise<
   BurnInstruction<
@@ -192,14 +172,8 @@ export async function getBurnInstructionAsync<
   if (!accounts.depositor.value) {
     accounts.depositor.value = await findDepositorPda(
       {
-        pool: getAddressFromResolvedInstructionAccount(
-          "pool",
-          accounts.pool.value,
-        ),
-        owner: getAddressFromResolvedInstructionAccount(
-          "owner",
-          accounts.owner.value,
-        ),
+        pool: getAddressFromResolvedInstructionAccount("pool", accounts.pool.value),
+        owner: getAddressFromResolvedInstructionAccount("owner", accounts.owner.value),
       },
       { programAddress },
     );
@@ -213,9 +187,7 @@ export async function getBurnInstructionAsync<
       getAccountMeta("depositor", accounts.depositor),
       getAccountMeta("owner", accounts.owner),
     ],
-    data: getBurnInstructionDataEncoder().encode(
-      args as BurnInstructionDataArgs,
-    ),
+    data: getBurnInstructionDataEncoder().encode(args as BurnInstructionDataArgs),
     programAddress,
   } as BurnInstruction<
     TProgramAddress,
@@ -256,12 +228,7 @@ export function getBurnInstruction<
   TAccountOwner extends string,
   TProgramAddress extends Address = typeof POOL_PROGRAM_ADDRESS,
 >(
-  input: BurnInput<
-    TAccountPool,
-    TAccountAuthority,
-    TAccountDepositor,
-    TAccountOwner
-  >,
+  input: BurnInput<TAccountPool, TAccountAuthority, TAccountDepositor, TAccountOwner>,
   config?: { programAddress?: TProgramAddress },
 ): BurnInstruction<
   TProgramAddress,
@@ -296,9 +263,7 @@ export function getBurnInstruction<
       getAccountMeta("depositor", accounts.depositor),
       getAccountMeta("owner", accounts.owner),
     ],
-    data: getBurnInstructionDataEncoder().encode(
-      args as BurnInstructionDataArgs,
-    ),
+    data: getBurnInstructionDataEncoder().encode(args as BurnInstructionDataArgs),
     programAddress,
   } as BurnInstruction<
     TProgramAddress,
@@ -341,13 +306,10 @@ export function parseBurnInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedBurnInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 4) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 4,
-      },
-    );
+    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+      actualAccountMetas: instruction.accounts.length,
+      expectedAccountMetas: 4,
+    });
   }
   let accountIndex = 0;
   const getNextAccount = () => {

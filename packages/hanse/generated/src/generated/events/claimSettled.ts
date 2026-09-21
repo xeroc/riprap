@@ -7,8 +7,12 @@
  */
 
 import {
+  type Address,
   combineCodec,
   containsBytes,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -21,26 +25,21 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 import {
-  getClaimStatusDecoder,
-  getClaimStatusEncoder,
   type ClaimStatus,
   type ClaimStatusArgs,
+  getClaimStatusDecoder,
+  getClaimStatusEncoder,
 } from "../types";
 
-export const CLAIM_SETTLED_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([144, 220, 131, 115, 8, 187, 224, 236]);
+export const CLAIM_SETTLED_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  144, 220, 131, 115, 8, 187, 224, 236,
+]);
 
 export function getClaimSettledEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    CLAIM_SETTLED_EVENT_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(CLAIM_SETTLED_EVENT_DISCRIMINATOR);
 }
 
 export type ClaimSettledEvent = {
@@ -92,20 +91,13 @@ export function getClaimSettledEventCodec(): FixedSizeCodec<
   ClaimSettledEventArgs,
   ClaimSettledEvent
 > {
-  return combineCodec(
-    getClaimSettledEventEncoder(),
-    getClaimSettledEventDecoder(),
-  );
+  return combineCodec(getClaimSettledEventEncoder(), getClaimSettledEventDecoder());
 }
 
 /** Parses the provided bytes into {@link ClaimSettledEvent} event data. */
-export function parseClaimSettledEvent(
-  data: ReadonlyUint8Array | Uint8Array,
-): ClaimSettledEvent {
+export function parseClaimSettledEvent(data: ReadonlyUint8Array | Uint8Array): ClaimSettledEvent {
   if (containsBytes(data, CLAIM_SETTLED_EVENT_DISCRIMINATOR, 0)) {
     return getClaimSettledEventDecoder().decode(data);
   }
-  throw new Error(
-    'The provided data does not match the "ClaimSettledEvent" event discriminators.',
-  );
+  throw new Error('The provided data does not match the "ClaimSettledEvent" event discriminators.');
 }

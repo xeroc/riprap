@@ -7,7 +7,13 @@
  */
 
 import {
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
   combineCodec,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getAddressEncoder,
@@ -16,22 +22,16 @@ import {
   getProgramDerivedAddress,
   getStructDecoder,
   getStructEncoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   type TransactionSigner,
+  transformEncoder,
   type WritableAccount,
   type WritableSignerAccount,
 } from "@solana/kit";
@@ -48,9 +48,7 @@ export const CLAIM_PAYOUT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
 ]);
 
 export function getClaimPayoutDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    CLAIM_PAYOUT_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(CLAIM_PAYOUT_DISCRIMINATOR);
 }
 
 export type ClaimPayoutInstruction<
@@ -65,41 +63,31 @@ export type ClaimPayoutInstruction<
   TAccountTreasury extends string | AccountMeta<string> = string,
   TAccountDestination extends string | AccountMeta<string> = string,
   TAccountDepositMint extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends string | AccountMeta<string> =
-    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-  TAccountPoolProgram extends string | AccountMeta<string> =
-    "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf",
+  TAccountTokenProgram extends
+    | string
+    | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  TAccountPoolProgram extends
+    | string
+    | AccountMeta<string> = "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
       TAccountClaimant extends string
-        ? WritableSignerAccount<TAccountClaimant> &
-            AccountSignerMeta<TAccountClaimant>
+        ? WritableSignerAccount<TAccountClaimant> & AccountSignerMeta<TAccountClaimant>
         : TAccountClaimant,
       TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            AccountSignerMeta<TAccountAuthority>
+        ? ReadonlySignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
         : TAccountAuthority,
-      TAccountMutual extends string
-        ? ReadonlyAccount<TAccountMutual>
-        : TAccountMutual,
-      TAccountClaim extends string
-        ? WritableAccount<TAccountClaim>
-        : TAccountClaim,
+      TAccountMutual extends string ? ReadonlyAccount<TAccountMutual> : TAccountMutual,
+      TAccountClaim extends string ? WritableAccount<TAccountClaim> : TAccountClaim,
       TAccountRightsAuthority extends string
         ? ReadonlyAccount<TAccountRightsAuthority>
         : TAccountRightsAuthority,
-      TAccountPool extends string
-        ? WritableAccount<TAccountPool>
-        : TAccountPool,
-      TAccountDepositor extends string
-        ? WritableAccount<TAccountDepositor>
-        : TAccountDepositor,
-      TAccountTreasury extends string
-        ? WritableAccount<TAccountTreasury>
-        : TAccountTreasury,
+      TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
+      TAccountDepositor extends string ? WritableAccount<TAccountDepositor> : TAccountDepositor,
+      TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
       TAccountDestination extends string
         ? WritableAccount<TAccountDestination>
         : TAccountDestination,
@@ -128,9 +116,7 @@ export function getClaimPayoutInstructionDataEncoder(): FixedSizeEncoder<ClaimPa
 }
 
 export function getClaimPayoutInstructionDataDecoder(): FixedSizeDecoder<ClaimPayoutInstructionData> {
-  return getStructDecoder([
-    ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
-  ]);
+  return getStructDecoder([["discriminator", fixDecoderSize(getBytesDecoder(), 8)]]);
 }
 
 export function getClaimPayoutInstructionDataCodec(): FixedSizeCodec<
@@ -267,10 +253,7 @@ export async function getClaimPayoutInstructionAsync<
   if (!accounts.rightsAuthority.value) {
     accounts.rightsAuthority.value = await findRightsAuthorityPda(
       {
-        mutual: getAddressFromResolvedInstructionAccount(
-          "mutual",
-          accounts.mutual.value,
-        ),
+        mutual: getAddressFromResolvedInstructionAccount("mutual", accounts.mutual.value),
       },
       { programAddress },
     );
@@ -281,23 +264,16 @@ export async function getClaimPayoutInstructionAsync<
         "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" as Address<"ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL">,
       seeds: [
         getAddressEncoder().encode(
-          getAddressFromResolvedInstructionAccount(
-            "claimant",
-            accounts.claimant.value,
-          ),
+          getAddressFromResolvedInstructionAccount("claimant", accounts.claimant.value),
         ),
         getBytesEncoder().encode(
           new Uint8Array([
-            6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235,
-            121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133,
-            126, 255, 0, 169,
+            6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180,
+            133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169,
           ]),
         ),
         getAddressEncoder().encode(
-          getAddressFromResolvedInstructionAccount(
-            "depositMint",
-            accounts.depositMint.value,
-          ),
+          getAddressFromResolvedInstructionAccount("depositMint", accounts.depositMint.value),
         ),
       ],
     });
@@ -559,13 +535,10 @@ export function parseClaimPayoutInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedClaimPayoutInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 12) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 12,
-      },
-    );
+    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+      actualAccountMetas: instruction.accounts.length,
+      expectedAccountMetas: 12,
+    });
   }
   let accountIndex = 0;
   const getNextAccount = () => {

@@ -7,7 +7,11 @@
  */
 
 import {
+  type Address,
+  type Codec,
   combineCodec,
+  type Decoder,
+  type Encoder,
   fixDecoderSize,
   fixEncoderSize,
   getAddressDecoder,
@@ -22,29 +26,25 @@ import {
   getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
+  getU8Decoder,
+  getU8Encoder,
   getU32Decoder,
   getU32Encoder,
   getU64Decoder,
   getU64Encoder,
-  getU8Decoder,
-  getU8Encoder,
-  type Address,
-  type Codec,
-  type Decoder,
-  type Encoder,
   type Option,
   type OptionOrNullable,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 import {
-  getCaseTermsDecoder,
-  getCaseTermsEncoder,
-  getDisputeStateDecoder,
-  getDisputeStateEncoder,
   type CaseTerms,
   type CaseTermsArgs,
   type DisputeState,
   type DisputeStateArgs,
+  getCaseTermsDecoder,
+  getCaseTermsEncoder,
+  getDisputeStateDecoder,
+  getDisputeStateEncoder,
 } from ".";
 
 /**
@@ -249,14 +249,8 @@ export function getDisputeEncoder(): Encoder<DisputeArgs> {
     ["filer", getAddressEncoder()],
     ["nonce", getU64Encoder()],
     ["numOptions", getU8Encoder()],
-    [
-      "options",
-      getArrayEncoder(fixEncoderSize(getBytesEncoder(), 32), { size: 8 }),
-    ],
-    [
-      "evidenceHashes",
-      getArrayEncoder(fixEncoderSize(getBytesEncoder(), 32), { size: 4 }),
-    ],
+    ["options", getArrayEncoder(fixEncoderSize(getBytesEncoder(), 32), { size: 8 })],
+    ["evidenceHashes", getArrayEncoder(fixEncoderSize(getBytesEncoder(), 32), { size: 4 })],
     ["state", getDisputeStateEncoder()],
     ["currentRound", getU32Encoder()],
     ["terms", getCaseTermsEncoder()],
@@ -279,14 +273,8 @@ export function getDisputeDecoder(): Decoder<Dispute> {
     ["filer", getAddressDecoder()],
     ["nonce", getU64Decoder()],
     ["numOptions", getU8Decoder()],
-    [
-      "options",
-      getArrayDecoder(fixDecoderSize(getBytesDecoder(), 32), { size: 8 }),
-    ],
-    [
-      "evidenceHashes",
-      getArrayDecoder(fixDecoderSize(getBytesDecoder(), 32), { size: 4 }),
-    ],
+    ["options", getArrayDecoder(fixDecoderSize(getBytesDecoder(), 32), { size: 8 })],
+    ["evidenceHashes", getArrayDecoder(fixDecoderSize(getBytesDecoder(), 32), { size: 4 })],
     ["state", getDisputeStateDecoder()],
     ["currentRound", getU32Decoder()],
     ["terms", getCaseTermsDecoder()],

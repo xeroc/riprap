@@ -8,11 +8,11 @@
 
 import {
   combineCodec,
-  getEnumDecoder,
-  getEnumEncoder,
   type FixedSizeCodec,
   type FixedSizeDecoder,
   type FixedSizeEncoder,
+  getEnumDecoder,
+  getEnumEncoder,
 } from "@solana/kit";
 
 /**
@@ -36,9 +36,6 @@ export function getShortfallPolicyDecoder(): FixedSizeDecoder<ShortfallPolicy> {
   return getEnumDecoder(ShortfallPolicy);
 }
 
-export function getShortfallPolicyCodec(): FixedSizeCodec<
-  ShortfallPolicyArgs,
-  ShortfallPolicy
-> {
+export function getShortfallPolicyCodec(): FixedSizeCodec<ShortfallPolicyArgs, ShortfallPolicy> {
   return combineCodec(getShortfallPolicyEncoder(), getShortfallPolicyDecoder());
 }

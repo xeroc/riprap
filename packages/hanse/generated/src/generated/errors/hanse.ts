@@ -7,8 +7,8 @@
  */
 
 import {
-  isProgramError,
   type Address,
+  isProgramError,
   type SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM,
   type SolanaError,
 } from "@solana/kit";
@@ -171,10 +171,5 @@ export function isHanseError<TProgramErrorCode extends HanseError>(
   code?: TProgramErrorCode,
 ): error is SolanaError<typeof SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM> &
   Readonly<{ context: Readonly<{ code: TProgramErrorCode }> }> {
-  return isProgramError<TProgramErrorCode>(
-    error,
-    transactionMessage,
-    HANSE_PROGRAM_ADDRESS,
-    code,
-  );
+  return isProgramError<TProgramErrorCode>(error, transactionMessage, HANSE_PROGRAM_ADDRESS, code);
 }

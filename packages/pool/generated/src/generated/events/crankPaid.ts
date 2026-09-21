@@ -7,8 +7,12 @@
  */
 
 import {
+  type Address,
   combineCodec,
   containsBytes,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -21,20 +25,15 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 
-export const CRANK_PAID_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([30, 73, 76, 251, 232, 155, 234, 50]);
+export const CRANK_PAID_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  30, 73, 76, 251, 232, 155, 234, 50,
+]);
 
 export function getCrankPaidEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    CRANK_PAID_EVENT_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(CRANK_PAID_EVENT_DISCRIMINATOR);
 }
 
 export type CrankPaidEvent = {
@@ -78,21 +77,14 @@ export function getCrankPaidEventDecoder(): FixedSizeDecoder<CrankPaidEvent> {
 }
 
 /** Gets the codec for {@link CrankPaidEvent} event data. */
-export function getCrankPaidEventCodec(): FixedSizeCodec<
-  CrankPaidEventArgs,
-  CrankPaidEvent
-> {
+export function getCrankPaidEventCodec(): FixedSizeCodec<CrankPaidEventArgs, CrankPaidEvent> {
   return combineCodec(getCrankPaidEventEncoder(), getCrankPaidEventDecoder());
 }
 
 /** Parses the provided bytes into {@link CrankPaidEvent} event data. */
-export function parseCrankPaidEvent(
-  data: ReadonlyUint8Array | Uint8Array,
-): CrankPaidEvent {
+export function parseCrankPaidEvent(data: ReadonlyUint8Array | Uint8Array): CrankPaidEvent {
   if (containsBytes(data, CRANK_PAID_EVENT_DISCRIMINATOR, 0)) {
     return getCrankPaidEventDecoder().decode(data);
   }
-  throw new Error(
-    'The provided data does not match the "CrankPaidEvent" event discriminators.',
-  );
+  throw new Error('The provided data does not match the "CrankPaidEvent" event discriminators.');
 }

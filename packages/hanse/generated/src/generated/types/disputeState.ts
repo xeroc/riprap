@@ -8,11 +8,11 @@
 
 import {
   combineCodec,
-  getEnumDecoder,
-  getEnumEncoder,
   type FixedSizeCodec,
   type FixedSizeDecoder,
   type FixedSizeEncoder,
+  getEnumDecoder,
+  getEnumEncoder,
 } from "@solana/kit";
 
 /**
@@ -47,9 +47,6 @@ export function getDisputeStateDecoder(): FixedSizeDecoder<DisputeState> {
   return getEnumDecoder(DisputeState);
 }
 
-export function getDisputeStateCodec(): FixedSizeCodec<
-  DisputeStateArgs,
-  DisputeState
-> {
+export function getDisputeStateCodec(): FixedSizeCodec<DisputeStateArgs, DisputeState> {
   return combineCodec(getDisputeStateEncoder(), getDisputeStateDecoder());
 }

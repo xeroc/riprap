@@ -7,8 +7,12 @@
  */
 
 import {
+  type Address,
   combineCodec,
   containsBytes,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
@@ -19,26 +23,16 @@ import {
   getHiddenPrefixEncoder,
   getStructDecoder,
   getStructEncoder,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type ReadonlyUint8Array,
 } from "@solana/kit";
-import {
-  getTrackDecoder,
-  getTrackEncoder,
-  type Track,
-  type TrackArgs,
-} from "../types";
+import { getTrackDecoder, getTrackEncoder, type Track, type TrackArgs } from "../types";
 
-export const AUTHORITY_UPDATED_EVENT_DISCRIMINATOR: ReadonlyUint8Array =
-  new Uint8Array([133, 207, 24, 122, 14, 234, 91, 34]);
+export const AUTHORITY_UPDATED_EVENT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  133, 207, 24, 122, 14, 234, 91, 34,
+]);
 
 export function getAuthorityUpdatedEventDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    AUTHORITY_UPDATED_EVENT_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(AUTHORITY_UPDATED_EVENT_DISCRIMINATOR);
 }
 
 export type AuthorityUpdatedEvent = {
@@ -82,10 +76,7 @@ export function getAuthorityUpdatedEventCodec(): FixedSizeCodec<
   AuthorityUpdatedEventArgs,
   AuthorityUpdatedEvent
 > {
-  return combineCodec(
-    getAuthorityUpdatedEventEncoder(),
-    getAuthorityUpdatedEventDecoder(),
-  );
+  return combineCodec(getAuthorityUpdatedEventEncoder(), getAuthorityUpdatedEventDecoder());
 }
 
 /** Parses the provided bytes into {@link AuthorityUpdatedEvent} event data. */

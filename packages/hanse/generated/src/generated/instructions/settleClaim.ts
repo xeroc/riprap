@@ -7,7 +7,13 @@
  */
 
 import {
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
   combineCodec,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getAddressEncoder,
@@ -16,22 +22,16 @@ import {
   getProgramDerivedAddress,
   getStructDecoder,
   getStructEncoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   type TransactionSigner,
+  transformEncoder,
   type WritableAccount,
 } from "@solana/kit";
 import {
@@ -46,9 +46,7 @@ export const SETTLE_CLAIM_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
 ]);
 
 export function getSettleClaimDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    SETTLE_CLAIM_DISCRIMINATOR,
-  );
+  return fixEncoderSize(getBytesEncoder(), 8).encode(SETTLE_CLAIM_DISCRIMINATOR);
 }
 
 export type SettleClaimInstruction<
@@ -61,38 +59,28 @@ export type SettleClaimInstruction<
   TAccountFeeFloat extends string | AccountMeta<string> = string,
   TAccountClaimantAta extends string | AccountMeta<string> = string,
   TAccountFeeMint extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends string | AccountMeta<string> =
-    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  TAccountTokenProgram extends
+    | string
+    | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
       TAccountCranker extends string
-        ? ReadonlySignerAccount<TAccountCranker> &
-            AccountSignerMeta<TAccountCranker>
+        ? ReadonlySignerAccount<TAccountCranker> & AccountSignerMeta<TAccountCranker>
         : TAccountCranker,
-      TAccountMutual extends string
-        ? WritableAccount<TAccountMutual>
-        : TAccountMutual,
-      TAccountClaim extends string
-        ? WritableAccount<TAccountClaim>
-        : TAccountClaim,
+      TAccountMutual extends string ? WritableAccount<TAccountMutual> : TAccountMutual,
+      TAccountClaim extends string ? WritableAccount<TAccountClaim> : TAccountClaim,
       TAccountMemberAccount extends string
         ? WritableAccount<TAccountMemberAccount>
         : TAccountMemberAccount,
-      TAccountDispute extends string
-        ? ReadonlyAccount<TAccountDispute>
-        : TAccountDispute,
-      TAccountFeeFloat extends string
-        ? WritableAccount<TAccountFeeFloat>
-        : TAccountFeeFloat,
+      TAccountDispute extends string ? ReadonlyAccount<TAccountDispute> : TAccountDispute,
+      TAccountFeeFloat extends string ? WritableAccount<TAccountFeeFloat> : TAccountFeeFloat,
       TAccountClaimantAta extends string
         ? WritableAccount<TAccountClaimantAta>
         : TAccountClaimantAta,
-      TAccountFeeMint extends string
-        ? ReadonlyAccount<TAccountFeeMint>
-        : TAccountFeeMint,
+      TAccountFeeMint extends string ? ReadonlyAccount<TAccountFeeMint> : TAccountFeeMint,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
@@ -112,9 +100,7 @@ export function getSettleClaimInstructionDataEncoder(): FixedSizeEncoder<SettleC
 }
 
 export function getSettleClaimInstructionDataDecoder(): FixedSizeDecoder<SettleClaimInstructionData> {
-  return getStructDecoder([
-    ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
-  ]);
+  return getStructDecoder([["discriminator", fixDecoderSize(getBytesDecoder(), 8)]]);
 }
 
 export function getSettleClaimInstructionDataCodec(): FixedSizeCodec<
@@ -225,23 +211,16 @@ export async function getSettleClaimInstructionAsync<
         "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" as Address<"ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL">,
       seeds: [
         getAddressEncoder().encode(
-          getAddressFromResolvedInstructionAccount(
-            "mutual",
-            accounts.mutual.value,
-          ),
+          getAddressFromResolvedInstructionAccount("mutual", accounts.mutual.value),
         ),
         getBytesEncoder().encode(
           new Uint8Array([
-            6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235,
-            121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140, 245, 133,
-            126, 255, 0, 169,
+            6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180,
+            133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169,
           ]),
         ),
         getAddressEncoder().encode(
-          getAddressFromResolvedInstructionAccount(
-            "feeMint",
-            accounts.feeMint.value,
-          ),
+          getAddressFromResolvedInstructionAccount("feeMint", accounts.feeMint.value),
         ),
       ],
     });
@@ -443,13 +422,10 @@ export function parseSettleClaimInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedSettleClaimInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 9) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 9,
-      },
-    );
+    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+      actualAccountMetas: instruction.accounts.length,
+      expectedAccountMetas: 9,
+    });
   }
   let accountIndex = 0;
   const getNextAccount = () => {

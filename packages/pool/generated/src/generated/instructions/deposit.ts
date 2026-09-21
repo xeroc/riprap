@@ -7,7 +7,13 @@
  */
 
 import {
+  type AccountMeta,
+  type AccountSignerMeta,
+  type Address,
   combineCodec,
+  type FixedSizeCodec,
+  type FixedSizeDecoder,
+  type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
   getBytesDecoder,
@@ -16,22 +22,16 @@ import {
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
-  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-  SolanaError,
-  transformEncoder,
-  type AccountMeta,
-  type AccountSignerMeta,
-  type Address,
-  type FixedSizeCodec,
-  type FixedSizeDecoder,
-  type FixedSizeEncoder,
   type Instruction,
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   type TransactionSigner,
+  transformEncoder,
   type WritableAccount,
   type WritableSignerAccount,
 } from "@solana/kit";
@@ -42,12 +42,7 @@ import {
 } from "@solana/program-client-core";
 import { findDepositorPda } from "../pdas";
 import { POOL_PROGRAM_ADDRESS } from "../programs";
-import {
-  getTrackDecoder,
-  getTrackEncoder,
-  type Track,
-  type TrackArgs,
-} from "../types";
+import { getTrackDecoder, getTrackEncoder, type Track, type TrackArgs } from "../types";
 
 export const DEPOSIT_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
   242, 35, 198, 137, 82, 225, 242, 182,
@@ -66,39 +61,28 @@ export type DepositInstruction<
   TAccountRentPayer extends string | AccountMeta<string> = string,
   TAccountOwnerAta extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends string | AccountMeta<string> =
-    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-  TAccountSystemProgram extends string | AccountMeta<string> =
-    "11111111111111111111111111111111",
+  TAccountTokenProgram extends
+    | string
+    | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  TAccountSystemProgram extends string | AccountMeta<string> = "11111111111111111111111111111111",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
-      TAccountPool extends string
-        ? WritableAccount<TAccountPool>
-        : TAccountPool,
-      TAccountDepositor extends string
-        ? WritableAccount<TAccountDepositor>
-        : TAccountDepositor,
+      TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
+      TAccountDepositor extends string ? WritableAccount<TAccountDepositor> : TAccountDepositor,
       TAccountOwner extends string
-        ? ReadonlySignerAccount<TAccountOwner> &
-            AccountSignerMeta<TAccountOwner>
+        ? ReadonlySignerAccount<TAccountOwner> & AccountSignerMeta<TAccountOwner>
         : TAccountOwner,
       TAccountFunder extends string
-        ? ReadonlySignerAccount<TAccountFunder> &
-            AccountSignerMeta<TAccountFunder>
+        ? ReadonlySignerAccount<TAccountFunder> & AccountSignerMeta<TAccountFunder>
         : TAccountFunder,
       TAccountRentPayer extends string
-        ? WritableSignerAccount<TAccountRentPayer> &
-            AccountSignerMeta<TAccountRentPayer>
+        ? WritableSignerAccount<TAccountRentPayer> & AccountSignerMeta<TAccountRentPayer>
         : TAccountRentPayer,
-      TAccountOwnerAta extends string
-        ? WritableAccount<TAccountOwnerAta>
-        : TAccountOwnerAta,
-      TAccountTreasury extends string
-        ? WritableAccount<TAccountTreasury>
-        : TAccountTreasury,
+      TAccountOwnerAta extends string ? WritableAccount<TAccountOwnerAta> : TAccountOwnerAta,
+      TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
@@ -143,10 +127,7 @@ export function getDepositInstructionDataCodec(): FixedSizeCodec<
   DepositInstructionDataArgs,
   DepositInstructionData
 > {
-  return combineCodec(
-    getDepositInstructionDataEncoder(),
-    getDepositInstructionDataDecoder(),
-  );
+  return combineCodec(getDepositInstructionDataEncoder(), getDepositInstructionDataDecoder());
 }
 
 export type DepositAsyncInput<
@@ -258,14 +239,8 @@ export async function getDepositInstructionAsync<
   if (!accounts.depositor.value) {
     accounts.depositor.value = await findDepositorPda(
       {
-        pool: getAddressFromResolvedInstructionAccount(
-          "pool",
-          accounts.pool.value,
-        ),
-        owner: getAddressFromResolvedInstructionAccount(
-          "owner",
-          accounts.owner.value,
-        ),
+        pool: getAddressFromResolvedInstructionAccount("pool", accounts.pool.value),
+        owner: getAddressFromResolvedInstructionAccount("owner", accounts.owner.value),
       },
       { programAddress },
     );
@@ -292,9 +267,7 @@ export async function getDepositInstructionAsync<
       getAccountMeta("tokenProgram", accounts.tokenProgram),
       getAccountMeta("systemProgram", accounts.systemProgram),
     ],
-    data: getDepositInstructionDataEncoder().encode(
-      args as DepositInstructionDataArgs,
-    ),
+    data: getDepositInstructionDataEncoder().encode(args as DepositInstructionDataArgs),
     programAddress,
   } as DepositInstruction<
     TProgramAddress,
@@ -436,9 +409,7 @@ export function getDepositInstruction<
       getAccountMeta("tokenProgram", accounts.tokenProgram),
       getAccountMeta("systemProgram", accounts.systemProgram),
     ],
-    data: getDepositInstructionDataEncoder().encode(
-      args as DepositInstructionDataArgs,
-    ),
+    data: getDepositInstructionDataEncoder().encode(args as DepositInstructionDataArgs),
     programAddress,
   } as DepositInstruction<
     TProgramAddress,
@@ -502,13 +473,10 @@ export function parseDepositInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedDepositInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 9) {
-    throw new SolanaError(
-      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
-      {
-        actualAccountMetas: instruction.accounts.length,
-        expectedAccountMetas: 9,
-      },
-    );
+    throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
+      actualAccountMetas: instruction.accounts.length,
+      expectedAccountMetas: 9,
+    });
   }
   let accountIndex = 0;
   const getNextAccount = () => {
@@ -518,9 +486,7 @@ export function parseDepositInstruction<
   };
   const getNextOptionalAccount = () => {
     const accountMeta = getNextAccount();
-    return accountMeta.address === POOL_PROGRAM_ADDRESS
-      ? undefined
-      : accountMeta;
+    return accountMeta.address === POOL_PROGRAM_ADDRESS ? undefined : accountMeta;
   };
   return {
     programAddress: instruction.programAddress,

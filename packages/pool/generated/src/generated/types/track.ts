@@ -8,11 +8,11 @@
 
 import {
   combineCodec,
-  getEnumDecoder,
-  getEnumEncoder,
   type FixedSizeCodec,
   type FixedSizeDecoder,
   type FixedSizeEncoder,
+  getEnumDecoder,
+  getEnumEncoder,
 } from "@solana/kit";
 
 /**

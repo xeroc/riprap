@@ -7,10 +7,10 @@
  */
 
 import {
+  type Address,
   getAddressEncoder,
   getBytesEncoder,
   getProgramDerivedAddress,
-  type Address,
   type ProgramDerivedAddress,
 } from "@solana/kit";
 
