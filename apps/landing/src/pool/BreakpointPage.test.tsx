@@ -228,6 +228,18 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
       (td) => td.textContent,
     );
     expect(nums).toEqual(["$10", "up to $1,000", "$20", "up to $2,000", "$40", "up to $4,000"]);
+    // §7: the subaccord stamp — the fineprint's one link, bound to mutual.subaccord
+    // (copy doc § on-chain states: full address in href + title, head…tail display)
+    const stampLinks = [
+      ...container.querySelectorAll<HTMLAnchorElement>('[data-slot="policy-section"] a'),
+    ];
+    expect(stampLinks.length).toBe(1);
+    expect(stampLinks[0].getAttribute("href")).toBe(
+      `https://app.useaccord.xyz/#/subaccords/${"1".repeat(32)}`,
+    );
+    expect(stampLinks[0].getAttribute("title")).toBe("1".repeat(32));
+    expect(stampLinks[0].textContent).toContain("1111…1111");
+    expect(container.textContent).toContain("ADJUDICATION · SUBACCORD");
     // §7/§12: discretion and liability stated plainly — counsel recs 2 and 3
     expect(container.textContent).toContain("enforceable right to any payment");
     expect(container.textContent).toContain("no limited liability");
@@ -411,6 +423,9 @@ describe("loading — {{PARAM}} placeholders, no static numbers (copy doc § on-
     expect(cta.hasAttribute("disabled")).toBe(true);
     // §5 table carries placeholders too — no fallback prices anywhere
     expect(container.textContent).toContain("up to {{PARAM}}");
+    // §7: no subaccord until the chain answers — {{PARAM}}, never a link
+    expect(container.textContent).toContain("ADJUDICATION · SUBACCORD {{PARAM}}");
+    expect(container.querySelector('[data-slot="policy-section"] a')).toBeNull();
   });
 });
 

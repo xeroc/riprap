@@ -6,7 +6,8 @@
 // modal": {{PARAM}} mono placeholders whenever the chain hasn't answered —
 // never static fallback numbers); §6/§7/§10 keep their policy-doc example
 // numbers (their source is the policy document, not the chain).
-import { Card, SectionBand, usd } from "@riprap/ui";
+import { Card, SectionBand, shortenAddress, TextLink, usd } from "@riprap/ui";
+import type { Address } from "@solana/kit";
 import type { ReactNode } from "react";
 
 import { type PoolTier, poolTiers, TIER_NAMES } from "../mutual";
@@ -31,7 +32,7 @@ function fineRows(tiers: PoolTier[] | null): FineTier[] {
 }
 
 // Sources: meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md §1–§13.
-function buildSections(tiers: PoolTier[] | null): PolicySection[] {
+function buildSections(tiers: PoolTier[] | null, subaccord: Address | null): PolicySection[] {
   return [
     {
       n: "01",
@@ -193,6 +194,22 @@ function buildSections(tiers: PoolTier[] | null): PolicySection[] {
           <p data-num className="font-mono text-xs text-stone">
             EXAMPLE: $20,000 POOL · $12,000 APPROVED REQUESTS · $8,000 RETURNED
           </p>
+          {/* copy doc § on-chain states: {{subaccord}} ← mutual.subaccord, useaccord app link */}
+          <p data-num className="font-mono text-xs text-stone">
+            ADJUDICATION · SUBACCORD{" "}
+            {subaccord === null ? (
+              PARAM
+            ) : (
+              <TextLink
+                href={`https://app.useaccord.xyz/#/subaccords/${subaccord}`}
+                title={subaccord}
+                external
+                className="font-mono text-xs"
+              >
+                {shortenAddress(subaccord)}
+              </TextLink>
+            )}
+          </p>
         </div>
       ),
     },
@@ -316,7 +333,7 @@ function buildSections(tiers: PoolTier[] | null): PolicySection[] {
 export function PolicyFineprint() {
   const mutualQuery = useMutual();
   const tiers = mutualQuery.state === "ready" ? poolTiers(mutualQuery.mutual) : null;
-
+  const subaccord = mutualQuery.state === "ready" ? mutualQuery.mutual.subaccord : null;
   return (
     <SectionBand id="policy" label="the policy" tone="soft">
       <div className="flex flex-col gap-(--riprap-space-lg)">
@@ -327,7 +344,7 @@ export function PolicyFineprint() {
           The comedy stops here. The policy is real.
         </p>
         <div className="grid gap-4 md:grid-cols-2" data-slot="policy-sections">
-          {buildSections(tiers).map((s) => (
+          {buildSections(tiers, subaccord).map((s) => (
             <Card key={s.n} data-slot="policy-section" className="gap-3 p-6">
               <p className="flex items-baseline gap-3 text-muted-soft [font:var(--riprap-mono-label)]">
                 <span data-num>§ {s.n}</span>
