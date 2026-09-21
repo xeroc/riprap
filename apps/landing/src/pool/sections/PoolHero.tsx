@@ -202,7 +202,20 @@ export function PoolHero() {
         <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)">
           <Settle>
             <div className="flex flex-wrap items-center gap-3">
-              <StampBadge pool="Blade Pool" event="Breakpoint" />
+              {/* prominence pulse — two accent hairline rings emanate from the stamp's
+                  border box (2.8s, staggered); pure opacity/scale overlay, and the
+                  stamp itself never moves. Reduced motion: rings never show. */}
+              <span className="relative inline-flex" data-slot="stamp-pulse">
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 rounded-none border border-(--riprap-accent) opacity-0 motion-safe:animate-[stamp-pulse_2800ms_cubic-bezier(0,0,0.2,1)_infinite]"
+                />
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 rounded-none border border-(--riprap-accent) opacity-0 motion-safe:animate-[stamp-pulse_2800ms_cubic-bezier(0,0,0.2,1)_infinite_1400ms]"
+                />
+                <StampBadge pool="Blade Pool" event="Breakpoint" />
+              </span>
               <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
                 Olympia Convention Centre, London · 15-17 November 2026
               </p>
@@ -264,9 +277,8 @@ export function PoolHero() {
               <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
                 Choose your coverage
               </p>
-              {mutualQuery.state === "ready" && tier !== null ? (
-                null
-              ) : mutualQuery.state === "loading" ? (
+              {mutualQuery.state === "ready" && tier !== null ? null : mutualQuery.state ===
+                "loading" ? (
                 <>
                   <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
                     Reading the pool from the chain.

@@ -72,3 +72,21 @@ samp {
     transition: opacity 200ms ease;
   }
 }
+
+/* stamp-pulse — the hero stamp's prominence rings: an accent hairline ring
+   emanates from the badge's border box (visible at 0%, expanded + gone by
+   75%). Keyframes set opacity at every stage (unlike Tailwind's `ping`,
+   which leaves 0–75% on base styles — a base of opacity-0 would render the
+   ring invisible for the whole cycle). Applied via motion-safe only: under
+   prefers-reduced-motion the ring keeps its base opacity-0 and never shows. */
+@keyframes stamp-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}

@@ -1,14 +1,18 @@
 // /2026-breakpoint-blade-pool — the anchored cover terms: the exact bytes the
 // mutual's policy_hash pins, fetched from the Accord evidence daemon's public
-// domain CAS and rendered verbatim (no markdown interpretation — what's
-// anchored is what's shown). 404 is a state with a remedy: the operator
+// domain CAS. Immutable by construction — different terms would be a
+// different hash — and presented as a document: copy-chips for the anchors
+// (kit AddressChip), a hairline-framed panel with the byte count and a
+// one-click copy of the full text, the bytes themselves verbatim and
+// scrollable (never dominant). 404 is a state with a remedy: the operator
 // uploads the cover-terms file through the daemon's proof-mode PUT
 // (HANSE_DOMAIN_SPEC_UPLOAD §2) — the client hashes the file, refuses any
 // bytes that don't match the on-chain policy_hash, derives the preimage, and
 // PUTs. Copy: landing-page.md § "Anchored terms band" (2026-09-21).
 
 import type { Mutual } from "@riprap/hanse";
-import { Button, Card, SectionBand } from "@riprap/ui";
+import { AddressChip, Button, Card, SectionBand } from "@riprap/ui";
+import { CheckIcon, CopyIcon } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 import { domainRefHex, hansePreimage, sha256Hex, toHex } from "../domainRef";
 import { useMutual } from "../useMutual";
@@ -20,8 +24,9 @@ const PARAM = "{{PARAM}}";
 /** PUT failure → one deadpan line (copy doc). */
 function putFailureLine(status: number): string {
   if (status === 404) return "The evidence server can't see the mutual yet. Try again in a moment.";
-  if (status === 400)
+  if (status === 400) {
     return "The evidence server rejected the proof — these bytes don't match the on-chain anchor.";
+  }
   if (status === 409) return "Different bytes are already stored at this anchor.";
   return "The upload didn't go through. Try again.";
 }
@@ -51,10 +56,45 @@ async function uploadTerms(
   return { ok: false, line: putFailureLine(response.status) };
 }
 
+/** `copy` ⇄ `copied` — the AddressChip settle-safe word swap, applied to the whole document. */
+function useCopyText(): { copied: boolean; copy: (text: string) => void } {
+  const [copied, setCopied] = useState(false);
+  return {
+    copied,
+    copy: (text: string) => {
+      navigator.clipboard
+        ?.writeText(text)
+        .then(() => {
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 2000);
+        })
+        .catch((error: unknown) => console.error("terms copy failed", error));
+    },
+  };
+}
+
+/** One anchor: mono label + a copy-chip carrying the full value. */
+function AnchorChip({ label, value }: { label: string; value: string }) {
+  return (
+    <span
+      data-num
+      className="inline-flex items-center gap-2 text-muted-soft [font:var(--riprap-mono-label)]"
+    >
+      {label}
+      <AddressChip
+        address={value}
+        aria-label={`copy ${label.toLowerCase()}`}
+        className="min-h-8 px-2"
+      />
+    </span>
+  );
+}
+
 export function AnchoredTerms() {
   const mutualQuery = useMutual();
   const mutual = mutualQuery.state === "ready" ? mutualQuery.mutual : null;
   const doc = usePolicyDoc(mutual);
+  const { copied, copy } = useCopyText();
 
   const fileInput = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -84,11 +124,12 @@ export function AnchoredTerms() {
     <SectionBand id="terms" label="the anchored terms" tone="soft">
       <div className="flex flex-col gap-(--riprap-space-lg)">
         <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
-          The terms as anchored on-chain.
+          The immutable terms of this mutual.
         </h2>
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The exact bytes the mutual's policy hash pins, served by the Accord evidence server.
-          Rendered verbatim.
+        <p className="max-w-[42rem] text-muted-foreground [font:var(--riprap-body-sm)]">
+          Fixed when the pool was created: the on-chain policy hash pins these exact bytes, so they
+          can never change — different terms would be a different hash. Served by the Accord
+          evidence server.
         </p>
         <Card data-slot="terms-card" className="gap-3 p-6">
           {doc.state === "idle" && (
@@ -145,13 +186,37 @@ export function AnchoredTerms() {
             </div>
           )}
           {doc.state === "ready" && mutual !== null && (
-            <div className="flex flex-col gap-4">
-              <p data-num className="font-mono text-xs text-stone">
-                POLICY HASH {toHex(mutual.policyHash)} · DOMAIN REF {doc.ref}
-              </p>
-              <pre className="overflow-x-auto whitespace-pre-wrap text-ink [font:var(--riprap-body-sm)]">
-                {doc.text}
-              </pre>
+            <div className="flex flex-col gap-4" data-slot="terms-ready">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <AnchorChip label="POLICY HASH" value={toHex(mutual.policyHash)} />
+                <AnchorChip label="DOMAIN REF" value={doc.ref} />
+              </div>
+              <div
+                data-slot="terms-document"
+                className="overflow-hidden rounded-sm border border-hairline"
+              >
+                <div className="flex items-center justify-between gap-3 border-b border-hairline px-3 py-2">
+                  <p data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
+                    COVER TERMS · {new TextEncoder().encode(doc.text).length} BYTES · VERBATIM
+                  </p>
+                  <Button
+                    variant="ghost"
+                    className="size-7 p-0"
+                    aria-label="copy the cover terms"
+                    title={copied ? "copied" : "copy"}
+                    onClick={() => copy(doc.text)}
+                  >
+                    {copied ? (
+                      <CheckIcon aria-hidden="true" className="size-3.5" />
+                    ) : (
+                      <CopyIcon aria-hidden="true" className="size-3.5" />
+                    )}
+                  </Button>
+                </div>
+                <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap p-3 font-mono text-xs leading-relaxed text-ink">
+                  {doc.text}
+                </pre>
+              </div>
             </div>
           )}
         </Card>

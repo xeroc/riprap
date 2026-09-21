@@ -4,10 +4,9 @@
 // mocked to the worked vector (seed 1, policy_hash d5756c2e… → domain_ref
 // f76adcdd…), so URL assertions double as derivation assertions. fetch is
 // stubbed — no network in jsdom.
-
 import type { Mutual } from "@riprap/hanse";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMutual } from "../fixtures";
 import { type MutualQuery, useMutual } from "../useMutual";
@@ -22,8 +21,9 @@ const DOMAIN_REF = "f76adcdd011256053753e5f5c9a4f73bca8645fdb8b566ef8c3a431085ec
 const PREIMAGE =
   "68616e73653a7375626163636f72640100000000000000" +
   "d5756c2e6ec42a9a557da82b0ac7000a7c0e613f997fb822407c7a43801172b4";
+const DOC_TEXT = "# Hanse Cover Terms\n\nPilot v1 mutual cover terms.\n";
+const DOC = new TextEncoder().encode(DOC_TEXT);
 
-const DOC = new TextEncoder().encode("# Hanse Cover Terms\n\nPilot v1 mutual cover terms.\n");
 const READY: MutualQuery = (() => {
   const policyHash = new Uint8Array(32);
   for (let i = 0; i < 32; i++)
@@ -36,6 +36,7 @@ const READY: MutualQuery = (() => {
 })();
 
 const fetchStub = vi.fn();
+const writeText = vi.fn().mockResolvedValue(undefined);
 
 function response(status: number, body?: string): Response {
   return new Response(body ?? null, { status });
@@ -61,6 +62,7 @@ function pickFile(file: File) {
 beforeEach(() => {
   mutualMock.mockReturnValue(READY);
   vi.stubGlobal("fetch", fetchStub);
+  Object.assign(navigator, { clipboard: { writeText } });
 });
 
 afterEach(() => {
@@ -68,20 +70,34 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   fetchStub.mockReset();
-  mutualMock.mockReset();
+  writeText.mockClear();
 });
 
 describe("anchored terms — GET by derived domain_ref (HANSE §4 vector)", () => {
-  it("serves the doc: stamp carries policy hash + domain ref, body verbatim", async () => {
-    fetchStub.mockResolvedValueOnce(
-      response(200, "# Hanse Cover Terms\n\nPilot v1 mutual cover terms.\n"),
-    );
+  it("serves the doc: immutable framing, anchor chips, framed verbatim document", async () => {
+    fetchStub.mockResolvedValueOnce(response(200, DOC_TEXT));
+    renderBand();
+    const document = await screen.findByText(/Pilot v1 mutual cover terms/);
+    expect(
+      screen.getByRole("heading", { level: 2, name: "The immutable terms of this mutual." }),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("copy policy hash").textContent).toContain("d575…72b4");
+    expect(screen.getByLabelText("copy domain ref").textContent).toContain("f76a…686e");
+    // framed document: byte count + verbatim body
+    expect(screen.getByText(/COVER TERMS · 50 BYTES · VERBATIM/)).toBeTruthy();
+    expect(document.closest('[data-slot="terms-document"]')).toBeTruthy();
+    expect(fetchStub).toHaveBeenCalledWith(`${BASE}/domains/${DOMAIN_REF}`);
+  });
+
+  it("copy icon writes the full document to the clipboard, swaps to a check", async () => {
+    fetchStub.mockResolvedValueOnce(response(200, DOC_TEXT));
     renderBand();
     await screen.findByText(/Pilot v1 mutual cover terms/);
-    expect(screen.getByText(/POLICY HASH d5756c2e/).textContent).toContain(
-      `DOMAIN REF ${DOMAIN_REF}`,
-    );
-    expect(fetchStub).toHaveBeenCalledWith(`${BASE}/domains/${DOMAIN_REF}`);
+    const copyButton = screen.getByRole("button", { name: "copy the cover terms" });
+    expect(copyButton.querySelector(".lucide-copy")).toBeTruthy(); // icon, not the word
+    fireEvent.click(copyButton);
+    await waitFor(() => expect(copyButton.querySelector(".lucide-check")).toBeTruthy());
+    expect(writeText).toHaveBeenCalledWith(DOC_TEXT);
   });
 
   it("404 renders the upload remedy (copy doc § anchored terms band)", async () => {
@@ -105,9 +121,7 @@ describe("anchored terms — proof-mode PUT (HANSE §2)", () => {
   it("matching file PUTs to the derived ref with preimage + offset=23, then refetches", async () => {
     fetchStub.mockResolvedValueOnce(response(404)); // initial GET
     fetchStub.mockResolvedValueOnce(response(201)); // PUT
-    fetchStub.mockResolvedValueOnce(
-      response(200, "# Hanse Cover Terms\n\nPilot v1 mutual cover terms.\n"),
-    ); // refetch
+    fetchStub.mockResolvedValueOnce(response(200, DOC_TEXT)); // refetch
     renderBand();
     await screen.findByText("Not published yet.");
     pickFile(new File([DOC], "terms.md", { type: "text/markdown" }));
