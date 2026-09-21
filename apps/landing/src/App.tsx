@@ -4,6 +4,7 @@
 
 import { SiteNav } from "./components/SiteNav";
 import { Audience } from "./sections/Audience";
+import { Faq } from "./sections/Faq";
 import { FinalCta } from "./sections/FinalCta";
 import { Footer } from "./sections/Footer";
 import { Heritage } from "./sections/Heritage";
@@ -19,6 +20,7 @@ export function App() {
         <Mechanism />
         <Heritage />
         <Audience />
+        <Faq />
         <FinalCta />
       </main>
       <Footer />

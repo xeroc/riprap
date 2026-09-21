@@ -61,6 +61,29 @@ describe("landing", () => {
     expect(container.textContent).not.toMatch(/knife assault/i);
   });
 
+  it("answers the ten platform questions in order — FAQ discloses natively", () => {
+    const { container } = render(<App />);
+    const faq = container.querySelector("section#faq");
+    expect(faq).not.toBeNull();
+    const questions = [...(faq?.querySelectorAll("summary h3") ?? [])].map((h) => h.textContent);
+    expect(questions).toEqual([
+      "Is this insurance?",
+      "Who holds the money, and can the Riprap team move it?",
+      "What's the most I can lose?",
+      "What if the pool can't pay every approved claim?",
+      "What happens to the money if nothing happens?",
+      "Who decides whether a claim is paid?",
+      "What keeps the jurors honest?",
+      "What kinds of risk can a pool cover?",
+      "What does Riprap charge?",
+      "Is this legal?",
+    ]);
+    // answers live in the DOM without JS (native details — copy doc §5.5)
+    expect(faq?.querySelectorAll("details").length).toBe(10);
+    // platform law: the page carries no numbers — FAQ included (§page laws)
+    expect(faq?.textContent).not.toMatch(/[\d$]/);
+  });
+
   it("hero: the ring assembles — 7 stones, one slot open, one harbor-blue newest member", () => {
     const { container } = render(<App />);
     const hero = container.querySelector("section#top");
