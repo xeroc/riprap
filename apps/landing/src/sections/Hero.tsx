@@ -44,14 +44,21 @@ export function Hero() {
               <Waitlist />
             </Settle>
             <Settle delay={240}>
-              <div className="flex flex-wrap items-center gap-3 pt-(--riprap-space-sm)">
-                <a
-                  href="#/2026-breakpoint-blade-pool"
-                  aria-label="Blade Pool at Breakpoint 2026 — policy and participation"
-                  className="outline-none transition-opacity duration-[160ms] ease-out hover:opacity-80 focus-visible:ring-3 focus-visible:ring-ring"
-                >
-                  <StampBadge pool="Blade Pool" event="Breakpoint" />
-                </a>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="relative inline-flex">
+                  <span
+                    aria-hidden="true"
+                    className=" pointer-events-none absolute inset-0 rounded-[inherit] bg-(--riprap-accent)/15 blur-md motion-safe:animate-ping motion-reduce:hidden "
+                  />
+                  <a
+                    href="#/2026-breakpoint-blade-pool"
+                    aria-label="Blade Pool at Breakpoint 2026 — policy and participation"
+                    className=" relative z-10 inline-flex transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring "
+                  >
+                    <StampBadge pool="Blade Pool" event="Breakpoint" />
+                  </a>
+                </span>
+
                 <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
                   First pool · Olympia Convention Centre, London · 15-17 November 2026
                 </p>
