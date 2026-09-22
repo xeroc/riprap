@@ -17,7 +17,7 @@ function EmergencyBanner() {
   return (
     <div
       data-slot="emergency"
-      className="flex max-w-[36rem] flex-col gap-2 border border-hairline bg-surface px-4 py-3"
+      className="flex max-w-[36rem] flex-col gap-2 border border-hairline bg-card px-4 py-3"
     >
       <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
         First
