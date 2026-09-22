@@ -110,7 +110,7 @@ const COMPARE_ROWS: { id: string; label: ReactNode; trad: boolean; web3: boolean
 const VisionSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the vision" headline="DeFi broke finance. Insurance is next.">
+    <SlideFrame kicker="the vision" headline="DeFi rebuilt finance. Insurance is next.">
       <div className="flex w-full flex-col gap-8">
         {/* the comparison table — same business, different rails */}
         <div className="flex w-full flex-col">
@@ -220,25 +220,25 @@ const FIELD_ROWS: {
   chain: string;
   cells: { v: string; sub?: string }[];
 }[] = [
-  {
-    name: "Nexus Mutual",
-    chain: "ethereum · arbitrum · kyc",
-    cells: [
-      { v: "$5.7M", sub: "cover fees '25" },
-      { v: "$2.7M", sub: "ever · no VC" },
-      { v: "$1B+", sub: "purchased '25" },
-    ],
-  },
-  {
-    name: "OpenCover",
-    chain: "base · ethereum · off-chain co",
-    cells: [
-      { v: "—", sub: "undisclosed" },
-      { v: "$4.6M", sub: "seed '22–23" },
-      { v: "$141.6M", sub: "protected '25" },
-    ],
-  },
-];
+    {
+      name: "Nexus Mutual",
+      chain: "ethereum · arbitrum · kyc",
+      cells: [
+        { v: "$5.7M", sub: "cover fees '25" },
+        { v: "$2.7M", sub: "ever · no VC" },
+        { v: "$1B+", sub: "purchased '25" },
+      ],
+    },
+    {
+      name: "OpenCover",
+      chain: "base · ethereum · off-chain co",
+      cells: [
+        { v: "—", sub: "undisclosed" },
+        { v: "$4.6M", sub: "seed '22–23" },
+        { v: "$141.6M", sub: "protected '25" },
+      ],
+    },
+  ];
 
 const IncumbantsProblemSlide: FC = () => {
   const frame = useSlideFrame();
