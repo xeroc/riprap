@@ -424,13 +424,23 @@ function Wizard({ wallet }: { wallet: Address }) {
     const operatorPub = operatorPubFromKey(operator.operator.encryptionKey);
     setOperatorDown(false);
 
-    const posted = await postManifest({
-      endpoint,
-      subaccord: pass.mutual.subaccord,
-      dispute: result.dispute,
-      manifest: new TextEncoder().encode(manifest.yaml),
-      operatorPub,
-    });
+    let posted: "posted" | "conflict";
+    try {
+      posted = await postManifest({
+        endpoint,
+        subaccord: pass.mutual.subaccord,
+        dispute: result.dispute,
+        manifest: new TextEncoder().encode(manifest.yaml),
+        operatorPub,
+      });
+    } catch (error) {
+      // a 400 here is loud (unknown schema — never silently degraded); any
+      // failure leaves delivery retryable from the app surface
+      setOperatorDown(true);
+      toast.error(error instanceof Error ? error.message : "Couldn't reach the operator.");
+      setDocRows(Object.fromEntries(DOC_PATHS.map((path) => [path, "failed" as const])));
+      return;
+    }
     if (posted === "conflict") {
       // a different manifest is already stored for this dispute — the wrong
       // manifest for this claim; nothing to retry
@@ -454,6 +464,7 @@ function Wizard({ wallet }: { wallet: Address }) {
           path,
           bytes,
           operatorPub,
+          onRetry: () => setDocRows((current) => ({ ...current, [path]: "retrying" })),
         });
         if (outcome === "conflict") {
           setConflictPath(path); // hard stop — wrong document under this path

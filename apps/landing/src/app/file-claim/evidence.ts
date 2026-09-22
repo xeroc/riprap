@@ -71,6 +71,8 @@ export async function putDocument(params: {
   path: string;
   bytes: Uint8Array;
   operatorPub: Uint8Array;
+  /** Fires when a retry is scheduled — the UI's `retrying` row state. */
+  onRetry?: (attempt: number) => void;
 }): Promise<"delivered" | "conflict"> {
   const { endpoint, subaccord, dispute, path, bytes, operatorPub } = params;
   const body = await bundleJson(bytes, operatorPub);
@@ -86,12 +88,15 @@ export async function putDocument(params: {
       if (res.status === 409) return "conflict";
       if (res.status >= 500 && attempt < PUT_ATTEMPTS) {
         lastError = `${res.status}`;
+        params.onRetry?.(attempt + 1);
         continue;
       }
       throw new Error(`evidence put ${path} failed: ${res.status} ${await bodyText(res)}`);
     } catch (error) {
       lastError = error instanceof Error ? error.message : "network error";
-      if (attempt < PUT_ATTEMPTS) continue;
+      if (attempt < PUT_ATTEMPTS) {
+        params.onRetry?.(attempt + 1);
+      }
     }
   }
   throw new Error(`evidence put ${path} failed after ${PUT_ATTEMPTS} attempts: ${lastError}`);

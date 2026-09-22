@@ -6,6 +6,7 @@
 // § /app/file-claim.
 
 import {
+  fetchMaybeDepositorByOwner,
   fetchMaybeMemberByOwner,
   fetchMaybeMutual,
   type Member,
@@ -147,8 +148,8 @@ function memberAccount(over: Partial<Member> = {}): MaybeAccount<Member> {
 
 const testConfig = getDefaultConfig({ appName: "riprap-test", network: "localnet" });
 
-function renderWizard() {
-  vi.stubEnv("VITE_LOCALNET_MUTUAL", MUTUAL_ADDR);
+function renderWizard(mutualAddress = MUTUAL_ADDR) {
+  vi.stubEnv("VITE_LOCALNET_MUTUAL", mutualAddress);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
   });
@@ -230,6 +231,10 @@ afterEach(() => {
   walletState.isConnected = false;
   walletState.account = null;
   localStorage.clear();
+  mutualMock.mockReset();
+  memberMock.mockReset();
+  feeBalanceMock.mockReset();
+  vi.mocked(fetchMaybeDepositorByOwner).mockClear();
 });
 
 describe("#/app/file-claim — frame + gates", () => {
@@ -496,4 +501,118 @@ describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", (
     // no second attempt without a nonce move
     expect(sendMock).toHaveBeenCalledTimes(1);
   });
+});
+describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)", () => {
+  it("not a member: shared /app copy with the pool-page link", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    memberMock.mockResolvedValue({
+      exists: false,
+      address: "M".repeat(32),
+    } as unknown as MaybeAccount<Member>);
+    renderWizard();
+    expect(await screen.findByText("This wallet isn't in the pool.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "the pool page" }).getAttribute("href")).toBe(
+      "#/2026-breakpoint-blade-pool",
+    );
+  });
+
+  it("zero rights stake: honest no-stake state", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    const { fetchMaybeDepositorByOwner } = await import("@riprap/hanse");
+    vi.mocked(fetchMaybeDepositorByOwner).mockResolvedValueOnce({
+      exists: true,
+      address: "D".repeat(32),
+      data: { rightsStake: 0n },
+    } as unknown as MaybeAccount<never>);
+    renderWizard();
+    await waitFor(() => {
+      const slot = document.querySelector('[data-slot="no-rights-stake"]');
+      expect(slot?.textContent).toContain("No rights stake left on this membership.");
+      expect(slot?.textContent).toContain("It cannot file a payout request.");
+    });
+  });
+
+  it("claims window closed: the close date and the no-requests line (chain truth)", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    // epoch 1_788_134_399 = 2026-08-30 23:59:59 UTC — before "now"
+    mutualMock.mockResolvedValue({
+      exists: true,
+      address: MUTUAL_ADDR,
+      data: fakeMutual({ claimsCloseAt: 1_788_134_399n }) as Mutual,
+    } as unknown as MaybeAccount<Mutual>);
+    renderWizard();
+    await waitFor(() => {
+      const slot = document.querySelector('[data-slot="window-closed"]');
+      expect(slot?.textContent).toContain("The claims window closed 2026-08-30 23:59 UTC.");
+      expect(slot?.textContent).toContain("Payout requests are no longer accepted for this pool.");
+    });
+  });
+
+  it("no deployment on the cluster: the shared not-live state, no gate reads", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    renderWizard("");
+    expect(await screen.findByText("Not live on this cluster")).toBeTruthy();
+    expect(mutualMock).not.toHaveBeenCalled();
+  });
+
+  it("a 5xx PUT shows the retrying row, then delivers; the tx is never re-sent", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    await walkToReview();
+
+    // first attempt on 01-ticket.pdf: 500; the retry is held until asserted
+    const calls = ["fail"];
+    let release: (() => void) | undefined;
+    const held = new Promise<Response>((resolve) => {
+      release = () => resolve(ok201());
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (init?.method === "PUT" && String(input).endsWith("/01-ticket.pdf")) {
+          if (calls.shift() === "fail") return new Response("boom", { status: 500 });
+          return held;
+        }
+        return ok201();
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
+      const ticket = rows.find((r) => r.textContent?.includes("01-ticket.pdf"));
+      expect(ticket?.textContent).toContain("retrying");
+    });
+    release?.();
+    await waitFor(() => {
+      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+    });
+    expect(sendMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("a POST 400 (unknown schema) is surfaced loudly — rows failed, no silent degrade", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    await walkToReview();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("unknown schema", { status: 400 })),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
+    await waitFor(() => {
+      const unreachable = document.querySelector('[data-slot="publish-unreachable"]');
+      expect(unreachable?.textContent).toContain("Couldn't reach the operator.");
+      expect(document.querySelectorAll('[data-slot="publish-row"]').length).toBe(5);
+    });
+    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
+  });
+
+  // Recovery re-entry (manifest re-upload → sha256 == dispute.evidence_hashes[0]
+  // → re-PUT 201-no-op) tests the #/app claim-detail surface — bean
+  // riprap-wwvc's scope. Unskipped when that surface lands.
+  it.skip("recovery: re-uploaded manifest matching the dispute slot re-PUTs (201 no-op)", () => {});
 });
