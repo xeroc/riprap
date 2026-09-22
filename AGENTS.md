@@ -31,7 +31,7 @@ Riprap is a platform for event-scoped mutual protection pools on Solana (first d
 |Governing docs|`meta/` (symlink → the Obsidian spec vault), root `DESIGN.md`, `PROJECT.md`, `CONTEXT.md`, `README.md`|Must describe the code as it is; the spec-wins rules in Project Overview make several of them law.|
 |Decisions & ledger|`apps/docs/adr/`, `apps/docs/beans/` (`.beans.yml`)|ADRs for architectural calls; beans task ledger.|
 |CI / deploy|`.github/workflows/landing-page.yaml`|Builds `apps/landing` and deploys to GitHub Pages (`riprap.xyz`) on push to `main`.|
-|Cross-repo pin|`programs/hanse/Cargo.toml` (accord `rev`, see Completion Gate), `@useaccord/sdk@0.1.0` (`apps/cli` + `tests` + `apps/landing` pool page — the juror-stake read off the mutual's subaccord), `ACCORD_SO` artifact|The sibling accord checkout is an external dependency of both the program and the TS workspace.|
+|Cross-repo pin|`programs/hanse/Cargo.toml` (accord `rev`, see Completion Gate), `@useaccord/sdk@0.1.0` (`apps/cli` + `tests` + `apps/landing` — root-export subaccord reads/PDAs in `src/pool/useMinStake.ts` and the `src/app/` surfaces incl. the wizard, plus the `@useaccord/sdk/evidence` export in `src/app/file-claim/evidence.ts` — `claimantEncrypt` ECIES delivery to the evidence operator per ADR-0031), `ACCORD_SO` artifact|The sibling accord checkout is an external dependency of both the program and the TS workspace.|
 
 ### When you change X, also touch Y
 
@@ -55,7 +55,7 @@ Riprap is a platform for event-scoped mutual protection pools on Solana (first d
 
 - **Visual law** (tokens, type, motion): one place — `packages/ui/src/tokens.css` + the kit; hex values never appear anywhere else.
 
-- **Accord pin bump** (`rev` in `programs/hanse/Cargo.toml` or `@useaccord/sdk` version in `apps/cli`/`tests`): rebuild the sibling (`cd ../accord && make build`, or point `ACCORD_SO` at the artifact), audit every `@useaccord/sdk` import site (`apps/cli/src/commands/hanse/{file-claim,set-subaccord-param}.ts` + build tests, `tests/src/setup/deploy.ts`), and run the live e2e.
+- **Accord pin bump** (`rev` in `programs/hanse/Cargo.toml` or `@useaccord/sdk` version in `apps/cli`/`tests`): rebuild the sibling (`cd ../accord && make build`, or point `ACCORD_SO` at the artifact), audit every `@useaccord/sdk` import site (`apps/cli/src/commands/hanse/{file-claim,set-subaccord-param}.ts` + build tests, `tests/src/`, `apps/landing/src/pool/useMinStake.ts`, `apps/landing/src/app/` — incl. the `/evidence` export in `src/app/file-claim/evidence.ts`), and run the live e2e.
 
 ### Keeping this map current
 
