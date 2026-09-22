@@ -5,6 +5,7 @@
 // numbers render from chain reads (props, never invented); numerals mono.
 
 import {
+  AddressChip,
   BadgeStamp,
   Button,
   buttonVariants,
@@ -15,7 +16,6 @@ import {
   TextLink,
   usd,
 } from "@riprap/ui";
-
 import { Settle } from "../../components/Settle";
 import { microToUsd, type PoolTier } from "../../pool/mutual";
 import type { ClaimDraft, DocSlot } from "./draft";
@@ -403,6 +403,9 @@ export function StepReview({
   feePerJuror,
   incidentIso,
   operator,
+  canSign,
+  onBack,
+  onSign,
 }: {
   draft: ClaimDraft;
   tier: PoolTier;
@@ -411,6 +414,10 @@ export function StepReview({
   feePerJuror: bigint;
   incidentIso: string;
   operator: EvidenceOperatorQuery;
+  /** Signing needs the signer env + operator resolution (or {{PARAM}} risk). */
+  canSign: boolean;
+  onBack: () => void;
+  onSign: () => void;
 }) {
   const amount = Number.parseFloat(draft.amountUsdc);
   return (
@@ -453,6 +460,176 @@ export function StepReview({
           , the pool's evidence operator, and delivered there for the jury.
         </p>
       </div>
+      <div className="flex items-center gap-3">
+        <Button variant="outline" onClick={onBack}>
+          Back
+        </Button>
+        {/* copy doc § SIGN: the review's single action starts the wallet tx */}
+        <Button disabled={!canSign} onClick={onSign}>
+          Sign and file
+        </Button>
+      </div>
     </StepFrame>
   );
+}
+
+// --- step 6: SIGN -----------------------------------------------------------
+
+export type SignPhase = "building" | "wallet-signing" | "confirming";
+
+const SIGN_PHASE_LINES: Record<SignPhase, string> = {
+  building: "Building the transaction…",
+  "wallet-signing": "Waiting for your wallet…",
+  confirming: "Confirming…",
+};
+
+export function StepSign({ phase, nonceRace }: { phase: SignPhase; nonceRace: boolean }) {
+  return (
+    <StepFrame n={6} name="Sign">
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="sign-phase">
+        <p className="text-body [font:var(--riprap-body-md)]">{SIGN_PHASE_LINES[phase]}</p>
+        {nonceRace ? (
+          <p className="text-muted-foreground [font:var(--riprap-body-sm)]" data-slot="nonce-race">
+            Another member filed first — the claim number moved. Sign once more.
+          </p>
+        ) : null}
+      </div>
+    </StepFrame>
+  );
+}
+
+// --- step 7: PUBLISH --------------------------------------------------------
+
+export type DocRowStatus = "pending" | "delivering" | "retrying" | "delivered" | "failed";
+
+export function StepPublish({
+  operatorName,
+  rows,
+  conflictPath,
+  unreachable,
+}: {
+  operatorName: string;
+  rows: Array<{ path: string; status: DocRowStatus }>;
+  /** A 409 leaf — hard stop, nothing overwritten. */
+  conflictPath?: string;
+  /** Operator unreachable after the tx landed — delivery keeps retrying. */
+  unreachable?: boolean;
+}) {
+  return (
+    <StepFrame n={7} name="Publish">
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="publish">
+        <p className="text-body [font:var(--riprap-body-md)]">
+          Filing confirmed. Delivering evidence to <span className="text-ink">{operatorName}</span>…
+        </p>
+        <ul className="flex max-w-3xl flex-col">
+          {rows.map((row) => (
+            <li
+              key={row.path}
+              data-slot="publish-row"
+              className="flex items-baseline justify-between gap-4 border-b border-hairline py-2 first:border-t"
+            >
+              <span data-num className="font-mono text-sm text-ink">
+                {row.path}
+              </span>
+              <span
+                data-num={row.status === "delivered" || row.status === "failed" ? true : undefined}
+                className="font-mono text-xs text-stone"
+              >
+                {row.status === "pending" ? "delivering" : row.status}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {conflictPath !== undefined ? (
+          <p
+            className="max-w-[42rem] leading-relaxed text-error [font:var(--riprap-body-sm)]"
+            data-slot="publish-conflict"
+          >
+            The operator already holds a different file under{" "}
+            <span data-num className="font-mono">
+              {conflictPath}
+            </span>
+            . Nothing was overwritten. Re-attach the exact document from this request.
+          </p>
+        ) : null}
+        {unreachable ? (
+          <p
+            className="max-w-[42rem] leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]"
+            data-slot="publish-unreachable"
+          >
+            Couldn't reach the operator. Your claim is on-chain — delivery keeps retrying, and the
+            review window is 48 hours. Keep manifest.yaml; if this page closes, re-enter from the
+            app surface.
+          </p>
+        ) : null}
+      </div>
+    </StepFrame>
+  );
+}
+
+// --- step 8: FILED ----------------------------------------------------------
+
+const ROUND_TIMELINE =
+  "draw → review 48h → commit 12h → reveal 12h → ruling → appeal 48h → settle → pull";
+
+export function StepFiled({
+  nonce,
+  claim,
+  dispute,
+  delivered,
+  feeUsd,
+  onDownload,
+}: {
+  nonce: bigint;
+  claim: string;
+  dispute: string;
+  /** How many of the five documents are stored. */
+  delivered: number;
+  feeUsd: string;
+  onDownload: () => void;
+}) {
+  return (
+    <Settle className="flex max-w-3xl flex-col gap-(--riprap-space-lg)">
+      <h2>
+        <BadgeStamp data-num>Filed — claim #{nonce}</BadgeStamp>
+      </h2>
+      <div className="flex max-w-3xl flex-col gap-2">
+        <p className="flex flex-wrap items-baseline gap-2 text-body [font:var(--riprap-body-sm)]">
+          Claim <AddressChipInline value={claim} />
+        </p>
+        <p className="flex flex-wrap items-baseline gap-2 text-body [font:var(--riprap-body-sm)]">
+          Dispute <AddressChipInline value={dispute} />
+        </p>
+        <p data-num className="font-mono text-sm text-ink">
+          {delivered === 5 ? "Evidence: delivered" : `Evidence: incomplete — ${delivered} of 5`}
+        </p>
+      </div>
+      <p data-num className="max-w-3xl font-mono text-xs leading-relaxed text-stone">
+        {ROUND_TIMELINE}
+      </p>
+      <p className="max-w-[42rem] leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
+        The{" "}
+        <span data-num className="font-mono">
+          {feeUsd}
+        </span>{" "}
+        USDC fee rides the outcome — refunded if approved, kept if denied, returned if adjudication
+        fails.
+      </p>
+      <p className="max-w-[42rem] leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
+        Keep manifest.yaml. If evidence delivery failed, re-enter from the app surface — the
+        manifest re-verifies against the claim and re-delivers.
+      </p>
+      <div>
+        <Button variant="outline" onClick={onDownload}>
+          Download manifest.yaml
+        </Button>
+      </div>
+    </Settle>
+  );
+}
+
+/** Mono inline address chip (short + copyable) — the kit AddressChip is
+ * nav-sized; this is the inline facts-line variant. */
+function AddressChipInline({ value }: { value: string }) {
+  return <AddressChip address={value} className="scale-90 origin-left" />;
 }

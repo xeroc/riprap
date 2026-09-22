@@ -1,40 +1,72 @@
 // #/app/file-claim — the payout-request wizard (CLAIM-WIZARD v1, copy doc §
 // /app/file-claim): wallet gate → step 0 preflight (chain gates only) →
-// incident → amount → evidence → manifest → review. Steps 6–8 (sign,
-// publish, filed) land with the next lane bean; this page owns the machine
-// and the draft (localStorage, form fields + hashes only — CLAIM-WIZARD §4).
-// Every string is copy-doc verbatim; numbers come from the chain reads in
-// useClaimPreflight, never constants; numerals mono.
+// incident → amount → evidence → manifest → review → sign → publish →
+// filed. The sign step builds ONE hanse::file_claim tx via
+// @riprap/hanse's buildFileClaim and sends it through the shared
+// sendInstruction seam; a nonce race (another member filed first) refetches
+// the nonce, rebuilds, and re-signs exactly once — NEVER re-sent after
+// success. Publish delivers the encrypted manifest (POST) + documents
+// (per-file PUT, independent retry, 409 = hard stop) per ADR-0031. The
+// draft (localStorage, fields + hashes only) clears once the claim is filed.
+// Every string is copy-doc verbatim; numbers come from chain reads; mono
+// numerals throughout.
 
-import { findClaimPda } from "@riprap/hanse";
+import { buildFileClaim, fetchMaybeMutual, findClaimPda } from "@riprap/hanse";
 import { Button, HexBackdrop, SectionBand, TextLink, usd } from "@riprap/ui";
 import { useCluster, useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
-import { findDisputePda } from "@useaccord/sdk";
+import { findAccordStatePda, findDisputePda } from "@useaccord/sdk";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Settle } from "../../components/Settle";
 import { SiteNav } from "../../components/SiteNav";
 import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../../pool/mutual";
-import { useClusterRpc } from "../../shared/rpc";
+import { useClusterRpc, useHanseEnv } from "../../shared/rpc";
+import { describeError, sendInstruction } from "../../shared/transaction";
 import { AppNavControls, ClusterSwitch, ConnectWalletButton } from "../AppPage";
 import { intakeDocument } from "./documents";
-import { type ClaimDraft, type DocSlot, emptyDraft, loadDraft, saveDraft } from "./draft";
+import {
+  type ClaimDraft,
+  clearDraft,
+  DOC_SLOTS,
+  type DocSlot,
+  emptyDraft,
+  loadDraft,
+  saveDraft,
+} from "./draft";
+import { operatorPubFromKey, postManifest, putDocument } from "./evidence";
 import { buildManifest, manifestEntries } from "./manifest";
 import {
+  type DocRowStatus,
   EmergencyBanner,
+  type SignPhase,
   type SlotIntake,
   StepAmount,
   StepEvidence,
+  StepFiled,
   StepIncident,
   StepManifest,
+  StepPublish,
   StepReview,
+  StepSign,
 } from "./steps";
 import { type PreflightBlock, type PreflightPass, useClaimPreflight } from "./useClaimPreflight";
 import { useEvidenceOperator } from "./useEvidenceOperator";
 
-/** Steps this page owns — 6/7/8 (sign/publish/filed) join with their bean. */
-type Step = 0 | 1 | 2 | 3 | 4 | 5;
+/** Steps this page owns — 0 gate, 1–5 collect, 6 sign, 7 publish, 8 filed. */
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+/** The five canonical paths, policy §7 order. */
+const DOC_PATHS = DOC_SLOTS.map((slot) => slot.path);
+
+/** What the sign step hands to publish + filed. */
+interface FiledResult {
+  signature: string;
+  claim: Address;
+  dispute: Address;
+  nonce: bigint;
+}
 
 /** Synchronous manifest.yaml download — must ride a user gesture. */
 function downloadManifest(yaml: string): void {
@@ -45,6 +77,15 @@ function downloadManifest(yaml: string): void {
   anchor.download = "manifest.yaml";
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+/** 64-hex sha256 → 32 bytes — the on-chain evidence_hash (§7). */
+function hexToBytes32(hex: string): Uint8Array {
+  const out = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) {
+    out[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  return out;
 }
 
 /** The wallet gate for a deep link with no wallet (copy doc § /app/file-claim Frame). */
@@ -198,11 +239,12 @@ function BlockedState({ block }: { block: PreflightBlock }) {
   }
 }
 
-/** The wizard machine: step 0 gates, steps 1–5 collect, one draft, one buffer. */
+/** The wizard machine: gate → collect → one signature → delivery → filed. */
 function Wizard({ wallet }: { wallet: Address }) {
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const mutualAddress = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
   const clusterRpc = useClusterRpc();
+  const hanseEnv = useHanseEnv();
 
   const preflight = useClaimPreflight();
   const pass: PreflightPass | null = preflight.state === "pass" ? preflight.pass : null;
@@ -218,6 +260,14 @@ function Wizard({ wallet }: { wallet: Address }) {
   /** Upload bytes per canonical path — session memory only, never persisted. */
   const fileBytes = useRef(new Map<string, Uint8Array>());
   const [manifest, setManifest] = useState<{ yaml: string; sha256: string } | null>(null);
+
+  // sign/publish/filed machine state
+  const [signPhase, setSignPhase] = useState<SignPhase>("building");
+  const [nonceRace, setNonceRace] = useState(false);
+  const [filed, setFiled] = useState<FiledResult | null>(null);
+  const [docRows, setDocRows] = useState<Record<string, DocRowStatus>>({});
+  const [conflictPath, setConflictPath] = useState<string | undefined>(undefined);
+  const [operatorDown, setOperatorDown] = useState(false);
 
   const tier =
     pass === null
@@ -265,7 +315,7 @@ function Wizard({ wallet }: { wallet: Address }) {
   };
 
   // Entering step 4: build the manifest ONCE — one buffer feeds preview,
-  // hash, and download (CLAIM-WIZARD §5: never re-serialize).
+  // hash, signature, and delivery (CLAIM-WIZARD §5: never re-serialize).
   const enterManifest = async () => {
     if (pass === null || tier === null || mutualAddress === undefined) return;
     const nonce = pass.mutual.claimNonce;
@@ -290,8 +340,144 @@ function Wizard({ wallet }: { wallet: Address }) {
     setStep(4);
   };
 
+  /** One build+send attempt at a given nonce. Throws on failure. */
+  const attemptSign = async (nonce: bigint): Promise<FiledResult> => {
+    if (hanseEnv === null || pass === null || manifest === null || mutualAddress === undefined) {
+      throw new Error("signing prerequisites disappeared mid-flight");
+    }
+    const [dispute] = await findDisputePda({ filer: mutualAddress, nonce });
+    const [accordState] = await findAccordStatePda();
+    const build = await buildFileClaim({
+      mutual: {
+        address: mutualAddress,
+        claimNonce: nonce,
+        pool: pass.mutual.pool,
+        subaccord: pass.mutual.subaccord,
+        feeMint: pass.mutual.feeMint,
+      },
+      subaccord: { minJurySize: pass.minJurySize, feePerJuror: pass.feePerJuror },
+      claimant: hanseEnv.signer,
+      requested: BigInt(Math.round(Number.parseFloat(draft.amountUsdc) * 1_000_000)),
+      evidenceHash: hexToBytes32(manifest.sha256),
+      dispute,
+      accordState,
+    });
+    setSignPhase("wallet-signing");
+    const signature = await sendInstruction(
+      hanseEnv.rpc,
+      hanseEnv.rpcSubscriptions,
+      hanseEnv.signer,
+      [build.instruction],
+      () => setSignPhase("confirming"),
+    );
+    return { signature, claim: build.claim, dispute: build.dispute, nonce: build.nonce };
+  };
+
+  /**
+   * The sign step (copy doc § SIGN): one tx; a nonce race (another member
+   * filed first — the Claim-PDA init fails) refetches the nonce, rebuilds,
+   * and re-signs EXACTLY once. NEVER re-sent after success: `filed` gates
+   * every re-entry.
+   */
+  const signAndFile = async () => {
+    if (filed !== null || manifest === null || pass === null || clusterRpc === null) return;
+    setStep(6);
+    setSignPhase("building");
+    setNonceRace(false);
+    try {
+      const result = await attemptSign(pass.mutual.claimNonce);
+      setFiled(result);
+      void deliverEvidence(result);
+    } catch (err) {
+      try {
+        // nonce race? the chain's nonce moved under us — rebuild + re-sign once
+        if (mutualAddress === undefined) throw err;
+        const fresh = await fetchMaybeMutual(clusterRpc.rpc, mutualAddress);
+        const moved = fresh.exists && fresh.data.claimNonce !== pass.mutual.claimNonce;
+        if (!moved) throw err;
+        setNonceRace(true);
+        setSignPhase("building");
+        const result = await attemptSign(fresh.data.claimNonce);
+        setFiled(result);
+        void deliverEvidence(result);
+      } catch (raceErr) {
+        toast.error(describeError(raceErr));
+        setStep(5);
+      }
+    }
+  };
+
+  /**
+   * The publish step (copy doc § PUBLISH, ADR-0031): manifest POST first,
+   * then per-file PUTs — independent ECIES, per-file retry, 409 hard stop.
+   * Runs only after a landed tx (delivery retries never re-send the claim).
+   */
+  const deliverEvidence = async (result: FiledResult) => {
+    setStep(7);
+    if (manifest === null || pass === null || mutualAddress === undefined) return;
+    if (operator.state !== "ready") {
+      setOperatorDown(true);
+      setDocRows(Object.fromEntries(DOC_PATHS.map((path) => [path, "failed" as const])));
+      return;
+    }
+    const endpoint = operator.operator.url;
+    const operatorPub = operatorPubFromKey(operator.operator.encryptionKey);
+    setOperatorDown(false);
+
+    const posted = await postManifest({
+      endpoint,
+      subaccord: pass.mutual.subaccord,
+      dispute: result.dispute,
+      manifest: new TextEncoder().encode(manifest.yaml),
+      operatorPub,
+    });
+    if (posted === "conflict") {
+      // a different manifest is already stored for this dispute — the wrong
+      // manifest for this claim; nothing to retry
+      setConflictPath("manifest.yaml");
+      return;
+    }
+
+    let delivered = 0;
+    for (const path of DOC_PATHS) {
+      const bytes = fileBytes.current.get(path);
+      if (bytes === undefined) {
+        setDocRows((current) => ({ ...current, [path]: "failed" }));
+        continue;
+      }
+      setDocRows((current) => ({ ...current, [path]: "delivering" }));
+      try {
+        const outcome = await putDocument({
+          endpoint,
+          subaccord: pass.mutual.subaccord,
+          dispute: result.dispute,
+          path,
+          bytes,
+          operatorPub,
+        });
+        if (outcome === "conflict") {
+          setConflictPath(path); // hard stop — wrong document under this path
+          setDocRows((current) => ({ ...current, [path]: "failed" }));
+          return;
+        }
+        delivered += 1;
+        setDocRows((current) => ({ ...current, [path]: "delivered" }));
+      } catch {
+        setDocRows((current) => ({ ...current, [path]: "failed" }));
+        setOperatorDown(true);
+      }
+    }
+    if (delivered === DOC_PATHS.length) {
+      setStep(8);
+      if (mutualAddress !== undefined) clearDraft(mutualAddress);
+    }
+  };
+
   const incidentIso =
     draft.incidentAt === "" ? "{{PARAM}}" : new Date(draft.incidentAt).toISOString();
+
+  const publishRows = DOC_PATHS.map((path) => ({ path, status: docRows[path] ?? "pending" }));
+  const deliveredCount = DOC_PATHS.filter((path) => docRows[path] === "delivered").length;
 
   return (
     <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" data-slot="wizard">
@@ -346,6 +532,27 @@ function Wizard({ wallet }: { wallet: Address }) {
           feePerJuror={pass.feePerJuror}
           incidentIso={incidentIso}
           operator={operator}
+          canSign={manifest !== null && hanseEnv !== null && filed === null}
+          onBack={() => setStep(4)}
+          onSign={() => void signAndFile()}
+        />
+      ) : step === 6 ? (
+        <StepSign phase={signPhase} nonceRace={nonceRace} />
+      ) : step === 7 && filed !== null ? (
+        <StepPublish
+          operatorName={operator.state === "ready" ? operator.operator.name : "{{PARAM}}"}
+          rows={publishRows}
+          conflictPath={conflictPath}
+          unreachable={operatorDown}
+        />
+      ) : step === 8 && filed !== null && manifest !== null ? (
+        <StepFiled
+          nonce={filed.nonce}
+          claim={filed.claim}
+          dispute={filed.dispute}
+          delivered={deliveredCount}
+          feeUsd={usd(microToUsd(pass.feeMicro))}
+          onDownload={() => downloadManifest(manifest.yaml)}
         />
       ) : (
         <PreflightGate onPass={() => setStep(1)} />

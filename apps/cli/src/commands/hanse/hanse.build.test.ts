@@ -1,5 +1,6 @@
 import { ed25519 } from "@noble/curves/ed25519";
 import {
+  buildFileClaim,
   findClaimPda,
   findDepositorPda,
   findFeeFloatPda,
@@ -16,10 +17,9 @@ import {
   setTransactionMessageFeePayerSigner,
   signTransactionMessageWithSigners,
 } from "@solana/kit";
-import { findDisputePda } from "@useaccord/sdk";
+import { findAccordStatePda, findDisputePda } from "@useaccord/sdk";
 import { describe, expect, test } from "vitest";
 import { buildClaimPayout } from "./claim-payout";
-import { buildFileClaim } from "./file-claim";
 import { buildSettleClaim } from "./settle-claim";
 
 /**
@@ -51,7 +51,6 @@ describe("buildFileClaim (hanse:file-claim)", () => {
       claimNonce: 0n,
       pool: POOL,
       subaccord: SUBACCORD,
-      depositMint: DEPOSIT_MINT,
       feeMint: FEE_MINT,
     };
     const build = await buildFileClaim({
@@ -60,6 +59,8 @@ describe("buildFileClaim (hanse:file-claim)", () => {
       claimant,
       requested: 2_000_000_000n,
       evidenceHash: EVIDENCE,
+      dispute: (await findDisputePda({ filer: MUTUAL, nonce: 0n }))[0],
+      accordState: (await findAccordStatePda())[0],
     });
     expect(build.fee).toBe(15_000_000n);
 
