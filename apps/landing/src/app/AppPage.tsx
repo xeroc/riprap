@@ -1,6 +1,8 @@
-// #/app — the member wallet surface, reads-only v1 (milestone riprap-9ehc,
-// bean riprap-c1r1): wallet gate → the connected wallet's Member PDA + claims
-// against the static per-cluster mutual map (src/pool/mutual.ts). No writes.
+// #/app — the member wallet surface (milestone riprap-9ehc, bean riprap-c1r1;
+// payout-request entry added 2026-09-22, CLAIM-WIZARD §2): wallet gate → the
+// connected wallet's Member PDA + claims against the static per-cluster
+// mutual map (src/pool/mutual.ts). The surface's writes live in the wizard
+// route (#/app/file-claim); this page itself still only reads.
 // Copy source: meta/marketing/03-website-copy/landing-page.md § "/app — the
 // member wallet surface" — rendered verbatim; unknown values render
 // {{PARAM}} mono placeholders, never static numbers.
@@ -9,6 +11,7 @@ import {
   AddressChip,
   BadgeStamp,
   Button,
+  buttonVariants,
   ClusterSelect,
   HexBackdrop,
   SectionBand,
@@ -32,12 +35,13 @@ import { SiteNav } from "../components/SiteNav";
 import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../pool/mutual";
 import { useMinStake } from "../pool/useMinStake";
 import { useMutual } from "../pool/useMutual";
+import { useClaimPreflight } from "./file-claim/useClaimPreflight";
 import { type ClaimsQuery, useClaims } from "./useClaims";
 import { useMembership } from "./useMembership";
 
 /** The inline cluster switch for the not-live empty state (copy doc § /app,
  * same component as the pool page's). */
-function ClusterSwitch() {
+export function ClusterSwitch() {
   const { clusters, cluster, setCluster } = useCluster();
   return (
     <ClusterSelect
@@ -67,7 +71,7 @@ function AccountControls({ address }: { address: string }) {
 /** Connect button + the kit's props-driven wallet picker — one wiring shared
  * by the navbar (`Connect wallet`) and the wallet gate (copy doc § /app:
  * `Connect a wallet`); button chrome is the caller's. */
-function ConnectWalletButton({
+export function ConnectWalletButton({
   label,
   ...buttonProps
 }: { label: string } & ComponentProps<typeof Button>) {
@@ -101,7 +105,7 @@ function ConnectWalletButton({
 /** The app route's navbar right side (copy doc § /app nav): the cluster
  * select + connect — connected wallets get their address chip + Disconnect
  * instead. Passed to SiteNav as `actions`, replacing the Open App CTA. */
-function AppNavControls() {
+export function AppNavControls() {
   const { isConnected, account } = useWallet();
   const connected = isConnected && account !== null;
 
@@ -129,7 +133,7 @@ function WalletGate() {
       </Settle>
       <Settle delay={60}>
         <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-          Connect the wallet you joined with. This surface only reads.
+          Connect the wallet you joined with.
         </p>
       </Settle>
       <Settle delay={120}>
@@ -206,7 +210,6 @@ function ClaimsBlock({ claims }: { claims: ClaimsQuery }) {
   );
 }
 
-/** Connected surface: membership + claims reads against the static map. */
 function MemberSurface({ wallet }: { wallet: Address }) {
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const mutualAddress = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
@@ -214,6 +217,7 @@ function MemberSurface({ wallet }: { wallet: Address }) {
   const minStake = useMinStake(mutualQuery.state === "ready" ? mutualQuery.mutual.subaccord : null);
   const membership = useMembership();
   const member = membership.state === "ready" ? membership.member : null;
+  const preflight = useClaimPreflight();
   const claims = useClaims(
     mutualQuery.state === "ready" && member !== null && mutualAddress !== undefined
       ? { mutual: mutualAddress, claimant: wallet, claimNonce: mutualQuery.mutual.claimNonce }
@@ -289,6 +293,16 @@ function MemberSurface({ wallet }: { wallet: Address }) {
         <h1>
           <BadgeStamp data-num>Covered — {tier.name}</BadgeStamp>
         </h1>
+      </Settle>
+      <Settle delay={90}>
+        {/* payout-request entry (copy doc § /app): only while preflight passes */}
+        {preflight.state === "pass" ? (
+          <div data-slot="file-claim-entry">
+            <a className={buttonVariants({ variant: "primary" })} href="#/app/file-claim">
+              File a payout request
+            </a>
+          </div>
+        ) : null}
       </Settle>
       <Settle delay={60}>
         <p data-num className="font-mono text-base text-ink">

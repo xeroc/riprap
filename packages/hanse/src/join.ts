@@ -229,8 +229,9 @@ export async function buildJoinInstructions(
 
 /** getTokenAccountBalance's accountNotFound path: a missing ATA is balance
  * 0n, not an exception (HANDOFF §3). Any other RPC failure rethrows so the
- * page can render its retry state instead of a fake zero. */
-async function tokenBalanceOrZero(rpc: JoinRpc, ata: Address): Promise<bigint> {
+ * page can render its retry state instead of a fake zero. Exported for the
+ * landing's fee-ATA reads — the single not-found→0 contract. */
+export async function tokenBalanceOrZero(rpc: JoinRpc, ata: Address): Promise<bigint> {
   try {
     const { value } = await rpc.getTokenAccountBalance(ata).send();
     return BigInt(value.amount);

@@ -68,6 +68,7 @@ export {
   CardHeader,
   CardTitle,
 } from "./ui/card";
+export { Checkbox } from "./ui/checkbox";
 export {
   Dialog,
   DialogClose,
@@ -124,3 +125,4 @@ export {
 } from "./ui/sheet";
 export { Slider } from "./ui/slider";
 export { Toaster } from "./ui/sonner";
+export { Textarea } from "./ui/textarea";

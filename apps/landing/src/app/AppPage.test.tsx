@@ -7,10 +7,13 @@
 import {
   type Claim,
   ClaimStatus,
+  type Depositor,
   fetchMaybeClaimByNonce,
+  fetchMaybeDepositorByOwner,
   fetchMaybeMemberByOwner,
   fetchMaybeMutual,
   type Member,
+  tokenBalanceOrZero,
 } from "@riprap/hanse";
 import { AppProvider, getDefaultConfig } from "@solana/connector";
 import type { Address, MaybeAccount } from "@solana/kit";
@@ -45,6 +48,9 @@ vi.mock("@riprap/hanse", () => ({
   fetchMaybeMutual: vi.fn(),
   fetchMaybeMemberByOwner: vi.fn(),
   fetchMaybeClaimByNonce: vi.fn(),
+  fetchMaybeDepositorByOwner: vi.fn(),
+  findAssociatedTokenAddress: vi.fn(async () => "1".repeat(32)),
+  tokenBalanceOrZero: vi.fn(async () => 15n * 1_000_000n),
 }));
 
 vi.mock("@solana/connector", async (importOriginal) => {
@@ -55,12 +61,26 @@ vi.mock("@solana/connector", async (importOriginal) => {
     useKitTransactionSigner: () => ({ signer: null }),
   };
 });
-vi.mock("@useaccord/sdk", () => ({ fetchSubaccordMaybe: vi.fn() }));
+vi.mock("@useaccord/sdk", () => ({
+  fetchSubaccordMaybe: vi.fn(),
+  findDisputePda: vi.fn(async () => "2".repeat(32)),
+}));
+// The preflight hook's one direct rpc call (SOL balance) — stubbed so the
+// money read settles offline like every SDK-mocked read around it.
+vi.mock("../shared/rpc", () => ({
+  useClusterRpc: () => ({
+    endpoint: "http://127.0.0.1:8899",
+    rpc: { getBalance: () => ({ send: async () => ({ value: 1n }) }) },
+    rpcSubscriptions: {},
+  }),
+  useHanseEnv: () => null,
+}));
 const subaccordMock = vi.mocked(fetchSubaccordMaybe);
 const claimMock = vi.mocked(fetchMaybeClaimByNonce);
 const mutualMock = vi.mocked(fetchMaybeMutual);
 const memberMock = vi.mocked(fetchMaybeMemberByOwner);
-
+const depositorMock = vi.mocked(fetchMaybeDepositorByOwner);
+const feeBalanceMock = vi.mocked(tokenBalanceOrZero);
 const MUTUAL_ADDR = "MutualXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 const WALLET = "W".repeat(32);
 const OTHER = "O".repeat(32);
@@ -120,13 +140,26 @@ function renderApp(mutualAddress = MUTUAL_ADDR) {
   );
 }
 
-// The juror panel's stake floor answers $10 (policy §12) by default.
+// Defaults: the juror panel's stake floor answers $10 (policy §12) and the
+// preflight money reads settle as a full stake + the pilot's 3×$5 juror fee
+// paid — tests that need a blocked gate override these.
 beforeEach(() => {
   subaccordMock.mockResolvedValue({
     exists: true,
     address: "S".repeat(32) as Address,
-    data: { minStake: 10n * 1_000_000n },
+    data: {
+      minStake: 10n * 1_000_000n,
+      minJurySize: 3,
+      feePerJuror: 5n * 1_000_000n,
+      evidenceOperator: "E".repeat(32),
+    },
   } as unknown as MaybeAccount<Subaccord>);
+  depositorMock.mockResolvedValue({
+    exists: true,
+    address: "D".repeat(32),
+    data: { rightsStake: 20n * 1_000_000n },
+  } as unknown as MaybeAccount<Depositor>);
+  feeBalanceMock.mockResolvedValue(15n * 1_000_000n);
 });
 afterEach(() => {
   cleanup();
@@ -136,6 +169,8 @@ afterEach(() => {
   mutualMock.mockReset();
   memberMock.mockReset();
   claimMock.mockReset();
+  depositorMock.mockReset();
+  feeBalanceMock.mockReset();
 });
 
 describe("/app — wallet gate (reads-only: no chain calls until connected)", () => {
@@ -155,9 +190,7 @@ describe("/app — wallet gate (reads-only: no chain calls until connected)", ()
     expect(screen.queryByRole("link", { name: "Open App" })).toBeNull();
     expect(screen.getByRole("combobox")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Connect wallet" })).toBeTruthy();
-    expect(
-      screen.getByText("Connect the wallet you joined with. This surface only reads."),
-    ).toBeTruthy();
+    expect(screen.getByText("Connect the wallet you joined with.")).toBeTruthy();
     expect(mutualMock).not.toHaveBeenCalled();
   });
 
@@ -221,6 +254,10 @@ describe("/app — membership + claims (data-bound to the chain)", () => {
 
     expect(await screen.findByText("Covered — Standard")).toBeTruthy();
     expect(await screen.findByText("$20 entry · up to $2,000 maximum payout")).toBeTruthy();
+    // payout-request entry (copy doc § /app): rendered while preflight passes
+    // (the money read settles after the mutual/member reads — await it)
+    const entry = await screen.findByRole("link", { name: "File a payout request" });
+    expect(entry.getAttribute("href")).toBe("#/app/file-claim");
     // nav account controls: shortened address (full in title) + disconnect
     expect(screen.getByTitle(WALLET).textContent).toContain("WWWW");
     // juror panel (copy doc § /app): the overlay's Become-a-juror destination
