@@ -5,117 +5,18 @@
 // member wallet surface" — rendered verbatim; unknown values render
 // {{PARAM}} mono placeholders, never static numbers.
 import { ClaimStatus } from "@riprap/hanse";
-import {
-  AddressChip,
-  BadgeStamp,
-  Button,
-  ClusterSelect,
-  HexBackdrop,
-  SectionBand,
-  TextLink,
-  usd,
-  WalletDialog,
-} from "@riprap/ui";
-import {
-  useCluster,
-  useConnectWallet,
-  useDisconnectWallet,
-  useWallet,
-  useWalletConnectors,
-  type WalletConnectorId,
-} from "@solana/connector";
+import { BadgeStamp, Button, HexBackdrop, SectionBand, TextLink, usd } from "@riprap/ui";
+import { useCluster, useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
-import { type ComponentProps, useState } from "react";
 
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
 import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../pool/mutual";
 import { useMinStake } from "../pool/useMinStake";
 import { useMutual } from "../pool/useMutual";
+import { AppNavControls, ClusterSwitch, ConnectWalletButton } from "./controls";
 import { type ClaimsQuery, useClaims } from "./useClaims";
 import { useMembership } from "./useMembership";
-
-/** The inline cluster switch for the not-live empty state (copy doc § /app,
- * same component as the pool page's). */
-function ClusterSwitch() {
-  const { clusters, cluster, setCluster } = useCluster();
-  return (
-    <ClusterSelect
-      className="w-44"
-      clusters={clusters.map((c) => ({ value: c.id, label: c.label }))}
-      value={cluster?.id}
-      onValueChange={(value) => void setCluster(value as (typeof clusters)[number]["id"])}
-    />
-  );
-}
-
-/** Connected-wallet nav controls: the address as a copyable chip + Disconnect
- * (kit chrome only — the kit itself stays Solana-free). */
-function AccountControls({ address }: { address: string }) {
-  const { disconnect } = useDisconnectWallet();
-  return (
-    <div className="flex items-center gap-2">
-      <AddressChip address={address} />
-      <Button variant="outline" onClick={() => void disconnect()}>
-        Disconnect
-      </Button>
-    </div>
-  );
-}
-
-/** The connect gate (copy doc § /app wallet gate) — the kit's props-driven
-/** Connect button + the kit's props-driven wallet picker — one wiring shared
- * by the navbar (`Connect wallet`) and the wallet gate (copy doc § /app:
- * `Connect a wallet`); button chrome is the caller's. */
-function ConnectWalletButton({
-  label,
-  ...buttonProps
-}: { label: string } & ComponentProps<typeof Button>) {
-  const [open, setOpen] = useState(false);
-  const connectors = useWalletConnectors();
-  const { connect } = useConnectWallet();
-  const { disconnect } = useDisconnectWallet();
-  const { isConnected, account } = useWallet();
-
-  return (
-    <>
-      <Button {...buttonProps} onClick={() => setOpen(true)}>
-        {label}
-      </Button>
-      <WalletDialog
-        open={open}
-        onOpenChange={setOpen}
-        connectors={connectors.map((c) => ({ id: c.id, name: c.name }))}
-        onConnect={(id) => {
-          setOpen(false);
-          void connect(id as WalletConnectorId);
-        }}
-        connected={isConnected}
-        address={account ?? undefined}
-        onDisconnect={() => void disconnect()}
-      />
-    </>
-  );
-}
-
-/** The app route's navbar right side (copy doc § /app nav): the cluster
- * select + connect — connected wallets get their address chip + Disconnect
- * instead. Passed to SiteNav as `actions`, replacing the Open App CTA. */
-function AppNavControls() {
-  const { isConnected, account } = useWallet();
-  const connected = isConnected && account !== null;
-
-  return (
-    <div className="flex items-center gap-2">
-      <ClusterSwitch />
-      {connected && account !== null ? (
-        <AccountControls address={account} />
-      ) : (
-        <ConnectWalletButton variant="outline" label="Connect wallet" />
-      )}
-    </div>
-  );
-}
 
 /** The connect gate (copy doc § /app wallet gate): the entrance copy + the
  * shared connect button carrying the picker. */
@@ -129,7 +30,7 @@ function WalletGate() {
       </Settle>
       <Settle delay={60}>
         <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-          Connect the wallet you joined with. This surface only reads.
+          Connect the wallet you joined with.
         </p>
       </Settle>
       <Settle delay={120}>

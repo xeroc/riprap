@@ -14,6 +14,7 @@ import App from "./App.tsx";
 
 const PoolRoute = lazy(() => import("./pool/entry.tsx"));
 const MemberRoute = lazy(() => import("./app/entry.tsx"));
+const FileClaimRoute = lazy(() => import("./app/file-claim/entry.tsx"));
 
 /** "#/app/" matches "#/app"; "" / "#" / "#/" (and in-page anchors) are platform. */
 function routeHash(hash: string): string | null {
@@ -27,6 +28,8 @@ function matchRoute(hash: string | null): { title: string | null; element: React
       return { title: "Riprap: Blade Pool @ Breakpoint 2026", element: <PoolRoute /> };
     case "#/app":
       return { title: "Riprap: Blade Pool member app", element: <MemberRoute /> };
+    case "#/app/file-claim":
+      return { title: "Riprap: File a payout request", element: <FileClaimRoute /> };
     default:
       return { title: null, element: <App /> };
   }
