@@ -167,11 +167,16 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Get stabbed with friends.");
     // naming lock is a platform-page rule; the policy page states it plainly
     expect(document.body.textContent).toMatch(/knife assault/i);
-    await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
+    // ready-wait: the picker lives behind a connected wallet (2026-09-21) —
+    // the CTA is the disconnected ready state
+    expect(await screen.findByRole("button", { name: "Connect a wallet to chip in" })).toBeTruthy();
   });
 
   it("tier slider defaults to Standard and moves through exactly the three on-chain tiers", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    joinMock.mockResolvedValue(joinCtx());
     renderPoolPage();
     await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
     const thumb = screen.getByRole("slider");
@@ -185,9 +190,12 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
   });
 
   it("shows the deposits window from deposits_close_at (chain truth)", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
     fetchMock.mockResolvedValue(
       maybe(fakeMutual({ depositsCloseAt: BigInt(Date.UTC(2026, 10, 15, 9, 30) / 1000) })),
     );
+    joinMock.mockResolvedValue(joinCtx());
     renderPoolPage();
     expect(await screen.findByText("entry closes 2026-11-15 09:30 UTC")).toBeTruthy();
   });
@@ -195,7 +203,7 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
   it("the odds table carries the four ludic rows, jokes never touching the math", async () => {
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
     const { container } = renderPoolPage();
-    await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
+    await screen.findByRole("button", { name: "Connect a wallet to chip in" });
     const rows = [...container.querySelectorAll('[data-slot="odds"] tbody tr')].map(
       (tr) => tr.textContent,
     );
@@ -218,7 +226,7 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
   it("fineprint: all 13 policy categories, all 8 exclusions, §5 table from mutual.tiers", async () => {
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
     const { container } = renderPoolPage();
-    await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
+    await screen.findByRole("button", { name: "Connect a wallet to chip in" });
     const sections = [...container.querySelectorAll('[data-slot="policy-section"]')];
     expect(sections.length).toBe(13);
     const headings = sections.map((s) => s.querySelector("span.uppercase")?.textContent ?? "");
@@ -260,7 +268,7 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     expect(stampLinks[0].textContent).toContain("1111…1111");
     expect(container.textContent).toContain("ADJUDICATION · SUBACCORD");
     // the anchored-terms band is wired under the fineprint
-    expect(container.textContent).toContain("The terms as anchored on-chain.");
+    expect(container.textContent).toContain("The immutable terms of this mutual.");
     // §7/§12: discretion and liability stated plainly — counsel recs 2 and 3
     expect(container.textContent).toContain("enforceable right to any payment");
     expect(container.textContent).toContain("no limited liability");
@@ -303,14 +311,14 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
     expect(await screen.findByText("Confirming…")).toBeTruthy();
     resolveSend("sig");
 
-    expect(await screen.findByText("Covered — Standard")).toBeTruthy();
-
     // the covered overlay fires on confirmation — the join moment (copy doc
     // § Covered overlay): stamp, headline, the three figures (total last,
     // chain-formatted), the juror field, Continue. Assert and dismiss FIRST:
-    // an open Radix dialog aria-hides the rest of the page.
+    // it renders a second `Covered — Standard` stamp, and an open Radix
+    // dialog aria-hides the rest of the page.
     const dialog = await screen.findByRole("dialog");
     expect(dialog.textContent).toContain("You're in the ring.");
+    expect(dialog.textContent).toContain("Covered — Standard");
     expect(dialog.textContent).toContain("$20");
     expect(dialog.textContent).toContain("up to $2,000");
     await waitFor(() => expect(dialog.textContent).toContain("pool holds $4,020"));
@@ -323,9 +331,11 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
-    // the slider locks and the app link appears (copy doc § Covered)
-    // Radix restores page aria-hidden a tick after unmount — wait it out
-    await waitFor(() => expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe(""));
+    // the inline covered state (copy doc § Covered): stamp + the app link —
+    // the picker is gone once covered; Radix restores page aria-hidden a
+    // tick after dialog unmount, so wait the stamp out
+    expect(await screen.findByText("Covered — Standard")).toBeTruthy();
+    expect(screen.queryByRole("slider")).toBeNull();
     expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("#/app");
 
     // the facade built against the static address + chosen tier + wallet signer
@@ -415,7 +425,7 @@ describe("balance pre-checks — chip-in disabled with an inline reason (copy do
 });
 
 describe("covered — an existing member is a state, never an error toast", () => {
-  it("renders the Covered stamp with their on-chain tier, locks the slider, links the app", async () => {
+  it("renders the Covered stamp with their on-chain tier and links the app", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
@@ -445,9 +455,10 @@ describe("covered — an existing member is a state, never an error toast", () =
       ),
     ).toBe(true);
     expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("#/app");
-    await waitFor(() => expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe(""));
-    // their tier line, from their on-chain member PDA
-    expect(screen.getByText("Basic · $10 entry · up to $1,000 maximum payout")).toBeTruthy();
+    // the covered view carries the stamp + link only — the tier comes from
+    // the member PDA into the stamp itself; the picker is gone once covered
+    expect(screen.queryByRole("slider")).toBeNull();
+    expect(screen.queryByText("Basic · $10 entry · up to $1,000 maximum payout")).toBeNull();
     // the session gate is set — the moment already happened for this wallet
     expect(sessionStorage.getItem(`riprap:covered:${WALLET}`)).toBe("1");
   });
@@ -539,10 +550,12 @@ describe("deposits closed — entry-closed state from deposits_close_at", () => 
         "This pool stopped taking members. Claims, settlement, and dissolution follow the policy.",
       ),
     ).toBeTruthy();
-    // tiers still render (real chain data), but there is nothing to chip into
-    expect(
-      await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout"),
-    ).toBeTruthy();
+    // the hero subline still carries the Standard tier's chain numbers, but
+    // the picker is gone — there is nothing to chip into
+    await waitFor(() =>
+      expect(document.body.textContent).toContain("up to $2,000 out in the worst case"),
+    );
+    expect(screen.queryByRole("slider")).toBeNull();
     expect(screen.queryByRole("button", { name: /Chip in/ })).toBeNull();
   });
 });

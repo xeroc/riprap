@@ -155,9 +155,7 @@ describe("/app — wallet gate (reads-only: no chain calls until connected)", ()
     expect(screen.queryByRole("link", { name: "Open App" })).toBeNull();
     expect(screen.getByRole("combobox")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Connect wallet" })).toBeTruthy();
-    expect(
-      screen.getByText("Connect the wallet you joined with. This surface only reads."),
-    ).toBeTruthy();
+    expect(screen.getByText("Connect the wallet you joined with.")).toBeTruthy();
     expect(mutualMock).not.toHaveBeenCalled();
   });
 
