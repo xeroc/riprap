@@ -23,6 +23,7 @@ import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMutual } from "../pool/fixtures";
 import { AppPage } from "./AppPage";
+import { recordDelivery } from "./file-claim/evidenceRecord";
 
 // --- hoisted mock state (vi.mock factories run before the module body) -------
 
@@ -163,6 +164,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  localStorage.clear();
   vi.unstubAllEnvs();
   walletState.isConnected = false;
   walletState.account = null;
@@ -282,8 +284,25 @@ describe("/app — membership + claims (data-bound to the chain)", () => {
     expect(await screen.findByText("Covered — Premium")).toBeTruthy();
     expect(await screen.findByText("#0 · $2,000 · PAID")).toBeTruthy();
     expect(screen.getByText("filed 2026-11-16 10:00 UTC")).toBeTruthy();
+    // evidence + recovery (copy doc § /app): no delivery record ⇒ incomplete
+    // with the resume entry
+    expect(screen.getByText("Evidence: incomplete")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Resume evidence delivery" })).toBeTruthy();
     // the other wallet's claim is filtered out — no second row, no nonce #1
     expect(screen.queryByText(/#1/)).toBeNull();
+  });
+
+  it("claims: a recorded complete delivery shows the complete line, no resume entry", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual({ claimNonce: 1n })));
+    memberMock.mockResolvedValue(memberAccount(1));
+    claimMock.mockResolvedValue(claimAccount(WALLET));
+    recordDelivery(MUTUAL_ADDR, 0n);
+    renderApp();
+
+    expect(await screen.findByText("Evidence: complete")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Resume evidence delivery" })).toBeNull();
   });
 
   it("claims loading reads as loading; empty list reads as none", async () => {

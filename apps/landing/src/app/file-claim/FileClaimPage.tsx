@@ -36,6 +36,7 @@ import {
   saveDraft,
 } from "./draft";
 import { operatorPubFromKey, postManifest, putDocument } from "./evidence";
+import { recordDelivery } from "./evidenceRecord";
 import { buildManifest, manifestEntries } from "./manifest";
 import {
   type DocRowStatus,
@@ -480,7 +481,10 @@ function Wizard({ wallet }: { wallet: Address }) {
     }
     if (delivered === DOC_PATHS.length) {
       setStep(8);
-      if (mutualAddress !== undefined) clearDraft(mutualAddress);
+      if (mutualAddress !== undefined) {
+        clearDraft(mutualAddress);
+        recordDelivery(mutualAddress, result.nonce); // the #/app evidence line
+      }
     }
   };
 

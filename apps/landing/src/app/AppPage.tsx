@@ -29,12 +29,14 @@ import {
 } from "@solana/connector";
 import type { Address } from "@solana/kit";
 import { type ComponentProps, useState } from "react";
-
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
 import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../pool/mutual";
 import { useMinStake } from "../pool/useMinStake";
 import { useMutual } from "../pool/useMutual";
+import { useClusterRpc } from "../shared/rpc";
+import { deliveryComplete } from "./file-claim/evidenceRecord";
+import { Recovery } from "./file-claim/Recovery";
 import { useClaimPreflight } from "./file-claim/useClaimPreflight";
 import { type ClaimsQuery, useClaims } from "./useClaims";
 import { useMembership } from "./useMembership";
@@ -150,14 +152,25 @@ function statusLabel(status: ClaimStatus): string {
 }
 
 /** The claims list (copy doc § /app claims): hairline rows, every field mono
- * and straight off the chain — `#nonce · amount · STATUS · filed date`. */
-function ClaimsBlock({ claims }: { claims: ClaimsQuery }) {
+ * and straight off the chain — `#nonce · amount · STATUS · filed date` —
+ * plus the evidence line + recovery entry (copy doc § /app "Claim rows,
+ * evidence + recovery", 2026-09-22). */
+function ClaimsBlock({
+  claims,
+  mutual,
+  subaccord,
+}: {
+  claims: ClaimsQuery;
+  mutual: Address;
+  subaccord: Address;
+}) {
+  const [openRecovery, setOpenRecovery] = useState<bigint | null>(null);
   const label = (
     <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
       Claims
     </p>
   );
-
+  const clusterRpc = useClusterRpc();
   if (claims.state === "loading") {
     return (
       <div data-slot="claims" className="flex max-w-[36rem] flex-col gap-2">
@@ -190,20 +203,48 @@ function ClaimsBlock({ claims }: { claims: ClaimsQuery }) {
         </p>
       ) : (
         <ul className="w-full">
-          {claims.claims.map(({ nonce, claim }) => (
-            <li
-              key={nonce.toString()}
-              data-num
-              className="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-hairline py-2 font-mono text-sm text-ink"
-            >
-              <span>
-                {`#${nonce.toString()} · ${usd(microToUsd(claim.claimAmount))} · ${statusLabel(claim.status)}`}
-              </span>
-              <span className="font-mono text-xs text-muted-foreground">
-                filed {formatUtc(claim.filedAt)}
-              </span>
-            </li>
-          ))}
+          {claims.claims.map(({ nonce, claim }) => {
+            const complete = deliveryComplete(mutual, nonce);
+            return (
+              <li
+                key={nonce.toString()}
+                data-num
+                className="flex flex-col border-t border-hairline py-2 font-mono text-sm text-ink"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+                  <span>
+                    {`#${nonce.toString()} · ${usd(microToUsd(claim.claimAmount))} · ${statusLabel(claim.status)}`}
+                  </span>
+                  <span className="font-mono text-xs text-muted-foreground">
+                    filed {formatUtc(claim.filedAt)}
+                  </span>
+                </div>
+                <div className="mt-1 flex flex-wrap items-baseline gap-x-4">
+                  <span className="font-mono text-xs text-stone">
+                    {complete ? "Evidence: complete" : "Evidence: incomplete"}
+                  </span>
+                  {!complete && clusterRpc !== null ? (
+                    <Button
+                      variant="outline"
+                      className="h-8 px-3 text-xs"
+                      onClick={() => setOpenRecovery(openRecovery === nonce ? null : nonce)}
+                    >
+                      Resume evidence delivery
+                    </Button>
+                  ) : null}
+                </div>
+                {openRecovery === nonce && clusterRpc !== null ? (
+                  <Recovery
+                    clusterRpc={clusterRpc}
+                    mutual={mutual}
+                    subaccord={subaccord}
+                    dispute={claim.dispute}
+                    nonce={nonce}
+                  />
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -310,7 +351,13 @@ function MemberSurface({ wallet }: { wallet: Address }) {
         </p>
       </Settle>
       <Settle delay={120}>
-        <ClaimsBlock claims={claims} />
+        {/* mutual ready implies the address resolved — wallet is an
+            impossible-branch key fallback for the type, never hit */}
+        <ClaimsBlock
+          claims={claims}
+          mutual={mutualAddress ?? wallet}
+          subaccord={mutualQuery.mutual.subaccord}
+        />
       </Settle>
       <Settle delay={180}>
         {/* juror panel (copy doc § /app): the covered overlay's destination */}

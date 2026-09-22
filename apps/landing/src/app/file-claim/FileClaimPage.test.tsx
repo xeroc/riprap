@@ -612,7 +612,6 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
   });
 
   // Recovery re-entry (manifest re-upload → sha256 == dispute.evidence_hashes[0]
-  // → re-PUT 201-no-op) tests the #/app claim-detail surface — bean
-  // riprap-wwvc's scope. Unskipped when that surface lands.
-  it.skip("recovery: re-uploaded manifest matching the dispute slot re-PUTs (201 no-op)", () => {});
+  // → re-PUT 201-no-op) lives with its surface: Recovery.test.tsx (the
+  // panel) and AppPage.test (the claims-row entry) — riprap-wwvc.
 });
