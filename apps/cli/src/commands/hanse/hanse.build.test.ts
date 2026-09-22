@@ -67,8 +67,8 @@ describe("buildFileClaim (hanse:file-claim)", () => {
     expect(build.claim).toBe((await findClaimPda({ mutual: MUTUAL, nonce: 0n }))[0]);
     expect(build.dispute).toBe((await findDisputePda({ filer: MUTUAL, nonce: 0n }))[0]);
 
-    // [0]claimant [1]mutual [2]memberAccount [3]claim [4]depositor
-    // [5]subaccord [6]memberFeeAta [7]feeFloat [8]feeMint [9]treasury
+    // [0]claimant [1]rentPayer [2]mutual [3]memberAccount [4]claim
+    // [5]depositor [6]subaccord [7]memberFeeAta [8]feeFloat [9]feeMint
     // [10]dispute [11]feeVault [12]accordState
     const accounts = build.instruction.accounts ?? [];
     expect(accounts[0]?.address).toBe(claimant.address); // claimant signer
@@ -82,9 +82,8 @@ describe("buildFileClaim (hanse:file-claim)", () => {
     expect(accounts[8]?.address).toBe(
       (await findFeeFloatPda({ mutual: MUTUAL, feeMint: FEE_MINT }))[0],
     );
-    expect(accounts[10]?.address).toBe(await findAssociatedTokenAddress(DEPOSIT_MINT, POOL));
-    expect(accounts[11]?.address).toBe(build.dispute);
-    expect(accounts[12]?.address).toBe(await findAssociatedTokenAddress(FEE_MINT, SUBACCORD));
+    expect(accounts[10]?.address).toBe(build.dispute);
+    expect(accounts[11]?.address).toBe(await findAssociatedTokenAddress(FEE_MINT, SUBACCORD));
   });
 });
 

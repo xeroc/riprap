@@ -63,7 +63,6 @@ export async function buildFileClaim(input: {
   const [depositor] = await findDepositorPda({ pool: mutual.pool, owner: claimant.address });
   const memberFeeAta = await findAssociatedTokenAddress(mutual.feeMint, claimant.address);
   const [feeFloat] = await findFeeFloatPda({ mutual: mutual.address, feeMint: mutual.feeMint });
-  const treasury = await findAssociatedTokenAddress(mutual.depositMint, mutual.pool);
   const [dispute] = await findDisputePda({ filer: mutual.address, nonce });
   const feeVault = await findAssociatedTokenAddress(mutual.feeMint, mutual.subaccord);
   const [accordState] = await findAccordStatePda();
@@ -78,7 +77,6 @@ export async function buildFileClaim(input: {
     memberFeeAta,
     feeFloat,
     feeMint: mutual.feeMint,
-    treasury,
     dispute,
     feeVault,
     accordState,

@@ -57,7 +57,6 @@ fn file_claim_tx(
             member_fee_ata: ata(&member.pubkey(), &env.mint),
             fee_float: ata(&mutual, &env.mint),
             fee_mint: env.mint,
-            treasury: pool_treasury(&pool, &env.mint),
             dispute,
             fee_vault: ata(&subaccord, &env.mint),
             accord_state: Pubkey::find_program_address(&[b"state"], &accord::id()).0,
@@ -93,7 +92,6 @@ fn setup_claimable(
 #[test]
 fn file_claim_opens_dispute_and_marks_pending() {
     let (mut env, cfg, member, member_ata) = setup_claimable(1, 50_000_000);
-    let treasury_before = token_amount(&env.svm, &pool_treasury(&pool_pda(1), &env.mint));
 
     file_claim_tx(&mut env, &cfg, &member, 1_500_000_000, [9u8; 32], 0).unwrap();
 
@@ -113,7 +111,7 @@ fn file_claim_opens_dispute_and_marks_pending() {
     assert_eq!(c.settled_at, 0);
 
     // Dispute: bound to this mutual + nonce, filed by the mutual PDA, binary
-    // options, evidence manifest with structural context.
+    // options, evidence hash passed through verbatim (no wrap).
     let dispute = dispute_pda(&mutual, 0);
     assert_eq!(c.dispute, dispute);
     let (d, _): (accord::state::Dispute, u64) = {
@@ -126,9 +124,7 @@ fn file_claim_opens_dispute_and_marks_pending() {
     assert_eq!(d.filer, mutual, "the mutual PDA files, not the member");
     assert_eq!(d.nonce, 0);
     assert_eq!(d.num_options, 2);
-    let expected_manifest =
-        hanse::instructions::evidence_manifest(&[9u8; 32], 1, 20_000_000, treasury_before);
-    assert_eq!(d.evidence_hashes[0], expected_manifest);
+    assert_eq!(d.evidence_hashes[0], [9u8; 32]);
     assert_eq!(
         d.options[0],
         hanse::instructions::option_label(&mutual, 0),
@@ -265,7 +261,6 @@ fn non_member_reverts() {
                 member_fee_ata: ata(&stranger.pubkey(), &env.mint),
                 fee_float: ata(&mutual, &env.mint),
                 fee_mint: env.mint,
-                treasury: pool_treasury(&pool, &env.mint),
                 dispute,
                 fee_vault: ata(&subaccord, &env.mint),
                 accord_state: Pubkey::find_program_address(&[b"state"], &accord::id()).0,

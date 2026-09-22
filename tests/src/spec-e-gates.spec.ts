@@ -151,7 +151,6 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
           subaccord: fx.fx.subaccord,
           memberFeeAta: fx.memberAtas[0]!,
           feeMint: fx.mint,
-          treasury: fx.treasury,
           dispute: await disputePdaFor(env, fx.mutual, nonce),
           feeVault: fx.feeVault,
           accordState: (await findAccordStatePda())[0],

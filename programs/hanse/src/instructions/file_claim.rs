@@ -14,24 +14,6 @@ pub fn option_label(mutual: &Pubkey, index: u64) -> [u8; 32] {
     ::solana_program::hash::hashv(&[b"hanse-opt", mutual.as_ref(), &index.to_le_bytes()]).to_bytes()
 }
 
-/// Filing evidence manifest hash (§9): the claimant's evidence commitment
-/// plus the public structural context jurors rule under —
-/// `H(evidence_hash ‖ tier_le ‖ contribution_le ‖ treasury_balance_le)`.
-pub fn evidence_manifest(
-    evidence_hash: &[u8; 32],
-    tier: u8,
-    contribution: u64,
-    treasury_balance: u64,
-) -> [u8; 32] {
-    ::solana_program::hash::hashv(&[
-        evidence_hash,
-        &[tier],
-        &contribution.to_le_bytes(),
-        &treasury_balance.to_le_bytes(),
-    ])
-    .to_bytes()
-}
-
 /// Account context for `file_claim` — member-signed (EVENT-MUTUAL §7).
 #[derive(Accounts)]
 #[instruction(requested: u64, evidence_hash: [u8; 32], nonce: u64)]
@@ -104,9 +86,6 @@ pub struct FileClaim<'info> {
     #[account(constraint = fee_mint.key() == mutual.fee_mint @ HanseError::WrongMint)]
     pub fee_mint: Account<'info, Mint>,
 
-    /// Pool treasury — read for the solvency context baked into the evidence
-    /// manifest. CHECK: must be the pool's ATA; verified in the handler.
-    pub treasury: Box<Account<'info, TokenAccount>>,
 
     /// The Dispute PDA ["dispute", mutual, nonce] — created by the CPI.
     /// CHECK: verified in the handler before the CPI.
@@ -174,17 +153,6 @@ impl<'info> FileClaim<'info> {
             HanseError::NoRightsStake
         );
 
-        // Treasury must be the pool's canonical ATA (its balance is baked
-        // into the evidence manifest).
-        let expected_treasury = anchor_spl::associated_token::get_associated_token_address(
-            &mutual.pool,
-            &mutual.deposit_mint,
-        );
-        require_keys_eq!(
-            ctx.accounts.treasury.key(),
-            expected_treasury,
-            HanseError::WrongTreasury
-        );
 
         // Dispute PDA bound to this mutual + this nonce (filer = mutual PDA).
         let (expected_dispute, _) = Pubkey::find_program_address(
@@ -219,17 +187,14 @@ impl<'info> FileClaim<'info> {
         )?;
 
         // ── CPI accord::create_dispute — mutual PDA files; claimant pays
-        //    rent (ADR-0028, data-free signer); float pays the fee ────────
+        //    rent (ADR-0028, data-free signer); float pays the fee.
+        //    evidence_hash = sha256(manifest) passes through VERBATIM (spec
+        //    amendment 2026-09-22 — no hanse-side wrap; the accord-universal
+        //    check sha256(manifest) == evidence_hashes[0] holds) ──────────
         let options = vec![
             option_label(&mutual.key(), 0), // Approve
             option_label(&mutual.key(), 1), // Deny
         ];
-        let manifest = evidence_manifest(
-            &evidence_hash,
-            member.tier,
-            tier.contribution,
-            ctx.accounts.treasury.amount,
-        );
         let seed_le = mutual.seed.to_le_bytes();
         accord::cpi::create_dispute(
             CpiContext::new_with_signer(
@@ -253,7 +218,7 @@ impl<'info> FileClaim<'info> {
                 &[&[MUTUAL_SEED, seed_le.as_ref(), &[mutual.bump]]],
             ),
             options,
-            manifest,
+            evidence_hash,
             nonce,
             fee,
         )?;
@@ -303,15 +268,4 @@ mod tests {
         assert_ne!(approve, deny);
     }
 
-    /// Evidence manifest binds evidence + tier + contribution + treasury
-    /// balance (§9 structural context).
-    #[test]
-    fn evidence_manifest_is_sensitivity_bound() {
-        let h = [1u8; 32];
-        let a = evidence_manifest(&h, 1, 20_000_000, 1_000_000);
-        assert_eq!(a, evidence_manifest(&h, 1, 20_000_000, 1_000_000));
-        assert_ne!(a, evidence_manifest(&h, 1, 20_000_000, 2_000_000));
-        assert_ne!(a, evidence_manifest(&h, 2, 20_000_000, 1_000_000));
-        assert_ne!(a, evidence_manifest(&h, 1, 40_000_000, 1_000_000));
-    }
 }

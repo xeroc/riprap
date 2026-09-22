@@ -65,7 +65,6 @@ export type FileClaimInstruction<
   TAccountMemberFeeAta extends string | AccountMeta<string> = string,
   TAccountFeeFloat extends string | AccountMeta<string> = string,
   TAccountFeeMint extends string | AccountMeta<string> = string,
-  TAccountTreasury extends string | AccountMeta<string> = string,
   TAccountDispute extends string | AccountMeta<string> = string,
   TAccountFeeVault extends string | AccountMeta<string> = string,
   TAccountAccordState extends string | AccountMeta<string> = string,
@@ -102,7 +101,6 @@ export type FileClaimInstruction<
         : TAccountMemberFeeAta,
       TAccountFeeFloat extends string ? WritableAccount<TAccountFeeFloat> : TAccountFeeFloat,
       TAccountFeeMint extends string ? ReadonlyAccount<TAccountFeeMint> : TAccountFeeMint,
-      TAccountTreasury extends string ? ReadonlyAccount<TAccountTreasury> : TAccountTreasury,
       TAccountDispute extends string ? WritableAccount<TAccountDispute> : TAccountDispute,
       TAccountFeeVault extends string ? WritableAccount<TAccountFeeVault> : TAccountFeeVault,
       TAccountAccordState extends string
@@ -176,7 +174,6 @@ export type FileClaimAsyncInput<
   TAccountMemberFeeAta extends string = string,
   TAccountFeeFloat extends string = string,
   TAccountFeeMint extends string = string,
-  TAccountTreasury extends string = string,
   TAccountDispute extends string = string,
   TAccountFeeVault extends string = string,
   TAccountAccordState extends string = string,
@@ -215,11 +212,6 @@ export type FileClaimAsyncInput<
    */
   feeFloat?: Address<TAccountFeeFloat>;
   feeMint: Address<TAccountFeeMint>;
-  /**
-   * Pool treasury — read for the solvency context baked into the evidence
-   * manifest. CHECK: must be the pool's ATA; verified in the handler.
-   */
-  treasury: Address<TAccountTreasury>;
   /** The Dispute PDA ["dispute", mutual, nonce] — created by the CPI. */
   dispute: Address<TAccountDispute>;
   /** The subaccord's fee vault ATA — created (init_if_needed) by the CPI. */
@@ -246,7 +238,6 @@ export async function getFileClaimInstructionAsync<
   TAccountMemberFeeAta extends string,
   TAccountFeeFloat extends string,
   TAccountFeeMint extends string,
-  TAccountTreasury extends string,
   TAccountDispute extends string,
   TAccountFeeVault extends string,
   TAccountAccordState extends string,
@@ -267,7 +258,6 @@ export async function getFileClaimInstructionAsync<
     TAccountMemberFeeAta,
     TAccountFeeFloat,
     TAccountFeeMint,
-    TAccountTreasury,
     TAccountDispute,
     TAccountFeeVault,
     TAccountAccordState,
@@ -290,7 +280,6 @@ export async function getFileClaimInstructionAsync<
     TAccountMemberFeeAta,
     TAccountFeeFloat,
     TAccountFeeMint,
-    TAccountTreasury,
     TAccountDispute,
     TAccountFeeVault,
     TAccountAccordState,
@@ -315,7 +304,6 @@ export async function getFileClaimInstructionAsync<
     memberFeeAta: { value: input.memberFeeAta ?? null, isWritable: true },
     feeFloat: { value: input.feeFloat ?? null, isWritable: true },
     feeMint: { value: input.feeMint ?? null, isWritable: false },
-    treasury: { value: input.treasury ?? null, isWritable: false },
     dispute: { value: input.dispute ?? null, isWritable: true },
     feeVault: { value: input.feeVault ?? null, isWritable: true },
     accordState: { value: input.accordState ?? null, isWritable: false },
@@ -404,7 +392,6 @@ export async function getFileClaimInstructionAsync<
       getAccountMeta("memberFeeAta", accounts.memberFeeAta),
       getAccountMeta("feeFloat", accounts.feeFloat),
       getAccountMeta("feeMint", accounts.feeMint),
-      getAccountMeta("treasury", accounts.treasury),
       getAccountMeta("dispute", accounts.dispute),
       getAccountMeta("feeVault", accounts.feeVault),
       getAccountMeta("accordState", accounts.accordState),
@@ -427,7 +414,6 @@ export async function getFileClaimInstructionAsync<
     TAccountMemberFeeAta,
     TAccountFeeFloat,
     TAccountFeeMint,
-    TAccountTreasury,
     TAccountDispute,
     TAccountFeeVault,
     TAccountAccordState,
@@ -449,7 +435,6 @@ export type FileClaimInput<
   TAccountMemberFeeAta extends string = string,
   TAccountFeeFloat extends string = string,
   TAccountFeeMint extends string = string,
-  TAccountTreasury extends string = string,
   TAccountDispute extends string = string,
   TAccountFeeVault extends string = string,
   TAccountAccordState extends string = string,
@@ -488,11 +473,6 @@ export type FileClaimInput<
    */
   feeFloat: Address<TAccountFeeFloat>;
   feeMint: Address<TAccountFeeMint>;
-  /**
-   * Pool treasury — read for the solvency context baked into the evidence
-   * manifest. CHECK: must be the pool's ATA; verified in the handler.
-   */
-  treasury: Address<TAccountTreasury>;
   /** The Dispute PDA ["dispute", mutual, nonce] — created by the CPI. */
   dispute: Address<TAccountDispute>;
   /** The subaccord's fee vault ATA — created (init_if_needed) by the CPI. */
@@ -519,7 +499,6 @@ export function getFileClaimInstruction<
   TAccountMemberFeeAta extends string,
   TAccountFeeFloat extends string,
   TAccountFeeMint extends string,
-  TAccountTreasury extends string,
   TAccountDispute extends string,
   TAccountFeeVault extends string,
   TAccountAccordState extends string,
@@ -540,7 +519,6 @@ export function getFileClaimInstruction<
     TAccountMemberFeeAta,
     TAccountFeeFloat,
     TAccountFeeMint,
-    TAccountTreasury,
     TAccountDispute,
     TAccountFeeVault,
     TAccountAccordState,
@@ -562,7 +540,6 @@ export function getFileClaimInstruction<
   TAccountMemberFeeAta,
   TAccountFeeFloat,
   TAccountFeeMint,
-  TAccountTreasury,
   TAccountDispute,
   TAccountFeeVault,
   TAccountAccordState,
@@ -586,7 +563,6 @@ export function getFileClaimInstruction<
     memberFeeAta: { value: input.memberFeeAta ?? null, isWritable: true },
     feeFloat: { value: input.feeFloat ?? null, isWritable: true },
     feeMint: { value: input.feeMint ?? null, isWritable: false },
-    treasury: { value: input.treasury ?? null, isWritable: false },
     dispute: { value: input.dispute ?? null, isWritable: true },
     feeVault: { value: input.feeVault ?? null, isWritable: true },
     accordState: { value: input.accordState ?? null, isWritable: false },
@@ -637,7 +613,6 @@ export function getFileClaimInstruction<
       getAccountMeta("memberFeeAta", accounts.memberFeeAta),
       getAccountMeta("feeFloat", accounts.feeFloat),
       getAccountMeta("feeMint", accounts.feeMint),
-      getAccountMeta("treasury", accounts.treasury),
       getAccountMeta("dispute", accounts.dispute),
       getAccountMeta("feeVault", accounts.feeVault),
       getAccountMeta("accordState", accounts.accordState),
@@ -660,7 +635,6 @@ export function getFileClaimInstruction<
     TAccountMemberFeeAta,
     TAccountFeeFloat,
     TAccountFeeMint,
-    TAccountTreasury,
     TAccountDispute,
     TAccountFeeVault,
     TAccountAccordState,
@@ -707,21 +681,16 @@ export type ParsedFileClaimInstruction<
      */
     feeFloat: TAccountMetas[8];
     feeMint: TAccountMetas[9];
-    /**
-     * Pool treasury — read for the solvency context baked into the evidence
-     * manifest. CHECK: must be the pool's ATA; verified in the handler.
-     */
-    treasury: TAccountMetas[10];
     /** The Dispute PDA ["dispute", mutual, nonce] — created by the CPI. */
-    dispute: TAccountMetas[11];
+    dispute: TAccountMetas[10];
     /** The subaccord's fee vault ATA — created (init_if_needed) by the CPI. */
-    feeVault: TAccountMetas[12];
+    feeVault: TAccountMetas[11];
     /** Accord's global state (pause flag). */
-    accordState: TAccountMetas[13];
-    tokenProgram: TAccountMetas[14];
-    associatedTokenProgram: TAccountMetas[15];
-    systemProgram: TAccountMetas[16];
-    accordProgram: TAccountMetas[17];
+    accordState: TAccountMetas[12];
+    tokenProgram: TAccountMetas[13];
+    associatedTokenProgram: TAccountMetas[14];
+    systemProgram: TAccountMetas[15];
+    accordProgram: TAccountMetas[16];
   };
   data: FileClaimInstructionData;
 };
@@ -734,10 +703,10 @@ export function parseFileClaimInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedFileClaimInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 18) {
+  if (instruction.accounts.length < 17) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 18,
+      expectedAccountMetas: 17,
     });
   }
   let accountIndex = 0;
@@ -759,7 +728,6 @@ export function parseFileClaimInstruction<
       memberFeeAta: getNextAccount(),
       feeFloat: getNextAccount(),
       feeMint: getNextAccount(),
-      treasury: getNextAccount(),
       dispute: getNextAccount(),
       feeVault: getNextAccount(),
       accordState: getNextAccount(),

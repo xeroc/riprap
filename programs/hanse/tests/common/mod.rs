@@ -641,7 +641,6 @@ pub fn file_claim_raw(
             member_fee_ata: ata(&member.pubkey(), &env.mint),
             fee_float: ata(&mutual, &env.mint),
             fee_mint: env.mint,
-            treasury: pool_treasury(&pool, &env.mint),
             dispute,
             fee_vault: ata(&subaccord, &env.mint),
             accord_state: Pubkey::find_program_address(&[b"state"], &accord::id()).0,

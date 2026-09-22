@@ -278,7 +278,6 @@ export async function fileMemberClaim(
     subaccord: fx.fx.subaccord,
     memberFeeAta: claimantAta,
     feeMint: mint,
-    treasury: fx.treasury,
     dispute: disputePda,
     feeVault: fx.feeVault,
     accordState: await ensurePause(env),
