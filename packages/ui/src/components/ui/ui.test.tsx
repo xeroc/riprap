@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { toast } from "sonner";
 import { afterEach, describe, expect, it } from "vitest";
 import { Button, buttonVariants } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { Toaster } from "../ui/sonner";
+import { Textarea } from "../ui/textarea";
 
 afterEach(cleanup);
 
@@ -99,6 +101,39 @@ describe("Separator", () => {
     expect(el).toBeTruthy();
     expect(el?.className).toContain("bg-border"); // --color-border = hairline
     expect(el?.className).toContain("h-px");
+  });
+});
+
+describe("Checkbox", () => {
+  it("is a native input restyled: hairline-strong box, 2px radius, settle colors", () => {
+    render(<Checkbox />);
+    const el = screen.getByRole("checkbox");
+    expect(el.className).toContain("appearance-none");
+    expect(el.className).toContain("rounded-input");
+    expect(el.className).toContain("border-hairline-strong");
+    expect(el.className).toContain("bg-card");
+    expect(el.className).toContain("checked:bg-stone");
+  });
+
+  it("toggles like a checkbox and shows the check glyph only when checked", () => {
+    render(<Checkbox />);
+    const el = screen.getByRole("checkbox") as HTMLInputElement;
+    expect(el.checked).toBe(false);
+    fireEvent.click(el);
+    expect(el.checked).toBe(true);
+    const box = el.parentElement;
+    expect(box?.querySelector("svg")?.getAttribute("class")).toContain("peer-checked:block");
+  });
+});
+
+describe("Textarea", () => {
+  it("follows text-input law: card ground, hairline-strong edge, 2px radius", () => {
+    render(<Textarea placeholder="what happened" />);
+    const el = screen.getByPlaceholderText("what happened");
+    expect(el.className).toContain("rounded-input");
+    expect(el.className).toContain("border-hairline-strong");
+    expect(el.className).toContain("bg-card");
+    expect(el.className).toContain("min-h-24");
   });
 });
 
