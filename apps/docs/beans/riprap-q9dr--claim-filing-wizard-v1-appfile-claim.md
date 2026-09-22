@@ -1,11 +1,11 @@
 ---
 # riprap-q9dr
 title: 'Claim-filing wizard v1 — #/app/file-claim'
-status: todo
+status: completed
 type: milestone
 priority: high
 created_at: 2026-09-22T13:59:54Z
-updated_at: 2026-09-22T13:59:54Z
+updated_at: 2026-09-22T18:58:52Z
 ---
 
 The member-facing payout-request flow for the Blade Pool: wallet-gated wizard
