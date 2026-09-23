@@ -34,6 +34,10 @@ jobs:
           VITE_VCS_REF: ${{ github.sha }}
           NODE_ENV: production
           VITE_N8N_WEBHOOK_URL: ${{ vars.PUBLIC_N8N_WEBHOOK_URL }}
+          VITE_DEVNET_MUTUAL: ${{ vars.VITE_DEVNET_MUTUAL }}
+          VITE_MAINNET_MUTUAL: ${{ vars.VITE_MAINNET_MUTUAL }}
+          VITE_DEVNET_RPC: ${{ secrets.VITE_DEVNET_RPC }}
+          VITE_MAINNET_RPC: ${{ secrets.VITE_MAINNET_RPC }}
 
       - name: Deploy to external repository
         uses: peaceiris/actions-gh-pages@v3
