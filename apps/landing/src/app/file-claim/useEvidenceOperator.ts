@@ -8,6 +8,7 @@
 // the URL is health-checked against the daemon's /healthz. The resolution
 // shape matches the future curation path — a pointer change, not code.
 
+import { shortenAddress } from "@riprap/ui";
 import {
   type Address,
   fetchEncodedAccount,
@@ -67,7 +68,9 @@ export async function resolveEvidenceOperator(
   });
   const account = await fetchEncodedAccount(clusterRpc.rpc, pda);
   if (!account.exists) {
-    throw new Error(`no program-metadata account for operator ${operatorAuthority}`);
+    throw new Error(
+      `no program-metadata account for operator ${shortenAddress(operatorAuthority)}`,
+    );
   }
   // the encoded account carries its bytes — the body is UTF-8 JSON
   const parsed = JSON.parse(new TextDecoder().decode(account.data)) as Partial<OperatorMetadata>;

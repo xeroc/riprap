@@ -562,7 +562,7 @@ function Wizard({ wallet }: { wallet: Address }) {
           minJurySize={pass.minJurySize}
           feePerJuror={pass.feePerJuror}
           incidentIso={incidentIso}
-          operator={operator}
+          operatorAddress={pass.evidenceOperator}
           canSign={manifest !== null && hanseEnv !== null && filed === null}
           onBack={() => setStep(4)}
           onSign={() => void signAndFile()}
@@ -571,7 +571,7 @@ function Wizard({ wallet }: { wallet: Address }) {
         <StepSign phase={signPhase} nonceRace={nonceRace} />
       ) : step === 7 && filed !== null ? (
         <StepPublish
-          operatorName={operator.state === "ready" ? operator.operator.name : "{{PARAM}}"}
+          operatorAddress={pass.evidenceOperator}
           rows={publishRows}
           conflictPath={conflictPath}
           unreachable={operatorDown}

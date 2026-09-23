@@ -20,7 +20,6 @@ import { Settle } from "../../components/Settle";
 import { microToUsd, type PoolTier } from "../../pool/mutual";
 import type { ClaimDraft, DocSlot } from "./draft";
 import { DOC_SLOTS } from "./draft";
-import type { EvidenceOperatorQuery } from "./useEvidenceOperator";
 
 /** The emergency banner — leads every step (copy doc § /app/file-claim). */
 export function EmergencyBanner() {
@@ -225,8 +224,11 @@ export function StepAmount({
           </p>
           {overCap ? (
             <p className="text-error [font:var(--riprap-body-sm)]">
-              Above your cap — <span data-num className="font-mono">{usd(tier.cap)}</span> USDC is
-              the most this membership can request.
+              Above your cap —{" "}
+              <span data-num className="font-mono">
+                {usd(tier.cap)}
+              </span>{" "}
+              USDC is the most this membership can request.
             </p>
           ) : null}
         </div>
@@ -410,7 +412,7 @@ export function StepReview({
   minJurySize,
   feePerJuror,
   incidentIso,
-  operator,
+  operatorAddress,
   canSign,
   onBack,
   onSign,
@@ -421,7 +423,8 @@ export function StepReview({
   minJurySize: number;
   feePerJuror: bigint;
   incidentIso: string;
-  operator: EvidenceOperatorQuery;
+  /** sub.evidence_operator — the operator IS this pubkey; presented truncated. */
+  operatorAddress: string;
   /** Signing needs the signer env + operator resolution (or {{PARAM}} risk). */
   canSign: boolean;
   onBack: () => void;
@@ -461,11 +464,8 @@ export function StepReview({
           One open claim per member.
         </p>
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-          Evidence is encrypted for{" "}
-          <span className="text-ink">
-            {operator.state === "ready" ? operator.operator.name : "{{PARAM}}"}
-          </span>
-          , the pool's evidence operator, and delivered there for the jury.
+          Evidence is encrypted for <AddressChipInline value={operatorAddress} />, the pool's
+          evidence operator, and delivered there for the jury.
         </p>
       </div>
       <div className="flex items-center gap-3">
@@ -511,12 +511,13 @@ export function StepSign({ phase, nonceRace }: { phase: SignPhase; nonceRace: bo
 export type DocRowStatus = "pending" | "delivering" | "retrying" | "delivered" | "failed";
 
 export function StepPublish({
-  operatorName,
+  operatorAddress,
   rows,
   conflictPath,
   unreachable,
 }: {
-  operatorName: string;
+  /** sub.evidence_operator — presented truncated, never a full dump. */
+  operatorAddress: string;
   rows: Array<{ path: string; status: DocRowStatus }>;
   /** A 409 leaf — hard stop, nothing overwritten. */
   conflictPath?: string;
@@ -527,7 +528,7 @@ export function StepPublish({
     <StepFrame n={7} name="Publish">
       <div className="flex max-w-3xl flex-col gap-2" data-slot="publish">
         <p className="text-body [font:var(--riprap-body-md)]">
-          Filing confirmed. Delivering evidence to <span className="text-ink">{operatorName}</span>…
+          Filing confirmed. Delivering evidence to <AddressChipInline value={operatorAddress} />…
         </p>
         <ul className="flex max-w-3xl flex-col">
           {rows.map((row) => (

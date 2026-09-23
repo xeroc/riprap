@@ -367,7 +367,10 @@ describe("#/app/file-claim — the walk (0→5)", () => {
     expect(await screen.findByText(/Step 5 of 5 — Review/i)).toBeTruthy();
     expect(screen.getByText(/Juror fee \$15 USDC — 3 jurors at \$5 USDC each/)).toBeTruthy();
     const operatorLine = screen.getByText(/Evidence is encrypted for/);
-    expect(operatorLine.textContent).toContain("Accord Evidence");
+    // the operator is presented as its pubkey, truncated (AddressChip) —
+    // never the full 32/44-char dump, never a pretend name
+    expect(operatorLine.textContent).toContain("EEEE…EEEE");
+    expect(operatorLine.textContent).not.toContain("E".repeat(32));
     expect(
       screen.getByText(
         "Denied: the fee is kept. Approved: refunded with the payment. Failed adjudication: returned.",
@@ -431,8 +434,7 @@ describe("#/app/file-claim — the walk (0→5)", () => {
     }
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     const amount = (await screen.findByLabelText("Requested payout (USDC)")) as HTMLInputElement;
-    const continueBtn = () =>
-      screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
+    const continueBtn = () => screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
 
     // default = cap ($2,000) — at-cap is valid
     expect(continueBtn().disabled).toBe(false);
