@@ -1,6 +1,6 @@
 import{a as e}from"./rolldown-runtime-B0Z9INg1.js";import{D as t,E as n,L as r,N as i,g as a,k as o,n as s,t as c,v as l,x as u}from"./Settle-CUQ03V1X.js";var d=/(\d[\d.,]*\d|\d)/g;function f(e){return e.split(d).filter(e=>e!==``).map(e=>({text:e,numeral:/\d/.test(e)}))}var p=e(r(),1),m=`Everything on this page is meant to be copied: an explainer when you write about riprap, the logo files, and an email that introduces us to someone you know.`,h=`raising a pre-seed now · terms and deck on request`,g=`riprap — real-world risk protection on solana. riprap.xyz`,_=`Over 20% of every insurance dollar vanishes before a single claim is paid.
 
-riprap to insurance is what DeFi is to finance.
+riprap is to insurance what DeFi is to finance.
 
 Mutual risk pools are humanity's oldest protection — the original insurance. riprap puts them on-chain: peers chip in, peers settle claims. That changes what they can do.
 
