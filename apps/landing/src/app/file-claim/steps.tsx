@@ -204,7 +204,8 @@ export function StepAmount({
   onContinue: () => void;
 }) {
   const amount = Number.parseFloat(draft.amountUsdc);
-  const valid = Number.isFinite(amount) && amount > 0;
+  const overCap = Number.isFinite(amount) && amount > tier.cap;
+  const valid = Number.isFinite(amount) && amount > 0 && !overCap;
   return (
     <StepFrame n={2} name="Amount">
       <div className="flex max-w-xl flex-col gap-4">
@@ -214,6 +215,7 @@ export function StepAmount({
             id="amount"
             inputMode="decimal"
             data-num
+            aria-invalid={overCap || undefined}
             className="font-mono"
             value={draft.amountUsdc}
             onChange={(e) => onChange({ amountUsdc: e.target.value })}
@@ -221,6 +223,12 @@ export function StepAmount({
           <p data-num className="font-mono text-sm text-muted-foreground">
             Your cap: {usd(tier.cap)}
           </p>
+          {overCap ? (
+            <p className="text-error [font:var(--riprap-body-sm)]">
+              Above your cap — <span data-num className="font-mono">{usd(tier.cap)}</span> USDC is
+              the most this membership can request.
+            </p>
+          ) : null}
         </div>
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
           The chain clamps the request to your cap. The jury sees the amount — an overpriced claim

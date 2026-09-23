@@ -412,6 +412,41 @@ describe("#/app/file-claim — the walk (0→5)", () => {
       ((await screen.findByLabelText("Requested payout (USDC)")) as HTMLInputElement).value,
     ).toBe("1500"); // a saved amount is not re-defaulted
   });
+
+  it("step 2 blocks a request above the tier cap (policy §5: Standard $2,000)", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    renderWizard();
+    expect(await screen.findByText(/Step 1 of 5 — Incident/i)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "2026-11-15T18:05" } });
+    fireEvent.change(screen.getByLabelText("Where"), { target: { value: "Olympia" } });
+    fireEvent.change(screen.getByLabelText("What happened"), { target: { value: "assault" } });
+    for (const label of [
+      "Another person used a knife or blade against me",
+      "It happened during the coverage window",
+      "It happened inside the covered area",
+      "It caused bodily injury",
+    ]) {
+      fireEvent.click(screen.getByLabelText(label));
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    const amount = (await screen.findByLabelText("Requested payout (USDC)")) as HTMLInputElement;
+    const continueBtn = () =>
+      screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement;
+
+    // default = cap ($2,000) — at-cap is valid
+    expect(continueBtn().disabled).toBe(false);
+
+    // above the cap: blocked, error states the cap
+    fireEvent.change(amount, { target: { value: "2500" } });
+    expect(screen.getByText(/Above your cap/).textContent).toContain("$2,000");
+    expect(continueBtn().disabled).toBe(true);
+
+    // back at the cap: valid again, error gone
+    fireEvent.change(amount, { target: { value: "2000" } });
+    expect(screen.queryByText(/Above your cap/)).toBeNull();
+    expect(continueBtn().disabled).toBe(false);
+  });
 });
 
 describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", () => {
