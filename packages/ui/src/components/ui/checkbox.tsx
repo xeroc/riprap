@@ -16,7 +16,7 @@ function Checkbox({ className, ...props }: React.ComponentProps<"input">) {
         type="checkbox"
         data-slot="checkbox-input"
         className={cn(
-          "peer appearance-none checked:border-stone checked:bg-stone checked:hover:border-stone cursor-pointer rounded-input border border-hairline-strong bg-card transition-colors duration-[160ms] ease-out focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-stone disabled:cursor-not-allowed disabled:border-hairline-soft aria-invalid:border-error",
+          "peer size-[18px] appearance-none checked:border-stone checked:bg-stone checked:hover:border-stone cursor-pointer rounded-input border border-hairline-strong bg-card transition-colors duration-[160ms] ease-out focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-stone disabled:cursor-not-allowed disabled:border-hairline-soft aria-invalid:border-error",
           className,
         )}
         {...props}

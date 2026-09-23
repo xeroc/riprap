@@ -109,6 +109,9 @@ describe("Checkbox", () => {
     render(<Checkbox />);
     const el = screen.getByRole("checkbox");
     expect(el.className).toContain("appearance-none");
+    // appearance-none collapses the intrinsic size to 0 — without an
+    // explicit size the box renders as a 1px vertical line
+    expect(el.className).toContain("size-[18px]");
     expect(el.className).toContain("rounded-input");
     expect(el.className).toContain("border-hairline-strong");
     expect(el.className).toContain("bg-card");
