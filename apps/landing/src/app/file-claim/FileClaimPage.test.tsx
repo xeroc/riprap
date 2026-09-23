@@ -499,13 +499,14 @@ describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", (
     expect(puts.length).toBe(5);
   });
 
-  it("nonce race: rebuild at the fresh nonce — tx hash, manifest.dispute, POST, and re-downloaded yaml all name the landed dispute (bean riprap-s8jk, §5)", async () => {
+  it("nonce race: re-signs the SAME manifest at the fresh nonce — the address-free buffer and its download never change (ADR-0003, bean riprap-s8jk)", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    // the factory mocks derive PDAs per nonce: disputeAt(0) is the step-4
-    // buffer's, disputeAt(1) the rebuilt one
+    // the factory mocks derive PDAs per nonce: disputeAt(0)/disputeAt(1) are
+    // the tx's stale/fresh dispute — chain addressing, never manifest content
     const disputeAt = (n: number) => `${"D".repeat(31)}${String.fromCharCode(65 + n)}`;
-    // capture both manifest downloads (step-4 gesture + the race re-trigger)
+    // capture the manifest downloads (step-4 gesture — and nothing else: the
+    // race must NOT re-trigger a download)
     const downloads: Blob[] = [];
     Object.defineProperty(URL, "createObjectURL", {
       value: vi.fn((blob: Blob) => {
@@ -524,7 +525,7 @@ describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", (
       }),
     );
     // first attempt fails (Claim PDA init — another member filed first); the
-    // second is HELD so the sign step's race state is assertable in flight
+    // second is HELD so the in-flight race state is assertable
     const { promise: signHeld, resolve: releaseSign } = Promise.withResolvers<string>();
     sendMock.mockImplementationOnce(async () => {
       throw new Error("failed to send transaction: already in use");
@@ -533,7 +534,7 @@ describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", (
       await signHeld;
       return "SIG";
     });
-    await walkToReview(); // download #1: the step-4 manifest at nonce 0
+    await walkToReview(); // download #1: the step-4 manifest — the only one
 
     // the chain's nonce has moved by the time we refetch (the race branch's
     // fetchMaybeMutual goes through the same mock as every other read)
@@ -544,48 +545,46 @@ describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", (
     } as unknown as MaybeAccount<Mutual>);
 
     fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
-    // held at the second wallet signature — the sign step shows both race
-    // lines while the rebuilt claim is in flight
+    // held at the second wallet signature — the race copy renders, and no
+    // rebuilt-manifest line exists to render (address-free: nothing rebuilt)
     await waitFor(() => {
       expect(screen.getByText(/Another member filed first/)).toBeTruthy();
     });
-    await waitFor(() => {
-      expect(document.querySelector('[data-slot="manifest-rebuilt"]')?.textContent).toContain(
-        "A fresh manifest.yaml was downloaded",
-      );
-    });
+    expect(document.querySelector('[data-slot="manifest-rebuilt"]')).toBeNull();
+    expect(downloads.length).toBe(1); // the step-4 download is still THE file
 
-    // download #2: the rebuilt manifest, re-triggered by the race branch —
-    // the stale file names a dispute that was never filed
-    expect(downloads.length).toBe(2);
-    const staleYaml = await downloads[0].text();
-    const rebuiltYaml = await downloads[1].text();
-    expect(staleYaml).toContain(`dispute: ${disputeAt(0)}`);
-    expect(rebuiltYaml).toContain(`dispute: ${disputeAt(1)}`);
-    expect(rebuiltYaml).not.toContain(disputeAt(0));
+    // the manifest carries no addresses at all — nonce-invariant by §5
+    const yaml = await downloads[0].text();
+    expect(yaml).not.toContain("dispute:");
+    expect(yaml).not.toContain("claim:");
 
-    // §5 cross-check while the second send is still held: it carries
-    // sha256(rebuilt yaml) and the LANDED dispute — never the step-4 buffer's
-    const digestHex = await sha256Hex(new TextEncoder().encode(rebuiltYaml));
-    const secondSend = buildFileClaimMock.mock.calls[1]?.[0] as unknown as {
-      mutual: { claimNonce: bigint };
-      dispute: Address;
-      evidenceHash: Uint8Array;
-    };
-    expect(secondSend.mutual.claimNonce).toBe(1n);
-    expect(secondSend.dispute).toBe(disputeAt(1));
-    expect(toHex(secondSend.evidenceHash)).toBe(digestHex);
+    // both sends commit the SAME buffer hash; only the dispute/nonce moved
+    const digestHex = await sha256Hex(new TextEncoder().encode(yaml));
+    const sends = buildFileClaimMock.mock.calls.map(
+      (c) =>
+        c[0] as unknown as {
+          mutual: { claimNonce: bigint };
+          dispute: Address;
+          evidenceHash: Uint8Array;
+        },
+    );
+    expect(sends.length).toBe(2);
+    expect(sends[0]?.mutual.claimNonce).toBe(0n);
+    expect(sends[0]?.dispute).toBe(disputeAt(0));
+    expect(sends[1]?.mutual.claimNonce).toBe(1n);
+    expect(sends[1]?.dispute).toBe(disputeAt(1));
+    expect(toHex(sends[1]?.evidenceHash as Uint8Array)).toBe(digestHex);
+    expect(toHex(sends[0]?.evidenceHash as Uint8Array)).toBe(digestHex);
 
-    // release the signature → publish → filed under claim #1, after exactly
-    // one rebuild + re-sign
+    // release the signature → publish → filed under claim #1
     releaseSign("SIG");
     await waitFor(() => {
       expect(screen.getByText(/Filed — claim #1/)).toBeTruthy();
     });
-    expect(sendMock).toHaveBeenCalledTimes(2);
+    expect(sendMock).toHaveBeenCalledTimes(2); // never a third after success
 
-    // the manifest POST is keyed at the landed dispute and its ECIES bundle
-    // wraps the rebuilt buffer (plaintext_hash == the same digest)
+    // the manifest POST is keyed at the LANDED dispute and its ECIES bundle
+    // wraps the unchanged buffer (plaintext_hash == the same digest)
     const manifestPost = calls.find(({ url }) => url.endsWith("/0"));
     expect(manifestPost?.url).toContain(`/${disputeAt(1)}/0`);
     const bundle = JSON.parse(manifestPost?.body ?? "{}") as { plaintext_hash: string };

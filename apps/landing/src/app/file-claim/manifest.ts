@@ -36,14 +36,16 @@ export interface ClaimContext {
   contributionUsdc: bigint;
 }
 
-/** Everything the manifest carries; addresses are base58 strings. */
+/** Everything the manifest carries; addresses are base58 strings.
+ * Address-free by design (ADR-0003): no dispute/claim lines — those PDAs
+ * derive from the claim nonce and nothing that reads the manifest uses
+ * them, while embedding them made the durable artifact mutate on a filing
+ * race. sha256(manifest) == the on-chain slot is the binding. */
 export interface ClaimManifestInput {
-  dispute: string;
   subaccord: string;
   filer: string; // the mutual PDA
   mutual: string;
   member: string;
-  claim: string; // the Claim PDA
   filedAt: string; // ISO 8601 UTC
   title: string; // e.g. "Payout request — knife assault, 2026-11-15"
   language?: string; // fixed "en" unless the caller says otherwise
@@ -109,12 +111,10 @@ export function serializeClaimManifest(input: ClaimManifestInput): string {
 
   const lines = [
     "schema: riprap-claim/v1",
-    `dispute: ${address("dispute", input.dispute)}`,
     `subaccord: ${address("subaccord", input.subaccord)}`,
     `filer: ${address("filer", input.filer)}`,
     `mutual: ${address("mutual", input.mutual)}`,
     `member: ${address("member", input.member)}`,
-    `claim: ${address("claim", input.claim)}`,
     `filed_at: ${iso("filed_at", input.filedAt)}`,
     `language: ${input.language ?? "en"}`,
     `title: ${dq(input.title)}`,

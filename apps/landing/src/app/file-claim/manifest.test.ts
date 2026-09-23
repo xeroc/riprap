@@ -18,12 +18,10 @@ const addr = (c: string) => c.repeat(43);
  * $2,000 requested (2_000_000_000 micro) · Standard · $20 contribution. */
 function exampleInput(over: Partial<ClaimManifestInput> = {}): ClaimManifestInput {
   return {
-    dispute: addr("D"),
     subaccord: addr("S"),
     filer: addr("F"),
     mutual: addr("F"),
     member: addr("M"),
-    claim: addr("C"),
     filedAt: "2026-11-15T19:42:00Z",
     title: "Payout request — knife assault, 2026-11-15",
     claimContext: {
@@ -42,12 +40,10 @@ function exampleInput(over: Partial<ClaimManifestInput> = {}): ClaimManifestInpu
 }
 
 const GOLDEN = `schema: riprap-claim/v1
-dispute: ${addr("D")}
 subaccord: ${addr("S")}
 filer: ${addr("F")}
 mutual: ${addr("F")}
 member: ${addr("M")}
-claim: ${addr("C")}
 filed_at: 2026-11-15T19:42:00Z
 language: en
 title: "Payout request — knife assault, 2026-11-15"
@@ -174,7 +170,7 @@ describe("riprap-claim/v1 — sha256 provenance (evidence_hash = sha256(utf8(man
       exampleInput({
         entries: leafs.map((e, i) => (i === 0 ? { ...e, sha256: "f".repeat(64) } : e)),
       }),
-      exampleInput({ dispute: addr("E") }),
+      exampleInput({ subaccord: addr("E") }),
     ];
     const hashes = await Promise.all(variants.map((v) => buildClaimManifest(v)));
     for (const h of hashes) {
@@ -195,8 +191,8 @@ describe("riprap-claim/v1 — the fixed option block (EVENT-MUTUAL: Approve=0, D
 
 describe("riprap-claim/v1 — trust-boundary validation", () => {
   it("rejects a non-base58 address", () => {
-    expect(() => serializeClaimManifest(exampleInput({ dispute: "0ops" }))).toThrow(
-      /dispute is not a base58/,
+    expect(() => serializeClaimManifest(exampleInput({ subaccord: "0ops" }))).toThrow(
+      /subaccord is not a base58/,
     );
   });
 
