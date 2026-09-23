@@ -1,8 +1,9 @@
-// The single entry: a hash router over the three surfaces. The platform
+// The single entry: a hash router over four surfaces. The platform
 // landing is the default route (in-page anchor hashes render it too); the
 // pool page and the member app are lazy route modules, so their @solana/*
 // graphs load only when their route is hit — the platform route stays
-// Solana-free. <title> swaps per route; OG/canonical/JSON-LD stay the
+// Solana-free. The unlisted #/blurb page (the forwardable kit) rides the
+// same lazy pattern. <title> swaps per route; OG/canonical/JSON-LD stay the
 // platform head in index.html (hash routes are not separately crawlable —
 // accepted tradeoff of hash routing).
 
@@ -14,6 +15,7 @@ import App from "./App.tsx";
 
 const PoolRoute = lazy(() => import("./pool/entry.tsx"));
 const MemberRoute = lazy(() => import("./app/entry.tsx"));
+const BlurbRoute = lazy(() => import("./blurb/entry.tsx"));
 
 /** "#/app/" matches "#/app"; "" / "#" / "#/" (and in-page anchors) are platform. */
 function routeHash(hash: string): string | null {
@@ -27,6 +29,8 @@ function matchRoute(hash: string | null): { title: string | null; element: React
       return { title: "Riprap: Blade Pool @ Breakpoint 2026", element: <PoolRoute /> };
     case "#/app":
       return { title: "Riprap: Blade Pool member app", element: <MemberRoute /> };
+    case "#/blurb":
+      return { title: "Riprap: blurb & brand kit", element: <BlurbRoute /> };
     default:
       return { title: null, element: <App /> };
   }

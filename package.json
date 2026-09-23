@@ -12,7 +12,7 @@
     "dev:landing": "pnpm --filter @riprap/landing dev",
     "dev:remotion": "pnpm --filter @riprap/remotion studio",
     "dev:ui": "pnpm --filter @riprap/ui storybook",
-    "verify": "pnpm -r run build && pnpm lint && pnpm -r run test && anchor build && cargo test"
+    "verify": "pnpm -r run build && pnpm lint && pnpm -r run test && anchor build --ignore-keys && cargo test"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0"

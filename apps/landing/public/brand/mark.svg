@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <!-- Riprap logomark — THE RING (settled state), extracted from
+       packages/ui/src/components/chrome/Logomark.tsx (RING_SEEDS, GAP_INDEX=3,
+       BLUE_INDEX=2) via src/lib/stone.ts geometry. Slot 3 (lower-right, ~4:30)
+       is deliberately EMPTY — the open door. Colors: riprap token stone
+       #a7adb3 / riprap token accent #3e7ca6 (light-mode tokens; dark mode:
+       #5f666d / #2e6488). Regenerate, never hand-edit. -->
+  <g transform="translate(48.00 16.00) scale(0.55) rotate(7.5285)">
+    <polygon points="20,0 12,16 -8,16 -20,0 -12,-12 8,-16" fill="#a7adb3"/>
+  </g>
+  <g transform="translate(70.63 25.37) scale(0.55) rotate(5.0827)">
+    <polygon points="24,0 12,12 -12,12 -20,0 -8,-16 8,-16" fill="#a7adb3"/>
+  </g>
+  <g transform="translate(48.00 80.00) scale(0.55) rotate(-14.5111)">
+    <polygon points="20,4 12,12 -8,16 -20,-4 -12,-12 8,-12" fill="#a7adb3"/>
+  </g>
+  <g transform="translate(25.37 70.63) scale(0.55) rotate(13.0967)">
+    <polygon points="16,0 12,12 -12,12 -16,0 -8,-16 12,-12" fill="#a7adb3"/>
+  </g>
+  <g transform="translate(16.00 48.00) scale(0.55) rotate(9.4152)">
+    <polygon points="24,0 8,16 -8,16 -16,0 -8,-16 8,-12" fill="#a7adb3"/>
+  </g>
+  <g transform="translate(25.37 25.37) scale(0.55) rotate(13.3488)">
+    <polygon points="20,0 12,12 -12,12 -20,-4 -8,-16 8,-12" fill="#a7adb3"/>
+  </g>
+  <g transform="translate(80.00 48.00) scale(0.55) rotate(4.0208)">
+    <polygon points="16,0 12,16 -12,12 -20,0 -12,-12 12,-12" fill="#3e7ca6"/> <!-- harbor-blue stone — the newest member -->
+  </g>
+</svg>

@@ -8,6 +8,7 @@ import { Router } from "./main";
 
 vi.mock("./pool/entry", () => ({ default: () => <div data-testid="pool-route" /> }));
 vi.mock("./app/entry", () => ({ default: () => <div data-testid="app-route" /> }));
+vi.mock("./blurb/entry", () => ({ default: () => <div data-testid="blurb-route" /> }));
 
 const PLATFORM_H1 = "Finance went P2P. Risk Cover can too.";
 
@@ -45,6 +46,13 @@ describe("hash router", () => {
     render(<Router />);
     expect(await screen.findByTestId("app-route")).toBeTruthy();
     await waitFor(() => expect(document.title).toBe("Riprap: Blade Pool member app"));
+  });
+
+  it("renders the blurb route on #/blurb and titles it", async () => {
+    window.location.hash = "#/blurb";
+    render(<Router />);
+    expect(await screen.findByTestId("blurb-route")).toBeTruthy();
+    await waitFor(() => expect(document.title).toBe("Riprap: blurb & brand kit"));
   });
 
   it("swaps surfaces on hashchange without a reload, restoring the platform title", async () => {

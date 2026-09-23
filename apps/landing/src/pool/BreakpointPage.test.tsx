@@ -259,8 +259,9 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     expect(stampLinks[0].getAttribute("title")).toBe("1".repeat(32));
     expect(stampLinks[0].textContent).toContain("1111…1111");
     expect(container.textContent).toContain("ADJUDICATION · SUBACCORD");
-    // the anchored-terms band is wired under the fineprint
-    expect(container.textContent).toContain("The terms as anchored on-chain.");
+    // the anchored-terms band is wired under the fineprint (heading per copy
+    // doc § Anchored terms band, 2026-09-21 revision)
+    expect(container.textContent).toContain("The immutable terms of this mutual.");
     // §7/§12: discretion and liability stated plainly — counsel recs 2 and 3
     expect(container.textContent).toContain("enforceable right to any payment");
     expect(container.textContent).toContain("no limited liability");
