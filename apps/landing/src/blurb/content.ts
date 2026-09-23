@@ -21,7 +21,7 @@ export const ONE_LINE = "riprap — real-world risk protection on solana. riprap
  * + first pool (bound facts: Breakpoint, November, London) + founder. */
 export const SHORT_BLURB = `Over 20% of every insurance dollar vanishes before a single claim is paid.
 
-riprap to insurance is what DeFi is to finance.
+riprap is to insurance what DeFi is to finance.
 
 Mutual risk pools are humanity's oldest protection — the original insurance. riprap puts them on-chain: peers chip in, peers settle claims. That changes what they can do.
 
