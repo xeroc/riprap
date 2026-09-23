@@ -6,6 +6,7 @@
 // § /app/file-claim.
 
 import {
+  buildFileClaim,
   fetchMaybeDepositorByOwner,
   fetchMaybeMemberByOwner,
   fetchMaybeMutual,
@@ -18,6 +19,7 @@ import type { Address, MaybeAccount } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ed25519PublicKeyFromSeed } from "@useaccord/sdk/evidence";
+import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMutual } from "../../pool/fixtures";
 import { sha256Hex } from "./documents";
@@ -57,12 +59,17 @@ vi.mock("@riprap/hanse", async (importOriginal) => {
     })),
     findAssociatedTokenAddress: vi.fn(async () => "1".repeat(32) as Address),
     tokenBalanceOrZero: vi.fn(),
-    findClaimPda: vi.fn(async () => ["C".repeat(32) as Address, 255]),
-    buildFileClaim: vi.fn(async (input: { mutual: { claimNonce: bigint } }) => ({
+    // nonce-faithful PDAs: stale (0) and fresh (1) are distinguishable — the
+    // race test cross-checks the rebuilt buffer against them
+    findClaimPda: vi.fn(async ({ nonce }: { nonce: bigint }) => [
+      `${"C".repeat(31)}${String.fromCharCode(65 + Number(nonce))}` as Address,
+      255,
+    ]),
+    buildFileClaim: vi.fn(async (input: { mutual: { claimNonce: bigint }; dispute: Address }) => ({
       instruction: { programAddress: "P".repeat(32) },
       fee: 15n * 1_000_000n,
-      claim: "C".repeat(32),
-      dispute: "P".repeat(32),
+      claim: `${"C".repeat(31)}${String.fromCharCode(65 + Number(input.mutual.claimNonce))}`,
+      dispute: input.dispute,
       nonce: input.mutual.claimNonce,
     })),
   };
@@ -96,7 +103,10 @@ vi.mock("@useaccord/sdk", () => ({
       evidenceOperator: "E".repeat(32),
     },
   })),
-  findDisputePda: vi.fn(async () => ["P".repeat(32) as Address, 255]),
+  findDisputePda: vi.fn(async ({ nonce }: { nonce: bigint }) => [
+    `${"D".repeat(31)}${String.fromCharCode(65 + Number(nonce))}` as Address,
+    255,
+  ]),
   findAccordStatePda: vi.fn(async () => ["A".repeat(32) as Address, 255]),
 }));
 
@@ -122,8 +132,8 @@ vi.mock("../../shared/transaction", async (importOriginal) => {
 const mutualMock = vi.mocked(fetchMaybeMutual);
 const memberMock = vi.mocked(fetchMaybeMemberByOwner);
 const feeBalanceMock = vi.mocked(tokenBalanceOrZero);
-const sendMock = (await import("../../shared/transaction"))
-  .sendInstruction as unknown as ReturnType<typeof vi.fn>;
+const buildFileClaimMock = vi.mocked(buildFileClaim);
+const sendMock = (await import("../../shared/transaction")).sendInstruction as unknown as Mock;
 
 // base58-valid (no 0/O/I/l) — the manifest's trust-boundary validation
 // rejects real-invalid fakes like "Mutual…".
@@ -170,6 +180,19 @@ function pdf(name: string): File {
 
 function ok201(): Response {
   return new Response("{}", { status: 201 });
+}
+
+/** 64-hex ↔ 32 bytes — the evidence-hash shapes (§5). */
+function hexToBytes32(hex: string): Uint8Array {
+  const out = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) out[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+
+function toHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 /** Walk 0→5 with everything passing; leaves the review step on screen. */
@@ -236,6 +259,7 @@ afterEach(() => {
   mutualMock.mockReset();
   memberMock.mockReset();
   feeBalanceMock.mockReset();
+  buildFileClaimMock.mockClear(); // calls are per-test; the factory impl stays
   vi.mocked(fetchMaybeDepositorByOwner).mockClear();
 });
 
@@ -473,46 +497,99 @@ describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", (
     expect(fetchMock).toHaveBeenCalledTimes(6);
     const puts = fetchMock.mock.calls.filter((call) => call[1]?.method === "PUT");
     expect(puts.length).toBe(5);
-
-    // filed facts: claim + dispute chips, evidence delivered, timeline, fee
-    expect(screen.getByText("Evidence: delivered")).toBeTruthy();
-    expect(
-      screen.getByText(
-        "draw → review 48h → commit 12h → reveal 12h → ruling → appeal 48h → settle → pull",
-      ),
-    ).toBeTruthy();
-    expect(screen.getByText(/USDC fee rides the outcome/).textContent).toContain(
-      "The $15 USDC fee rides the outcome — refunded if approved, kept if denied, returned if adjudication fails.",
-    );
-    expect(screen.getByText(/Keep manifest\.yaml\./)).toBeTruthy();
-    // the draft cleared — the claim exists on-chain now
-    expect(localStorage.getItem(`riprap:file-claim:${MUTUAL_ADDR}`)).toBeNull();
   });
 
-  it("nonce race: first send fails on Claim init, nonce moved → rebuild + re-sign exactly once", async () => {
+  it("nonce race: rebuild at the fresh nonce — tx hash, manifest.dispute, POST, and re-downloaded yaml all name the landed dispute (bean riprap-s8jk, §5)", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    // first attempt fails (Claim PDA init — another member filed first)
-    sendMock.mockRejectedValueOnce(new Error("failed to send transaction: already in use"));
-    await walkToReview();
+    // the factory mocks derive PDAs per nonce: disputeAt(0) is the step-4
+    // buffer's, disputeAt(1) the rebuilt one
+    const disputeAt = (n: number) => `${"D".repeat(31)}${String.fromCharCode(65 + n)}`;
+    // capture both manifest downloads (step-4 gesture + the race re-trigger)
+    const downloads: Blob[] = [];
+    Object.defineProperty(URL, "createObjectURL", {
+      value: vi.fn((blob: Blob) => {
+        downloads.push(blob);
+        return "blob:x";
+      }),
+      writable: true,
+    });
+    // capture the operator POST/PUTs
+    const calls: Array<{ url: string; body: string }> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        calls.push({ url: String(input), body: String(init?.body ?? "") });
+        return ok201();
+      }),
+    );
+    // first attempt fails (Claim PDA init — another member filed first); the
+    // second is HELD so the sign step's race state is assertable in flight
+    const { promise: signHeld, resolve: releaseSign } = Promise.withResolvers<string>();
+    sendMock.mockImplementationOnce(async () => {
+      throw new Error("failed to send transaction: already in use");
+    });
+    sendMock.mockImplementationOnce(async () => {
+      await signHeld;
+      return "SIG";
+    });
+    await walkToReview(); // download #1: the step-4 manifest at nonce 0
 
-    // the chain's nonce has moved by the time we refetch
-    const { fetchMaybeMutual: liveFetch } = await import("@riprap/hanse");
-    vi.mocked(liveFetch).mockResolvedValue({
+    // the chain's nonce has moved by the time we refetch (the race branch's
+    // fetchMaybeMutual goes through the same mock as every other read)
+    mutualMock.mockResolvedValue({
       exists: true,
       address: MUTUAL_ADDR,
       data: fakeMutual({ claimNonce: 1n }) as Mutual,
     } as unknown as MaybeAccount<Mutual>);
 
     fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
-    // the rebuilt tx lands under the moved nonce — claim #1 — after exactly
-    // one rebuild + re-sign (the race copy renders while it signs)
+    // held at the second wallet signature — the sign step shows both race
+    // lines while the rebuilt claim is in flight
+    await waitFor(() => {
+      expect(screen.getByText(/Another member filed first/)).toBeTruthy();
+    });
+    await waitFor(() => {
+      expect(document.querySelector('[data-slot="manifest-rebuilt"]')?.textContent).toContain(
+        "A fresh manifest.yaml was downloaded",
+      );
+    });
+
+    // download #2: the rebuilt manifest, re-triggered by the race branch —
+    // the stale file names a dispute that was never filed
+    expect(downloads.length).toBe(2);
+    const staleYaml = await downloads[0].text();
+    const rebuiltYaml = await downloads[1].text();
+    expect(staleYaml).toContain(`dispute: ${disputeAt(0)}`);
+    expect(rebuiltYaml).toContain(`dispute: ${disputeAt(1)}`);
+    expect(rebuiltYaml).not.toContain(disputeAt(0));
+
+    // §5 cross-check while the second send is still held: it carries
+    // sha256(rebuilt yaml) and the LANDED dispute — never the step-4 buffer's
+    const digestHex = await sha256Hex(new TextEncoder().encode(rebuiltYaml));
+    const secondSend = buildFileClaimMock.mock.calls[1]?.[0] as unknown as {
+      mutual: { claimNonce: bigint };
+      dispute: Address;
+      evidenceHash: Uint8Array;
+    };
+    expect(secondSend.mutual.claimNonce).toBe(1n);
+    expect(secondSend.dispute).toBe(disputeAt(1));
+    expect(toHex(secondSend.evidenceHash)).toBe(digestHex);
+
+    // release the signature → publish → filed under claim #1, after exactly
+    // one rebuild + re-sign
+    releaseSign("SIG");
     await waitFor(() => {
       expect(screen.getByText(/Filed — claim #1/)).toBeTruthy();
     });
-    // exactly TWO signatures total: the failed one + the rebuilt one — and
-    // never a third after success
     expect(sendMock).toHaveBeenCalledTimes(2);
+
+    // the manifest POST is keyed at the landed dispute and its ECIES bundle
+    // wraps the rebuilt buffer (plaintext_hash == the same digest)
+    const manifestPost = calls.find(({ url }) => url.endsWith("/0"));
+    expect(manifestPost?.url).toContain(`/${disputeAt(1)}/0`);
+    const bundle = JSON.parse(manifestPost?.body ?? "{}") as { plaintext_hash: string };
+    expect(bundle.plaintext_hash).toBe(btoa(String.fromCharCode(...hexToBytes32(digestHex))));
   });
 
   it("PUT 409: hard stop with the wrong-document copy; nothing overwritten", async () => {

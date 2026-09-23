@@ -491,7 +491,17 @@ const SIGN_PHASE_LINES: Record<SignPhase, string> = {
   confirming: "Confirming…",
 };
 
-export function StepSign({ phase, nonceRace }: { phase: SignPhase; nonceRace: boolean }) {
+export function StepSign({
+  phase,
+  nonceRace,
+  manifestRebuilt,
+}: {
+  phase: SignPhase;
+  nonceRace: boolean;
+  /** The race rebuilt the manifest at the fresh nonce and re-downloaded it
+   * (copy doc § /app/file-claim SIGN). */
+  manifestRebuilt: boolean;
+}) {
   return (
     <StepFrame n={6} name="Sign">
       <div className="flex max-w-3xl flex-col gap-2" data-slot="sign-phase">
@@ -499,6 +509,15 @@ export function StepSign({ phase, nonceRace }: { phase: SignPhase; nonceRace: bo
         {nonceRace ? (
           <p className="text-muted-foreground [font:var(--riprap-body-sm)]" data-slot="nonce-race">
             Another member filed first — the claim number moved. Sign once more.
+          </p>
+        ) : null}
+        {manifestRebuilt ? (
+          <p
+            className="text-muted-foreground [font:var(--riprap-body-sm)]"
+            data-slot="manifest-rebuilt"
+          >
+            Your payout request was rebuilt under the new claim number. A fresh manifest.yaml was
+            downloaded — keep that copy, not the earlier one.
           </p>
         ) : null}
       </div>
