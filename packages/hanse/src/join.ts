@@ -32,7 +32,7 @@ import { findDepositorPda, findJoinMemberAccountPda } from "./pdas";
  * outputs (accord app convention) and the CLI's cluster-capable rpc union —
  * no casts at either consumer.
  */
-type JoinRpc = Rpc<GetAccountInfoApi & GetBalanceApi & GetTokenAccountBalanceApi>;
+export type JoinRpc = Rpc<GetAccountInfoApi & GetBalanceApi & GetTokenAccountBalanceApi>;
 
 // --- typed errors (name-stable: the hero maps constructor names to toasts) ---
 
@@ -230,7 +230,7 @@ export async function buildJoinInstructions(
 /** getTokenAccountBalance's accountNotFound path: a missing ATA is balance
  * 0n, not an exception (HANDOFF §3). Any other RPC failure rethrows so the
  * page can render its retry state instead of a fake zero. */
-async function tokenBalanceOrZero(rpc: JoinRpc, ata: Address): Promise<bigint> {
+export async function tokenBalanceOrZero(rpc: JoinRpc, ata: Address): Promise<bigint> {
   try {
     const { value } = await rpc.getTokenAccountBalance(ata).send();
     return BigInt(value.amount);

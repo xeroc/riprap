@@ -55,3 +55,23 @@ class ResizeObserverStub implements ResizeObserver {
 if (typeof ResizeObserver === "undefined") {
   globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
 }
+
+/*
+ * Node ≥26 ships a native `localStorage` accessor on globalThis that returns
+ * undefined without --localstorage-file and shadows jsdom's implementation —
+ * every suite touching localStorage (claim drafts, recovery) would crash on
+ * `localStorage.clear()`. It's configurable, so swap in a memory-backed stub.
+ */
+if (globalThis.localStorage === undefined) {
+  const store = new Map<string, string>();
+  globalThis.localStorage = {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => void store.set(key, String(value)),
+    removeItem: (key: string) => void store.delete(key),
+    clear: () => void store.clear(),
+    key: (index: number) => Array.from(store.keys())[index] ?? null,
+    get length() {
+      return store.size;
+    },
+  } as Storage;
+}

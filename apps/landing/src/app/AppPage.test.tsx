@@ -11,11 +11,12 @@ import {
   fetchMaybeMemberByOwner,
   fetchMaybeMutual,
   type Member,
+  tokenBalanceOrZero,
 } from "@riprap/hanse";
 import { AppProvider, getDefaultConfig } from "@solana/connector";
 import type { Address, MaybeAccount } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMutual } from "../pool/fixtures";
@@ -27,25 +28,26 @@ const { walletState } = vi.hoisted(() => ({
   walletState: { isConnected: false, account: null as string | null },
 }));
 
-// AppPage pulls ClaimStatus as a value (status stamps) — the mock needs the
-// numeric-enum reverse map or the name lookup renders undefined.
-vi.mock("@riprap/hanse", () => ({
-  ClaimStatus: {
-    Pending: 0,
-    Approved: 1,
-    Denied: 2,
-    Failed: 3,
-    Paid: 4,
-    0: "Pending",
-    1: "Approved",
-    2: "Denied",
-    3: "Failed",
-    4: "Paid",
-  },
-  fetchMaybeMutual: vi.fn(),
-  fetchMaybeMemberByOwner: vi.fn(),
-  fetchMaybeClaimByNonce: vi.fn(),
-}));
+// @riprap/hanse: the read fetchers are vi.fn()s (reset per test); the real
+// ClaimStatus enum rides along via importOriginal (status stamps need the
+// numeric-enum reverse map).
+vi.mock("@riprap/hanse", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@riprap/hanse")>();
+  return {
+    ...actual,
+    fetchMaybeMutual: vi.fn(),
+    fetchMaybeMemberByOwner: vi.fn(),
+    fetchMaybeClaimByNonce: vi.fn(),
+    // the preflight money reads (useClaimPreflight) — rights stake + ATA
+    fetchMaybeDepositorByOwner: vi.fn(async () => ({
+      exists: true,
+      address: "D".repeat(32),
+      data: { rightsStake: 20n * 1_000_000n },
+    })),
+    findAssociatedTokenAddress: vi.fn(async () => "1".repeat(32) as Address),
+    tokenBalanceOrZero: vi.fn(),
+  };
+});
 
 vi.mock("@solana/connector", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@solana/connector")>();
@@ -56,10 +58,18 @@ vi.mock("@solana/connector", async (importOriginal) => {
   };
 });
 vi.mock("@useaccord/sdk", () => ({ fetchSubaccordMaybe: vi.fn() }));
+vi.mock("../shared/rpc", () => ({
+  useClusterRpc: () => ({
+    endpoint: "http://127.0.0.1:8899",
+    rpc: { getBalance: () => ({ send: async () => ({ value: 1n }) }) },
+    rpcSubscriptions: {},
+  }),
+}));
 const subaccordMock = vi.mocked(fetchSubaccordMaybe);
 const claimMock = vi.mocked(fetchMaybeClaimByNonce);
 const mutualMock = vi.mocked(fetchMaybeMutual);
 const memberMock = vi.mocked(fetchMaybeMemberByOwner);
+const feeBalanceMock = vi.mocked(tokenBalanceOrZero);
 
 const MUTUAL_ADDR = "MutualXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 const WALLET = "W".repeat(32);
@@ -120,13 +130,21 @@ function renderApp(mutualAddress = MUTUAL_ADDR) {
   );
 }
 
-// The juror panel's stake floor answers $10 (policy §12) by default.
+// The subaccord answers the pilot's live fee inputs (policy §12: 3 jurors ×
+// $5) + the juror panel's $10 stake floor; the wallet's fee ATA answers $15
+// USDC by default — exactly the juror fee, so preflight passes.
 beforeEach(() => {
   subaccordMock.mockResolvedValue({
     exists: true,
     address: "S".repeat(32) as Address,
-    data: { minStake: 10n * 1_000_000n },
+    data: {
+      minStake: 10n * 1_000_000n,
+      minJurySize: 3,
+      feePerJuror: 5n * 1_000_000n,
+      evidenceOperator: "E".repeat(32),
+    },
   } as unknown as MaybeAccount<Subaccord>);
+  feeBalanceMock.mockResolvedValue(15n * 1_000_000n);
 });
 afterEach(() => {
   cleanup();
@@ -136,6 +154,7 @@ afterEach(() => {
   mutualMock.mockReset();
   memberMock.mockReset();
   claimMock.mockReset();
+  feeBalanceMock.mockReset();
 });
 
 describe("/app — wallet gate (reads-only: no chain calls until connected)", () => {
@@ -155,9 +174,7 @@ describe("/app — wallet gate (reads-only: no chain calls until connected)", ()
     expect(screen.queryByRole("link", { name: "Open App" })).toBeNull();
     expect(screen.getByRole("combobox")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Connect wallet" })).toBeTruthy();
-    expect(
-      screen.getByText("Connect the wallet you joined with. This surface only reads."),
-    ).toBeTruthy();
+    expect(screen.getByText("Connect the wallet you joined with.")).toBeTruthy();
     expect(mutualMock).not.toHaveBeenCalled();
   });
 
@@ -276,5 +293,34 @@ describe("/app — membership + claims (data-bound to the chain)", () => {
       await screen.findByText("Couldn't read your claims.", {}, { timeout: 5000 }),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+  });
+});
+
+describe("/app — payout-request entry action (copy doc § /app, CLAIM-WIZARD §2)", () => {
+  it("preflight passes: 'File a payout request' links to #/app/file-claim", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual()));
+    memberMock.mockResolvedValue(memberAccount(1)); // Standard
+    claimMock.mockResolvedValue({ exists: false, address: "C".repeat(32) } as MaybeAccount<Claim>);
+    renderApp();
+
+    const action = await screen.findByRole("link", { name: "File a payout request" });
+    expect(action.getAttribute("href")).toBe("#/app/file-claim");
+  });
+
+  it("preflight blocked (fee short): no payout-request action", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual()));
+    memberMock.mockResolvedValue(memberAccount(1));
+    claimMock.mockResolvedValue({ exists: false, address: "C".repeat(32) } as MaybeAccount<Claim>);
+    feeBalanceMock.mockResolvedValue(1n * 1_000_000n); // $1 < the $15 juror fee
+    renderApp();
+
+    // claims (started with the money reads) settled — preflight evaluated
+    expect(await screen.findByText("No claims filed from this wallet.")).toBeTruthy();
+    await waitFor(() => expect(feeBalanceMock).toHaveBeenCalled());
+    expect(screen.queryByRole("link", { name: "File a payout request" })).toBeNull();
   });
 });

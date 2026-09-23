@@ -32,6 +32,7 @@ import { SiteNav } from "../components/SiteNav";
 import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../pool/mutual";
 import { useMinStake } from "../pool/useMinStake";
 import { useMutual } from "../pool/useMutual";
+import { useClaimPreflight } from "./file-claim/useClaimPreflight";
 import { type ClaimsQuery, useClaims } from "./useClaims";
 import { useMembership } from "./useMembership";
 
@@ -63,7 +64,6 @@ function AccountControls({ address }: { address: string }) {
   );
 }
 
-/** The connect gate (copy doc § /app wallet gate) — the kit's props-driven
 /** Connect button + the kit's props-driven wallet picker — one wiring shared
  * by the navbar (`Connect wallet`) and the wallet gate (copy doc § /app:
  * `Connect a wallet`); button chrome is the caller's. */
@@ -129,7 +129,7 @@ function WalletGate() {
       </Settle>
       <Settle delay={60}>
         <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-          Connect the wallet you joined with. This surface only reads.
+          Connect the wallet you joined with.
         </p>
       </Settle>
       <Settle delay={120}>
@@ -214,6 +214,10 @@ function MemberSurface({ wallet }: { wallet: Address }) {
   const minStake = useMinStake(mutualQuery.state === "ready" ? mutualQuery.mutual.subaccord : null);
   const membership = useMembership();
   const member = membership.state === "ready" ? membership.member : null;
+  // The payout-request entry action's gate (copy doc § /app, CLAIM-WIZARD
+  // §2): rendered only while preflight passes — live reads, never constants.
+  // Runs before the early returns (rules of hooks).
+  const preflight = useClaimPreflight();
   const claims = useClaims(
     mutualQuery.state === "ready" && member !== null && mutualAddress !== undefined
       ? { mutual: mutualAddress, claimant: wallet, claimNonce: mutualQuery.mutual.claimNonce }
@@ -295,10 +299,17 @@ function MemberSurface({ wallet }: { wallet: Address }) {
           {usd(tier.fee)} entry · up to {usd(tier.cap)} maximum payout
         </p>
       </Settle>
-      <Settle delay={120}>
+      {preflight.state === "pass" && (
+        <Settle delay={120}>
+          <Button asChild size="lg" data-participate>
+            <a href="#/app/file-claim">File a payout request</a>
+          </Button>
+        </Settle>
+      )}
+      <Settle delay={180}>
         <ClaimsBlock claims={claims} />
       </Settle>
-      <Settle delay={180}>
+      <Settle delay={240}>
         {/* juror panel (copy doc § /app): the covered overlay's destination */}
         <div
           id="jurors"

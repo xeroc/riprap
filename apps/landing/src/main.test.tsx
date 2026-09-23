@@ -1,13 +1,17 @@
 // The hash router (src/main.tsx): platform landing as the default route, the
-// lazy pool/app route modules on their hashes, per-route <title> swap, and
-// hashchange re-render without a reload. Route modules are stubbed — their
-// real graphs are covered by the BreakpointPage and AppPage suites.
+// lazy pool/app/wizard route modules on their hashes, per-route <title> swap,
+// and hashchange re-render without a reload. Route modules are stubbed —
+// their real graphs are covered by the BreakpointPage, AppPage, and
+// FileClaimPage suites.
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Router } from "./main";
 
 vi.mock("./pool/entry", () => ({ default: () => <div data-testid="pool-route" /> }));
 vi.mock("./app/entry", () => ({ default: () => <div data-testid="app-route" /> }));
+vi.mock("./app/file-claim/entry", () => ({
+  default: () => <div data-testid="file-claim-route" />,
+}));
 
 const PLATFORM_H1 = "Finance went P2P. Risk Cover can too.";
 
@@ -45,6 +49,14 @@ describe("hash router", () => {
     render(<Router />);
     expect(await screen.findByTestId("app-route")).toBeTruthy();
     await waitFor(() => expect(document.title).toBe("Riprap: Blade Pool member app"));
+  });
+
+  it("renders the wizard route on #/app/file-claim (trailing slash tolerated) and titles it", async () => {
+    window.location.hash = "#/app/file-claim/";
+    render(<Router />);
+    expect(await screen.findByTestId("file-claim-route")).toBeTruthy();
+    expect(screen.queryByTestId("app-route")).toBeNull();
+    await waitFor(() => expect(document.title).toBe("Riprap: File a payout request"));
   });
 
   it("swaps surfaces on hashchange without a reload, restoring the platform title", async () => {

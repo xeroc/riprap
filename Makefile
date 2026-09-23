@@ -4,7 +4,8 @@
 # scripts; they'd duplicate the Makefile.
 
 SOLANA_VERSION ?= 3.1.10
-ANCHOR_VERSION ?= 1.0.2
+ANCHOR_VERSION ?= 1.2.0
+ANCHOR_PROGRAM ?= anchor-$(ANCHOR_VERSION)
 
 TODAY := $(shell date +%Y-%m-%d)
 DEPLOY_KEY_PATH := $(or $(ACCORD_DEPLOY_KEY_PATH),~/.config/solana/id.json)
@@ -24,7 +25,7 @@ prep: ## Install Solana + Anchor toolchains, then workspace deps
 	cd apps/docs && poetry install --no-root
 
 build: ## Build programs + packages + docs
-	anchor build --ignore-keys
+	$(ANCHOR_PROGRAM) build --ignore-keys
 	pnpm -r run build
 	$(MAKE) -C apps/docs build
 	$(MAKE) codegen
@@ -43,8 +44,8 @@ docs-serve: ## Live-reload MkDocs dev server
 	$(MAKE) -C apps/docs serve
 
 test: ## Full suite: Rust unit + LiteSVM + jest e2e (anchor test auto-starts Surfpool)
-	anchor build --ignore-keys
-	anchor test --skip-build
+	$(ANCHOR_PROGRAM) build --ignore-keys
+	$(ANCHOR_PROGRAM) test --skip-build
 
 test_unit: ## LiteSVM + unit tests. The no-entrypoint feature is REQUIRED per
 	## program — plain `cargo test` (or a single package's flag) compiles but
@@ -56,8 +57,8 @@ lint: ## Lint every workspace that declares a lint script
 	pnpm -r run lint
 
 clean: ## Remove build artifacts and node_modules
-	anchor clean
+	$(ANCHOR_PROGRAM) clean
 	rm -rf node_modules
 
 devnet_deploy:
-	anchor program deploy --provider.cluster $(SOLANA_API)
+	$(ANCHOR_PROGRAM) program deploy --provider.cluster $(SOLANA_API)
