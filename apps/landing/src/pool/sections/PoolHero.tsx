@@ -326,54 +326,60 @@ export function PoolHero() {
                 </>
               )}
             </div>
-            {mutualQuery.state === "ready" ? (
-              covered ? (
-                <div className="flex max-w-[36rem] flex-col gap-3" data-slot="covered">
-                  <BadgeStamp data-num>Covered — {tier !== null ? tier.name : PARAM}</BadgeStamp>
-                  <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                    This wallet is in the pool. Your membership and claims live in{" "}
-                    <TextLink href="#/app">the app</TextLink>.
-                  </p>
+            {mutualQuery.state === "ready" && tier !== null ? (
+              <>
+                {/* three stops, exactly tiers.length; value is a tier index;
+                  locked to the member's tier once covered (copy doc §
+                  Covered). The picker renders for every ready state —
+                  connected or not, deposits open or closed: tiers are chain
+                  data, browsing them never needed a wallet. */}
+                <Slider
+                  disabled={covered}
+                  value={[Math.min(shownIndex, tiers === null ? 0 : tiers.length - 1)]}
+                  min={0}
+                  max={(tiers ?? []).length - 1}
+                  step={1}
+                  aria-label="Coverage tier"
+                  onValueChange={(v) => setTierIndex(v[0] ?? DEFAULT_TIER)}
+                  className="max-w-[36rem]"
+                />
+                <div className="flex max-w-[36rem] justify-between">
+                  {(tiers ?? []).map((t, i) => (
+                    <span
+                      key={t.name}
+                      data-num
+                      className={`font-mono text-sm transition-colors duration-[160ms] ease-out ${
+                        i === shownIndex ? "text-ink" : "text-muted-soft"
+                      }`}
+                    >
+                      {usd(t.fee)}
+                    </span>
+                  ))}
                 </div>
-              ) : mutualQuery.depositsOpen && tier !== null ? (
-                isConnected ? (
-                  <>
-                    {/* three stops, exactly tiers.length; value is a tier index;
-                      locked once this wallet is covered (copy doc § Covered) */}
-                    <Slider
-                      disabled={covered}
-                      value={[Math.min(shownIndex, tiers === null ? 0 : tiers.length - 1)]}
-                      min={0}
-                      max={(tiers ?? []).length - 1}
-                      step={1}
-                      aria-label="Coverage tier"
-                      onValueChange={(v) => setTierIndex(v[0] ?? DEFAULT_TIER)}
-                      className="max-w-[36rem]"
-                    />
-                    <div className="flex max-w-[36rem] justify-between">
-                      {(tiers ?? []).map((t, i) => (
-                        <span
-                          key={t.name}
-                          data-num
-                          className={`font-mono text-sm transition-colors duration-[160ms] ease-out ${
-                            i === shownIndex ? "text-ink" : "text-muted-soft"
-                          }`}
-                        >
-                          {usd(t.fee)}
-                        </span>
-                      ))}
-                    </div>
-                    <p data-num className="font-mono text-base text-ink">
-                      {tier.name} · {usd(tier.fee)} entry · up to {usd(tier.cap)} maximum payout
-                    </p>
-                    <p className="text-muted-soft [font:var(--riprap-mono-label)]">
-                      {TIER_NOTES[Math.min(shownIndex, TIER_NOTES.length - 1)]}
-                    </p>
-                    {/* deposits window — deposits_close_at, chain truth */}
-                    <p data-num className="font-mono text-xs text-muted-foreground">
-                      entry closes {formatUtc(mutualQuery.mutual.depositsCloseAt)}
-                    </p>
+                <p data-num className="font-mono text-base text-ink">
+                  {tier.name} · {usd(tier.fee)} entry · up to {usd(tier.cap)} maximum payout
+                </p>
+                <p className="text-muted-soft [font:var(--riprap-mono-label)]">
+                  {TIER_NOTES[Math.min(shownIndex, TIER_NOTES.length - 1)]}
+                </p>
+                {/* deposits window — deposits_close_at, chain truth; while
+                  the window is open */}
+                {mutualQuery.depositsOpen ? (
+                  <p data-num className="font-mono text-xs text-muted-foreground">
+                    entry closes {formatUtc(mutualQuery.mutual.depositsCloseAt)}
+                  </p>
+                ) : null}
 
+                {covered ? (
+                  <div className="flex max-w-[36rem] flex-col gap-3" data-slot="covered">
+                    <BadgeStamp data-num>Covered — {tier.name}</BadgeStamp>
+                    <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                      This wallet is in the pool. Your membership and claims live in{" "}
+                      <TextLink href="#/app">the app</TextLink>.
+                    </p>
+                  </div>
+                ) : mutualQuery.depositsOpen ? (
+                  isConnected ? (
                     <div className="flex max-w-[36rem] flex-col gap-3">
                       <Button
                         size="lg"
@@ -387,19 +393,19 @@ export function PoolHero() {
                       </Button>
                       {precheck !== null && <JoinPrecheck isDevnet={isDevnet} {...precheck} />}
                     </div>
-                  </>
+                  ) : (
+                    <ConnectWalletCta />
+                  )
                 ) : (
-                  <ConnectWalletCta />
-                )
-              ) : (
-                <div className="flex max-w-[36rem] flex-col gap-2" data-slot="entry-closed">
-                  <p className="text-ink [font:var(--riprap-body-md)]">Entry closed.</p>
-                  <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                    This pool stopped taking members. Claims, settlement, and dissolution follow the
-                    policy.
-                  </p>
-                </div>
-              )
+                  <div className="flex max-w-[36rem] flex-col gap-2" data-slot="entry-closed">
+                    <p className="text-ink [font:var(--riprap-body-md)]">Entry closed.</p>
+                    <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                      This pool stopped taking members. Claims, settlement, and dissolution follow
+                      the policy.
+                    </p>
+                  </div>
+                )}
+              </>
             ) : mutualQuery.state === "loading" ? (
               <Button size="lg" disabled data-participate>
                 Chip in {PARAM}

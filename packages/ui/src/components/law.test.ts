@@ -11,8 +11,12 @@ import { describe, expect, it } from "vitest";
  *  - zero inline hex colors (colors live in tokens.css only)
  */
 // the avatar disc is the one sanctioned circle (DESIGN.md § Shapes) — carried
-// by quoted tweets, which render the author's real avatar on paper cards
-const SANCTIONED_FULL_RADIUS: Record<string, true> = { "TweetCard.tsx": true };
+// by quoted tweets and chat messages, which render a real sender avatar on
+// paper cards
+const SANCTIONED_FULL_RADIUS: Record<string, true> = {
+  "TweetCard.tsx": true,
+  "ChatMessage.tsx": true,
+};
 const ROOT = join(__dirname);
 
 function collect(dir: string): string[] {

@@ -11,16 +11,21 @@
 export type { AddressChipProps } from "./chrome/AddressChip";
 export { AddressChip, shortenAddress } from "./chrome/AddressChip";
 export { BadgeStamp } from "./chrome/BadgeStamp";
+export type { ChatMessageProps } from "./chrome/ChatMessage";
+export { ChatMessage } from "./chrome/ChatMessage";
 export type { ClusterOption, ClusterSelectProps } from "./chrome/ClusterSelect";
 export { ClusterSelect } from "./chrome/ClusterSelect";
 
 export { Container } from "./chrome/Container";
+export type { CopyBlockProps } from "./chrome/CopyBlock";
+export { CopyBlock } from "./chrome/CopyBlock";
 export type { CoveredOverlayProps } from "./chrome/CoveredOverlay";
 export { CoveredOverlay } from "./chrome/CoveredOverlay";
 export type { CTABandProps } from "./chrome/CTABand";
 export { CTABand } from "./chrome/CTABand";
 export type { DissolutionBandProps } from "./chrome/DissolutionBand";
-export { DissolutionBand } from "./chrome/DissolutionBand";
+export type { EmailCardProps } from "./chrome/EmailCard";
+export { EmailCard } from "./chrome/EmailCard";
 export type { FeatureCardProps } from "./chrome/FeatureCard";
 export { FeatureCard } from "./chrome/FeatureCard";
 export type { FooterBandProps, FooterColumn, FooterLink } from "./chrome/FooterBand";

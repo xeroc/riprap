@@ -12,6 +12,7 @@ vi.mock("./app/entry", () => ({ default: () => <div data-testid="app-route" /> }
 vi.mock("./app/file-claim/entry", () => ({
   default: () => <div data-testid="file-claim-route" />,
 }));
+vi.mock("./blurb/entry", () => ({ default: () => <div data-testid="blurb-route" /> }));
 
 const PLATFORM_H1 = "Finance went P2P. Risk Cover can too.";
 
@@ -57,6 +58,13 @@ describe("hash router", () => {
     expect(await screen.findByTestId("file-claim-route")).toBeTruthy();
     expect(screen.queryByTestId("app-route")).toBeNull();
     await waitFor(() => expect(document.title).toBe("Riprap: File a payout request"));
+  });
+
+  it("renders the blurb route on #/blurb and titles it", async () => {
+    window.location.hash = "#/blurb";
+    render(<Router />);
+    expect(await screen.findByTestId("blurb-route")).toBeTruthy();
+    await waitFor(() => expect(document.title).toBe("Riprap: blurb & brand kit"));
   });
 
   it("swaps surfaces on hashchange without a reload, restoring the platform title", async () => {
