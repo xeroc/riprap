@@ -7,7 +7,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BlurbPage } from "./BlurbPage";
-import { BRAND_COLORS, EMAIL_FULL, KUDOS, ONE_LINE } from "./content";
+import { BRAND_COLORS, EMAIL_FULL, EMAIL_SUBJECT, KUDOS, ONE_LINE } from "./content";
 
 const writeText = vi.fn(() => Promise.resolve());
 
@@ -60,8 +60,8 @@ describe("BlurbPage — the unlisted blurb & brand kit", () => {
     expect(grid).toBeTruthy();
     const standard = document.querySelector('[data-slot="copy-block"]')?.parentElement
       ? [...document.querySelectorAll('[data-slot="copy-block"]')].find((block) =>
-          block.textContent?.includes("standard blurb — 150 words"),
-        )
+        block.textContent?.includes("standard blurb — 150 words"),
+      )
       : null;
     expect(standard).toBeTruthy();
     expect(standard?.closest('[class*="grid-cols-2"]')).toBeNull(); // not in the chat grid

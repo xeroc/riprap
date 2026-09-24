@@ -74,6 +74,29 @@ describe("CoveredOverlay — the join moment, copy-free, settle-only", () => {
     expect(link.getAttribute("href")).toBe("#/app#jurors");
   });
 
+  it("share field: the page-supplied node renders in its slot; omitted renders nothing", () => {
+    const { unmount } = render(
+      <CoveredOverlay
+        open
+        onDismiss={() => {}}
+        {...PROPS}
+        share={<button type="button">Share on X</button>}
+      />,
+    );
+    const slot = document.querySelector('[data-slot="covered-share"]');
+    expect(slot?.textContent).toContain("Share on X");
+    // the two recruitment boxes share one horizontal row (copy doc §
+    // Covered overlay, 2026-09-24): juror left, share right
+    const row = document.querySelector('[data-slot="covered-fields"]');
+    expect(row?.contains(document.querySelector('[data-slot="covered-juror"]'))).toBe(true);
+    expect(row?.contains(document.querySelector('[data-slot="covered-share"]'))).toBe(true);
+    expect(getComputedStyle(row as Element).flexDirection).toBe("row");
+    unmount();
+
+    render(<CoveredOverlay open onDismiss={() => {}} {...PROPS} />);
+    expect(document.querySelector('[data-slot="covered-share"]')).toBeNull();
+  });
+
   it("Continue and Escape are dismiss paths (dialog semantics, one exit)", () => {
     const onDismiss = vi.fn();
     render(<CoveredOverlay open onDismiss={onDismiss} {...PROPS} />);

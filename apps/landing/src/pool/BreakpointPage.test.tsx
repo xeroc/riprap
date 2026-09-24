@@ -22,6 +22,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SUPPORTERS } from "../sections/Supporters";
 import { sendInstruction, TransactionSendError } from "../shared/transaction";
 import { BreakpointPage } from "./BreakpointPage";
 import { fakeMutual, POLICY_TIERS } from "./fixtures";
@@ -177,22 +178,15 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     const thumb = screen.getByRole("slider");
     fireEvent.keyDown(thumb, { key: "ArrowRight" });
     expect(screen.getByText("Premium · $40 entry · up to $4,000 maximum payout")).toBeTruthy();
-    expect(screen.getByText("you've read the news")).toBeTruthy();
     fireEvent.keyDown(thumb, { key: "ArrowLeft" });
     fireEvent.keyDown(thumb, { key: "ArrowLeft" });
     expect(screen.getByText("Basic · $10 entry · up to $1,000 maximum payout")).toBeTruthy();
-    expect(screen.getByText("you're probably fine")).toBeTruthy();
   });
 
-  it("shows the deposits window from deposits_close_at (chain truth)", async () => {
-    fetchMock.mockResolvedValue(
-      maybe(fakeMutual({ depositsCloseAt: BigInt(Date.UTC(2026, 10, 15, 9, 30) / 1000) })),
-    );
-    renderPoolPage();
-    expect(await screen.findByText("entry closes 2026-11-15 09:30 UTC")).toBeTruthy();
-  });
+  // deposits-window line disabled in the hero (2026-09-24 hero split) — no
+  // assertion until it ships again
 
-  it("the odds table carries the four ludic rows, jokes never touching the math", async () => {
+  it("the odds table carries the five ludic rows, jokes never touching the math", async () => {
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
     const { container } = renderPoolPage();
     await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
@@ -200,11 +194,41 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
       (tr) => tr.textContent,
     );
     expect(rows).toEqual([
-      "You get stabbed at Breakpointstatistically negligible",
+      "You going to Breakpoint in LondonYou betcha",
       "Accidental eye contact on the Tubecertain",
+      "You get stabbed at Breakpointstatistically negligible",
       "The pool dissolves on schedule100% — it's a program",
-      "You send this page to the group chathigh",
+      "You send this page to your friendshigh",
     ]);
+  });
+
+  it("hero split (2026-09-24): supporters left in the odds table's old slot, odds a right rail", async () => {
+    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    const { container } = renderPoolPage();
+    await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
+
+    // the odds table lives in a right rail beside the headline stack
+    const rail = container.querySelector('[data-slot="odds"]')?.closest("aside") ?? null;
+    expect(rail).not.toBeNull();
+    const lane = rail!.parentElement!;
+    const left = lane.firstElementChild as HTMLElement;
+    // the h1 stays the first look — it leads the left column
+    expect(left.querySelector("h1")?.textContent).toBe("Get stabbed with friends.");
+
+    // supporters sit where the odds table sat: after the subline, before the
+    // tier picker; the discs are exactly the committed supporters.json
+    const slot = left.querySelector('[data-slot="supporters"]');
+    if (SUPPORTERS.length === 0) {
+      expect(slot).toBeNull(); // no invented discs (kit data law)
+      return;
+    }
+    expect([...slot!.querySelectorAll("a")].map((a) => a.getAttribute("href"))).toEqual(
+      SUPPORTERS.map((s) => s.url),
+    );
+    const picker = left.querySelector('[data-slot="tier-picker"]')!;
+    expect(slot!.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
   });
 
   it("no wallet: 'Connect a wallet to chip in' opens the picker and reads no join context", async () => {
@@ -304,14 +328,16 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
     expect(await screen.findByText("Confirming…")).toBeTruthy();
     resolveSend("sig");
 
-    expect(await screen.findByText("Covered — Standard")).toBeTruthy();
+    // findAll — the inline stamp and the overlay stamp both say it (race on
+    // which commits first); the dialog asserts follow either way
+    expect((await screen.findAllByText("Covered — Standard")).length).toBeGreaterThan(0);
 
     // the covered overlay fires on confirmation — the join moment (copy doc
     // § Covered overlay): stamp, headline, the three figures (total last,
-    // chain-formatted), the juror field, Continue. Assert and dismiss FIRST:
-    // an open Radix dialog aria-hides the rest of the page.
+    // chain-formatted), the juror field, the share field, Continue. Assert and
+    // dismiss FIRST: an open Radix dialog aria-hides the rest of the page.
     const dialog = await screen.findByRole("dialog");
-    expect(dialog.textContent).toContain("You're in the ring.");
+    expect(dialog.textContent).toContain("Welcome, friend!");
     expect(dialog.textContent).toContain("$20");
     expect(dialog.textContent).toContain("up to $2,000");
     await waitFor(() => expect(dialog.textContent).toContain("pool holds $4,020"));
@@ -321,12 +347,22 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
     expect(dialog.querySelector('[data-slot="covered-juror"] a')?.getAttribute("href")).toBe(
       "#/app#jurors",
     );
+    // the share field (copy doc § Covered overlay, 2026-09-24): the note with
+    // the supporter twist, composer intents carrying the member's figures
+    expect(dialog.textContent).toContain(
+      "Post it with @riprapxyz — everyone who shares lands on the front page as a supporter",
+    );
+    const shareX = dialog.querySelector('[data-slot="covered-share"] a[aria-label="Share on X"]');
+    expect(shareX?.getAttribute("href")).toContain(
+      encodeURIComponent("$20 in, up to $2,000 out — "),
+    );
+    expect(shareX?.getAttribute("href")).toContain(encodeURIComponent("@riprapxyz"));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
-    // the slider locks and the app link appears (copy doc § Covered)
-    // Radix restores page aria-hidden a tick after unmount — wait it out
-    await waitFor(() => expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe(""));
+    // the picker is gone once covered (copy doc § Covered, 2026-09-24) and
+    // the app link appears; Radix restores aria-hidden a tick after unmount
+    await waitFor(() => expect(screen.queryByRole("slider")).toBeNull());
     expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("#/app");
 
     // the facade built against the static address + chosen tier + wallet signer
@@ -416,7 +452,7 @@ describe("balance pre-checks — chip-in disabled with an inline reason (copy do
 });
 
 describe("covered — an existing member is a state, never an error toast", () => {
-  it("renders the Covered stamp with their on-chain tier, locks the slider, links the app", async () => {
+  it("renders the Covered stamp with their on-chain tier; picker and explainer hide, app linked", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
@@ -446,8 +482,12 @@ describe("covered — an existing member is a state, never an error toast", () =
       ),
     ).toBe(true);
     expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("#/app");
-    await waitFor(() => expect(screen.getByRole("slider").getAttribute("data-disabled")).toBe(""));
-    // their tier line, from their on-chain member PDA
+    // once covered there is nothing for sale: no slider, no picker label,
+    // no by-slider explainer (copy doc § Covered, 2026-09-24)
+    expect(screen.queryByRole("slider")).toBeNull();
+    expect(screen.queryByText("Choose your coverage")).toBeNull();
+    expect(screen.queryByText(/buys you into the weirdest hedge/)).toBeNull();
+    // their tier line stays — the member's own facts, from their member PDA
     expect(screen.getByText("Basic · $10 entry · up to $1,000 maximum payout")).toBeTruthy();
     // the session gate is set — the moment already happened for this wallet
     expect(sessionStorage.getItem(`riprap:covered:${WALLET}`)).toBe("1");

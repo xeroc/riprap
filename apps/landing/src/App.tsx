@@ -10,6 +10,7 @@ import { Footer } from "./sections/Footer";
 import { Heritage } from "./sections/Heritage";
 import { Hero } from "./sections/Hero";
 import { Mechanism } from "./sections/Mechanism";
+import { Supporters } from "./sections/Supporters";
 
 export function App() {
   return (
@@ -21,6 +22,7 @@ export function App() {
         <Heritage />
         <Audience />
         <Faq />
+        <Supporters />
         <FinalCta />
       </main>
       <Footer />

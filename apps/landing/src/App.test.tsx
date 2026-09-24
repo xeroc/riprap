@@ -105,9 +105,14 @@ describe("landing", () => {
     const hrefs = Array.from(container.querySelectorAll("a[href]"), (a) => a.getAttribute("href"));
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {
-      expect(href?.startsWith("#") || href === "/" || href === "https://x.com/riprapxyz").toBe(
-        true,
-      );
+      // supporter discs (copy doc §5.6) link real posts — handle/status shape
+      const supporterPost = /^https:\/\/x\.com\/[A-Za-z0-9_]+\/status\/\d+$/.test(href ?? "");
+      expect(
+        href?.startsWith("#") ||
+          href === "/" ||
+          href === "https://x.com/riprapxyz" ||
+          supporterPost,
+      ).toBe(true);
     }
     expect(container.textContent).not.toContain("mailto:");
   });

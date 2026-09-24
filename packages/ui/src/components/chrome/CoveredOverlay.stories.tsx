@@ -18,7 +18,7 @@ const args: CoveredOverlayProps = {
   open: false,
   onDismiss: () => {},
   stamp: "Covered — Standard",
-  headline: "You're in the ring.",
+  headline: "Welcome, friend!",
   figures: [
     <span key="fee">
       <span data-num className="font-mono">
@@ -54,6 +54,19 @@ const args: CoveredOverlayProps = {
     action: "Become a juror",
     href: "#/app#jurors",
   },
+  share: (
+    <div className="flex flex-col items-center gap-2 rounded-none border border-hairline px-3 py-2.5">
+      <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
+        Share
+      </p>
+      <p className="max-w-[22rem] leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
+        The page supplies the note and the targets — the overlay only places them.
+      </p>
+      <Button size="sm" variant="outline">
+        Share the moment
+      </Button>
+    </div>
+  ),
 };
 
 /** The replay surface (copy doc § Covered overlay): the demo trigger —
