@@ -9,7 +9,7 @@ Riprap is a platform for **event-scoped mutual protection pools** on Solana: one
 - **One design system** — semantic color tokens (`funds` = money, `deliberation` = adjudication, `peril` = the peril), one stroke width (3), one radius (12), 8px grid, no gradients.
 - **Data law** — every number rendered by a component is either doc-sourced or an explicit `{{PARAM}}` placeholder. Components never invent figures.
 - **`programs/pool` + `programs/hanse`** — the on-chain half: a generic three-track mutual-pool primitive and the bounded-lifetime event mutual built on it, each with a Codama-generated TypeScript client (`@riprap/pool`, `@riprap/hanse`) and LiteSVM test suites.
-- **`apps/cli` + `tests/`** — the `riprap` operator CLI (single-signer — `hanse:claim-payout` is an authority-gated permissionless crank; see [`apps/cli/README.md`](apps/cli/README.md)) and the jest e2e suite against a Surfpool surfnet (specs skip cleanly with no validator reachable).
+- **`apps/cranker`** — the lifecycle daemon for the five permissionless cranks (`settle_claim`, `settle_pool`, `claim_payout`, `dissolve`, `pool::crank`): a reconciler poll over every Mutual, ported from the sibling accord cranker's architecture. See [`apps/cranker/README.md`](apps/cranker/README.md).
 
 ## Table of Contents
 
@@ -98,6 +98,7 @@ Both hot-reload. The landing imports `@riprap/ui` through the workspace link, so
 riprap/
 ├── apps/
 │   ├── cli/                    # @riprap/cli — `riprap` operator CLI (oclif v4) over @riprap/pool + @riprap/hanse
+│   ├── cranker/                # @riprap/cranker — lifecycle daemon for the permissionless cranks
 │   ├── docs/                   # ADRs and fleet bean files
 │   └── landing/                # @riprap/landing — static Vite + React site
 │       ├── src/
@@ -204,6 +205,7 @@ Run from the repo root unless noted:
 | `pnpm --filter @riprap/ui run build-storybook` | Static Storybook build → `packages/ui/storybook-static/`                                   |
 | `pnpm --filter @riprap/landing run preview`    | Serve the built landing locally                                                            |
 | `anchor test`                                  | Full e2e: build, start Surfpool, deploy pool + hanse, run the jest suite (`@riprap/tests`) |
+| `pnpm dev:cranker`                             | Cranker daemon (bun --watch; see `apps/cranker/.env.example`)                               |
 | `pnpm --filter @riprap/cli dev <cmd>`          | Run the `riprap` operator CLI from TypeScript sources                                      |
 
 ## Testing
@@ -354,7 +356,7 @@ pnpm --filter @riprap/ui exec storybook dev -p 6007
 | `programs/hanse/`  | Anchor program `hanse` — event-mutual orchestrator (`meta/specs/EVENT-MUTUAL.md`)                      |
 | `packages/pool/`   | `@riprap/pool` — Codama client generated from `programs/pool`                                          |
 | `packages/hanse/`  | `@riprap/hanse` — Codama client generated from `programs/hanse`                                        |
-| `apps/cli/`        | `@riprap/cli` — `riprap` operator CLI (single-signer; `hanse:claim-payout` is an authority-gated permissionless crank) |
+| `apps/cranker/`   | `@riprap/cranker` — lifecycle daemon for the permissionless cranks (discovery via the SDK scans)     |
 | `apps/docs/`       | ADRs and fleet bean files                                                                              |
 | `tests/`           | `@riprap/tests` — jest e2e against a Surfpool surfnet (skips offline)                                  |
 | `AGENTS.md`        | Instructions for coding agents working in this repo                                                    |

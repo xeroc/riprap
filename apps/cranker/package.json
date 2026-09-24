@@ -1,0 +1,26 @@
+{
+  "name": "@riprap/cranker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Riprap Cranker — advances mutuals through their lifecycle by calling the permissionless cranks (settle_claim, settle_pool, claim_payout, dissolve, pool::crank)",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@riprap/hanse": "workspace:*",
+    "@riprap/pool": "workspace:*",
+    "@solana/kit": "^7.0.0",
+    "@useaccord/sdk": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.11",
+    "@noble/curves": "^1.9.7"
+  }
+}

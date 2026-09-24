@@ -1,8 +1,18 @@
 import { type Address, getBase64Decoder, type Rpc, type SolanaRpcApi } from "@solana/kit";
 import { describe, expect, test } from "vitest";
 
-import { getPoolEncoder, POOL_PROGRAM_ADDRESS, PoolState } from "../generated/src/generated";
-import { fetchMaybeDepositorByOwner, fetchMaybePoolBySeed, fetchPoolBySeed } from "./fetch";
+import {
+  getDepositorEncoder,
+  getPoolEncoder,
+  POOL_PROGRAM_ADDRESS,
+  PoolState,
+} from "../generated/src/generated";
+import {
+  fetchDepositorsOfPool,
+  fetchMaybeDepositorByOwner,
+  fetchMaybePoolBySeed,
+  fetchPoolBySeed,
+} from "./fetch";
 import { findDepositorPda, findPoolPda } from "./pdas";
 
 const MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address;
@@ -57,8 +67,8 @@ function encodedPool(): string {
       yieldAuthority: AUTHORITY,
       totalAmount: 0n,
       seed: 0n,
-      bump: 255,
       liquidationBalance: 0n,
+      bump: 255,
     }),
   );
 }
@@ -83,6 +93,7 @@ describe("fetchPoolBySeed", () => {
 
   test("fetchMaybePoolBySeed returns exists:false on missing account", async () => {
     const maybe = await fetchMaybePoolBySeed(mockRpc(null), { seed: 42n });
+
     expect(maybe.exists).toBe(false);
     const [expected] = await findPoolPda({ seed: 42n });
     expect(maybe.address).toBe(expected);
@@ -98,5 +109,42 @@ describe("fetchMaybeDepositorByOwner", () => {
     const [expected] = await findDepositorPda({ pool, owner: AUTHORITY });
     expect(spy.queried).toBe(expected);
     expect(maybe.exists).toBe(false);
+  });
+});
+
+/** A depositor fixture encoded under its own derived PDA. */
+async function depositorFixture(pool: Address, owner: Address, total: bigint, settled: boolean) {
+  const [pda] = await findDepositorPda({ pool, owner });
+  const encoded = getBase64Decoder().decode(
+    getDepositorEncoder().encode({
+      owner,
+      residualBeneficiary: "11111111111111111111111111111111" as Address,
+      totalAmount: total,
+      ownershipStake: 0n,
+      rightsStake: 0n,
+      yieldStake: 0n,
+      settled,
+    }),
+  );
+  return { pda, encoded };
+}
+
+describe("fetchDepositorsOfPool", () => {
+  test("keeps only positions whose PDA derives under this pool", async () => {
+    const [poolA] = await findPoolPda({ seed: 1n });
+    const [poolB] = await findPoolPda({ seed: 2n });
+    const mine = await depositorFixture(poolA, AUTHORITY, 20_000_000n, false);
+    const foreign = await depositorFixture(poolB, AUTHORITY, 20_000_000n, false); // other pool's PDA
+    const results = [
+      { pubkey: mine.pda, account: base64Account(mine.encoded) },
+      { pubkey: foreign.pda, account: base64Account(foreign.encoded) },
+    ];
+    const rpc = {
+      getProgramAccounts: (_program: string) => ({ send: async () => results }),
+    } as unknown as Rpc<SolanaRpcApi>;
+
+    const depositors = await fetchDepositorsOfPool(rpc, poolA);
+    expect(depositors.map((d) => d.address)).toEqual([mine.pda]);
+    expect(depositors[0]?.data.totalAmount).toBe(20_000_000n);
   });
 });

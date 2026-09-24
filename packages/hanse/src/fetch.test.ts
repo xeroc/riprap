@@ -1,16 +1,24 @@
-import { type Address, getBase64Decoder, type Rpc, type SolanaRpcApi } from "@solana/kit";
+import {
+  type Address,
+  getAddressEncoder,
+  getBase64Decoder,
+  type Rpc,
+  type SolanaRpcApi,
+} from "@solana/kit";
 import { describe, expect, test } from "vitest";
-
 import {
   ClaimStatus,
   getClaimEncoder,
   getMemberEncoder,
   getMutualEncoder,
   HANSE_PROGRAM_ADDRESS,
+  MUTUAL_DISCRIMINATOR,
   Phase,
 } from "../generated/src/generated";
 import {
+  fetchAllMutuals,
   fetchClaimByNonce,
+  fetchClaimsOfMutual,
   fetchMaybeClaimByNonce,
   fetchMaybeMemberByOwner,
   fetchMaybeMutualBySeed,
@@ -181,5 +189,73 @@ describe("fetchClaimByNonce", () => {
     const [mutual] = await findMutualPda({ seed: 0n });
     const maybe = await fetchMaybeClaimByNonce(mockRpc(null), { mutual, nonce: 3n });
     expect(maybe.exists).toBe(false);
+  });
+});
+
+/** Minimal scan rpc: fixed program-account results, captured filters. */
+function scanRpc(results: { pubkey: string; account: MockAccount }[]) {
+  let capturedFilters: unknown;
+  const rpc = {
+    getProgramAccounts: (_program: string, config: { filters?: unknown }) => ({
+      send: async () => {
+        capturedFilters = config.filters;
+        return results;
+      },
+    }),
+  } as unknown as Rpc<SolanaRpcApi>;
+  return {
+    rpc,
+    get filters() {
+      return capturedFilters;
+    },
+  };
+}
+
+describe("fetchAllMutuals", () => {
+  test("decodes every mutual and passes the discriminator filter", async () => {
+    const scan = scanRpc([{ pubkey: OWNER, account: base64Account(encodedMutual(), 269n) }]);
+    const mutuals = await fetchAllMutuals(scan.rpc);
+    expect(mutuals).toHaveLength(1);
+    expect(mutuals[0]?.data.seed).toBe(42n);
+    expect(scan.filters).toEqual([
+      {
+        memcmp: {
+          offset: 0n,
+          bytes: getBase64Decoder().decode(MUTUAL_DISCRIMINATOR),
+          encoding: "base64",
+        },
+      },
+    ]);
+  });
+
+  test("skips malformed accounts, never throws per-account", async () => {
+    const scan = scanRpc([
+      { pubkey: OWNER, account: base64Account("AAAA", 269n) }, // not a mutual
+      { pubkey: MINT, account: base64Account(encodedMutual(), 269n) },
+    ]);
+    const mutuals = await fetchAllMutuals(scan.rpc);
+    expect(mutuals).toHaveLength(1);
+    expect(mutuals[0]?.address).toBe(MINT);
+  });
+});
+
+describe("fetchClaimsOfMutual", () => {
+  test("filters on the mutual field (offset 8) and decodes claims", async () => {
+    const scan = scanRpc([{ pubkey: OWNER, account: base64Account(encodedClaim(), 99n) }]);
+    const [mutual] = await findMutualPda({ seed: 42n });
+    const claims = await fetchClaimsOfMutual(scan.rpc, mutual);
+    expect(claims).toHaveLength(1);
+    expect(claims[0]?.data.claimAmount).toBe(7n);
+    expect(claims[0]?.data.mutual).toBe(OWNER);
+    const bytes = (scan.filters as { memcmp: { bytes: string } }[])[1]?.memcmp.bytes;
+    expect(bytes).toBe(getBase64Decoder().decode(getAddressEncoder().encode(mutual)));
+  });
+
+  test("status restriction adds the status-byte filter at offset 120", async () => {
+    const scan = scanRpc([]);
+    await fetchClaimsOfMutual(scan.rpc, OWNER, { statuses: [ClaimStatus.Pending] });
+    const filters = scan.filters as { memcmp: { offset: bigint; bytes: string } }[];
+    expect(filters[2]?.memcmp.offset).toBe(120n);
+    expect(filters[2]?.memcmp.bytes).toBe(getBase64Decoder().decode(Uint8Array.of(0)));
   });
 });

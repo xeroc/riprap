@@ -10,6 +10,7 @@
     "lint:fix": "biome check --write .",
     "test": "pnpm -r run test",
     "dev:landing": "pnpm --filter @riprap/landing dev",
+    "dev:cranker": "pnpm --filter @riprap/cranker dev",
     "dev:remotion": "pnpm --filter @riprap/remotion studio",
     "dev:ui": "pnpm --filter @riprap/ui storybook",
     "verify": "pnpm -r run build && pnpm lint && pnpm -r run test && anchor build --arch v2 --ignore-keys && cargo test"
