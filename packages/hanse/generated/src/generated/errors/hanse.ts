@@ -74,7 +74,7 @@ export const HANSE_ERROR__PULL_WINDOW_OPEN = 0x178b; // 6027
 export const HANSE_ERROR__CLAIM_NOT_APPROVED = 0x178c; // 6028
 /** ClaimAlreadyPaid: This claim is already paid — payouts are once */
 export const HANSE_ERROR__CLAIM_ALREADY_PAID = 0x178d; // 6029
-/** Unauthorized: Unauthorized: this instruction is gated to the mutual authority (admin knob or payout pass-check co-sign) */
+/** Unauthorized: Unauthorized: this instruction is gated to the mutual authority (admin knob or the pilot payout crank gate) */
 export const HANSE_ERROR__UNAUTHORIZED = 0x178e; // 6030
 /** MathOverflow: Checked math overflowed — the amounts do not fit the accounting */
 export const HANSE_ERROR__MATH_OVERFLOW = 0x178f; // 6031
@@ -143,7 +143,7 @@ if (process.env["NODE_ENV"] !== "production") {
     [HANSE_ERROR__PULL_WINDOW_CLOSED]: `The pull window is closed: unpaid amounts have reverted to the residual`,
     [HANSE_ERROR__PULL_WINDOW_OPEN]: `The pull window is still open: dissolve waits until pull_close_at`,
     [HANSE_ERROR__TIER_INVALID]: `Tier index out of range: this mutual has exactly three tiers`,
-    [HANSE_ERROR__UNAUTHORIZED]: `Unauthorized: this instruction is gated to the mutual authority (admin knob or payout pass-check co-sign)`,
+    [HANSE_ERROR__UNAUTHORIZED]: `Unauthorized: this instruction is gated to the mutual authority (admin knob or the pilot payout crank gate)`,
     [HANSE_ERROR__UNEXPECTED_RULING]: `The dispute's final ruling is not one of the filed options`,
     [HANSE_ERROR__WRONG_DEPOSITOR]: `Wrong depositor: not this member's pool position`,
     [HANSE_ERROR__WRONG_DISPUTE]: `Wrong dispute: not the Dispute PDA this filing creates`,

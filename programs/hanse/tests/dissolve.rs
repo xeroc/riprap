@@ -186,8 +186,8 @@ fn post_dissolve_crank_pays_only_non_burned_depositors() {
     let topup = 20_000_000_000 - 2 * 20_000_000;
     let (mut env, cfg, wallets, admin) = setup_settled(2, 1, topup);
 
-    // Claimant 0 pulls: $2,015 out, stake burned to zero (§8 solvent row).
-    payout(&mut env, &cfg, &wallets[0], &admin, 0).unwrap();
+    // Claimant 0 is paid: $2,015 out, stake burned to zero (§8 solvent row).
+    payout(&mut env, &cfg, &admin, 0).unwrap();
     let treasury = pool_treasury(&pool_pda(cfg.seed), &env.mint);
     let residual = token_amount(&env.svm, &treasury);
     assert_eq!(
@@ -225,8 +225,7 @@ fn post_dissolve_crank_pays_only_non_burned_depositors() {
 fn payout(
     env: &mut Env,
     cfg: &hanse::instructions::InitializeMutualConfig,
-    claimant: &Keypair,
-    admin: &Keypair,
+    cranker: &Keypair,
     nonce: u64,
 ) -> Result<(), String> {
     let mutual = mutual_pda(cfg.seed);
@@ -240,8 +239,8 @@ fn payout(
         hanse::id(),
         &hanse::instruction::ClaimPayout {}.data(),
         hanse::accounts::ClaimPayout {
-            claimant: claimant.pubkey(),
-            authority: admin.pubkey(),
+            cranker: cranker.pubkey(),
+            claimant: c.member,
             rights_authority: mutual_auth_pda(&mutual),
             mutual,
             claim,
@@ -255,7 +254,7 @@ fn payout(
         }
         .to_account_metas(None),
     );
-    try_send(&mut env.svm, &[ix], &mut [claimant, admin])
+    try_send(&mut env.svm, &[ix], &mut [cranker])
 }
 
 fn pool_crank(

@@ -74,8 +74,8 @@ const SUBACCORD_DEPTH: u8 = 12;
 #[instruction(config: InitializeMutualConfig)]
 pub struct InitializeMutual<'info> {
     /// Initializer — recorded as the demo admin (§2.10): gates
-    /// set_subaccord_param and co-signs payouts. Implies no other
-    /// authority; rent is paid by [`Self::rent_payer`].
+    /// set_subaccord_param and the payout pass-check crank. Implies no
+    /// other authority; rent is paid by [`Self::rent_payer`].
     #[account(mut)]
     pub authority: Signer<'info>,
 

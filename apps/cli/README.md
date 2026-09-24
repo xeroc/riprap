@@ -54,7 +54,7 @@ Commands that only need PDA math run dry with no RPC (`hanse:initialize` always;
 
 ## Signer model
 
-Single-signer: the loaded keypair is fee payer AND the instruction signer. The one exception is `hanse:claim-payout` (spec EVENT-MUTUAL §2.10): the claimant signs and the mutual's authority co-signs the event-pass gate — pass the admin key via `--co-signer <path>`. The default (`--co-signer` omitted) is the loaded wallet itself, for self-demo setups only.
+Single-signer everywhere: the loaded keypair is fee payer AND the instruction signer — `hanse:claim-payout` included. `claim_payout` is a permissionless payout crank (the claimant never signs; the payout lands in their canonical ATA whoever cranks), gated for the pilot to the mutual's authority as the Breakpoint pass check (spec EVENT-MUTUAL §2.10) — load the operator wallet to run it.
 
 ## Development
 

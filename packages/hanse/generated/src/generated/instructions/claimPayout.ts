@@ -33,7 +33,6 @@ import {
   type TransactionSigner,
   transformEncoder,
   type WritableAccount,
-  type WritableSignerAccount,
 } from "@solana/kit";
 import {
   getAccountMetaFactory,
@@ -53,8 +52,8 @@ export function getClaimPayoutDiscriminatorBytes(): ReadonlyUint8Array {
 
 export type ClaimPayoutInstruction<
   TProgram extends string = typeof HANSE_PROGRAM_ADDRESS,
+  TAccountCranker extends string | AccountMeta<string> = string,
   TAccountClaimant extends string | AccountMeta<string> = string,
-  TAccountAuthority extends string | AccountMeta<string> = string,
   TAccountMutual extends string | AccountMeta<string> = string,
   TAccountClaim extends string | AccountMeta<string> = string,
   TAccountRightsAuthority extends string | AccountMeta<string> = string,
@@ -74,12 +73,10 @@ export type ClaimPayoutInstruction<
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
-      TAccountClaimant extends string
-        ? WritableSignerAccount<TAccountClaimant> & AccountSignerMeta<TAccountClaimant>
-        : TAccountClaimant,
-      TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
-        : TAccountAuthority,
+      TAccountCranker extends string
+        ? ReadonlySignerAccount<TAccountCranker> & AccountSignerMeta<TAccountCranker>
+        : TAccountCranker,
+      TAccountClaimant extends string ? ReadonlyAccount<TAccountClaimant> : TAccountClaimant,
       TAccountMutual extends string ? ReadonlyAccount<TAccountMutual> : TAccountMutual,
       TAccountClaim extends string ? WritableAccount<TAccountClaim> : TAccountClaim,
       TAccountRightsAuthority extends string
@@ -130,8 +127,8 @@ export function getClaimPayoutInstructionDataCodec(): FixedSizeCodec<
 }
 
 export type ClaimPayoutAsyncInput<
+  TAccountCranker extends string = string,
   TAccountClaimant extends string = string,
-  TAccountAuthority extends string = string,
   TAccountMutual extends string = string,
   TAccountClaim extends string = string,
   TAccountRightsAuthority extends string = string,
@@ -143,12 +140,19 @@ export type ClaimPayoutAsyncInput<
   TAccountTokenProgram extends string = string,
   TAccountPoolProgram extends string = string,
 > = {
-  claimant: TransactionSigner<TAccountClaimant>;
   /**
-   * Breakpoint pass gate (§2.10 amendment / §12): passes are verified
-   * off-chain, so the gate sits at payout as the authority's co-signature.
+   * The crank initiator — permissionless in principle. Pilot pass gate
+   * (§2.10 amendment / §12): Breakpoint passes are verified off-chain,
+   * so the cranker must be the mutual's authority. ONE constraint —
+   * comment it out when the pass check retires and anyone may crank.
    */
-  authority: TransactionSigner<TAccountAuthority>;
+  cranker: TransactionSigner<TAccountCranker>;
+  /**
+   * The claimant — receives the payout, never signs: cranking someone
+   * else's claim pays that someone, never the cranker.
+   * the handler.
+   */
+  claimant: Address<TAccountClaimant>;
   mutual: Address<TAccountMutual>;
   claim: Address<TAccountClaim>;
   /**
@@ -177,8 +181,8 @@ export type ClaimPayoutAsyncInput<
 };
 
 export async function getClaimPayoutInstructionAsync<
+  TAccountCranker extends string,
   TAccountClaimant extends string,
-  TAccountAuthority extends string,
   TAccountMutual extends string,
   TAccountClaim extends string,
   TAccountRightsAuthority extends string,
@@ -192,8 +196,8 @@ export async function getClaimPayoutInstructionAsync<
   TProgramAddress extends Address = typeof HANSE_PROGRAM_ADDRESS,
 >(
   input: ClaimPayoutAsyncInput<
+    TAccountCranker,
     TAccountClaimant,
-    TAccountAuthority,
     TAccountMutual,
     TAccountClaim,
     TAccountRightsAuthority,
@@ -209,8 +213,8 @@ export async function getClaimPayoutInstructionAsync<
 ): Promise<
   ClaimPayoutInstruction<
     TProgramAddress,
+    TAccountCranker,
     TAccountClaimant,
-    TAccountAuthority,
     TAccountMutual,
     TAccountClaim,
     TAccountRightsAuthority,
@@ -228,8 +232,8 @@ export async function getClaimPayoutInstructionAsync<
 
   // Original accounts.
   const originalAccounts = {
-    claimant: { value: input.claimant ?? null, isWritable: true },
-    authority: { value: input.authority ?? null, isWritable: false },
+    cranker: { value: input.cranker ?? null, isWritable: false },
+    claimant: { value: input.claimant ?? null, isWritable: false },
     mutual: { value: input.mutual ?? null, isWritable: false },
     claim: { value: input.claim ?? null, isWritable: true },
     rightsAuthority: {
@@ -290,8 +294,8 @@ export async function getClaimPayoutInstructionAsync<
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
+      getAccountMeta("cranker", accounts.cranker),
       getAccountMeta("claimant", accounts.claimant),
-      getAccountMeta("authority", accounts.authority),
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("claim", accounts.claim),
       getAccountMeta("rightsAuthority", accounts.rightsAuthority),
@@ -307,8 +311,8 @@ export async function getClaimPayoutInstructionAsync<
     programAddress,
   } as ClaimPayoutInstruction<
     TProgramAddress,
+    TAccountCranker,
     TAccountClaimant,
-    TAccountAuthority,
     TAccountMutual,
     TAccountClaim,
     TAccountRightsAuthority,
@@ -323,8 +327,8 @@ export async function getClaimPayoutInstructionAsync<
 }
 
 export type ClaimPayoutInput<
+  TAccountCranker extends string = string,
   TAccountClaimant extends string = string,
-  TAccountAuthority extends string = string,
   TAccountMutual extends string = string,
   TAccountClaim extends string = string,
   TAccountRightsAuthority extends string = string,
@@ -336,12 +340,19 @@ export type ClaimPayoutInput<
   TAccountTokenProgram extends string = string,
   TAccountPoolProgram extends string = string,
 > = {
-  claimant: TransactionSigner<TAccountClaimant>;
   /**
-   * Breakpoint pass gate (§2.10 amendment / §12): passes are verified
-   * off-chain, so the gate sits at payout as the authority's co-signature.
+   * The crank initiator — permissionless in principle. Pilot pass gate
+   * (§2.10 amendment / §12): Breakpoint passes are verified off-chain,
+   * so the cranker must be the mutual's authority. ONE constraint —
+   * comment it out when the pass check retires and anyone may crank.
    */
-  authority: TransactionSigner<TAccountAuthority>;
+  cranker: TransactionSigner<TAccountCranker>;
+  /**
+   * The claimant — receives the payout, never signs: cranking someone
+   * else's claim pays that someone, never the cranker.
+   * the handler.
+   */
+  claimant: Address<TAccountClaimant>;
   mutual: Address<TAccountMutual>;
   claim: Address<TAccountClaim>;
   /**
@@ -370,8 +381,8 @@ export type ClaimPayoutInput<
 };
 
 export function getClaimPayoutInstruction<
+  TAccountCranker extends string,
   TAccountClaimant extends string,
-  TAccountAuthority extends string,
   TAccountMutual extends string,
   TAccountClaim extends string,
   TAccountRightsAuthority extends string,
@@ -385,8 +396,8 @@ export function getClaimPayoutInstruction<
   TProgramAddress extends Address = typeof HANSE_PROGRAM_ADDRESS,
 >(
   input: ClaimPayoutInput<
+    TAccountCranker,
     TAccountClaimant,
-    TAccountAuthority,
     TAccountMutual,
     TAccountClaim,
     TAccountRightsAuthority,
@@ -401,8 +412,8 @@ export function getClaimPayoutInstruction<
   config?: { programAddress?: TProgramAddress },
 ): ClaimPayoutInstruction<
   TProgramAddress,
+  TAccountCranker,
   TAccountClaimant,
-  TAccountAuthority,
   TAccountMutual,
   TAccountClaim,
   TAccountRightsAuthority,
@@ -419,8 +430,8 @@ export function getClaimPayoutInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    claimant: { value: input.claimant ?? null, isWritable: true },
-    authority: { value: input.authority ?? null, isWritable: false },
+    cranker: { value: input.cranker ?? null, isWritable: false },
+    claimant: { value: input.claimant ?? null, isWritable: false },
     mutual: { value: input.mutual ?? null, isWritable: false },
     claim: { value: input.claim ?? null, isWritable: true },
     rightsAuthority: {
@@ -453,8 +464,8 @@ export function getClaimPayoutInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
+      getAccountMeta("cranker", accounts.cranker),
       getAccountMeta("claimant", accounts.claimant),
-      getAccountMeta("authority", accounts.authority),
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("claim", accounts.claim),
       getAccountMeta("rightsAuthority", accounts.rightsAuthority),
@@ -470,8 +481,8 @@ export function getClaimPayoutInstruction<
     programAddress,
   } as ClaimPayoutInstruction<
     TProgramAddress,
+    TAccountCranker,
     TAccountClaimant,
-    TAccountAuthority,
     TAccountMutual,
     TAccountClaim,
     TAccountRightsAuthority,
@@ -491,12 +502,19 @@ export type ParsedClaimPayoutInstruction<
 > = {
   programAddress: Address<TProgram>;
   accounts: {
-    claimant: TAccountMetas[0];
     /**
-     * Breakpoint pass gate (§2.10 amendment / §12): passes are verified
-     * off-chain, so the gate sits at payout as the authority's co-signature.
+     * The crank initiator — permissionless in principle. Pilot pass gate
+     * (§2.10 amendment / §12): Breakpoint passes are verified off-chain,
+     * so the cranker must be the mutual's authority. ONE constraint —
+     * comment it out when the pass check retires and anyone may crank.
      */
-    authority: TAccountMetas[1];
+    cranker: TAccountMetas[0];
+    /**
+     * The claimant — receives the payout, never signs: cranking someone
+     * else's claim pays that someone, never the cranker.
+     * the handler.
+     */
+    claimant: TAccountMetas[1];
     mutual: TAccountMetas[2];
     claim: TAccountMetas[3];
     /**
@@ -549,8 +567,8 @@ export function parseClaimPayoutInstruction<
   return {
     programAddress: instruction.programAddress,
     accounts: {
+      cranker: getNextAccount(),
       claimant: getNextAccount(),
-      authority: getNextAccount(),
       mutual: getNextAccount(),
       claim: getNextAccount(),
       rightsAuthority: getNextAccount(),

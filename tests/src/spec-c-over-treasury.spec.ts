@@ -114,8 +114,8 @@ describe("e2e spec c: over-treasury proportional pulls (riprap-e5t9)", () => {
     const pull = async (claim: FiledClaim): Promise<bigint> => {
       await env.sendIx(
         await getClaimPayoutInstructionAsync({
-          claimant: claim.claimant,
-          authority: env.payer, // §12 pass gate: initializer co-signs
+          cranker: env.payer, // §12 pass gate: initializer cranks
+          claimant: claim.claimant.address,
           mutual,
           claim: claim.claimPda,
           pool: poolPda,

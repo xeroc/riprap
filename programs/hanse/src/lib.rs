@@ -90,8 +90,8 @@ pub mod hanse {
         SetSubaccordParam::handler_set_subaccord_param(ctx, nonce, param)
     }
 
-    /// Claimant pull against the frozen ratio, gated by the authority's
-    /// pass co-signature; atomic spend + burn (§7).
+    /// Permissionless payout crank against the frozen ratio — authority-gated
+    /// for the pilot pass check; atomic spend + burn (§7).
     pub fn claim_payout(ctx: Context<ClaimPayout>) -> Result<()> {
         ClaimPayout::handler_claim_payout(ctx)
     }

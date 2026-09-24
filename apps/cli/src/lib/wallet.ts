@@ -36,8 +36,7 @@ export function resolveKeypairPath(flagValue: string | undefined): string {
  *
  * The resulting signer is a full `TransactionSigner` — usable as fee payer,
  * instruction authority, and signing account. (Single-signer CLI model: the
- * wallet is fee payer + instruction signer; the one documented multi-signer
- * exception is hanse:claim-payout, handled by its own command.)
+ * wallet is fee payer and the instruction signer on every command.)
  */
 export async function loadKeypair(path: string): Promise<KeyPairSigner> {
   let raw: string;

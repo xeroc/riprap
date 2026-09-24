@@ -1,9 +1,10 @@
 /**
- * `riprap hanse:claim-payout` — THE multi-signer exception: the claimant
- * (loaded wallet) pulls an approved claim, and the mutual's authority
- * co-signs the Breakpoint pass gate (§2.10 / §12). Default --co-signer is
- * the loaded wallet itself (self-demo); production passes the admin key.
- * Atomic: spend + burn in one transaction, idempotent.
+ * `riprap hanse:claim-payout` — the payout crank: pays an approved claim
+ * into the claimant's canonical ATA (they never sign) and burns the
+ * matching rights stake — atomic and idempotent. Permissionless in
+ * principle; for the pilot the cranker must be the mutual's authority
+ * (Breakpoint pass gate §2.10/§12 — one on-chain constraint). Load the
+ * operator wallet and crank every approved claim.
  */
 import { Flags } from "@oclif/core";
 import {
@@ -15,27 +16,25 @@ import {
 import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address, Instruction, KeyPairSigner } from "@solana/kit";
 import { ChainCommand, chainFlags } from "../../lib/base-command";
-import { loadKeypair } from "../../lib/wallet";
 
 /**
  * Pure instruction assembly from decoded accounts — exported for tests
- * (two-signer set assembly without rpc).
+ * (single-signer crank assembly without rpc).
  */
 export async function buildClaimPayout(input: {
   claim: { address: Address; member: Address };
   mutual: { address: Address; pool: Address; depositMint: Address };
-  claimant: KeyPairSigner;
-  /** The mutual authority's pass-gate co-signature (§2.10). */
-  authority: KeyPairSigner;
+  /** The crank initiator — the mutual authority while the pass gate is on (§2.10). */
+  cranker: KeyPairSigner;
 }): Promise<Instruction> {
-  const { claim, mutual, claimant, authority } = input;
+  const { claim, mutual, cranker } = input;
   const [depositor] = await findDepositorPda({ pool: mutual.pool, owner: claim.member });
   const treasury = await findAssociatedTokenAddress(mutual.depositMint, mutual.pool);
-  const destination = await findAssociatedTokenAddress(mutual.depositMint, claimant.address);
+  const destination = await findAssociatedTokenAddress(mutual.depositMint, claim.member);
 
   return await getClaimPayoutInstructionAsync({
-    claimant,
-    authority,
+    cranker,
+    claimant: claim.member,
     mutual: mutual.address,
     claim: claim.address,
     pool: mutual.pool,
@@ -47,29 +46,22 @@ export async function buildClaimPayout(input: {
 }
 
 export default class HanseClaimPayout extends ChainCommand {
-  static summary = "Pull an approved claim (claimant + authority co-sign)";
+  static summary = "Crank an approved claim's payout to the claimant (authority-gated)";
 
   static description =
-    "The claimant pull: pays claim_amount × frozen ratio into the " +
-    "claimant's deposit-mint ATA and burns the matching rights stake — " +
-    "atomic and idempotent. Two signatures: the loaded wallet signs as the " +
-    "claimant, and the mutual's authority co-signs the event-pass gate " +
-    "(spec §2.10). --co-signer defaults to the loaded wallet (self-demo); " +
-    "production uses the admin keypair path.";
+    "The payout crank: pays claim_amount × frozen ratio into the claimant's " +
+    "deposit-mint ATA and burns the matching rights stake — atomic and " +
+    "idempotent. The claimant never signs: whoever turns the crank, the " +
+    "money lands in the claimant's ATA. For the pilot the cranker must be " +
+    "the mutual's authority (Breakpoint pass gate, spec §2.10) — load the " +
+    "operator wallet; the gate is one on-chain constraint, removed when the " +
+    "pass check retires.";
 
-  static examples = [
-    "<%= config.bin %> hanse:claim-payout --claim 9xQe…",
-    "<%= config.bin %> hanse:claim-payout --claim 9xQe… --co-signer /path/admin.json",
-  ];
+  static examples = ["<%= config.bin %> hanse:claim-payout --claim 9xQe…"];
 
   static flags = {
     ...chainFlags,
     claim: Flags.string({ description: "Claim account address", required: true }),
-    "co-signer": Flags.string({
-      description:
-        "Mutual authority keypair path for the pass-gate co-signature " +
-        "(default: the loaded wallet — self-demo only; production uses the admin key)",
-    }),
   };
 
   async run(): Promise<void> {
@@ -79,7 +71,6 @@ export default class HanseClaimPayout extends ChainCommand {
     const ctx = await this.loadChain(flags);
     const claimAccount = await fetchClaim(ctx.rpc, flags.claim as Address);
     const mutualAccount = await fetchMutual(ctx.rpc, claimAccount.data.mutual);
-    const coSigner = flags["co-signer"] ? await loadKeypair(flags["co-signer"]) : ctx.signer;
 
     const instruction = await buildClaimPayout({
       claim: { address: claimAccount.address, member: claimAccount.data.member },
@@ -88,8 +79,7 @@ export default class HanseClaimPayout extends ChainCommand {
         pool: mutualAccount.data.pool,
         depositMint: mutualAccount.data.depositMint,
       },
-      claimant: ctx.signer,
-      authority: coSigner,
+      cranker: ctx.signer,
     });
 
     if (flags["dry-run"]) {
@@ -100,8 +90,8 @@ export default class HanseClaimPayout extends ChainCommand {
     this.emitSend(signature, {
       claim: flags.claim,
       mutual: claimAccount.data.mutual,
-      claimant: ctx.signer.address,
-      coSigner: coSigner.address,
+      claimant: claimAccount.data.member,
+      cranker: ctx.signer.address,
     });
   }
 }

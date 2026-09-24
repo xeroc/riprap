@@ -236,13 +236,13 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
       ERR.PULL_WINDOW_OPEN,
     );
 
-    // claim_payout WITHOUT the authority co-sign reverts (wrong signer).
+    // claim_payout by a NON-authority cranker reverts (pilot pass gate).
     const stranger = await fundSigner(env);
     await expectRevert(
       env.sendIx(
         await getClaimPayoutInstructionAsync({
-          claimant: claimA.claimant,
-          authority: stranger, // NOT mutual.authority
+          cranker: stranger, // NOT mutual.authority
+          claimant: claimA.claimant.address,
           mutual,
           claim: claimA.claimPda,
           pool: poolPda,
@@ -257,8 +257,8 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     // Valid payout goes through once…
     await env.sendIx(
       await getClaimPayoutInstructionAsync({
-        claimant: claimA.claimant,
-        authority: env.payer,
+        cranker: env.payer,
+        claimant: claimA.claimant.address,
         mutual,
         claim: claimA.claimPda,
         pool: poolPda,
@@ -274,8 +274,8 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     await expectRevert(
       env.sendIx(
         await getClaimPayoutInstructionAsync({
-          claimant: claimA.claimant,
-          authority: env.payer,
+          cranker: env.payer,
+          claimant: claimA.claimant.address,
           mutual,
           claim: claimA.claimPda,
           pool: poolPda,
@@ -294,8 +294,8 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     await expectRevert(
       env.sendIx(
         await getClaimPayoutInstructionAsync({
-          claimant: claimB.claimant,
-          authority: env.payer,
+          cranker: env.payer,
+          claimant: claimB.claimant.address,
           mutual,
           claim: claimB.claimPda,
           pool: poolPda,

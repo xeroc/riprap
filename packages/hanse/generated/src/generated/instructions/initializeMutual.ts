@@ -217,8 +217,8 @@ export type InitializeMutualAsyncInput<
 > = {
   /**
    * Initializer — recorded as the demo admin (§2.10): gates
-   * set_subaccord_param and co-signs payouts. Implies no other
-   * authority; rent is paid by [`Self::rent_payer`].
+   * set_subaccord_param and the payout pass-check crank. Implies no
+   * other authority; rent is paid by [`Self::rent_payer`].
    */
   authority: TransactionSigner<TAccountAuthority>;
   /**
@@ -491,8 +491,8 @@ export type InitializeMutualInput<
 > = {
   /**
    * Initializer — recorded as the demo admin (§2.10): gates
-   * set_subaccord_param and co-signs payouts. Implies no other
-   * authority; rent is paid by [`Self::rent_payer`].
+   * set_subaccord_param and the payout pass-check crank. Implies no
+   * other authority; rent is paid by [`Self::rent_payer`].
    */
   authority: TransactionSigner<TAccountAuthority>;
   /**
@@ -730,8 +730,8 @@ export type ParsedInitializeMutualInstruction<
   accounts: {
     /**
      * Initializer — recorded as the demo admin (§2.10): gates
-     * set_subaccord_param and co-signs payouts. Implies no other
-     * authority; rent is paid by [`Self::rent_payer`].
+     * set_subaccord_param and the payout pass-check crank. Implies no
+     * other authority; rent is paid by [`Self::rent_payer`].
      */
     authority: TAccountMetas[0];
     /**

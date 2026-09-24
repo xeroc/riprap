@@ -77,7 +77,7 @@ pub enum HanseError {
     ClaimAlreadyPaid,
 
     // ── authority gates ──────────────────────────────────────────────────
-    #[msg("Unauthorized: this instruction is gated to the mutual authority (admin knob or payout pass-check co-sign)")]
+    #[msg("Unauthorized: this instruction is gated to the mutual authority (admin knob or the pilot payout crank gate)")]
     Unauthorized,
 
     // ── invariants ───────────────────────────────────────────────────────

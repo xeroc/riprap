@@ -6,7 +6,7 @@
 //   initialize_mutual → 4 × Basic + 4 × Standard + 2 × Premium join →
 //   3 member-jurors stake → file_claim → draw → commit/reveal Approve →
 //   finalize_dispute → settle_claim Approved → settle_pool ratio 1e9 →
-//   claim_payout (authority co-sign; spend + burn) → dissolve → crank residuals.
+//   claim_payout (authority-cranked; spend + burn) → dissolve → crank residuals.
 //
 // Cohort math (6-dp USDC units): 4 × $10 + 4 × $20 + 2 × $40 = $200 treasury;
 // a Standard claimant's $95 claim + $15 fee = $110 obligations (ratio exactly
@@ -140,11 +140,11 @@ describe("e2e spec a: solvent lifecycle to the cent (riprap-efdw)", () => {
     expect(mutual3.data.phase).toBe(Phase.Settled);
     expect(mutual3.data.ratio1e9).toBe(1_000_000_000n);
 
-    // ── claim_payout: authority co-sign; spend + burn atomically ─────────
+    // ── claim_payout: authority-cranked; spend + burn atomically ────────
     await env.sendIx(
       await getClaimPayoutInstructionAsync({
-        claimant: filed.claimant,
-        authority: env.payer, // §12 pass gate: initializer co-signs
+        cranker: env.payer, // §12 pass gate: initializer cranks
+        claimant: filed.claimant.address,
         mutual,
         claim: filed.claimPda,
         pool: poolPda,

@@ -1,5 +1,6 @@
 //! claim_payout tests (EVENT-MUTUAL §2.4/§7 + §8 numbers, bean riprap-6zfr):
-//! the claimant pull against the frozen ratio, gated by the pass co-sign.
+//! the payout crank against the frozen ratio — the claimant never signs;
+//! the pilot pass gate pins the cranker to mutual.authority.
 
 mod common;
 
@@ -17,8 +18,7 @@ const FEE: u64 = 15_000_000;
 fn payout_tx(
     env: &mut Env,
     cfg: &hanse::instructions::InitializeMutualConfig,
-    claimant: &Keypair,
-    co_signer: &Keypair,
+    cranker: &Keypair,
     claim_nonce: u64,
     destination: Option<Pubkey>,
 ) -> Result<(), String> {
@@ -35,8 +35,8 @@ fn payout_tx(
         hanse::id(),
         &hanse::instruction::ClaimPayout {}.data(),
         hanse::accounts::ClaimPayout {
-            claimant: claimant.pubkey(),
-            authority: co_signer.pubkey(),
+            cranker: cranker.pubkey(),
+            claimant: c.member,
             rights_authority: mutual_auth_pda(&mutual),
             mutual,
             claim,
@@ -50,7 +50,7 @@ fn payout_tx(
         }
         .to_account_metas(None),
     );
-    try_send(&mut env.svm, &[ix], &mut [claimant, co_signer])
+    try_send(&mut env.svm, &[ix], &mut [cranker])
 }
 
 /// Drive the real lifecycle to Settled: `members` joined at tier 1 ($20),
@@ -148,7 +148,7 @@ fn solvent_payout_is_claim_plus_fee() {
     let claimant = &wallets[0];
     let ata_addr = ata(&claimant.pubkey(), &env.mint);
     let before = token_amount(&env.svm, &ata_addr);
-    payout_tx(&mut env, &cfg, claimant, &admin, 0, None).unwrap();
+    payout_tx(&mut env, &cfg, &admin, 0, None).unwrap();
 
     assert_eq!(
         token_amount(&env.svm, &ata_addr) - before,
@@ -181,7 +181,7 @@ fn exhausted_payout_floors_per_term() {
     let claimant = &wallets[0];
     let ata_addr = ata(&claimant.pubkey(), &env.mint);
     let before = token_amount(&env.svm, &ata_addr);
-    payout_tx(&mut env, &cfg, claimant, &admin, 0, None).unwrap();
+    payout_tx(&mut env, &cfg, &admin, 0, None).unwrap();
 
     let m: hanse::Mutual = anchor_lang::AccountDeserialize::try_deserialize(
         &mut &env.svm.get_account(&mutual_pda(cfg.seed)).unwrap().data[..],
@@ -210,12 +210,12 @@ fn exhausted_payout_floors_per_term() {
 }
 
 #[test]
-fn missing_cosign_reverts() {
+fn non_authority_cranker_reverts() {
     let topup = 20_000_000_000 - 20_000_000;
-    let (mut env, cfg, wallets, _) = setup_payout_full(1, 1, topup);
+    let (mut env, cfg, _wallets, _) = setup_payout_full(1, 1, topup);
     let impostor = cranker(&mut env);
     assert_custom_err(
-        payout_tx(&mut env, &cfg, &wallets[0], &impostor, 0, None),
+        payout_tx(&mut env, &cfg, &impostor, 0, None),
         hanse::HanseError::Unauthorized,
     );
 }
@@ -223,7 +223,7 @@ fn missing_cosign_reverts() {
 #[test]
 fn pull_after_window_reverts() {
     let topup = 20_000_000_000 - 20_000_000;
-    let (mut env, cfg, wallets, admin) = setup_payout_full(1, 1, topup);
+    let (mut env, cfg, _wallets, admin) = setup_payout_full(1, 1, topup);
     let pull_close_at = {
         let m: hanse::Mutual = anchor_lang::AccountDeserialize::try_deserialize(
             &mut &env.svm.get_account(&mutual_pda(cfg.seed)).unwrap().data[..],
@@ -233,7 +233,7 @@ fn pull_after_window_reverts() {
     };
     warp_clock(&mut env.svm, pull_close_at);
     assert_custom_err(
-        payout_tx(&mut env, &cfg, &wallets[0], &admin, 0, None),
+        payout_tx(&mut env, &cfg, &admin, 0, None),
         hanse::HanseError::PullWindowClosed,
     );
 }
@@ -241,11 +241,11 @@ fn pull_after_window_reverts() {
 #[test]
 fn double_pull_reverts() {
     let topup = 20_000_000_000 - 20_000_000;
-    let (mut env, cfg, wallets, admin) = setup_payout_full(1, 1, topup);
-    payout_tx(&mut env, &cfg, &wallets[0], &admin, 0, None).unwrap();
+    let (mut env, cfg, _wallets, admin) = setup_payout_full(1, 1, topup);
+    payout_tx(&mut env, &cfg, &admin, 0, None).unwrap();
     env.svm.expire_blockhash();
     assert_custom_err(
-        payout_tx(&mut env, &cfg, &wallets[0], &admin, 0, None),
+        payout_tx(&mut env, &cfg, &admin, 0, None),
         hanse::HanseError::ClaimAlreadyPaid,
     );
 }
@@ -256,7 +256,7 @@ fn foreign_destination_reverts() {
     let (mut env, cfg, wallets, admin) = setup_payout_full(2, 1, topup);
     let other_ata = ata(&wallets[1].pubkey(), &env.mint);
     assert!(
-        payout_tx(&mut env, &cfg, &wallets[0], &admin, 0, Some(other_ata)).is_err(),
+        payout_tx(&mut env, &cfg, &admin, 0, Some(other_ata)).is_err(),
         "destination must be the claimant's own canonical ATA"
     );
 }

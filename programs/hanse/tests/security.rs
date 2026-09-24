@@ -5,7 +5,7 @@
 //!
 //! | Row | Case | Expected |
 //! |-----|------|----------|
-//! | S1  | claim_payout without authority co-sign (broken auth) | Unauthorized |
+//! | S1  | claim_payout by a non-authority cranker (broken auth) | Unauthorized |
 //! | S2  | set_subaccord_param by non-admin (broken auth) | Unauthorized |
 //! | S3  | file_claim: claimant ≠ the member PDA's member (signer chain) | ConstraintSeeds (the seeds bind member to claimant) |
 //! | S4  | join with another mutual's pool (cross-mutual) | WrongPool |
@@ -133,8 +133,7 @@ fn file_claim_attacked(
 fn payout_attacked(
     env: &mut Env,
     cfg: &hanse::instructions::InitializeMutualConfig,
-    claimant: &Keypair,
-    authority: &Keypair,
+    cranker: &Keypair,
     mutual_addr: Pubkey,
     claim_addr: Pubkey,
 ) -> Result<(), String> {
@@ -147,8 +146,8 @@ fn payout_attacked(
         hanse::id(),
         &hanse::instruction::ClaimPayout {}.data(),
         hanse::accounts::ClaimPayout {
-            claimant: claimant.pubkey(),
-            authority: authority.pubkey(),
+            cranker: cranker.pubkey(),
+            claimant: c.member,
             rights_authority: mutual_auth_pda(&mutual_addr),
             mutual: mutual_addr,
             claim: claim_addr,
@@ -162,7 +161,7 @@ fn payout_attacked(
         }
         .to_account_metas(None),
     );
-    try_send(&mut env.svm, &[ix], &mut [claimant, authority])
+    try_send(&mut env.svm, &[ix], &mut [cranker])
 }
 
 fn settle_claim_attacked(
@@ -247,9 +246,9 @@ fn approve_and_settle(
 
 // ── rows ───────────────────────────────────────────────────────────────────
 
-/// S1 — broken auth: payout without the pass co-signature.
+/// S1 — broken auth: payout cranked by a non-authority key.
 #[test]
-fn s1_payout_without_cosign() {
+fn s1_payout_non_authority_cranker() {
     let (mut env, cfg) = setup_with_mutual(1);
     init_accord_state(&mut env);
     arm_subaccord(&mut env, &cfg, 3);
@@ -266,7 +265,6 @@ fn s1_payout_without_cosign() {
         payout_attacked(
             &mut env,
             &cfg,
-            &m,
             &impostor,
             mutual_pda(1),
             claim_pda(&mutual_pda(1), 0),
@@ -460,7 +458,6 @@ fn s8_payout_foreign_claim() {
         payout_attacked(
             &mut env,
             &cfg1,
-            &member,
             &admin,
             mutual_pda(2),
             claim_pda(&mutual_pda(1), 0),
@@ -540,7 +537,6 @@ fn s12_ratio_zero_pays_nothing() {
     payout_attacked(
         &mut env,
         &cfg,
-        &m,
         &admin,
         mutual_pda(1),
         claim_pda(&mutual_pda(1), 0),
@@ -602,7 +598,6 @@ fn s15_payout_before_settlement() {
         payout_attacked(
             &mut env,
             &cfg,
-            &member,
             &admin,
             mutual_pda(1),
             claim_pda(&mutual_pda(1), 0),

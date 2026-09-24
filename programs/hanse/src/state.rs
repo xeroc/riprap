@@ -48,7 +48,7 @@ pub const PULL_WINDOW_SECS: i64 = 180 * 86_400;
 pub struct Mutual {
     // ── Immutable, set by initialize_mutual ─────────────────────────────
     /// Initializer — demo admin; gates set_subaccord_param and the payout
-    /// pass-check co-signature.
+    /// pass-check crank gate.
     pub authority: Pubkey,
     /// The pool this mutual owns (rights.authority = mutual_auth PDA,
     /// ownership.authority = mutual_own PDA).

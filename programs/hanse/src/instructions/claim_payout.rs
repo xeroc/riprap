@@ -5,16 +5,25 @@ use crate::error::HanseError;
 use crate::events::PayoutClaimed;
 use crate::state::{Claim, ClaimStatus, Mutual, Phase};
 
-/// Account context for `claim_payout` — the claimant pull, idempotent
-/// (EVENT-MUTUAL §2.4/§7). Atomic: spend + burn in one transaction.
+/// Account context for `claim_payout` — the permissionless payout crank
+/// (EVENT-MUTUAL §2.4/§7). Atomic: spend + burn in one transaction. The
+/// claimant NEVER signs — the payout lands in their canonical ATA whoever
+/// turns the crank (pool::crank pattern: the cranker pays fees, gains
+/// nothing).
 #[derive(Accounts)]
 pub struct ClaimPayout<'info> {
-    #[account(mut)]
-    pub claimant: Signer<'info>,
+    /// The crank initiator — permissionless in principle. Pilot pass gate
+    /// (§2.10 amendment / §12): Breakpoint passes are verified off-chain,
+    /// so the cranker must be the mutual's authority. ONE constraint —
+    /// comment it out when the pass check retires and anyone may crank.
+    #[account(constraint = cranker.key() == mutual.authority @ HanseError::Unauthorized)]
+    pub cranker: Signer<'info>,
 
-    /// Breakpoint pass gate (§2.10 amendment / §12): passes are verified
-    /// off-chain, so the gate sits at payout as the authority's co-signature.
-    pub authority: Signer<'info>,
+    /// The claimant — receives the payout, never signs: cranking someone
+    /// else's claim pays that someone, never the cranker.
+    /// CHECK: bound by claim.member below and the depositor PDA seeds in
+    /// the handler.
+    pub claimant: UncheckedAccount<'info>,
 
     #[account(
         constraint = mutual.phase == Phase::Settled @ HanseError::NotSettled,
@@ -81,13 +90,6 @@ impl<'info> ClaimPayout<'info> {
             HanseError::ClaimAlreadyPaid
         );
 
-        // Pass co-sign: the initializer's key must sign alongside the
-        // claimant (§2.10 amendment — off-chain pass validation).
-        require_keys_eq!(
-            ctx.accounts.authority.key(),
-            mutual.authority,
-            HanseError::Unauthorized
-        );
         // Pull window: unpaid amounts revert to the residual after this.
         require!(now < mutual.pull_close_at, HanseError::PullWindowClosed);
 

@@ -9,7 +9,7 @@ deploy check → hanse:initialize → seed jurors (accord stake)
      → hanse:join × N members        [deposits close 2026-11-15 08:00 UTC]
      → hanse:file-claim / settle-claim   (incident window; accord adjudicates)
      → hanse:settle-pool             [claims close 2026-12-01 18:00 UTC, all claims resolved]
-     → hanse:claim-payout × claimants (claimant + admin co-sign)
+     → hanse:claim-payout × claimants (operator cranks; authority-gated)
      → hanse:dissolve                [pull window closes ≈ settle + 180d]
      → pool:crank × members          (residual exits; mutual permanently dissolved)
 ```
@@ -47,8 +47,8 @@ node apps/cli/bin/run.js config:balance --rpc <RPC>
 
 | Wallet                         | Used for                                               | Notes                                                                                                                                                                                                                                                                                                                |
 | ------------------------------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Operator/admin keypair**     | `hanse:initialize`                                     | Becomes the mutual's immutable `authority`: the payout pass-gate co-signer and the only key that can propose `set-subaccord-param` (EVENT-MUTUAL §2.10). Not recoverable or transferable later — use a dedicated operations keypair (target: Squads 2/3 multisig per §12 "Upgrade authority"), never a personal key. |
-| **Member keypairs**            | `hanse:join`, `hanse:file-claim`, `hanse:claim-payout` | One per member; each is its own claim key.                                                                                                                                                                                                                                                                           |
+| **Operator/admin keypair**     | `hanse:initialize`                                     | Becomes the mutual's immutable `authority`: the payout pass-gate cranker (`hanse:claim-payout` — the claimant never signs) and the only key that can propose `set-subaccord-param` (EVENT-MUTUAL §2.10). Not recoverable or transferable later — use a dedicated operations keypair (target: Squads 2/3 multisig per §12 "Upgrade authority"), never a personal key. |
+| **Member keypairs**            | `hanse:join`, `hanse:file-claim`                       | One per member; each is its own claim key. Payouts need NO member signature — the operator (or anyone, once the pilot gate retires) cranks them into the member's ATA.                                                                                                                                               |
 | **Sponsor keypair (optional)** | `hanse:join --sponsor`                                 | Pays a member's contribution, receives the residual; claim rights stay the member's.                                                                                                                                                                                                                                 |
 
 Every wallet needs SOL for fees/rent. The initializer additionally pays rent for the Mutual, Pool, and fee-float accounts; each joiner (or their sponsor) pays Member + Depositor rent.
@@ -256,16 +256,16 @@ Then confirm on-chain: `riprap hanse:show --mutual {{MUTUAL}}` → `phase: Settl
 
 ---
 
-## 9. Payouts (claimant + admin co-sign)
+## 9. Payouts (operator-cranked)
 
-`hanse:claim-payout` is the one two-signer command: the claimant signs the pull, the mutual authority co-signs the Breakpoint pass gate (validated off-chain; §2.10/§12). Run with the claimant's wallet loaded and the admin key supplied:
+`hanse:claim-payout` is a permissionless payout crank gated to the authority for the pilot (Breakpoint pass check, validated off-chain; §2.10/§12). The claimant NEVER signs — the payout lands in their canonical USDC ATA whoever turns the crank. Load the operator wallet and sweep every approved claim:
 
 ```bash
-riprap hanse:claim-payout --claim {{CLAIM}} --co-signer /path/to/operator.json
+riprap hanse:claim-payout --claim {{CLAIM}}
 ```
 
 - Pays `floor(claim_amount × ratio) + floor(fee_paid × ratio)` into the claimant's USDC ATA and burns the matching rights stake — atomic, idempotent, repeatable until `pull_close_at`.
-- Both keypair files must be readable by the process (claimant's machine with the admin key mounted, or the operator runs it with the claimant key). Omitting `--co-signer` defaults to self-signing — self-demo only, never production.
+- Only the operator keypair is needed. The member's ATA must exist (it was created at `join`); if a member closed it, recreate it before cranking.
 - Unpulled approved amounts revert to the residual after the window closes.
 
 ---
@@ -294,7 +294,7 @@ Pays `floor(total_amount × liquidation_balance / pool.total_amount)` to the mem
   `riprap hanse:set-subaccord-param --mutual {{MUTUAL}} --payload MinStake:20000000 [--nonce N]`
   Exposable: `MinStake`, `FeePerJuror`, `AlphaBps`, `ReviewWindow`, `CommitWindow`, `RevealWindow`, `AppealWindow`. The printed `executeAfterSlot` tells you when the accord-side `lifecycle:execute-update` can land it.
 - **Monitoring**: `hanse:show` (phase, ratio, obligations, counters, deadlines, live treasury), `hanse:member`, `hanse:claim`, `pool:show`, `pool:depositor`.
-- **Nothing else is admin-gated** — money and lifecycle paths are permissionless by design. The authority's only powers are the payout pass-gate co-sign and subaccord param proposals.
+- **Nothing else is admin-gated** — money and lifecycle paths are permissionless by design (the payout crank itself is authority-gated only for the pilot pass check). The authority's only powers are the payout pass-gate crank and subaccord param proposals.
 
 ---
 
@@ -309,5 +309,5 @@ Pays `floor(total_amount × liquidation_balance / pool.total_amount)` to the mem
 - [ ] Jurors staked (≥ 10 USDC each, convention = tier contribution)
 - [ ] Members joined before 2026-11-15 08:00 UTC
 - [ ] Claims filed/settled; `settle-pool` after 2026-12-01 18:00 UTC + zero pending
-- [ ] Payouts co-signed and pulled before pull_close_at
+- [ ] Payouts cranked (operator wallet) before pull_close_at
 - [ ] `dissolve` + per-member `pool:crank`; treasury ends at zero

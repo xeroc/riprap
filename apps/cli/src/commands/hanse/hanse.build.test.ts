@@ -25,7 +25,7 @@ import { buildSettleClaim } from "./settle-claim";
 /**
  * Offline instruction assembly for the hanse commands that need live chain
  * state at run time (file-claim nonce/fee, settle-claim ruling accounts,
- * claim-payout two-signer set). Inputs are decoded-account shapes — no rpc,
+ * claim-payout crank set). Inputs are decoded-account shapes — no rpc,
  * no encoding fixtures (pool.reads.test.ts companion).
  */
 const DEPOSIT_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address;
@@ -112,40 +112,35 @@ describe("buildSettleClaim (hanse:settle-claim)", () => {
   });
 });
 
-describe("buildClaimPayout (hanse:claim-payout) — the multi-signer exception", () => {
-  test("claimant + authority co-signature both land in the signed transaction (§2.10)", async () => {
-    const claimant = await keypairFromSeed(3);
-    const admin = await keypairFromSeed(4);
+describe("buildClaimPayout (hanse:claim-payout) — the authority-gated payout crank", () => {
+  test("the cranker is the only signer; the claimant's ATA is the destination (§2.10)", async () => {
+    const cranker = await keypairFromSeed(4);
+    const claimant = (await keypairFromSeed(3)).address;
     const mutual = { address: MUTUAL, pool: POOL, depositMint: DEPOSIT_MINT };
-    const claim = { address: SUBACCORD, member: claimant.address };
+    const claim = { address: SUBACCORD, member: claimant };
 
-    const instruction = await buildClaimPayout({ claim, mutual, claimant, authority: admin });
-    // [0]claimant(signer) [1]authority(signer) [2]mutual [3]claim [4]rightsAuthority
+    const instruction = await buildClaimPayout({ claim, mutual, cranker });
+    // [0]cranker(signer) [1]claimant [2]mutual [3]claim [4]rightsAuthority
     // [5]pool [6]depositor [7]treasury [8]destination [9]depositMint
     const accounts = instruction.accounts ?? [];
-    expect(accounts[0]?.address).toBe(claimant.address);
-    expect(accounts[1]?.address).toBe(admin.address); // pass-gate co-signer
+    expect(accounts[0]?.address).toBe(cranker.address);
+    expect(accounts[1]?.address).toBe(claimant); // never signs
     expect(accounts[4]?.address).toBe((await findRightsAuthorityPda({ mutual: MUTUAL }))[0]);
     expect(accounts[5]?.address).toBe(POOL);
-    expect(accounts[6]?.address).toBe(
-      (await findDepositorPda({ pool: POOL, owner: claimant.address }))[0],
-    );
+    expect(accounts[6]?.address).toBe((await findDepositorPda({ pool: POOL, owner: claimant }))[0]);
     expect(accounts[7]?.address).toBe(await findAssociatedTokenAddress(DEPOSIT_MINT, POOL));
-    expect(accounts[8]?.address).toBe(
-      await findAssociatedTokenAddress(DEPOSIT_MINT, claimant.address),
-    );
+    expect(accounts[8]?.address).toBe(await findAssociatedTokenAddress(DEPOSIT_MINT, claimant));
 
     // THE proof: sign the assembled transaction and count signatures —
-    // claimant signs (also fee payer) and the authority co-signs.
+    // the cranker alone signs (also fee payer); the claimant cannot.
     const message = pipe(
       createTransactionMessage({ version: 0 }),
-      (tx) => setTransactionMessageFeePayerSigner(claimant, tx),
+      (tx) => setTransactionMessageFeePayerSigner(cranker, tx),
       (tx) => appendTransactionMessageInstructions([instruction], tx),
     );
     const signed = await signTransactionMessageWithSigners(message);
     const signers = Object.keys(signed.signatures);
-    expect(signers).toHaveLength(2);
-    expect(signers).toContain(claimant.address);
-    expect(signers).toContain(admin.address);
+    expect(signers).toHaveLength(1);
+    expect(signers).toContain(cranker.address);
   });
 });

@@ -67,7 +67,7 @@ export type Mutual = {
   discriminator: ReadonlyUint8Array;
   /**
    * Initializer — demo admin; gates set_subaccord_param and the payout
-   * pass-check co-signature.
+   * pass-check crank gate.
    */
   authority: Address;
   /**
@@ -131,7 +131,7 @@ export type Mutual = {
 export type MutualArgs = {
   /**
    * Initializer — demo admin; gates set_subaccord_param and the payout
-   * pass-check co-signature.
+   * pass-check crank gate.
    */
   authority: Address;
   /**
