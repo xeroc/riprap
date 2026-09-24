@@ -34,6 +34,9 @@ export interface CoveredOverlayProps {
   figures: React.ReactNode[];
   /** the juror recruitment field — label, body, and the outline action */
   juror: { label: string; body: React.ReactNode; action: string; href: string };
+  /** share field — the page-supplied word-of-mouth ask (label, note, targets);
+   *  omitted renders nothing */
+  share?: React.ReactNode;
   /** dismiss button label (default "Continue") */
   continueLabel?: string;
 }
@@ -285,6 +288,7 @@ export function CoveredOverlay({
   headline,
   figures,
   juror,
+  share,
   continueLabel = "Continue",
 }: CoveredOverlayProps) {
   const reduce = useReducedMotion();
@@ -383,6 +387,13 @@ export function CoveredOverlay({
                 </Button>
               </div>
             </Arrive>
+            {share && (
+              <Arrive at={afterFigures + 0.03}>
+                <div data-slot="covered-share" className="flex flex-col items-center gap-2">
+                  {share}
+                </div>
+              </Arrive>
+            )}
             <Arrive at={afterFigures + 0.06}>
               <Button data-slot="covered-continue" onClick={onDismiss}>
                 {continueLabel}

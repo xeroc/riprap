@@ -22,6 +22,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SUPPORTERS } from "../sections/Supporters";
 import { sendInstruction, TransactionSendError } from "../shared/transaction";
 import { BreakpointPage } from "./BreakpointPage";
 import { fakeMutual, POLICY_TIERS } from "./fixtures";
@@ -207,6 +208,35 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     ]);
   });
 
+  it("hero split (2026-09-24): supporters left in the odds table's old slot, odds a right rail", async () => {
+    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    const { container } = renderPoolPage();
+    await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
+
+    // the odds table lives in a right rail beside the headline stack
+    const rail = container.querySelector('[data-slot="odds"]')?.closest("aside") ?? null;
+    expect(rail).not.toBeNull();
+    const lane = rail!.parentElement!;
+    const left = lane.firstElementChild as HTMLElement;
+    // the h1 stays the first look — it leads the left column
+    expect(left.querySelector("h1")?.textContent).toBe("Get stabbed with friends.");
+
+    // supporters sit where the odds table sat: after the subline, before the
+    // tier picker; the discs are exactly the committed supporters.json
+    const slot = left.querySelector('[data-slot="supporters"]');
+    if (SUPPORTERS.length === 0) {
+      expect(slot).toBeNull(); // no invented discs (kit data law)
+      return;
+    }
+    expect([...slot!.querySelectorAll("a")].map((a) => a.getAttribute("href"))).toEqual(
+      SUPPORTERS.map((s) => s.url),
+    );
+    const picker = left.querySelector('[data-slot="tier-picker"]')!;
+    expect(slot!.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
   it("no wallet: 'Connect a wallet to chip in' opens the picker and reads no join context", async () => {
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
     renderPoolPage();
@@ -308,8 +338,8 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
 
     // the covered overlay fires on confirmation — the join moment (copy doc
     // § Covered overlay): stamp, headline, the three figures (total last,
-    // chain-formatted), the juror field, Continue. Assert and dismiss FIRST:
-    // an open Radix dialog aria-hides the rest of the page.
+    // chain-formatted), the juror field, the share field, Continue. Assert and
+    // dismiss FIRST: an open Radix dialog aria-hides the rest of the page.
     const dialog = await screen.findByRole("dialog");
     expect(dialog.textContent).toContain("You're in the ring.");
     expect(dialog.textContent).toContain("$20");
@@ -321,6 +351,16 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
     expect(dialog.querySelector('[data-slot="covered-juror"] a')?.getAttribute("href")).toBe(
       "#/app#jurors",
     );
+    // the share field (copy doc § Covered overlay, 2026-09-24): the note with
+    // the supporter twist, composer intents carrying the member's figures
+    expect(dialog.textContent).toContain(
+      "Post it with @riprapxyz — everyone who shares lands on the front page as a supporter",
+    );
+    const shareX = dialog.querySelector('[data-slot="covered-share"] a[aria-label="Share on X"]');
+    expect(shareX?.getAttribute("href")).toContain(
+      encodeURIComponent("$20 in, up to $2,000 out — "),
+    );
+    expect(shareX?.getAttribute("href")).toContain(encodeURIComponent("@riprapxyz"));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 

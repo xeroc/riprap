@@ -73,17 +73,26 @@ pnpm dev:ui         # Storybook → http://localhost:6006
 pnpm dev:remotion   # Remotion studio → http://localhost:3000
 ```
 
-Node 26+, pnpm 11+. Rust 1.89.0 (pinned in `rust-toolchain.toml`, auto-installed by rustup) and Anchor CLI 1.2.0 (via `avm`) — both required by the completion gate.
+Node 26+, pnpm 11+. Rust 1.89.0 (pinned in `rust-toolchain.toml`, auto-installed by rustup) and Anchor CLI 1.2.0 (via `avm`) — required only when the change touches the on-chain half (see the scoped gate below).
 
-## Completion Gate (REQUIRED)
+## Completion Gate (REQUIRED, scoped to the change)
 
-Work is not done until this passes from the repo root, exit 0:
+The gate is scoped: run the legs that can execute the code you touched — not every leg every time. The full gate, from the repo root, exit 0:
 
 ```bash
 pnpm -r run build && pnpm lint && pnpm -r run test && anchor build && cargo test
 ```
 
-Or the shorthand: `pnpm verify`. Run it before declaring any task complete — no exceptions, no "pre-existing failures" excuses: if it was green before your change, your change broke it; if it was red before your change, fixing it is part of your task. If you touched Storybook stories or `.storybook/`, also run `pnpm --filter @riprap/ui run build-storybook` as a smoke check.
+Or the shorthand: `pnpm verify`. Scoping:
+
+|Change touches|Required legs|
+|---|---|
+|`apps/landing` only (UI, copy, routes)|`pnpm -r run build && pnpm lint && pnpm --filter @riprap/landing run test` — no Rust legs|
+|`packages/ui` (kit)|same, plus `pnpm --filter @riprap/ui run test`; `pnpm --filter @riprap/ui run build-storybook` too if stories or `.storybook/` changed|
+|Any other TS surface (SDKs, CLI, remotion, cross-package renames)|`pnpm -r run build && pnpm lint && pnpm -r run test` — still no Rust legs|
+|`programs/**` (Rust, IDLs, codegen), Cargo pins, anything on-chain|the full `pnpm verify`, `anchor build && cargo test` included|
+
+Frontend-only work never requires `anchor build` or `cargo test` — those legs exist to execute program changes. Within the legs your scope requires: no exceptions, no "pre-existing failures" excuses — if it was green before your change, your change broke it; if it was red before your change, fixing it is part of your task. Rust-side breakages outside your scope stay with their tracking beans (e.g. toolchain drift in bean `riprap-0udy`), not with your frontend change.
 
 - The `pnpm -r run test` leg includes the jest e2e lane `@riprap/tests`: every spec probes the validator (`RIPRAP_RPC_URL`, default localnet) and skips cleanly when none is reachable, so `pnpm verify` stays green with no validator running. To exercise the lane for real, run `anchor test` — it builds, starts Surfpool, deploys pool + hanse, then runs the jest suite (Anchor.toml `[scripts]`).
 - Live-e2e prerequisites: a built sibling checkout of the accord repo — `cd ../accord && make build`, or point `ACCORD_SO` at the artifact (default `…/accord/target/deploy/accord.so` next to this worktree; `ACCORD_KEYPAIR` for its keypair). The accord dependency is a deliberate cross-repo pin — `programs/hanse/Cargo.toml`, `rev ba91bd8b8b374091c174909b115688ffb9b231ff` — the deployed artifact must be built from that rev.

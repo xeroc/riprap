@@ -7,7 +7,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BlurbPage } from "./BlurbPage";
-import { BRAND_COLORS, EMAIL_FULL, KUDOS, ONE_LINE } from "./content";
+import { BRAND_COLORS, EMAIL_FULL, EMAIL_SUBJECT, KUDOS, ONE_LINE } from "./content";
 
 const writeText = vi.fn(() => Promise.resolve());
 
@@ -75,7 +75,8 @@ describe("BlurbPage — the unlisted blurb & brand kit", () => {
     render(<BlurbPage />);
     expect(document.querySelector('[data-slot="email-card"]')).toBeTruthy();
     expect(screen.getByText("[investor name]")).toBeTruthy();
-    expect(screen.getByText("Intro: riprap — peer-to-peer cover on Solana")).toBeTruthy();
+    // the compose frame renders the content source, never a hardcoded subject
+    expect(screen.getByText(EMAIL_SUBJECT)).toBeTruthy();
   });
 
   it("team: both personas render with current rows, all kudos present", () => {
