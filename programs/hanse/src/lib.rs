@@ -22,6 +22,7 @@
 pub mod error;
 pub mod events;
 pub mod instructions;
+pub mod sas;
 pub mod state;
 
 pub use error::HanseError;

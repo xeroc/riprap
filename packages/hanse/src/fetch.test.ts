@@ -73,6 +73,8 @@ function encodedMutual(): string {
       authority: OWNER,
       pool: OWNER,
       subaccord: OWNER,
+      jurorCredential: OWNER,
+      jurorSchema: OWNER,
       depositMint: MINT,
       feeMint: MINT,
       policyHash: new Uint8Array(32),

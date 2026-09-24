@@ -41,6 +41,8 @@ function mutualFixture(): Mutual {
     authority: MEMBER,
     pool: POOL,
     subaccord: SUBACCORD,
+    jurorCredential: SUBACCORD,
+    jurorSchema: SUBACCORD,
     depositMint: DEPOSIT_MINT,
     feeMint: FEE_MINT,
     policyHash: new Uint8Array(32).fill(0xab),

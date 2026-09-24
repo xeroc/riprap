@@ -73,6 +73,8 @@ export type InitializeMutualInstruction<
   TAccountPool extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
   TAccountSubaccord extends string | AccountMeta<string> = string,
+  TAccountCredential extends string | AccountMeta<string> = string,
+  TAccountSchema extends string | AccountMeta<string> = string,
   TAccountDepositMint extends string | AccountMeta<string> = string,
   TAccountFeeMint extends string | AccountMeta<string> = string,
   TAccountFeeFloat extends string | AccountMeta<string> = string,
@@ -89,6 +91,9 @@ export type InitializeMutualInstruction<
   TAccountAccordProgram extends
     | string
     | AccountMeta<string> = "cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed",
+  TAccountSasProgram extends
+    | string
+    | AccountMeta<string> = "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -104,6 +109,8 @@ export type InitializeMutualInstruction<
       TAccountPool extends string ? WritableAccount<TAccountPool> : TAccountPool,
       TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
       TAccountSubaccord extends string ? WritableAccount<TAccountSubaccord> : TAccountSubaccord,
+      TAccountCredential extends string ? WritableAccount<TAccountCredential> : TAccountCredential,
+      TAccountSchema extends string ? WritableAccount<TAccountSchema> : TAccountSchema,
       TAccountDepositMint extends string
         ? ReadonlyAccount<TAccountDepositMint>
         : TAccountDepositMint,
@@ -124,6 +131,7 @@ export type InitializeMutualInstruction<
       TAccountAccordProgram extends string
         ? ReadonlyAccount<TAccountAccordProgram>
         : TAccountAccordProgram,
+      TAccountSasProgram extends string ? ReadonlyAccount<TAccountSasProgram> : TAccountSasProgram,
       ...TRemainingAccounts,
     ]
   >;
@@ -195,6 +203,8 @@ export type InitializeMutualAsyncInput<
   TAccountPool extends string = string,
   TAccountTreasury extends string = string,
   TAccountSubaccord extends string = string,
+  TAccountCredential extends string = string,
+  TAccountSchema extends string = string,
   TAccountDepositMint extends string = string,
   TAccountFeeMint extends string = string,
   TAccountFeeFloat extends string = string,
@@ -203,6 +213,7 @@ export type InitializeMutualAsyncInput<
   TAccountSystemProgram extends string = string,
   TAccountPoolProgram extends string = string,
   TAccountAccordProgram extends string = string,
+  TAccountSasProgram extends string = string,
 > = {
   /**
    * Initializer — recorded as the demo admin (§2.10): gates
@@ -238,6 +249,17 @@ export type InitializeMutualAsyncInput<
    * cannot resolve the hashed domain reference in seeds.
    */
   subaccord: Address<TAccountSubaccord>;
+  /**
+   * SAS membership credential PDA ["credential", mutual, "members"] —
+   * created by the SAS CreateCredential CPI below (authority = the mutual
+   * PDA, sole authorized signer). CHECK: PDA validation in the handler.
+   */
+  credential: Address<TAccountCredential>;
+  /**
+   * SAS membership schema PDA ["schema", credential, "membership", [1]] —
+   * created by the SAS CreateSchema CPI below. CHECK: handler-verified.
+   */
+  schema: Address<TAccountSchema>;
   depositMint: Address<TAccountDepositMint>;
   feeMint: Address<TAccountFeeMint>;
   /**
@@ -250,6 +272,7 @@ export type InitializeMutualAsyncInput<
   systemProgram?: Address<TAccountSystemProgram>;
   poolProgram?: Address<TAccountPoolProgram>;
   accordProgram?: Address<TAccountAccordProgram>;
+  sasProgram?: Address<TAccountSasProgram>;
   seed: InitializeMutualInstructionDataArgs["seed"];
   tiers: InitializeMutualInstructionDataArgs["tiers"];
   policyHash: InitializeMutualInstructionDataArgs["policyHash"];
@@ -265,6 +288,8 @@ export async function getInitializeMutualInstructionAsync<
   TAccountPool extends string,
   TAccountTreasury extends string,
   TAccountSubaccord extends string,
+  TAccountCredential extends string,
+  TAccountSchema extends string,
   TAccountDepositMint extends string,
   TAccountFeeMint extends string,
   TAccountFeeFloat extends string,
@@ -273,6 +298,7 @@ export async function getInitializeMutualInstructionAsync<
   TAccountSystemProgram extends string,
   TAccountPoolProgram extends string,
   TAccountAccordProgram extends string,
+  TAccountSasProgram extends string,
   TProgramAddress extends Address = typeof HANSE_PROGRAM_ADDRESS,
 >(
   input: InitializeMutualAsyncInput<
@@ -282,6 +308,8 @@ export async function getInitializeMutualInstructionAsync<
     TAccountPool,
     TAccountTreasury,
     TAccountSubaccord,
+    TAccountCredential,
+    TAccountSchema,
     TAccountDepositMint,
     TAccountFeeMint,
     TAccountFeeFloat,
@@ -289,7 +317,8 @@ export async function getInitializeMutualInstructionAsync<
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram,
     TAccountPoolProgram,
-    TAccountAccordProgram
+    TAccountAccordProgram,
+    TAccountSasProgram
   >,
   config?: { programAddress?: TProgramAddress },
 ): Promise<
@@ -301,6 +330,8 @@ export async function getInitializeMutualInstructionAsync<
     TAccountPool,
     TAccountTreasury,
     TAccountSubaccord,
+    TAccountCredential,
+    TAccountSchema,
     TAccountDepositMint,
     TAccountFeeMint,
     TAccountFeeFloat,
@@ -308,7 +339,8 @@ export async function getInitializeMutualInstructionAsync<
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram,
     TAccountPoolProgram,
-    TAccountAccordProgram
+    TAccountAccordProgram,
+    TAccountSasProgram
   >
 > {
   // Program address.
@@ -322,6 +354,8 @@ export async function getInitializeMutualInstructionAsync<
     pool: { value: input.pool ?? null, isWritable: true },
     treasury: { value: input.treasury ?? null, isWritable: true },
     subaccord: { value: input.subaccord ?? null, isWritable: true },
+    credential: { value: input.credential ?? null, isWritable: true },
+    schema: { value: input.schema ?? null, isWritable: true },
     depositMint: { value: input.depositMint ?? null, isWritable: false },
     feeMint: { value: input.feeMint ?? null, isWritable: false },
     feeFloat: { value: input.feeFloat ?? null, isWritable: true },
@@ -333,6 +367,7 @@ export async function getInitializeMutualInstructionAsync<
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     poolProgram: { value: input.poolProgram ?? null, isWritable: false },
     accordProgram: { value: input.accordProgram ?? null, isWritable: false },
+    sasProgram: { value: input.sasProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -383,6 +418,10 @@ export async function getInitializeMutualInstructionAsync<
     accounts.accordProgram.value =
       "cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed" as Address<"cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed">;
   }
+  if (!accounts.sasProgram.value) {
+    accounts.sasProgram.value =
+      "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG" as Address<"22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG">;
+  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
@@ -393,6 +432,8 @@ export async function getInitializeMutualInstructionAsync<
       getAccountMeta("pool", accounts.pool),
       getAccountMeta("treasury", accounts.treasury),
       getAccountMeta("subaccord", accounts.subaccord),
+      getAccountMeta("credential", accounts.credential),
+      getAccountMeta("schema", accounts.schema),
       getAccountMeta("depositMint", accounts.depositMint),
       getAccountMeta("feeMint", accounts.feeMint),
       getAccountMeta("feeFloat", accounts.feeFloat),
@@ -401,6 +442,7 @@ export async function getInitializeMutualInstructionAsync<
       getAccountMeta("systemProgram", accounts.systemProgram),
       getAccountMeta("poolProgram", accounts.poolProgram),
       getAccountMeta("accordProgram", accounts.accordProgram),
+      getAccountMeta("sasProgram", accounts.sasProgram),
     ],
     data: getInitializeMutualInstructionDataEncoder().encode(
       args as InitializeMutualInstructionDataArgs,
@@ -414,6 +456,8 @@ export async function getInitializeMutualInstructionAsync<
     TAccountPool,
     TAccountTreasury,
     TAccountSubaccord,
+    TAccountCredential,
+    TAccountSchema,
     TAccountDepositMint,
     TAccountFeeMint,
     TAccountFeeFloat,
@@ -421,7 +465,8 @@ export async function getInitializeMutualInstructionAsync<
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram,
     TAccountPoolProgram,
-    TAccountAccordProgram
+    TAccountAccordProgram,
+    TAccountSasProgram
   >);
 }
 
@@ -432,6 +477,8 @@ export type InitializeMutualInput<
   TAccountPool extends string = string,
   TAccountTreasury extends string = string,
   TAccountSubaccord extends string = string,
+  TAccountCredential extends string = string,
+  TAccountSchema extends string = string,
   TAccountDepositMint extends string = string,
   TAccountFeeMint extends string = string,
   TAccountFeeFloat extends string = string,
@@ -440,6 +487,7 @@ export type InitializeMutualInput<
   TAccountSystemProgram extends string = string,
   TAccountPoolProgram extends string = string,
   TAccountAccordProgram extends string = string,
+  TAccountSasProgram extends string = string,
 > = {
   /**
    * Initializer — recorded as the demo admin (§2.10): gates
@@ -475,6 +523,17 @@ export type InitializeMutualInput<
    * cannot resolve the hashed domain reference in seeds.
    */
   subaccord: Address<TAccountSubaccord>;
+  /**
+   * SAS membership credential PDA ["credential", mutual, "members"] —
+   * created by the SAS CreateCredential CPI below (authority = the mutual
+   * PDA, sole authorized signer). CHECK: PDA validation in the handler.
+   */
+  credential: Address<TAccountCredential>;
+  /**
+   * SAS membership schema PDA ["schema", credential, "membership", [1]] —
+   * created by the SAS CreateSchema CPI below. CHECK: handler-verified.
+   */
+  schema: Address<TAccountSchema>;
   depositMint: Address<TAccountDepositMint>;
   feeMint: Address<TAccountFeeMint>;
   /**
@@ -487,6 +546,7 @@ export type InitializeMutualInput<
   systemProgram?: Address<TAccountSystemProgram>;
   poolProgram?: Address<TAccountPoolProgram>;
   accordProgram?: Address<TAccountAccordProgram>;
+  sasProgram?: Address<TAccountSasProgram>;
   seed: InitializeMutualInstructionDataArgs["seed"];
   tiers: InitializeMutualInstructionDataArgs["tiers"];
   policyHash: InitializeMutualInstructionDataArgs["policyHash"];
@@ -502,6 +562,8 @@ export function getInitializeMutualInstruction<
   TAccountPool extends string,
   TAccountTreasury extends string,
   TAccountSubaccord extends string,
+  TAccountCredential extends string,
+  TAccountSchema extends string,
   TAccountDepositMint extends string,
   TAccountFeeMint extends string,
   TAccountFeeFloat extends string,
@@ -510,6 +572,7 @@ export function getInitializeMutualInstruction<
   TAccountSystemProgram extends string,
   TAccountPoolProgram extends string,
   TAccountAccordProgram extends string,
+  TAccountSasProgram extends string,
   TProgramAddress extends Address = typeof HANSE_PROGRAM_ADDRESS,
 >(
   input: InitializeMutualInput<
@@ -519,6 +582,8 @@ export function getInitializeMutualInstruction<
     TAccountPool,
     TAccountTreasury,
     TAccountSubaccord,
+    TAccountCredential,
+    TAccountSchema,
     TAccountDepositMint,
     TAccountFeeMint,
     TAccountFeeFloat,
@@ -526,7 +591,8 @@ export function getInitializeMutualInstruction<
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram,
     TAccountPoolProgram,
-    TAccountAccordProgram
+    TAccountAccordProgram,
+    TAccountSasProgram
   >,
   config?: { programAddress?: TProgramAddress },
 ): InitializeMutualInstruction<
@@ -537,6 +603,8 @@ export function getInitializeMutualInstruction<
   TAccountPool,
   TAccountTreasury,
   TAccountSubaccord,
+  TAccountCredential,
+  TAccountSchema,
   TAccountDepositMint,
   TAccountFeeMint,
   TAccountFeeFloat,
@@ -544,7 +612,8 @@ export function getInitializeMutualInstruction<
   TAccountAssociatedTokenProgram,
   TAccountSystemProgram,
   TAccountPoolProgram,
-  TAccountAccordProgram
+  TAccountAccordProgram,
+  TAccountSasProgram
 > {
   // Program address.
   const programAddress = config?.programAddress ?? HANSE_PROGRAM_ADDRESS;
@@ -557,6 +626,8 @@ export function getInitializeMutualInstruction<
     pool: { value: input.pool ?? null, isWritable: true },
     treasury: { value: input.treasury ?? null, isWritable: true },
     subaccord: { value: input.subaccord ?? null, isWritable: true },
+    credential: { value: input.credential ?? null, isWritable: true },
+    schema: { value: input.schema ?? null, isWritable: true },
     depositMint: { value: input.depositMint ?? null, isWritable: false },
     feeMint: { value: input.feeMint ?? null, isWritable: false },
     feeFloat: { value: input.feeFloat ?? null, isWritable: true },
@@ -568,6 +639,7 @@ export function getInitializeMutualInstruction<
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     poolProgram: { value: input.poolProgram ?? null, isWritable: false },
     accordProgram: { value: input.accordProgram ?? null, isWritable: false },
+    sasProgram: { value: input.sasProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -598,6 +670,10 @@ export function getInitializeMutualInstruction<
     accounts.accordProgram.value =
       "cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed" as Address<"cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed">;
   }
+  if (!accounts.sasProgram.value) {
+    accounts.sasProgram.value =
+      "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG" as Address<"22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG">;
+  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
@@ -608,6 +684,8 @@ export function getInitializeMutualInstruction<
       getAccountMeta("pool", accounts.pool),
       getAccountMeta("treasury", accounts.treasury),
       getAccountMeta("subaccord", accounts.subaccord),
+      getAccountMeta("credential", accounts.credential),
+      getAccountMeta("schema", accounts.schema),
       getAccountMeta("depositMint", accounts.depositMint),
       getAccountMeta("feeMint", accounts.feeMint),
       getAccountMeta("feeFloat", accounts.feeFloat),
@@ -616,6 +694,7 @@ export function getInitializeMutualInstruction<
       getAccountMeta("systemProgram", accounts.systemProgram),
       getAccountMeta("poolProgram", accounts.poolProgram),
       getAccountMeta("accordProgram", accounts.accordProgram),
+      getAccountMeta("sasProgram", accounts.sasProgram),
     ],
     data: getInitializeMutualInstructionDataEncoder().encode(
       args as InitializeMutualInstructionDataArgs,
@@ -629,6 +708,8 @@ export function getInitializeMutualInstruction<
     TAccountPool,
     TAccountTreasury,
     TAccountSubaccord,
+    TAccountCredential,
+    TAccountSchema,
     TAccountDepositMint,
     TAccountFeeMint,
     TAccountFeeFloat,
@@ -636,7 +717,8 @@ export function getInitializeMutualInstruction<
     TAccountAssociatedTokenProgram,
     TAccountSystemProgram,
     TAccountPoolProgram,
-    TAccountAccordProgram
+    TAccountAccordProgram,
+    TAccountSasProgram
   >);
 }
 
@@ -680,18 +762,30 @@ export type ParsedInitializeMutualInstruction<
      * cannot resolve the hashed domain reference in seeds.
      */
     subaccord: TAccountMetas[5];
-    depositMint: TAccountMetas[6];
-    feeMint: TAccountMetas[7];
+    /**
+     * SAS membership credential PDA ["credential", mutual, "members"] —
+     * created by the SAS CreateCredential CPI below (authority = the mutual
+     * PDA, sole authorized signer). CHECK: PDA validation in the handler.
+     */
+    credential: TAccountMetas[6];
+    /**
+     * SAS membership schema PDA ["schema", credential, "membership", [1]] —
+     * created by the SAS CreateSchema CPI below. CHECK: handler-verified.
+     */
+    schema: TAccountMetas[7];
+    depositMint: TAccountMetas[8];
+    feeMint: TAccountMetas[9];
     /**
      * Fee float: the mutual PDA's ATA of fee_mint — claimant-funded filing
      * fees land here before the create_dispute CPI drains them (§2.6).
      */
-    feeFloat: TAccountMetas[8];
-    tokenProgram: TAccountMetas[9];
-    associatedTokenProgram: TAccountMetas[10];
-    systemProgram: TAccountMetas[11];
-    poolProgram: TAccountMetas[12];
-    accordProgram: TAccountMetas[13];
+    feeFloat: TAccountMetas[10];
+    tokenProgram: TAccountMetas[11];
+    associatedTokenProgram: TAccountMetas[12];
+    systemProgram: TAccountMetas[13];
+    poolProgram: TAccountMetas[14];
+    accordProgram: TAccountMetas[15];
+    sasProgram: TAccountMetas[16];
   };
   data: InitializeMutualInstructionData;
 };
@@ -704,10 +798,10 @@ export function parseInitializeMutualInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedInitializeMutualInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 14) {
+  if (instruction.accounts.length < 17) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 14,
+      expectedAccountMetas: 17,
     });
   }
   let accountIndex = 0;
@@ -725,6 +819,8 @@ export function parseInitializeMutualInstruction<
       pool: getNextAccount(),
       treasury: getNextAccount(),
       subaccord: getNextAccount(),
+      credential: getNextAccount(),
+      schema: getNextAccount(),
       depositMint: getNextAccount(),
       feeMint: getNextAccount(),
       feeFloat: getNextAccount(),
@@ -733,6 +829,7 @@ export function parseInitializeMutualInstruction<
       systemProgram: getNextAccount(),
       poolProgram: getNextAccount(),
       accordProgram: getNextAccount(),
+      sasProgram: getNextAccount(),
     },
     data: getInitializeMutualInstructionDataDecoder().decode(instruction.data),
   };

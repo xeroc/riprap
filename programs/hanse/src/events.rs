@@ -5,22 +5,29 @@ use anchor_lang::prelude::*;
 
 use crate::state::ClaimStatus;
 
-/// Emitted once by initialize_mutual: the mutual exists, pool and subaccord wired.
+/// Emitted once by initialize_mutual: the mutual exists, pool and subaccord
+/// wired, SAS membership credential + schema registered (§2.8).
 #[event]
 pub struct MutualInitialized {
     pub mutual: Pubkey,
     pub authority: Pubkey,
     pub pool: Pubkey,
     pub subaccord: Pubkey,
+    /// The SAS credential + schema the subaccord's juror gate binds to.
+    pub credential: Pubkey,
+    pub schema: Pubkey,
 }
 
-/// Emitted on every join: money in, member enrolled, rights stake minted.
+/// Emitted on every join: money in, member enrolled, rights stake minted,
+/// membership attestation issued (§2.8).
 #[event]
 pub struct MemberJoined {
     pub mutual: Pubkey,
     pub member: Pubkey,
     pub tier: u8,
     pub contribution: u64,
+    /// The member's SAS attestation — the juror credential for staking.
+    pub attestation: Pubkey,
 }
 
 /// Emitted on every filing: claim clamped, fee funded, dispute opened.

@@ -9,9 +9,13 @@ import {
   fetchMutualBySeed,
   findClaimPda,
   findMutualPda,
+  findSasAttestationPda,
+  findSasCredentialPda,
+  findSasSchemaPda,
   getFileClaimInstructionAsync,
   getInitializeMutualInstructionAsync,
   getJoinInstructionAsync,
+  SAS_PROGRAM_ADDRESS,
 } from "@riprap/hanse";
 import { findDepositorPda, findPoolPda } from "@riprap/pool";
 import {
@@ -32,6 +36,7 @@ import {
   finalizeDisputeAfterAppealWindow,
 } from "./draw-harness.js";
 import { readClock } from "./setup/cheats.js";
+import { ensureAccordProgram, ensureSasProgram } from "./setup/deploy.js";
 import { fundSigner, type TestEnv } from "./setup/env.js";
 import { randomBytes32 } from "./setup/fixtures.js";
 import { ataOf, createMint, setTokenBalance } from "./setup/tokens.js";
@@ -134,6 +139,13 @@ export async function setupMutualCohort(
     ],
   });
 
+  // §2.8: the canonical SAS program must exist on the surfnet before
+  // initialize_mutual can CPI it (idempotent; loader-account fabrication).
+  await ensureAccordProgram(env); // jest file-order safety
+  await ensureSasProgram(env);
+  const [credential] = await findSasCredentialPda({ mutual });
+  const [schema] = await findSasSchemaPda({ credential });
+
   const initIx = await getInitializeMutualInstructionAsync({
     authority: env.payer,
     rentPayer: env.payer,
@@ -141,6 +153,8 @@ export async function setupMutualCohort(
     pool: poolPda,
     treasury,
     subaccord,
+    credential,
+    schema,
     depositMint: mint,
     feeMint: mint,
     seed,
@@ -162,6 +176,7 @@ export async function setupMutualCohort(
       maxDrawAttempts: 3,
       evidenceOperator: env.payer.address,
     },
+    sasProgram: SAS_PROGRAM_ADDRESS,
   });
   await env.sendIx(initIx);
 
@@ -169,12 +184,17 @@ export async function setupMutualCohort(
   const memberAtas: Address[] = [];
   for (let i = 0; i < nMembers; i++) {
     const signer = await fundSigner(env);
-    const contribution = PILOT_TIERS[tiers[i]!]!.contribution;
+    const contribution = PILOT_TIERS[tiers[i]!]?.contribution;
     await setTokenBalance(env, signer.address, mint, contribution);
     const ownerAta = await ataOf(mint, signer.address);
     const [depositor] = await findDepositorPda({
       pool: poolPda,
       owner: signer.address,
+    });
+    const [attestation] = await findSasAttestationPda({
+      credential,
+      schema,
+      member: signer.address,
     });
     const joinIx = await getJoinInstructionAsync({
       member: signer,
@@ -185,6 +205,10 @@ export async function setupMutualCohort(
       ownerAta,
       treasury,
       depositMint: mint,
+      credential,
+      schema,
+      attestation,
+      sasProgram: SAS_PROGRAM_ADDRESS,
       tier: tiers[i]!,
     });
     await env.sendIx(joinIx);
@@ -203,7 +227,14 @@ export async function setupMutualCohort(
     SUBACCORD_DEPTH,
     jurorSigners,
     // §12: default juror stake = the juror's own tier contribution
-    jurorTiers.map((t) => PILOT_TIERS[t]!.contribution),
+    jurorTiers.map((t) => PILOT_TIERS[t]?.contribution),
+    // §2.8: the gated pool requires each member-juror's join-issued
+    // attestation as stake's remaining_accounts[0].
+    await Promise.all(
+      jurorSigners.map((j) =>
+        findSasAttestationPda({ credential, schema, member: j.address }).then(([a]) => a),
+      ),
+    ),
   );
   const fx: DrawFixture = { env, up: true, ...core };
 

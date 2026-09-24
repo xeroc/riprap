@@ -18,6 +18,7 @@
 // the juror the rent payer for JurorStake + the vault ATA.
 
 import {
+  AccountRole,
   type Address,
   getAddressDecoder,
   getAddressEncoder,
@@ -178,6 +179,10 @@ export interface DrawFixture {
   jurors: JurorCtx[];
   tree: TreeTracker;
   jurorPdaByHex: Map<string, Address>;
+  /** §2.8 credential-gated pools only: juror hex → their SAS membership
+   * attestation (remaining_accounts[1] of draw_seat, remaining_accounts[0]
+   * of stake). Undefined on hand-made stake-only subaccords. */
+  attestationByHex?: Map<string, Address>;
 }
 
 const ZERO = "11111111111111111111111111111111" as Address;
@@ -317,12 +322,14 @@ export async function armMutualJurors(
   depth: number,
   signers: KeyPairSigner[],
   stakeAmount: bigint | readonly bigint[],
+  attestations?: Address[],
 ): Promise<Omit<DrawFixture, "env" | "up">> {
   const vault = await ataOf(mint, subaccord);
   const tree = await new TreeTracker(depth).init();
 
   const jurors: JurorCtx[] = [];
   const jurorPdaByHex = new Map<string, Address>();
+  const attestationByHex = new Map<string, Address>();
   for (let i = 0; i < signers.length; i++) {
     const signer = signers[i]!;
     const amount = typeof stakeAmount === "bigint" ? stakeAmount : stakeAmount[i]!;
@@ -331,6 +338,10 @@ export async function armMutualJurors(
     const jurorAta = await ataOf(mint, signer.address);
     const [stakePda] = await findJurorStakePda({ subaccord, juror: signer.address });
     const path = await tree.pathFor(i);
+    const attestation = attestations?.[i];
+    if (attestation) {
+      attestationByHex.set(toHex(addressBytes(signer.address)), attestation);
+    }
     await env.sendIx(
       stake(
         jurorAccord.adapter,
@@ -346,13 +357,25 @@ export async function armMutualJurors(
         },
         amount,
         path,
+        // §2.8: the mutual's subaccord is credential-gated — the member's
+        // join-issued SAS attestation is remaining_accounts[0].
+        attestation,
       ),
     );
     await tree.setLeaf(i, signer.address, amount);
     jurors.push({ signer, stakePda, jurorAta, accord: jurorAccord });
     jurorPdaByHex.set(toHex(addressBytes(signer.address)), stakePda);
   }
-  return { mint, vault, subaccord, accordState, jurors, tree, jurorPdaByHex };
+  return {
+    mint,
+    vault,
+    subaccord,
+    accordState,
+    jurors,
+    tree,
+    jurorPdaByHex,
+    attestationByHex,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -478,7 +501,7 @@ export async function submitDraw(
   const payerSdk = payerAccord(env);
   for (let seat = 0; seat < memberships.length; seat++) {
     const m = memberships[seat]!;
-    const ix = drawSeat(
+    let ix = drawSeat(
       payerSdk.adapter,
       env.accordProgramId,
       {
@@ -490,6 +513,16 @@ export async function submitDraw(
       seat,
       m,
     );
+    // §2.8 gated pools: draw_seat re-checks the drawn juror's attestation as
+    // remaining_accounts[1] (the @useaccord/sdk facade appends only the
+    // JurorStake — extend it locally until the SDK grows the arg).
+    const attestation = fx.attestationByHex?.get(toHex(m.leaf.juror));
+    if (attestation) {
+      ix = {
+        ...ix,
+        accounts: [...ix.accounts!, { address: attestation, role: AccountRole.READONLY }],
+      };
+    }
     await env.sendIx(ix);
   }
   return roundPda;
@@ -505,7 +538,6 @@ export function drawnJurorsFor(fx: DrawFixture, memberships: SeatMembership[]): 
     return j;
   });
 }
-
 // ---------------------------------------------------------------------------
 // Commit / reveal / finalize choreography (ADR-0010 per-juror signers)
 // ---------------------------------------------------------------------------
@@ -559,7 +591,7 @@ export async function revealAll(
         dispute: armed.dispute,
         round: roundPda,
         stakingToken: mint,
-        jurorTokenAccount: drawnJurors[i]!.jurorAta,
+        jurorTokenAccount: drawnJurors[i]?.jurorAta,
         vault: fx.vault,
       },
       { vote: votes[i]!, salt: salts[i]! },

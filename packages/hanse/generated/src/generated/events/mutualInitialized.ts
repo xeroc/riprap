@@ -39,6 +39,9 @@ export type MutualInitializedEvent = {
   authority: Address;
   pool: Address;
   subaccord: Address;
+  /** The SAS credential + schema the subaccord's juror gate binds to. */
+  credential: Address;
+  schema: Address;
 };
 
 export type MutualInitializedEventArgs = MutualInitializedEvent;
@@ -51,6 +54,8 @@ export function getMutualInitializedEventEncoder(): FixedSizeEncoder<MutualIniti
       ["authority", getAddressEncoder()],
       ["pool", getAddressEncoder()],
       ["subaccord", getAddressEncoder()],
+      ["credential", getAddressEncoder()],
+      ["schema", getAddressEncoder()],
     ]),
     [getConstantEncoder(MUTUAL_INITIALIZED_EVENT_DISCRIMINATOR)],
   );
@@ -64,6 +69,8 @@ export function getMutualInitializedEventDecoder(): FixedSizeDecoder<MutualIniti
       ["authority", getAddressDecoder()],
       ["pool", getAddressDecoder()],
       ["subaccord", getAddressDecoder()],
+      ["credential", getAddressDecoder()],
+      ["schema", getAddressDecoder()],
     ]),
     [getConstantDecoder(MUTUAL_INITIALIZED_EVENT_DISCRIMINATOR)],
   );

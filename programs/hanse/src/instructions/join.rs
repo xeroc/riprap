@@ -3,7 +3,7 @@ use anchor_spl::token::{Mint, Token};
 
 use crate::error::HanseError;
 use crate::events::MemberJoined;
-use crate::state::{Member, Mutual, MEMBER_SEED, MEMBER_SPACE};
+use crate::state::{Member, Mutual, MEMBER_SEED, MUTUAL_SEED, MEMBER_SPACE};
 
 /// Account context for `join` — member-signed (EVENT-MUTUAL §7). The member
 /// always signs (consent + the claim key); the money may come from an
@@ -47,10 +47,11 @@ pub struct Join<'info> {
     #[account(mut)]
     pub owner_ata: UncheckedAccount<'info>,
 
-    /// Data-free rent payer for both init sites here: the Member PDA and
-    /// the pool::deposit CPI's depositor PDA (bean riprap-gneb). v1: the
-    /// member passes their own wallet; any funded wallet may sponsor the
-    /// join without becoming the member.
+    /// Data-free rent payer for the three init sites here: the Member PDA,
+    /// the pool::deposit CPI's depositor PDA (bean riprap-gneb), and the
+    /// member's SAS attestation (§2.8). v1: the member passes their own
+    /// wallet; any funded wallet may sponsor the join without becoming the
+    /// member.
     #[account(mut)]
     pub rent_payer: Signer<'info>,
 
@@ -67,6 +68,22 @@ pub struct Join<'info> {
     /// CHECK: address-constrained to the pool program id.
     #[account(address = pool::ID)]
     pub pool_program: UncheckedAccount<'info>,
+
+
+    /// The mutual's SAS membership credential — CHECK: handler-verified
+    /// against `mutual.juror_credential` (§2.8).
+    pub credential: UncheckedAccount<'info>,
+    /// The mutual's SAS membership schema — CHECK: handler-verified against
+    /// `mutual.juror_schema`.
+    pub schema: UncheckedAccount<'info>,
+    /// The member's membership attestation PDA ["attestation", credential,
+    /// schema, member] — created by the SAS CreateAttestation CPI inside
+    /// this join. CHECK: handler-verified derivation.
+    #[account(mut)]
+    pub attestation: UncheckedAccount<'info>,
+    /// CHECK: address-constrained to the canonical SAS program id.
+    #[account(address = crate::sas::ID)]
+    pub sas_program: UncheckedAccount<'info>,
 }
 
 impl<'info> Join<'info> {
@@ -105,13 +122,54 @@ impl<'info> Join<'info> {
             contribution,
         )?;
 
+        // ── SAS membership attestation (§2.8): the mutual PDA (issuer,
+        //    sole authorized signer of the credential) attests THIS wallet
+        //    under the mutual's schema — `expiry = 0`, nonce = the member
+        //    key. This is the only issuance path, which is what makes the
+        //    subaccord's credential gate a members-only gate.
+        let attestation_pda = crate::sas::attestation_pda(
+            &mutual.juror_credential,
+            &mutual.juror_schema,
+            &ctx.accounts.member.key(),
+        );
+        require_keys_eq!(
+            ctx.accounts.credential.key(),
+            mutual.juror_credential,
+            HanseError::AttestationAccountMismatch
+        );
+        require_keys_eq!(
+            ctx.accounts.schema.key(),
+            mutual.juror_schema,
+            HanseError::AttestationAccountMismatch
+        );
+        require_keys_eq!(
+            ctx.accounts.attestation.key(),
+            attestation_pda,
+            HanseError::AttestationAccountMismatch
+        );
+        let seed_le = mutual.seed.to_le_bytes();
+        let mutual_seeds: [&[u8]; 3] = [
+            MUTUAL_SEED,
+            seed_le.as_ref(),
+            &[mutual.bump],
+        ];
+        crate::sas::create_attestation(
+            &ctx.accounts.rent_payer.to_account_info(),
+            &ctx.accounts.mutual.to_account_info(),
+            &ctx.accounts.credential.to_account_info(),
+            &ctx.accounts.schema.to_account_info(),
+            &ctx.accounts.attestation.to_account_info(),
+            &ctx.accounts.system_program.to_account_info(),
+            &mutual_seeds,
+            &ctx.accounts.member.key(),
+        )?;
+
         {
             let m = &mut ctx.accounts.member_account;
             m.mutual = mutual.key();
             m.member = ctx.accounts.member.key();
             m.tier = tier;
-            // RESERVED — stake-only until the SAS bean (riprap-7wa9).
-            m.attestation = Pubkey::default();
+            m.attestation = attestation_pda;
             m.has_pending_claim = false;
             m.bump = ctx.bumps.member_account;
         }
@@ -121,6 +179,7 @@ impl<'info> Join<'info> {
             member: ctx.accounts.member.key(),
             tier,
             contribution,
+            attestation: attestation_pda,
         });
         Ok(())
     }

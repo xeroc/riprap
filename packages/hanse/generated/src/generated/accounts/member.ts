@@ -54,9 +54,10 @@ export type Member = {
   /** Index into Mutual.tiers; validated at join. */
   tier: number;
   /**
-   * RESERVED — always Pubkey::default in v1 (SAS integration, bean
-   * riprap-7wa9); the field exists so filling it needs no account-space
-   * migration.
+   * The member's SAS membership attestation (§2.8): issuer = the mutual
+   * PDA via the join CPI, subject = this wallet (`data[0..32]`), nonce =
+   * this wallet, `expiry = 0`. Accord's stake gate reads it as the juror
+   * credential — the closed circle.
    */
   attestation: Address;
   /** One Pending claim per member — the file_claim gate (§7). */
@@ -70,9 +71,10 @@ export type MemberArgs = {
   /** Index into Mutual.tiers; validated at join. */
   tier: number;
   /**
-   * RESERVED — always Pubkey::default in v1 (SAS integration, bean
-   * riprap-7wa9); the field exists so filling it needs no account-space
-   * migration.
+   * The member's SAS membership attestation (§2.8): issuer = the mutual
+   * PDA via the join CPI, subject = this wallet (`data[0..32]`), nonce =
+   * this wallet, `expiry = 0`. Accord's stake gate reads it as the juror
+   * credential — the closed circle.
    */
   attestation: Address;
   /** One Pending claim per member — the file_claim gate (§7). */

@@ -130,6 +130,70 @@ export async function findMutualSubaccordPda(
   });
 }
 
+/** The canonical SAS program (programs/hanse sas.rs ID — solanaattestations.com). */
+export const SAS_PROGRAM_ADDRESS = "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG" as Address;
+
+/**
+ * The mutual's SAS membership credential: PDA ["credential", mutual,
+ * "members"] under SAS (programs/hanse sas.rs `credential_pda`). Authority
+ * and sole authorized signer = the mutual PDA — attestations under it can
+ * only be issued by `join` (§2.8 closed circle).
+ */
+export async function findSasCredentialPda(
+  seeds: { mutual: Address },
+  config: { programAddress?: Address | undefined } = {},
+): Promise<ProgramDerivedAddress> {
+  const { programAddress = SAS_PROGRAM_ADDRESS } = config;
+  return await getProgramDerivedAddress({
+    programAddress,
+    seeds: [getBytes("credential"), getAddressEncoder().encode(seeds.mutual), getBytes("members")],
+  });
+}
+
+/**
+ * The mutual's SAS membership schema: PDA ["schema", credential,
+ * "membership", [1]] under SAS (sas.rs `schema_pda`; version fixed at 1 by
+ * SAS create_schema). Layout `[U128, U128]` — 32 raw wallet bytes at
+ * data[0..32] where accord's gate reads the subject.
+ */
+export async function findSasSchemaPda(
+  seeds: { credential: Address },
+  config: { programAddress?: Address | undefined } = {},
+): Promise<ProgramDerivedAddress> {
+  const { programAddress = SAS_PROGRAM_ADDRESS } = config;
+  return await getProgramDerivedAddress({
+    programAddress,
+    seeds: [
+      getBytes("schema"),
+      getAddressEncoder().encode(seeds.credential),
+      getBytes("membership"),
+      new Uint8Array([1]),
+    ],
+  });
+}
+
+/**
+ * A member's membership attestation: PDA ["attestation", credential, schema,
+ * member] under SAS (sas.rs `attestation_pda`) — the member's own key is the
+ * SAS nonce, so the address derives without any account fetch. Stored on
+ * `Member.attestation` at join; accord's stake gate reads it as the juror
+ * credential.
+ */
+export async function findSasAttestationPda(
+  seeds: { credential: Address; schema: Address; member: Address },
+  config: { programAddress?: Address | undefined } = {},
+): Promise<ProgramDerivedAddress> {
+  const { programAddress = SAS_PROGRAM_ADDRESS } = config;
+  return await getProgramDerivedAddress({
+    programAddress,
+    seeds: [
+      getBytes("attestation"),
+      getAddressEncoder().encode(seeds.credential),
+      getAddressEncoder().encode(seeds.schema),
+      getAddressEncoder().encode(seeds.member),
+    ],
+  });
+}
 function getBytes(word: string): Uint8Array {
   return new TextEncoder().encode(word);
 }

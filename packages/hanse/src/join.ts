@@ -24,7 +24,14 @@ import {
 } from "@solana/kit";
 import { fetchMutual, getJoinInstructionAsync, type Mutual } from "../generated/src/generated";
 import { fetchMaybeMemberByOwner } from "./fetch";
-import { findDepositorPda, findJoinMemberAccountPda } from "./pdas";
+import {
+  findDepositorPda,
+  findJoinMemberAccountPda,
+  findSasAttestationPda,
+  findSasCredentialPda,
+  findSasSchemaPda,
+  SAS_PROGRAM_ADDRESS,
+} from "./pdas";
 
 /**
  * Minimal structural rpc the facade calls: account reads via the generated
@@ -203,6 +210,15 @@ export async function buildJoinInstructions(
   });
   const [depositor] = await findDepositorPda({ pool: m.pool, owner: input.member.address });
   const treasury = await findAssociatedTokenAddress(m.depositMint, m.pool);
+  // §2.8: join CPIs the member's SAS attestation into existence — the
+  // accounts derive from the mutual's stored binding, nothing caller-supplied.
+  const [credential] = await findSasCredentialPda({ mutual: input.mutual });
+  const [schema] = await findSasSchemaPda({ credential });
+  const [attestation] = await findSasAttestationPda({
+    credential,
+    schema,
+    member: input.member.address,
+  });
 
   return [
     // Always prepended: a no-op when the ATA already exists (HANDOFF §2).
@@ -222,6 +238,10 @@ export async function buildJoinInstructions(
       rentPayer: input.member,
       treasury,
       depositMint: m.depositMint,
+      credential,
+      schema,
+      attestation,
+      sasProgram: SAS_PROGRAM_ADDRESS,
       tier: input.tier,
     }),
   ];

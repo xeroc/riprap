@@ -69,6 +69,12 @@ export type JoinInstruction<
   TAccountPoolProgram extends
     | string
     | AccountMeta<string> = "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf",
+  TAccountCredential extends string | AccountMeta<string> = string,
+  TAccountSchema extends string | AccountMeta<string> = string,
+  TAccountAttestation extends string | AccountMeta<string> = string,
+  TAccountSasProgram extends
+    | string
+    | AccountMeta<string> = "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -103,6 +109,12 @@ export type JoinInstruction<
       TAccountPoolProgram extends string
         ? ReadonlyAccount<TAccountPoolProgram>
         : TAccountPoolProgram,
+      TAccountCredential extends string ? ReadonlyAccount<TAccountCredential> : TAccountCredential,
+      TAccountSchema extends string ? ReadonlyAccount<TAccountSchema> : TAccountSchema,
+      TAccountAttestation extends string
+        ? WritableAccount<TAccountAttestation>
+        : TAccountAttestation,
+      TAccountSasProgram extends string ? ReadonlyAccount<TAccountSasProgram> : TAccountSasProgram,
       ...TRemainingAccounts,
     ]
   >;
@@ -152,6 +164,10 @@ export type JoinAsyncInput<
   TAccountTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
   TAccountPoolProgram extends string = string,
+  TAccountCredential extends string = string,
+  TAccountSchema extends string = string,
+  TAccountAttestation extends string = string,
+  TAccountSasProgram extends string = string,
 > = {
   member: TransactionSigner<TAccountMember>;
   /**
@@ -177,10 +193,11 @@ export type JoinAsyncInput<
    */
   ownerAta: Address<TAccountOwnerAta>;
   /**
-   * Data-free rent payer for both init sites here: the Member PDA and
-   * the pool::deposit CPI's depositor PDA (bean riprap-gneb). v1: the
-   * member passes their own wallet; any funded wallet may sponsor the
-   * join without becoming the member.
+   * Data-free rent payer for the three init sites here: the Member PDA,
+   * the pool::deposit CPI's depositor PDA (bean riprap-gneb), and the
+   * member's SAS attestation (§2.8). v1: the member passes their own
+   * wallet; any funded wallet may sponsor the join without becoming the
+   * member.
    */
   rentPayer: TransactionSigner<TAccountRentPayer>;
   /**
@@ -192,6 +209,23 @@ export type JoinAsyncInput<
   tokenProgram?: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   poolProgram?: Address<TAccountPoolProgram>;
+  /**
+   * The mutual's SAS membership credential — CHECK: handler-verified
+   * against `mutual.juror_credential` (§2.8).
+   */
+  credential: Address<TAccountCredential>;
+  /**
+   * The mutual's SAS membership schema — CHECK: handler-verified against
+   * `mutual.juror_schema`.
+   */
+  schema: Address<TAccountSchema>;
+  /**
+   * The member's membership attestation PDA ["attestation", credential,
+   * schema, member] — created by the SAS CreateAttestation CPI inside
+   * this join. CHECK: handler-verified derivation.
+   */
+  attestation: Address<TAccountAttestation>;
+  sasProgram?: Address<TAccountSasProgram>;
   tier: JoinInstructionDataArgs["tier"];
 };
 
@@ -209,6 +243,10 @@ export async function getJoinInstructionAsync<
   TAccountTokenProgram extends string,
   TAccountSystemProgram extends string,
   TAccountPoolProgram extends string,
+  TAccountCredential extends string,
+  TAccountSchema extends string,
+  TAccountAttestation extends string,
+  TAccountSasProgram extends string,
   TProgramAddress extends Address = typeof HANSE_PROGRAM_ADDRESS,
 >(
   input: JoinAsyncInput<
@@ -224,7 +262,11 @@ export async function getJoinInstructionAsync<
     TAccountDepositMint,
     TAccountTokenProgram,
     TAccountSystemProgram,
-    TAccountPoolProgram
+    TAccountPoolProgram,
+    TAccountCredential,
+    TAccountSchema,
+    TAccountAttestation,
+    TAccountSasProgram
   >,
   config?: { programAddress?: TProgramAddress },
 ): Promise<
@@ -242,7 +284,11 @@ export async function getJoinInstructionAsync<
     TAccountDepositMint,
     TAccountTokenProgram,
     TAccountSystemProgram,
-    TAccountPoolProgram
+    TAccountPoolProgram,
+    TAccountCredential,
+    TAccountSchema,
+    TAccountAttestation,
+    TAccountSasProgram
   >
 > {
   // Program address.
@@ -263,6 +309,10 @@ export async function getJoinInstructionAsync<
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     poolProgram: { value: input.poolProgram ?? null, isWritable: false },
+    credential: { value: input.credential ?? null, isWritable: false },
+    schema: { value: input.schema ?? null, isWritable: false },
+    attestation: { value: input.attestation ?? null, isWritable: true },
+    sasProgram: { value: input.sasProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -294,6 +344,10 @@ export async function getJoinInstructionAsync<
     accounts.poolProgram.value =
       "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf" as Address<"PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf">;
   }
+  if (!accounts.sasProgram.value) {
+    accounts.sasProgram.value =
+      "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG" as Address<"22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG">;
+  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
@@ -311,6 +365,10 @@ export async function getJoinInstructionAsync<
       getAccountMeta("tokenProgram", accounts.tokenProgram),
       getAccountMeta("systemProgram", accounts.systemProgram),
       getAccountMeta("poolProgram", accounts.poolProgram),
+      getAccountMeta("credential", accounts.credential),
+      getAccountMeta("schema", accounts.schema),
+      getAccountMeta("attestation", accounts.attestation),
+      getAccountMeta("sasProgram", accounts.sasProgram),
     ],
     data: getJoinInstructionDataEncoder().encode(args as JoinInstructionDataArgs),
     programAddress,
@@ -328,7 +386,11 @@ export async function getJoinInstructionAsync<
     TAccountDepositMint,
     TAccountTokenProgram,
     TAccountSystemProgram,
-    TAccountPoolProgram
+    TAccountPoolProgram,
+    TAccountCredential,
+    TAccountSchema,
+    TAccountAttestation,
+    TAccountSasProgram
   >);
 }
 
@@ -346,6 +408,10 @@ export type JoinInput<
   TAccountTokenProgram extends string = string,
   TAccountSystemProgram extends string = string,
   TAccountPoolProgram extends string = string,
+  TAccountCredential extends string = string,
+  TAccountSchema extends string = string,
+  TAccountAttestation extends string = string,
+  TAccountSasProgram extends string = string,
 > = {
   member: TransactionSigner<TAccountMember>;
   /**
@@ -371,10 +437,11 @@ export type JoinInput<
    */
   ownerAta: Address<TAccountOwnerAta>;
   /**
-   * Data-free rent payer for both init sites here: the Member PDA and
-   * the pool::deposit CPI's depositor PDA (bean riprap-gneb). v1: the
-   * member passes their own wallet; any funded wallet may sponsor the
-   * join without becoming the member.
+   * Data-free rent payer for the three init sites here: the Member PDA,
+   * the pool::deposit CPI's depositor PDA (bean riprap-gneb), and the
+   * member's SAS attestation (§2.8). v1: the member passes their own
+   * wallet; any funded wallet may sponsor the join without becoming the
+   * member.
    */
   rentPayer: TransactionSigner<TAccountRentPayer>;
   /**
@@ -386,6 +453,23 @@ export type JoinInput<
   tokenProgram?: Address<TAccountTokenProgram>;
   systemProgram?: Address<TAccountSystemProgram>;
   poolProgram?: Address<TAccountPoolProgram>;
+  /**
+   * The mutual's SAS membership credential — CHECK: handler-verified
+   * against `mutual.juror_credential` (§2.8).
+   */
+  credential: Address<TAccountCredential>;
+  /**
+   * The mutual's SAS membership schema — CHECK: handler-verified against
+   * `mutual.juror_schema`.
+   */
+  schema: Address<TAccountSchema>;
+  /**
+   * The member's membership attestation PDA ["attestation", credential,
+   * schema, member] — created by the SAS CreateAttestation CPI inside
+   * this join. CHECK: handler-verified derivation.
+   */
+  attestation: Address<TAccountAttestation>;
+  sasProgram?: Address<TAccountSasProgram>;
   tier: JoinInstructionDataArgs["tier"];
 };
 
@@ -403,6 +487,10 @@ export function getJoinInstruction<
   TAccountTokenProgram extends string,
   TAccountSystemProgram extends string,
   TAccountPoolProgram extends string,
+  TAccountCredential extends string,
+  TAccountSchema extends string,
+  TAccountAttestation extends string,
+  TAccountSasProgram extends string,
   TProgramAddress extends Address = typeof HANSE_PROGRAM_ADDRESS,
 >(
   input: JoinInput<
@@ -418,7 +506,11 @@ export function getJoinInstruction<
     TAccountDepositMint,
     TAccountTokenProgram,
     TAccountSystemProgram,
-    TAccountPoolProgram
+    TAccountPoolProgram,
+    TAccountCredential,
+    TAccountSchema,
+    TAccountAttestation,
+    TAccountSasProgram
   >,
   config?: { programAddress?: TProgramAddress },
 ): JoinInstruction<
@@ -435,7 +527,11 @@ export function getJoinInstruction<
   TAccountDepositMint,
   TAccountTokenProgram,
   TAccountSystemProgram,
-  TAccountPoolProgram
+  TAccountPoolProgram,
+  TAccountCredential,
+  TAccountSchema,
+  TAccountAttestation,
+  TAccountSasProgram
 > {
   // Program address.
   const programAddress = config?.programAddress ?? HANSE_PROGRAM_ADDRESS;
@@ -455,6 +551,10 @@ export function getJoinInstruction<
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     poolProgram: { value: input.poolProgram ?? null, isWritable: false },
+    credential: { value: input.credential ?? null, isWritable: false },
+    schema: { value: input.schema ?? null, isWritable: false },
+    attestation: { value: input.attestation ?? null, isWritable: true },
+    sasProgram: { value: input.sasProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -477,6 +577,10 @@ export function getJoinInstruction<
     accounts.poolProgram.value =
       "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf" as Address<"PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf">;
   }
+  if (!accounts.sasProgram.value) {
+    accounts.sasProgram.value =
+      "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG" as Address<"22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG">;
+  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
@@ -494,6 +598,10 @@ export function getJoinInstruction<
       getAccountMeta("tokenProgram", accounts.tokenProgram),
       getAccountMeta("systemProgram", accounts.systemProgram),
       getAccountMeta("poolProgram", accounts.poolProgram),
+      getAccountMeta("credential", accounts.credential),
+      getAccountMeta("schema", accounts.schema),
+      getAccountMeta("attestation", accounts.attestation),
+      getAccountMeta("sasProgram", accounts.sasProgram),
     ],
     data: getJoinInstructionDataEncoder().encode(args as JoinInstructionDataArgs),
     programAddress,
@@ -511,7 +619,11 @@ export function getJoinInstruction<
     TAccountDepositMint,
     TAccountTokenProgram,
     TAccountSystemProgram,
-    TAccountPoolProgram
+    TAccountPoolProgram,
+    TAccountCredential,
+    TAccountSchema,
+    TAccountAttestation,
+    TAccountSasProgram
   >);
 }
 
@@ -545,10 +657,11 @@ export type ParsedJoinInstruction<
      */
     ownerAta: TAccountMetas[6];
     /**
-     * Data-free rent payer for both init sites here: the Member PDA and
-     * the pool::deposit CPI's depositor PDA (bean riprap-gneb). v1: the
-     * member passes their own wallet; any funded wallet may sponsor the
-     * join without becoming the member.
+     * Data-free rent payer for the three init sites here: the Member PDA,
+     * the pool::deposit CPI's depositor PDA (bean riprap-gneb), and the
+     * member's SAS attestation (§2.8). v1: the member passes their own
+     * wallet; any funded wallet may sponsor the join without becoming the
+     * member.
      */
     rentPayer: TAccountMetas[7];
     /**
@@ -560,6 +673,23 @@ export type ParsedJoinInstruction<
     tokenProgram: TAccountMetas[10];
     systemProgram: TAccountMetas[11];
     poolProgram: TAccountMetas[12];
+    /**
+     * The mutual's SAS membership credential — CHECK: handler-verified
+     * against `mutual.juror_credential` (§2.8).
+     */
+    credential: TAccountMetas[13];
+    /**
+     * The mutual's SAS membership schema — CHECK: handler-verified against
+     * `mutual.juror_schema`.
+     */
+    schema: TAccountMetas[14];
+    /**
+     * The member's membership attestation PDA ["attestation", credential,
+     * schema, member] — created by the SAS CreateAttestation CPI inside
+     * this join. CHECK: handler-verified derivation.
+     */
+    attestation: TAccountMetas[15];
+    sasProgram: TAccountMetas[16];
   };
   data: JoinInstructionData;
 };
@@ -572,10 +702,10 @@ export function parseJoinInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedJoinInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 13) {
+  if (instruction.accounts.length < 17) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 13,
+      expectedAccountMetas: 17,
     });
   }
   let accountIndex = 0;
@@ -604,6 +734,10 @@ export function parseJoinInstruction<
       tokenProgram: getNextAccount(),
       systemProgram: getNextAccount(),
       poolProgram: getNextAccount(),
+      credential: getNextAccount(),
+      schema: getNextAccount(),
+      attestation: getNextAccount(),
+      sasProgram: getNextAccount(),
     },
     data: getJoinInstructionDataDecoder().decode(instruction.data),
   };

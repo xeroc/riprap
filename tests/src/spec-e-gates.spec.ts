@@ -15,6 +15,9 @@ import {
   fetchClaimByNonce,
   fetchMutualBySeed,
   findMemberAccountPda,
+  findSasAttestationPda,
+  findSasCredentialPda,
+  findSasSchemaPda,
   getClaimPayoutInstructionAsync,
   getDissolveInstructionAsync,
   getFileClaimInstructionAsync,
@@ -22,6 +25,7 @@ import {
   getSettleClaimInstructionAsync,
   getSettlePoolInstruction,
   Phase,
+  SAS_PROGRAM_ADDRESS,
 } from "@riprap/hanse";
 import { findDepositorPda } from "@riprap/pool";
 import {
@@ -118,6 +122,15 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     const lateJoiner = await fundSigner(env);
     await setTokenBalance(env, lateJoiner.address, fx.mint, 20_000_000n);
     const lateAta = await ataOf(fx.mint, lateJoiner.address);
+    // §2.8: even a reverted join carries the SAS trio (the gate that fires
+    // is the deposits window, not the attestation path).
+    const [credential] = await findSasCredentialPda({ mutual: fx.mutual });
+    const [schema] = await findSasSchemaPda({ credential });
+    const [attestation] = await findSasAttestationPda({
+      credential,
+      schema,
+      member: lateJoiner.address,
+    });
     await expectRevert(
       env.sendIx(
         await getJoinInstructionAsync({
@@ -129,6 +142,10 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
           ownerAta: lateAta,
           treasury: fx.treasury,
           depositMint: fx.mint,
+          credential,
+          schema,
+          attestation,
+          sasProgram: SAS_PROGRAM_ADDRESS,
           tier: 1,
         }),
       ),
@@ -136,7 +153,7 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     );
 
     // file_claim after claims_close_at reverts (member 0 is joined, funded).
-    await setTokenBalance(env, fx.members[0]!.address, fx.mint, FILING_FEE);
+    await setTokenBalance(env, fx.members[0]?.address, fx.mint, FILING_FEE);
     const mutualAcct = await fetchMutualBySeed(env.rpc, { seed: fx.seed });
     const nonce = mutualAcct.data.claimNonce;
     await expectRevert(
@@ -146,7 +163,7 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
           rentPayer: fx.members[0]!,
           mutual: fx.mutual,
           depositor: (
-            await findDepositorPda({ pool: fx.poolPda, owner: fx.members[0]!.address })
+            await findDepositorPda({ pool: fx.poolPda, owner: fx.members[0]?.address })
           )[0],
           subaccord: fx.fx.subaccord,
           memberFeeAta: fx.memberAtas[0]!,

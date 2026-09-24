@@ -19,7 +19,11 @@ import {
   fetchMutual,
   findDepositorPda,
   findJoinMemberAccountPda,
+  findSasAttestationPda,
+  findSasCredentialPda,
+  findSasSchemaPda,
   getJoinInstructionAsync,
+  SAS_PROGRAM_ADDRESS,
 } from "@riprap/hanse";
 import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address } from "@solana/kit";
@@ -112,6 +116,15 @@ export default class HanseJoin extends ChainCommand {
       sponsor ? sponsor.address : ctx.signer.address,
     );
     const treasury = await findAssociatedTokenAddress(depositMint, pool);
+    // §2.8: the SAS trio derives from the mutual (or the fetched account's
+    // own binding when --pool overrode the fetch).
+    const [credential] = await findSasCredentialPda({ mutual });
+    const [schema] = await findSasSchemaPda({ credential });
+    const [attestation] = await findSasAttestationPda({
+      credential,
+      schema,
+      member: ctx.signer.address,
+    });
 
     const instruction = await getJoinInstructionAsync({
       member: ctx.signer,
@@ -124,6 +137,10 @@ export default class HanseJoin extends ChainCommand {
       rentPayer: sponsor ?? ctx.signer,
       treasury,
       depositMint,
+      credential,
+      schema,
+      attestation,
+      sasProgram: SAS_PROGRAM_ADDRESS,
       tier,
     });
 

@@ -31,6 +31,8 @@ fn init_tx_with_fee_mint(
     use anchor_lang::solana_program::instruction::Instruction;
     let mutual = mutual_pda(cfg.seed);
     let pool = pool_pda(cfg.seed);
+    let credential = hanse::sas::credential_pda(&mutual);
+    let schema = hanse::sas::schema_pda(&credential);
     let domain_ref = hanse::instructions::subaccord_domain_ref(cfg.seed, &cfg.policy_hash);
     let subaccord = Pubkey::find_program_address(
         &[
@@ -54,6 +56,8 @@ fn init_tx_with_fee_mint(
             pool,
             treasury: pool_treasury(&pool, &env.mint),
             subaccord,
+            credential,
+            schema,
             deposit_mint: env.mint,
             fee_mint: *fee_mint,
             fee_float: ata(&mutual, fee_mint),
@@ -62,6 +66,7 @@ fn init_tx_with_fee_mint(
             system_program: anchor_lang::solana_program::system_program::ID,
             pool_program: pool::id(),
             accord_program: accord::id(),
+            sas_program: hanse::sas::ID,
         }
         .to_account_metas(None),
     );
@@ -146,13 +151,44 @@ fn initialize_mutual_wires_pool_subaccord_and_float() {
     assert_eq!(s.fee_token, env.mint);
     assert_eq!(s.aggregation, accord::state::Aggregation::Plurality);
     assert_eq!(s.min_jury_size, cfg.subaccord.min_jury_size);
+    // §2.8 closed circle: the subaccord binds to the mutual's own SAS
+    // credential + schema — only attested members can stake and be drawn.
     assert_eq!(
         s.juror_credential,
-        Pubkey::default(),
-        "stake-only (riprap-7wa9)"
+        hanse::sas::credential_pda(&mutual),
+        "credential-bound (§2.8, riprap-7wa9)"
     );
-    assert_eq!(s.juror_schema, Pubkey::default());
+    assert_eq!(s.juror_schema, hanse::sas::schema_pda(&hanse::sas::credential_pda(&mutual)));
+    assert_eq!(m.juror_credential, hanse::sas::credential_pda(&mutual));
+    assert_eq!(m.juror_schema, hanse::sas::schema_pda(&hanse::sas::credential_pda(&mutual)));
     assert_eq!(m.subaccord, subaccord);
+
+    // The SAS accounts exist, are owned by the canonical SAS program, and
+    // the credential's authority + sole authorized signer is the mutual PDA
+    // (layout: disc 1 | authority 32 | name len u32 + bytes | signers len
+    // u32 + 32·n — SAS state/credential.rs).
+    let credential = hanse::sas::credential_pda(&mutual);
+    let schema = hanse::sas::schema_pda(&credential);
+    let cred_acc = env.svm.get_account(&credential).unwrap();
+    assert_eq!(cred_acc.owner, hanse::sas::ID);
+    assert_eq!(cred_acc.data[0], 0, "CredentialDiscriminator");
+    assert_eq!(
+        cred_acc.data[1..33],
+        mutual.to_bytes(),
+        "authority = the mutual PDA"
+    );
+    assert_eq!(cred_acc.data[33..37], 7u32.to_le_bytes(), "name len");
+    assert_eq!(&cred_acc.data[37..44], b"members");
+    assert_eq!(cred_acc.data[44..48], 1u32.to_le_bytes(), "one signer");
+    assert_eq!(
+        cred_acc.data[48..80],
+        mutual.to_bytes(),
+        "sole authorized signer = the mutual PDA"
+    );
+    let schema_acc = env.svm.get_account(&schema).unwrap();
+    assert_eq!(schema_acc.owner, hanse::sas::ID);
+    assert_eq!(schema_acc.data[0], 1, "SchemaDiscriminator");
+    assert_eq!(schema_acc.data[1..33], credential.to_bytes());
 
     // Fee float: the mutual PDA's ATA of fee_mint, empty.
     let float = ata(&mutual, &env.mint);

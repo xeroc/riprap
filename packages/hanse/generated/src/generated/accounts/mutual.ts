@@ -77,6 +77,18 @@ export type Mutual = {
   pool: Address;
   /** The Accord subaccord jurors stake into; authority = this Mutual PDA. */
   subaccord: Address;
+  /**
+   * The mutual's SAS membership credential (§2.8) — authority and sole
+   * authorized signer = this Mutual PDA, so only `join` ever issues
+   * attestations under it. Created by the initialize_mutual SAS CPI.
+   */
+  jurorCredential: Address;
+  /**
+   * The SAS membership schema under that credential (layout `[U128,
+   * U128]`; subject = member wallet at `data[0..32]`). The subaccord's
+   * `juror_schema` gate key — accord enforces the closed circle.
+   */
+  jurorSchema: Address;
   /** USDC for the pilot; contribution and payout mint. */
   depositMint: Address;
   /** USDC for the pilot; juror fees, claimant-funded. */
@@ -129,6 +141,18 @@ export type MutualArgs = {
   pool: Address;
   /** The Accord subaccord jurors stake into; authority = this Mutual PDA. */
   subaccord: Address;
+  /**
+   * The mutual's SAS membership credential (§2.8) — authority and sole
+   * authorized signer = this Mutual PDA, so only `join` ever issues
+   * attestations under it. Created by the initialize_mutual SAS CPI.
+   */
+  jurorCredential: Address;
+  /**
+   * The SAS membership schema under that credential (layout `[U128,
+   * U128]`; subject = member wallet at `data[0..32]`). The subaccord's
+   * `juror_schema` gate key — accord enforces the closed circle.
+   */
+  jurorSchema: Address;
   /** USDC for the pilot; contribution and payout mint. */
   depositMint: Address;
   /** USDC for the pilot; juror fees, claimant-funded. */
@@ -176,6 +200,8 @@ export function getMutualEncoder(): FixedSizeEncoder<MutualArgs> {
       ["authority", getAddressEncoder()],
       ["pool", getAddressEncoder()],
       ["subaccord", getAddressEncoder()],
+      ["jurorCredential", getAddressEncoder()],
+      ["jurorSchema", getAddressEncoder()],
       ["depositMint", getAddressEncoder()],
       ["feeMint", getAddressEncoder()],
       ["policyHash", fixEncoderSize(getBytesEncoder(), 32)],
@@ -205,6 +231,8 @@ export function getMutualDecoder(): FixedSizeDecoder<Mutual> {
     ["authority", getAddressDecoder()],
     ["pool", getAddressDecoder()],
     ["subaccord", getAddressDecoder()],
+    ["jurorCredential", getAddressDecoder()],
+    ["jurorSchema", getAddressDecoder()],
     ["depositMint", getAddressDecoder()],
     ["feeMint", getAddressDecoder()],
     ["policyHash", fixDecoderSize(getBytesDecoder(), 32)],
@@ -281,5 +309,5 @@ export async function fetchAllMaybeMutual(
 }
 
 export function getMutualSize(): number {
-  return 330;
+  return 394;
 }

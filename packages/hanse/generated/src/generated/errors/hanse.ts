@@ -78,12 +78,12 @@ export const HANSE_ERROR__CLAIM_ALREADY_PAID = 0x178d; // 6029
 export const HANSE_ERROR__UNAUTHORIZED = 0x178e; // 6030
 /** MathOverflow: Checked math overflowed — the amounts do not fit the accounting */
 export const HANSE_ERROR__MATH_OVERFLOW = 0x178f; // 6031
-/** AttestationReserved: The attestation field is reserved: v1 ships stake-only (SAS integration pending) */
-export const HANSE_ERROR__ATTESTATION_RESERVED = 0x1790; // 6032
+/** AttestationAccountMismatch: SAS account mismatch: credential/schema must be the mutual's own and the attestation the member's (§2.8 closed circle) */
+export const HANSE_ERROR__ATTESTATION_ACCOUNT_MISMATCH = 0x1790; // 6032
 
 export type HanseError =
   | typeof HANSE_ERROR__ALREADY_SETTLED
-  | typeof HANSE_ERROR__ATTESTATION_RESERVED
+  | typeof HANSE_ERROR__ATTESTATION_ACCOUNT_MISMATCH
   | typeof HANSE_ERROR__CLAIM_ALREADY_PAID
   | typeof HANSE_ERROR__CLAIM_NOT_APPROVED
   | typeof HANSE_ERROR__CLAIM_NOT_PENDING
@@ -120,7 +120,7 @@ let hanseErrorMessages: Record<HanseError, string> | undefined;
 if (process.env["NODE_ENV"] !== "production") {
   hanseErrorMessages = {
     [HANSE_ERROR__ALREADY_SETTLED]: `The pool is already settled or dissolved`,
-    [HANSE_ERROR__ATTESTATION_RESERVED]: `The attestation field is reserved: v1 ships stake-only (SAS integration pending)`,
+    [HANSE_ERROR__ATTESTATION_ACCOUNT_MISMATCH]: `SAS account mismatch: credential/schema must be the mutual's own and the attestation the member's (§2.8 closed circle)`,
     [HANSE_ERROR__CLAIM_ALREADY_PAID]: `This claim is already paid — payouts are once`,
     [HANSE_ERROR__CLAIM_NOT_APPROVED]: `Only approved claims pay out`,
     [HANSE_ERROR__CLAIM_NOT_PENDING]: `The claim is already resolved`,

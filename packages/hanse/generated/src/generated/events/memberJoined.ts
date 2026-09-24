@@ -43,6 +43,8 @@ export type MemberJoinedEvent = {
   member: Address;
   tier: number;
   contribution: bigint;
+  /** The member's SAS attestation — the juror credential for staking. */
+  attestation: Address;
 };
 
 export type MemberJoinedEventArgs = {
@@ -50,6 +52,8 @@ export type MemberJoinedEventArgs = {
   member: Address;
   tier: number;
   contribution: number | bigint;
+  /** The member's SAS attestation — the juror credential for staking. */
+  attestation: Address;
 };
 
 /** Gets the encoder for {@link MemberJoinedEventArgs} event data. */
@@ -60,6 +64,7 @@ export function getMemberJoinedEventEncoder(): FixedSizeEncoder<MemberJoinedEven
       ["member", getAddressEncoder()],
       ["tier", getU8Encoder()],
       ["contribution", getU64Encoder()],
+      ["attestation", getAddressEncoder()],
     ]),
     [getConstantEncoder(MEMBER_JOINED_EVENT_DISCRIMINATOR)],
   );
@@ -73,6 +78,7 @@ export function getMemberJoinedEventDecoder(): FixedSizeDecoder<MemberJoinedEven
       ["member", getAddressDecoder()],
       ["tier", getU8Decoder()],
       ["contribution", getU64Decoder()],
+      ["attestation", getAddressDecoder()],
     ]),
     [getConstantDecoder(MEMBER_JOINED_EVENT_DISCRIMINATOR)],
   );

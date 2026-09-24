@@ -65,6 +65,9 @@ fn join_tx_paying(
     use anchor_lang::solana_program::instruction::Instruction;
     let mutual = mutual_pda(cfg.seed);
     let pool = pool_pda(cfg.seed);
+    let credential = hanse::sas::credential_pda(&mutual);
+    let schema = hanse::sas::schema_pda(&credential);
+    let attestation = hanse::sas::attestation_pda(&credential, &schema, &member.pubkey());
     let ix = Instruction::new_with_bytes(
         hanse::id(),
         &hanse::instruction::Join { tier }.data(),
@@ -82,6 +85,10 @@ fn join_tx_paying(
             token_program: spl_token_interface::ID,
             system_program: anchor_lang::solana_program::system_program::ID,
             pool_program: pool::id(),
+            credential,
+            schema,
+            attestation,
+            sas_program: hanse::sas::ID,
         }
         .to_account_metas(None),
     );
@@ -133,11 +140,35 @@ fn join_mints_rights_stake_and_enrolls_member() {
     assert_eq!(m.mutual, mutual_pda(1));
     assert_eq!(m.member, member.pubkey());
     assert_eq!(m.tier, 1);
+    // §2.8: join issued the member's SAS attestation — owner is the
+    // canonical SAS program, subject (data[0..32]) is the member wallet,
+    // expiry = 0 (never; the subaccord dies with the event), signer =
+    // nonce = the member's own key.
+    let credential = hanse::sas::credential_pda(&mutual_pda(1));
+    let schema = hanse::sas::schema_pda(&credential);
+    let expected_att = hanse::sas::attestation_pda(&credential, &schema, &member.pubkey());
     assert_eq!(
-        m.attestation,
-        anchor_lang::prelude::Pubkey::default(),
-        "reserved (riprap-7wa9)"
+        m.attestation, expected_att,
+        "attestation stored on the member (§2.8, riprap-7wa9)"
     );
+    let att = env.svm.get_account(&expected_att).unwrap();
+    assert_eq!(att.owner, hanse::sas::ID);
+    assert_eq!(att.data[0], 2, "AttestationDiscriminator");
+    assert_eq!(att.data[1..33], member.pubkey().to_bytes(), "nonce = member");
+    assert_eq!(att.data[33..65], credential.to_bytes());
+    assert_eq!(att.data[65..97], schema.to_bytes());
+    assert_eq!(att.data[97..101], 32u32.to_le_bytes(), "data_len = wallet");
+    assert_eq!(
+        att.data[101..133],
+        member.pubkey().to_bytes(),
+        "subject = member (accord reads data[0..32])"
+    );
+    assert_eq!(
+        att.data[133..165],
+        mutual_pda(1).to_bytes(),
+        "signer = the mutual PDA"
+    );
+    assert_eq!(att.data[165..173], 0i64.to_le_bytes(), "expiry: never");
     assert!(!m.has_pending_claim);
 }
 
@@ -183,6 +214,9 @@ fn sponsored_join_residual_settles_to_sponsor() {
     // join: member signs (consent), sponsor pays cover + rent.
     let mutual = mutual_pda(cfg.seed);
     let pool = pool_pda(cfg.seed);
+    let credential = hanse::sas::credential_pda(&mutual);
+    let schema = hanse::sas::schema_pda(&credential);
+    let attestation = hanse::sas::attestation_pda(&credential, &schema, &member.pubkey());
     let ix = Instruction::new_with_bytes(
         hanse::id(),
         &hanse::instruction::Join { tier: 1 }.data(),
@@ -200,6 +234,10 @@ fn sponsored_join_residual_settles_to_sponsor() {
             token_program: spl_token_interface::ID,
             system_program: anchor_lang::solana_program::system_program::ID,
             pool_program: pool::id(),
+            credential,
+            schema,
+            attestation,
+            sas_program: hanse::sas::ID,
         }
         .to_account_metas(None),
     );

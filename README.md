@@ -183,9 +183,9 @@ The frontend needs no configuration to run. The landing's optional vars (see `ap
 | `RIPRAP_KEYPAIR_PATH`              | CLI (`--keypair`)           | `ANCHOR_WALLET` → `~/.config/solana/id.json`      | Signer keypair JSON                              |
 | `RIPRAP_PAYER_PATH`                | e2e                         | `~/.config/solana/id.json`                        | e2e payer keypair                                |
 | `RIPRAP_SMOKE_RPC`                 | CLI smoke test              | `http://127.0.0.1:8899`                           | Live-smoke endpoint; test skips when unreachable |
-| `ACCORD_SO` / `ACCORD_KEYPAIR`     | e2e                         | `…/accord/target/deploy/` in the sibling checkout | Built accord program artifact + its keypair      |
+| `ACCORD_SO` / `ACCORD_KEYPAIR`     | e2e, Rust LiteSVM lane      | `…/accord/target/deploy/` in the sibling checkout | Built accord program artifact + its keypair      |
+| `SAS_SO`                           | e2e, Rust LiteSVM lane      | `…/solana-attestation-service/target/deploy/solana_attestation_service.so` | Built SAS program artifact (the §2.8 closed-circle CPI target; the e2e fabricates its loader accounts at the canonical address) |
 
-Full CLI flag table (including `--commitment`, `--dry-run`, `--json`, `--quiet`): [`apps/cli/README.md`](apps/cli/README.md). Launch parameters that are still undecided are rendered as visible `{{PARAM}}` placeholders by design.
 
 ## Available Scripts
 

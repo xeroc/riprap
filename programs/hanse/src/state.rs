@@ -55,6 +55,14 @@ pub struct Mutual {
     pub pool: Pubkey,
     /// The Accord subaccord jurors stake into; authority = this Mutual PDA.
     pub subaccord: Pubkey,
+    /// The mutual's SAS membership credential (§2.8) — authority and sole
+    /// authorized signer = this Mutual PDA, so only `join` ever issues
+    /// attestations under it. Created by the initialize_mutual SAS CPI.
+    pub juror_credential: Pubkey,
+    /// The SAS membership schema under that credential (layout `[U128,
+    /// U128]`; subject = member wallet at `data[0..32]`). The subaccord's
+    /// `juror_schema` gate key — accord enforces the closed circle.
+    pub juror_schema: Pubkey,
     /// USDC for the pilot; contribution and payout mint.
     pub deposit_mint: Pubkey,
     /// USDC for the pilot; juror fees, claimant-funded.
@@ -99,9 +107,10 @@ pub struct Member {
     pub member: Pubkey,
     /// Index into Mutual.tiers; validated at join.
     pub tier: u8,
-    /// RESERVED — always Pubkey::default in v1 (SAS integration, bean
-    /// riprap-7wa9); the field exists so filling it needs no account-space
-    /// migration.
+    /// The member's SAS membership attestation (§2.8): issuer = the mutual
+    /// PDA via the join CPI, subject = this wallet (`data[0..32]`), nonce =
+    /// this wallet, `expiry = 0`. Accord's stake gate reads it as the juror
+    /// credential — the closed circle.
     pub attestation: Pubkey,
     /// One Pending claim per member — the file_claim gate (§7).
     pub has_pending_claim: bool,
@@ -140,21 +149,23 @@ pub const CLAIM_SPACE: usize = 8 + Claim::INIT_SPACE;
 mod tests {
     use super::*;
 
-    /// EVENT-MUTUAL §6: Mutual = immutable block (5 pubkeys + policy_hash 32 +
-    /// tiers 3×16 + three i64 timestamps) + settlement block (phase 1 +
-    /// pull_close_at 8 + ratio 8 + obligations 8 + fee_refunds 8 +
-    /// claims_filed 4 + claims_resolved 4 + claim_nonce 8 + seed 8) + bump 1.
+    /// EVENT-MUTUAL §6: Mutual = immutable block (7 pubkeys — authority,
+    /// pool, subaccord, juror_credential, juror_schema, deposit_mint,
+    /// fee_mint — + policy_hash 32 + tiers 3×16 + three i64 timestamps) +
+    /// settlement block (phase 1 + pull_close_at 8 + ratio 8 + obligations 8
+    /// + fee_refunds 8 + claims_filed 4 + claims_resolved 4 + claim_nonce 8
+    /// + seed 8) + bump 1.
     #[test]
     fn mutual_space_matches_spec_layout() {
         assert_eq!(
             Mutual::INIT_SPACE,
-            5 * 32 + 32 + 3 * 16 + 3 * 8 + 8 + 1 + 8 + 8 + 8 + 8 + 4 + 4 + 8 + 1
+            7 * 32 + 32 + 3 * 16 + 3 * 8 + 8 + 1 + 8 + 8 + 8 + 8 + 4 + 4 + 8 + 1
         );
-        assert_eq!(MUTUAL_SPACE, 8 + 322);
+        assert_eq!(MUTUAL_SPACE, 8 + 386);
     }
 
     /// EVENT-MUTUAL §6: Member = mutual 32 + member 32 + tier 1 +
-    /// attestation 32 (reserved, always default) + has_pending_claim 1 + bump 1.
+    /// attestation 32 (§2.8 SAS membership) + has_pending_claim 1 + bump 1.
     #[test]
     fn member_space_matches_spec_layout() {
         assert_eq!(Member::INIT_SPACE, 32 + 32 + 1 + 32 + 1 + 1);

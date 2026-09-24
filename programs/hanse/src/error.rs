@@ -83,6 +83,6 @@ pub enum HanseError {
     // ── invariants ───────────────────────────────────────────────────────
     #[msg("Checked math overflowed — the amounts do not fit the accounting")]
     MathOverflow,
-    #[msg("The attestation field is reserved: v1 ships stake-only (SAS integration pending)")]
-    AttestationReserved,
+    #[msg("SAS account mismatch: credential/schema must be the mutual's own and the attestation the member's (§2.8 closed circle)")]
+    AttestationAccountMismatch,
 }

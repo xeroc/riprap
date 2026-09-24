@@ -15,7 +15,10 @@ import {
   findMutualPda,
   findMutualSubaccordPda,
   findPoolPda,
+  findSasCredentialPda,
+  findSasSchemaPda,
   getInitializeMutualInstructionAsync,
+  SAS_PROGRAM_ADDRESS,
   type SubaccordConfigArgs,
   type TierArgs,
 } from "@riprap/hanse";
@@ -26,15 +29,17 @@ import { hexToBytes32, parseTierSpec } from "../../lib/hanse-args";
 import { toBigInt } from "../../lib/pool-args";
 
 export default class HanseInitialize extends ChainCommand {
-  static summary = "Create a mutual (mutual + pool + subaccord + fee float)";
+  static summary = "Create a mutual (mutual + pool + SAS binding + subaccord + fee float)";
 
   static description =
     "Initializes an event mutual: Mutual PDA [mutual, seed], its pool (same " +
     "seed — rights 1:1 under the mutual_auth PDA, ownership disabled under " +
-    "mutual_own), its Accord subaccord (creator = this wallet, authority = " +
-    "the mutual PDA, stake-only jurors), and the fee float ATA. Exactly " +
-    "three --tier flags, in Basic/Standard/Premium order. The payout pull " +
-    "window is fixed on-chain at 180 days — no flag. Pilot numbers: " +
+    "mutual_own), its SAS membership credential + schema (authority = the " +
+    "mutual PDA; join auto-issues member attestations), its Accord subaccord " +
+    "(creator = this wallet, authority = the mutual PDA, credential-bound " +
+    "jurors — only attested members can stake, §2.8), and the fee float ATA. " +
+    "Exactly three --tier flags, in Basic/Standard/Premium order. The payout " +
+    "pull window is fixed on-chain at 180 days — no flag. Pilot numbers: " +
     "EVENT-MUTUAL §12.";
 
   static examples = [
@@ -137,6 +142,10 @@ export default class HanseInitialize extends ChainCommand {
       mutual,
       feeMint: flags["fee-mint"] as Address,
     });
+    // §2.8: the mutual's SAS credential + schema, registered by the init CPIs
+    // and bound into the subaccord — members-only juror pool.
+    const [credential] = await findSasCredentialPda({ mutual });
+    const [schema] = await findSasSchemaPda({ credential });
 
     const subaccordConfig: SubaccordConfigArgs = {
       feePerJuror: toBigInt("fee-per-juror", flags["fee-per-juror"], 64),
@@ -160,6 +169,8 @@ export default class HanseInitialize extends ChainCommand {
       pool,
       treasury,
       subaccord,
+      credential,
+      schema,
       depositMint: flags["deposit-mint"] as Address,
       feeMint: flags["fee-mint"] as Address,
       feeFloat,
@@ -169,6 +180,7 @@ export default class HanseInitialize extends ChainCommand {
       depositsCloseAt: toBigInt("deposits-close-at", flags["deposits-close-at"], 64),
       claimsCloseAt: toBigInt("claims-close-at", flags["claims-close-at"], 64),
       subaccordArg: subaccordConfig,
+      sasProgram: SAS_PROGRAM_ADDRESS,
     });
 
     if (flags["dry-run"]) {

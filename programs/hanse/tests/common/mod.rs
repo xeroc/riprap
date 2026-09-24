@@ -26,8 +26,8 @@ use {
     spl_token_interface::instruction as token_ix,
 };
 
-const POOL_WASM: &[u8] = include_bytes!("../../../../target/deploy/pool.so");
-const HANSE_WASM: &[u8] = include_bytes!("../../../../target/deploy/hanse.so");
+pub const POOL_WASM: &[u8] = include_bytes!("../../../../target/deploy/pool.so");
+pub const HANSE_WASM: &[u8] = include_bytes!("../../../../target/deploy/hanse.so");
 
 /// Why the harness could not boot: the accord binary lives in the sibling
 /// repo (`Accord/accord`), which is not part of this workspace.
@@ -79,10 +79,28 @@ fn accord_so_path() -> std::path::PathBuf {
         })
 }
 
+/// The SAS binary path — sibling checkout (or `$SAS_SO`), same pattern as
+/// [`accord_so_path`]. CARGO_MANIFEST_DIR = programs/hanse.
+fn sas_so_path() -> std::path::PathBuf {
+    std::env::var_os("SAS_SO")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| {
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+                "../../../solana-attestation-service/target/deploy/solana_attestation_service.so",
+            )
+        })
+}
+
 /// The accord program bytes, read at runtime from the sibling checkout
 /// (overridable via `ACCORD_SO`).
 pub fn accord_bytes() -> Result<Vec<u8>, AccordBinaryError> {
     std::fs::read(accord_so_path()).map_err(Into::into)
+}
+
+/// The SAS program bytes (canonical `22zoJ…` — LiteSVM loads by address,
+/// no keypair needed, unlike the surfnet's loader-account fabrication).
+pub fn sas_bytes() -> Result<Vec<u8>, AccordBinaryError> {
+    std::fs::read(sas_so_path()).map_err(Into::into)
 }
 
 /// The shared test world: three programs, a funded payer, a 6-decimal
@@ -93,7 +111,6 @@ pub struct Env {
     pub payer: Keypair,
     pub mint: Pubkey,
 }
-
 impl Env {
     pub fn setup() -> Result<Self, AccordBinaryError> {
         let payer = Keypair::new();
@@ -103,6 +120,9 @@ impl Env {
         svm.add_program(pool::id(), POOL_WASM).unwrap();
         svm.add_program(hanse::id(), HANSE_WASM).unwrap();
         svm.add_program(accord::id(), &accord_bytes()?).unwrap();
+        // The canonical SAS program id — LiteSVM loads by address, no
+        // keypair needed (unlike the surfnet's loader-account fabrication).
+        svm.add_program(hanse::sas::ID, &sas_bytes()?).unwrap();
         svm.airdrop(&payer.pubkey(), 50_000_000_000).unwrap();
 
         // A real SPL mint, 6 decimals (USDC-style).
@@ -430,6 +450,8 @@ pub fn init_mutual(
         &accord::id(),
     )
     .0;
+    let credential = hanse::sas::credential_pda(&mutual);
+    let schema = hanse::sas::schema_pda(&credential);
     let ix = Instruction::new_with_bytes(
         hanse::id(),
         &hanse::instruction::InitializeMutual {
@@ -443,6 +465,8 @@ pub fn init_mutual(
             pool,
             treasury: pool_treasury(&pool, &env.mint),
             subaccord,
+            credential,
+            schema,
             deposit_mint: env.mint,
             fee_mint: env.mint,
             fee_float: ata(&mutual, &env.mint),
@@ -451,13 +475,13 @@ pub fn init_mutual(
             system_program: anchor_lang::solana_program::system_program::ID,
             pool_program: pool::id(),
             accord_program: accord::id(),
+            sas_program: hanse::sas::ID,
         }
         .to_account_metas(None),
     );
     try_send(&mut env.svm, &[ix], &mut [&env.payer])
 }
 
-/// Boot the env, pin the clock at INIT_TEST_NOW, and initialize mutual #seed.
 pub fn setup_with_mutual(seed: u64) -> (Env, hanse::instructions::InitializeMutualConfig) {
     let mut env = Env::setup().unwrap();
     warp_clock(&mut env.svm, INIT_TEST_NOW);
@@ -498,7 +522,8 @@ pub fn member_with(env: &mut Env, balance: u64) -> (Keypair, anchor_lang::prelud
     (kp, ata_addr)
 }
 
-/// Join `member` at `tier` via the real join instruction.
+/// Join `member` at `tier` via the real join instruction — the SAS attest
+/// CPI inside it issues the membership attestation (§2.8).
 pub fn join_member(
     env: &mut Env,
     cfg: &hanse::instructions::InitializeMutualConfig,
@@ -510,6 +535,9 @@ pub fn join_member(
     use anchor_lang::{InstructionData, ToAccountMetas};
     let mutual = mutual_pda(cfg.seed);
     let pool = pool_pda(cfg.seed);
+    let credential = hanse::sas::credential_pda(&mutual);
+    let schema = hanse::sas::schema_pda(&credential);
+    let attestation = hanse::sas::attestation_pda(&credential, &schema, &member.pubkey());
     let ix = Instruction::new_with_bytes(
         hanse::id(),
         &hanse::instruction::Join { tier }.data(),
@@ -527,6 +555,10 @@ pub fn join_member(
             token_program: spl_token_interface::ID,
             system_program: anchor_lang::solana_program::system_program::ID,
             pool_program: pool::id(),
+            credential,
+            schema,
+            attestation,
+            sas_program: hanse::sas::ID,
         }
         .to_account_metas(None),
     );

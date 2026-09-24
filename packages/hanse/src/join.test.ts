@@ -31,7 +31,15 @@ import {
   InsufficientBalance,
   TierInvalid,
 } from "./join";
-import { findDepositorPda, findJoinMemberAccountPda, findMemberAccountPda } from "./pdas";
+import {
+  findDepositorPda,
+  findJoinMemberAccountPda,
+  findMemberAccountPda,
+  findSasAttestationPda,
+  findSasCredentialPda,
+  findSasSchemaPda,
+  SAS_PROGRAM_ADDRESS,
+} from "./pdas";
 
 const WALLET = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM" as Address;
 /** Devnet USDC reference deployment (milestone riprap-9ehc) — fixture mint. */
@@ -60,6 +68,8 @@ function encodedMutual(depositsCloseAt: bigint): string {
       authority: WALLET,
       pool: POOL,
       subaccord: WALLET,
+      jurorCredential: WALLET,
+      jurorSchema: WALLET,
       depositMint: MINT,
       feeMint: WALLET,
       policyHash: new Uint8Array(32),
@@ -314,6 +324,15 @@ describe("buildJoinInstructions", () => {
     });
     const [depositor] = await findDepositorPda({ pool: POOL, owner: member.address });
     const treasury = await findAssociatedTokenAddress(MINT, POOL);
+    // §2.8: the SAS trio + program derive from the mutual — join CPIs the
+    // attestation into existence.
+    const [credential] = await findSasCredentialPda({ mutual: MUTUAL });
+    const [schema] = await findSasSchemaPda({ credential });
+    const [attestation] = await findSasAttestationPda({
+      credential,
+      schema,
+      member: member.address,
+    });
     expect(join.programAddress).toBe(HANSE_PROGRAM_ADDRESS);
     expect(join.accounts?.map((a) => a.address)).toEqual([
       member.address, // member signer
@@ -329,6 +348,10 @@ describe("buildJoinInstructions", () => {
       TOKEN_PROGRAM_ADDRESS,
       SYSTEM_PROGRAM,
       POOL_PROGRAM_ADDRESS,
+      credential,
+      schema,
+      attestation,
+      SAS_PROGRAM_ADDRESS,
     ]);
     expect(join.data).toEqual(getJoinInstructionDataEncoder().encode({ tier: 1 }));
   });

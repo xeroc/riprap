@@ -26,6 +26,7 @@ import {
   lamports,
 } from "@solana/kit";
 import { ACCORD_PROGRAM_ID } from "@useaccord/sdk";
+import { setAccountRaw } from "./cheats.js";
 import type { TestEnv } from "./env.js";
 
 /** BPFLoaderUpgradeab1e — the upgradeable loader program. */
@@ -340,4 +341,74 @@ export async function ensureAccordProgram(env: TestEnv): Promise<{
   // console.error(`[deploy] accord.so ${elf.length} B from ${soPath}`);
   await deployProgram(env, ACCORD_PROGRAM_ID, elf, programSigner);
   return { programId: ACCORD_PROGRAM_ID, deployed: true };
+}
+
+/** The canonical SAS program (programs/hanse sas.rs ID — 22zoJ…). */
+export const SAS_PROGRAM_ID = "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG" as Address;
+
+/**
+ * Idempotently ensure the SAS program exists on the surfnet — required
+ * before any hanse initialize_mutual/join CPI (§2.8, bean riprap-7wa9).
+ *
+ * Unlike accord, the canonical SAS keypair is not ours to hold, so this
+ * cannot go through real loader transactions: the two upgradeable-loader
+ * accounts (program + programdata PDA) are fabricated directly via the
+ * `surfnet_setAccount` cheatcode with the real ELF. Layouts per
+ * solana-bpf-loader-program (same encoding deploy.ts documents above):
+ * program = u32 tag 2 ‖ programdata pubkey (36 B, executable); programdata =
+ * u32 tag 3 ‖ slot u64 ‖ bincode Option<Pubkey> authority (Some = 1 + 32) ‖
+ * elf. The binary comes from the sibling solana-attestation-service
+ * checkout (or `$SAS_SO`).
+ */
+export async function ensureSasProgram(env: TestEnv): Promise<{
+  programId: Address;
+  deployed: boolean;
+}> {
+  const existing = await env.rpc.getAccountInfo(SAS_PROGRAM_ID).send();
+  if (existing.value !== null) {
+    return { programId: SAS_PROGRAM_ID, deployed: false };
+  }
+
+  const soPath =
+    process.env.SAS_SO ??
+    fileURLToPath(
+      new URL(
+        "../../../../solana-attestation-service/target/deploy/solana_attestation_service.so",
+        import.meta.url,
+      ),
+    );
+  const elf = new Uint8Array(readFileSync(soPath));
+
+  const [programdataPda] = await getProgramDerivedAddress({
+    programAddress: LOADER_ADDRESS,
+    seeds: [new TextEncoder().encode("programdata"), getAddressEncoder().encode(SAS_PROGRAM_ID)],
+  });
+
+  const programData = new Uint8Array(45 + elf.length);
+  new DataView(programData.buffer).setUint32(0, 3, true); // ProgramData tag
+  new DataView(programData.buffer).setBigUint64(4, 0n, true); // slot
+  programData[12] = 1; // authority: Some
+  programData.set(getAddressEncoder().encode(env.payer.address), 13);
+  programData.set(elf, 45);
+
+  const programAccountData = new Uint8Array(36);
+  new DataView(programAccountData.buffer).setUint32(0, 2, true); // Program tag
+  programAccountData.set(getAddressEncoder().encode(programdataPda), 4);
+  const [programRent, programdataRent] = await Promise.all([
+    env.rpc.getMinimumBalanceForRentExemption(36n).send(),
+    env.rpc.getMinimumBalanceForRentExemption(BigInt(programData.length)).send(),
+  ]);
+  await setAccountRaw(env, SAS_PROGRAM_ID, {
+    lamports: programRent,
+    data: programAccountData,
+    owner: LOADER_ADDRESS,
+    executable: true,
+  });
+  await setAccountRaw(env, programdataPda, {
+    lamports: programdataRent,
+    data: programData,
+    owner: LOADER_ADDRESS,
+    executable: false,
+  });
+  return { programId: SAS_PROGRAM_ID, deployed: true };
 }

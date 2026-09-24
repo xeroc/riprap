@@ -9,8 +9,8 @@ use crate::ID;
 /// Full subaccord economics forwarded verbatim to `accord::create_subaccord`
 /// (EVENT-MUTUAL §7). Fixed in code, NOT config: aggregation = Plurality
 /// (binary Approve/Deny claims), shortfall = Redraw, depth = 12 (tx-budget
-/// default), juror_credential/juror_schema = Pubkey::default (stake-only —
-/// SAS binding is bean riprap-7wa9), authority = the mutual PDA.
+/// default), juror_credential/juror_schema = the mutual's own SAS
+/// credential + schema (§2.8 closed circle), authority = the mutual PDA.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct SubaccordConfig {
     pub fee_per_juror: u64,
@@ -123,6 +123,17 @@ pub struct InitializeMutual<'info> {
     #[account(mut)]
     pub subaccord: UncheckedAccount<'info>,
 
+    /// SAS membership credential PDA ["credential", mutual, "members"] —
+    /// created by the SAS CreateCredential CPI below (authority = the mutual
+    /// PDA, sole authorized signer). CHECK: PDA validation in the handler.
+    #[account(mut)]
+    pub credential: UncheckedAccount<'info>,
+
+    /// SAS membership schema PDA ["schema", credential, "membership", [1]] —
+    /// created by the SAS CreateSchema CPI below. CHECK: handler-verified.
+    #[account(mut)]
+    pub schema: UncheckedAccount<'info>,
+
     pub deposit_mint: Account<'info, Mint>,
     pub fee_mint: Account<'info, Mint>,
 
@@ -145,6 +156,9 @@ pub struct InitializeMutual<'info> {
     /// CHECK: address-constrained to the accord program id.
     #[account(address = accord::ID)]
     pub accord_program: UncheckedAccount<'info>,
+    /// CHECK: address-constrained to the canonical SAS program id.
+    #[account(address = crate::sas::ID)]
+    pub sas_program: UncheckedAccount<'info>,
 }
 
 impl<'info> InitializeMutual<'info> {
@@ -252,11 +266,28 @@ impl<'info> InitializeMutual<'info> {
             HanseError::InvalidConfiguration
         );
 
+        // SAS credential/schema PDA sanity — fixed names under the mutual
+        // PDA (§2.8), so the addresses are derived, never configuration.
+        let credential_pda = crate::sas::credential_pda(&mutual_key);
+        let schema_pda = crate::sas::schema_pda(&credential_pda);
+        require_keys_eq!(
+            ctx.accounts.credential.key(),
+            credential_pda,
+            HanseError::InvalidConfiguration
+        );
+        require_keys_eq!(
+            ctx.accounts.schema.key(),
+            schema_pda,
+            HanseError::InvalidConfiguration
+        );
+
         {
             let m = &mut ctx.accounts.mutual;
             m.authority = ctx.accounts.authority.key();
             m.pool = ctx.accounts.pool.key();
             m.subaccord = ctx.accounts.subaccord.key();
+            m.juror_credential = credential_pda;
+            m.juror_schema = schema_pda;
             m.deposit_mint = ctx.accounts.deposit_mint.key();
             m.fee_mint = ctx.accounts.fee_mint.key();
             m.policy_hash = config.policy_hash;
@@ -305,11 +336,40 @@ impl<'info> InitializeMutual<'info> {
             },
         )?;
 
+        // ── CPI SAS — register the mutual's membership credential + schema
+        //    (§2.8): authority and sole authorized signer = the mutual PDA,
+        //    so only `join`'s attest CPI can ever issue under them. The
+        //    initializer's rent_payer wallet carries both accounts' rent,
+        //    and registration must precede create_subaccord (the binding
+        //    below points at these accounts).
+        let seed_le = config.seed.to_le_bytes();
+        let mutual_seeds: [&[u8]; 3] = [
+            MUTUAL_SEED,
+            seed_le.as_ref(),
+            &[ctx.bumps.mutual],
+        ];
+        crate::sas::create_credential(
+            &ctx.accounts.rent_payer.to_account_info(),
+            &ctx.accounts.credential.to_account_info(),
+            &ctx.accounts.mutual.to_account_info(),
+            &ctx.accounts.system_program.to_account_info(),
+            &mutual_seeds,
+        )?;
+        crate::sas::create_schema(
+            &ctx.accounts.rent_payer.to_account_info(),
+            &ctx.accounts.mutual.to_account_info(),
+            &ctx.accounts.credential.to_account_info(),
+            &ctx.accounts.schema.to_account_info(),
+            &ctx.accounts.system_program.to_account_info(),
+            &mutual_seeds,
+        )?;
+
         // ── CPI accord::create_subaccord — creator = the initializer wallet,
-        //    authority = the mutual PDA; stake-only juror binding (§2.8
-        //    degradation). Synod file_dispute precedent: a data-carrying PDA
-        //    cannot pay rent (system rejects transfers from data accounts)
-        //    and create_subaccord has no separate rent-payer field, so the
+        //    authority = the mutual PDA; credential-bound juror pool (§2.8
+        //    closed circle: only attested members can stake and be drawn).
+        //    Synod file_dispute precedent: a data-carrying PDA cannot pay
+        //    rent (system rejects transfers from data accounts) and
+        //    create_subaccord has no separate rent-payer field, so the
         //    initializer wallet is the creator. `creator` is also PDA seed
         //    material in accord (["subaccord", creator, domain_ref]) —
         //    routing it through rent_payer would move the subaccord address,
@@ -345,8 +405,8 @@ impl<'info> InitializeMutual<'info> {
                 authority: mutual_key,
                 evidence_operator: sub.evidence_operator,
                 depth: SUBACCORD_DEPTH,
-                juror_credential: Pubkey::default(),
-                juror_schema: Pubkey::default(),
+                juror_credential: credential_pda,
+                juror_schema: schema_pda,
             },
         )?;
 
@@ -355,6 +415,8 @@ impl<'info> InitializeMutual<'info> {
             authority: ctx.accounts.authority.key(),
             pool: ctx.accounts.pool.key(),
             subaccord: ctx.accounts.subaccord.key(),
+            credential: credential_pda,
+            schema: schema_pda,
         });
         Ok(())
     }

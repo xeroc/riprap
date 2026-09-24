@@ -365,6 +365,18 @@ fn s4_join_with_foreign_pool() {
             token_program: spl_token_interface::ID,
             system_program: anchor_lang::solana_program::system_program::ID,
             pool_program: pool::id(),
+            credential: hanse::sas::credential_pda(&mutual_pda(cfg1.seed)),
+            schema: hanse::sas::schema_pda(&hanse::sas::credential_pda(
+                &mutual_pda(cfg1.seed),
+            )),
+            attestation: hanse::sas::attestation_pda(
+                &hanse::sas::credential_pda(&mutual_pda(cfg1.seed)),
+                &hanse::sas::schema_pda(&hanse::sas::credential_pda(
+                    &mutual_pda(cfg1.seed),
+                )),
+                &m2.pubkey(),
+            ),
+            sas_program: hanse::sas::ID,
         }
         .to_account_metas(None),
     );
