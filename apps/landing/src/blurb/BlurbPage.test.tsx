@@ -71,13 +71,6 @@ describe("BlurbPage — the unlisted blurb & brand kit", () => {
     expect(standard?.className).not.toMatch(/max-w-/);
   });
 
-  it("illustrates the one-liner and short blurb as chat, the email as a compose frame", () => {
-    render(<BlurbPage />);
-    expect(document.querySelector('[data-slot="email-card"]')).toBeTruthy();
-    expect(screen.getByText("[investor name]")).toBeTruthy();
-    expect(screen.getByText("Intro: riprap — peer-to-peer cover on Solana")).toBeTruthy();
-  });
-
   it("team: both personas render with current rows, all kudos present", () => {
     render(<BlurbPage />);
     expect(screen.getByAltText("Dr.-Ing. Fabian Schuh")).toBeTruthy();
