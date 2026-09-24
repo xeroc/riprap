@@ -18,7 +18,7 @@ const args: CoveredOverlayProps = {
   open: false,
   onDismiss: () => {},
   stamp: "Covered — Standard",
-  headline: "You're in the ring.",
+  headline: "Welcome, friend!",
   figures: [
     <span key="fee">
       <span data-num className="font-mono">

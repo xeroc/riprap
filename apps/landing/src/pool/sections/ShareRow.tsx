@@ -12,18 +12,25 @@ import { toast } from "sonner";
 
 // Copy doc § Covered overlay: the shared URL is the printed pool path — the
 // public/ stub keeps it working.
-const POOL_URL = "https://riprap.xyz/2026-breakpoint-blade-pool";
+const POOL_URL = "https://riprap.xyz/#/2026-breakpoint-blade-pool";
 const HANDLE = "@riprapxyz";
 
 /** The prefilled message (copy doc § Covered overlay, verbatim minus slots). */
 export function shareText(fee: string | null, cap: string | null): string {
-  const figures = fee !== null && cap !== null ? `${fee} in, up to ${cap} out — ` : "";
-  return `${figures}Blade Pool at Breakpoint 2026, claims juried by members. I'm in. ${HANDLE}`;
+  return `I just bought the weirdest hedge at Breakpoint for ${fee} 😳.
+
+Get stabbed with friends. 🤯
+
+Worst case: up to ${cap} out.
+Best case: every cent back.
+Friends decide over the payouts.
+
+I'm in. ${HANDLE}`;
 }
 
 /** Composer intents — the platform prefills the message; the member posts. */
 function intentHref(kind: "x" | "farcaster" | "telegram", text: string): string {
-  const full = `${text} ${POOL_URL}`;
+  const full = `${text}`;
   switch (kind) {
     case "x":
       return `https://twitter.com/intent/tweet?text=${encodeURIComponent(full)}`;

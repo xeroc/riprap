@@ -319,7 +319,7 @@ export function CoveredOverlay({
           />
         </DialogPrimitive.Overlay>
         <DialogPrimitive.Content className="fixed inset-0 z-50 flex items-center justify-center outline-none">
-          <div className="flex max-w-sm flex-col items-center gap-(--riprap-space-lg) px-6 text-center">
+          <div className="flex max-w-xl flex-col items-center gap-(--riprap-space-lg) px-6 text-center">
             {reduce ? (
               <div
                 data-slot="covered-scene"
@@ -371,29 +371,40 @@ export function CoveredOverlay({
                 </Arrive>
               ))}
             </div>
-            <Arrive at={afterFigures}>
-              <div
-                data-slot="covered-juror"
-                className="flex flex-col items-center gap-2 rounded-none border border-hairline px-3 py-2.5"
-              >
-                <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-                  {juror.label}
-                </p>
-                <p className="max-w-[22rem] leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-                  {juror.body}
-                </p>
-                <Button size="sm" variant="outline" asChild>
-                  <a href={juror.href}>{juror.action}</a>
-                </Button>
-              </div>
-            </Arrive>
-            {share && (
-              <Arrive at={afterFigures + 0.03}>
-                <div data-slot="covered-share" className="flex flex-col items-center gap-2">
-                  {share}
+            {/* the two recruitment boxes share one horizontal row (copy doc §
+            Covered overlay, 2026-09-24): juror left, share right, equal
+            flex-1 halves, equal height */}
+            <div
+              data-slot="covered-fields"
+              className="flex w-full max-w-[26rem] items-stretch justify-center gap-3"
+            >
+              <Arrive at={afterFigures} className="flex-1">
+                <div
+                  data-slot="covered-juror"
+                  className="flex h-full w-full flex-col items-center gap-2 rounded-none border border-hairline px-3 py-2.5"
+                >
+                  <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
+                    {juror.label}
+                  </p>
+                  <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
+                    {juror.body}
+                  </p>
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={juror.href}>{juror.action}</a>
+                  </Button>
                 </div>
               </Arrive>
-            )}
+              {share && (
+                <Arrive at={afterFigures + 0.03} className="flex-1">
+                  <div
+                    data-slot="covered-share"
+                    className="flex h-full w-full flex-col items-center gap-2"
+                  >
+                    {share}
+                  </div>
+                </Arrive>
+              )}
+            </div>
             <Arrive at={afterFigures + 0.06}>
               <Button data-slot="covered-continue" onClick={onDismiss}>
                 {continueLabel}

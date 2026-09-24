@@ -34,12 +34,22 @@ describe("mergeSupporters", () => {
   const a: Supporter = { handle: "alice", url: "https://x.com/alice/status/1" };
   const b: Supporter = { handle: "bob", url: "https://x.com/bob/status/2" };
 
-  it("dedupes by post URL with the fresh entry winning (fresher avatar)", () => {
-    const freshA = { ...a, avatar: "https://pbs.example/new.jpg" };
-    // found leads the row; alice's slot keeps the fresh entry
+  it("one disc per person: a handle posting twice keeps only its newest post", () => {
+    const aliceAgain = { handle: "alice", url: "https://x.com/alice/status/9" };
+    // found leads in API Latest order — alice's first (newest) post wins
+    expect(mergeSupporters([a, b], [aliceAgain, a])).toEqual([aliceAgain, b]);
+  });
+
+  it("a re-found person's disc refreshes to their newest post; others keep theirs", () => {
+    const freshA = {
+      ...a,
+      url: "https://x.com/alice/status/7",
+      avatar: "https://pbs.example/new.jpg",
+    };
     expect(mergeSupporters([a, b], [freshA])).toEqual([freshA, b]);
   });
-  it("caps the row at the limit, keeping the newest first", () => {
+
+  it("caps the row at the limit, unique people, newest first", () => {
     const many = Array.from({ length: 30 }, (_, i) => ({
       handle: `h${i}`,
       url: `https://x.com/h${i}/status/${i}`,

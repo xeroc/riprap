@@ -27,7 +27,7 @@ const MAX_DISCS = 24; // the band is a row, not a wall — bean riprap-9spw
 const PAGES = 3; // ≈ up to ~100 posts per run; plenty between deploys
 
 const JSON_PATH = new URL("../src/supporters.json", import.meta.url);
-const ENDPOINT = "https://api.twitterapi.io/twitter/tweet/search";
+const ENDPOINT = "https://api.twitterapi.io/twitter/tweet/advanced_search";
 
 export type Supporter = { handle: string; url: string; avatar?: string };
 
@@ -45,43 +45,49 @@ export function toSupporter(tweet: Tweet): Supporter | null {
   return supporter;
 }
 
-/** merge by post URL — the fresh entry wins (fresher avatar), newest first,
- *  capped at MAX_DISCS. Order comes from the API (Latest first). */
+/** merge into the disc row — ONE disc per person: the first occurrence of a
+ *  handle wins its disc. Found entries lead (API Latest order), so that's
+ *  each person's newest post; handles that weren't re-found keep their
+ *  existing disc and trail after the fresh ones. Capped at MAX_DISCS. */
 export function mergeSupporters(
   existing: Supporter[],
   found: Supporter[],
   max = MAX_DISCS,
 ): Supporter[] {
-  // found entries lead (API Latest order) and win their URL slot; existing
-  // discs that weren't re-found trail after the new posts
-  const freshUrls = new Set(found.map((s) => s.url));
-  return [...found, ...existing.filter((s) => !freshUrls.has(s.url))].slice(0, max);
+  const byHandle = new Map<string, Supporter>();
+  for (const supporter of [...found, ...existing]) {
+    if (!byHandle.has(supporter.handle)) byHandle.set(supporter.handle, supporter);
+  }
+  return [...byHandle.values()].slice(0, max);
 }
 
 async function searchTweets(key: string): Promise<Tweet[]> {
   const tweets: Tweet[] = [];
   let cursor: string | undefined;
   for (let page = 0; page < PAGES; page += 1) {
-    const response = await fetch(ENDPOINT, {
-      method: "POST",
-      headers: { "X-API-KEY": key, "Content-Type": "application/json" },
-      body: JSON.stringify({ query: QUERY, queryType: "Latest", cursor }),
+    const params = new URLSearchParams({ query: QUERY, queryType: "Latest" });
+    if (cursor) params.set("cursor", cursor);
+    const response = await fetch(`${ENDPOINT}?${params}`, {
+      headers: { "X-API-KEY": key },
     });
     if (!response.ok) {
       // 401/402 = key missing/unfunded — say which, one line, exit non-zero.
       throw new Error(`TwitterAPI.io ${response.status}: ${(await response.text()).slice(0, 120)}`);
     }
-    const payload = (await response.json()) as { tweets?: Tweet[]; next_cursor?: string };
+    const payload = (await response.json()) as {
+      tweets?: Tweet[];
+      next_cursor?: string;
+      has_next_page?: boolean;
+    };
     if (!Array.isArray(payload.tweets)) {
       throw new Error(`Unexpected payload: ${Object.keys(payload).join(", ")}`);
     }
     tweets.push(...payload.tweets);
-    cursor = payload.next_cursor;
+    cursor = payload.has_next_page ? payload.next_cursor : undefined;
     if (!cursor) break;
   }
   return tweets;
 }
-
 function list(label: string, supporters: Supporter[]): void {
   console.log(`${label}: ${supporters.length}`);
   for (const s of supporters) console.log(`  @${s.handle}  ${s.url}${s.avatar ? "" : "  (no avatar — initials disc)"}`);
@@ -89,15 +95,17 @@ function list(label: string, supporters: Supporter[]): void {
 
 async function main(): Promise<void> {
   const write = process.argv.includes("--write");
-  const key = process.env.TWITTERAPI_IO_KEY;
-  const existing = JSON.parse(readFileSync(JSON_PATH, "utf8")) as Supporter[];
-
+  let key = process.env.TWITTERAPI_IO_KEY;
+  // cron shells don't inherit exports — the landing's .env may carry the key
   if (!key) {
-    list("Listed (current supporters.json)", existing);
-    console.log("\nNo TWITTERAPI_IO_KEY — search skipped. Set it to scan X for @riprapxyz mentions.");
-    process.exitCode = write ? 1 : 0;
-    return;
+    try {
+      process.loadEnvFile(new URL("../.env", import.meta.url));
+      key = process.env.TWITTERAPI_IO_KEY;
+    } catch {
+      /* no .env — handled below */
+    }
   }
+  const existing = JSON.parse(readFileSync(JSON_PATH, "utf8")) as Supporter[];
 
   const tweets = await searchTweets(key);
   if (tweets.length === 0) {

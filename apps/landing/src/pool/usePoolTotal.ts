@@ -16,7 +16,10 @@ import { microToUsd } from "./mutual";
 const PARAM = "{{PARAM}}";
 
 /** The formatted pool total ("$4,020"), or {{PARAM}} until the chain answers. */
-export function usePoolTotal(pool: Address | null): string {
+export function usePoolTotal(pool: Address | null): {
+  amount: number;
+  displayAmount: string;
+} {
   const clusterRpc = useClusterRpc();
   const enabled = clusterRpc !== null && pool !== null;
 
@@ -32,6 +35,13 @@ export function usePoolTotal(pool: Address | null): string {
     retry: 1,
   });
 
-  if (!query.data) return PARAM;
-  return usd(microToUsd(query.data.data.totalAmount));
+  if (!query.data)
+    return {
+      amount: 0,
+      displayAmount: PARAM,
+    };
+  return {
+    amount: microToUsd(query.data.data.totalAmount),
+    displayAmount: usd(microToUsd(query.data.data.totalAmount)),
+  };
 }

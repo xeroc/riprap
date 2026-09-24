@@ -43,7 +43,7 @@ import { Settle } from "../../components/Settle";
 import { SUPPORTERS, SupporterDiscs } from "../../sections/Supporters";
 import { useHanseEnv } from "../../shared/rpc";
 import { describeError, sendInstruction, TransactionSendError } from "../../shared/transaction";
-import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../mutual";
+import { microToUsd, poolTiers, resolveMutualAddress } from "../mutual";
 import { useJoinContext } from "../useJoinContext";
 import { useMinStake } from "../useMinStake";
 import { useMutual } from "../useMutual";
@@ -131,7 +131,9 @@ export function PoolHero() {
   const tiers = mutualQuery.state === "ready" ? poolTiers(mutualQuery.mutual) : null;
   const context = joinQuery.state === "ready" ? joinQuery.context : null;
   const minStake = useMinStake(context?.mutual.data.subaccord ?? null);
-  const poolTotal = usePoolTotal(context?.mutual.data.pool ?? null);
+  const { displayAmount: poolTotal, amount: poolAmount } = usePoolTotal(
+    context?.mutual.data.pool ?? null,
+  );
   // alreadyMember is a STATE (copy doc § Covered): the Member PDA's tier wins;
   // between confirmation and the context refetch, the tier just joined shows.
   const memberTier = context?.alreadyMember ?? (phase === "covered" ? { tier: tierIndex } : null);
@@ -233,23 +235,27 @@ export function PoolHero() {
                 Get stabbed with friends.
               </h1>
             </Settle>
-            <Settle delay={120}>
-              <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                <span data-num className="font-mono">
-                  {subFee}
-                </span>{" "}
-                buys you into the weirdest hedge at Breakpoint: up to{" "}
-                <span data-num className="font-mono">
-                  {subCap}
-                </span>{" "}
-                out in the worst case, every cent back if nothing does, then the pool dissolves.
-                This is not insurance. It's{" "}
-                <span data-num className="font-mono">
-                  {subFee}
-                </span>{" "}
-                and emotional support with a payout cap.
-              </p>
-            </Settle>
+            {/* the by-slider tier explainer hides once covered (copy doc §
+            Covered, 2026-09-24) — nothing for sale to a member */}
+            {covered ? null : (
+              <Settle delay={120}>
+                <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
+                  <span data-num className="font-mono">
+                    {subFee}
+                  </span>{" "}
+                  buys you into the weirdest hedge at Breakpoint: up to{" "}
+                  <span data-num className="font-mono">
+                    {subCap}
+                  </span>{" "}
+                  out in the worst case, every cent back if nothing does, then the pool dissolves.
+                  This is not insurance. It's{" "}
+                  <span data-num className="font-mono">
+                    {subFee}
+                  </span>{" "}
+                  and emotional support with a payout cap.
+                </p>
+              </Settle>
+            )}
             <Settle delay={150}>
               {/* supporters — the odds table's old slot; the committed discs
               render verbatim, nothing while the list is empty (kit data law) */}
@@ -263,89 +269,94 @@ export function PoolHero() {
               ) : null}
             </Settle>
             <Settle delay={180} className="pt-(--riprap-space-sm) flex flex-col gap-4">
-              <div className="flex flex-col gap-3" data-slot="tier-picker">
-                <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-                  Choose your coverage
-                </p>
-                {mutualQuery.state === "ready" && tier !== null ? null : mutualQuery.state ===
-                  "loading" ? (
-                  <>
-                    <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                      Reading the pool from the chain.
-                    </p>
-                    <Slider
-                      disabled
-                      value={[DEFAULT_TIER]}
-                      min={0}
-                      max={2}
-                      step={1}
-                      aria-label="Coverage tier"
-                      className="max-w-[36rem]"
-                    />
-                    <div
-                      className="flex max-w-[36rem] justify-between"
-                      data-slot="tier-placeholders"
-                    >
-                      {[0, 1, 2].map((i) => (
-                        <span key={i} data-num className="font-mono text-sm text-muted-soft">
-                          {PARAM}
-                        </span>
-                      ))}
-                    </div>
-                    <p data-num className="font-mono text-base text-ink">
-                      {PARAM}
-                    </p>
-                  </>
-                ) : mutualQuery.state === "error" ? (
-                  <>
-                    <p className="text-ink [font:var(--riprap-body-md)]">
-                      Couldn't reach the cluster.
-                    </p>
-                    <Button variant="outline" className="w-44" onClick={mutualQuery.retry}>
-                      Try again
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-ink [font:var(--riprap-body-md)]">
-                      Not live on this cluster
-                    </p>
-                    <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                      The Blade Pool isn't deployed on this network. Switch networks to find it.
-                    </p>
-                    <ClusterSwitch />
-                  </>
-                )}
-              </div>
+              {!covered && (
+                <div className="flex flex-col gap-3" data-slot="tier-picker">
+                  <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
+                    Choose your coverage
+                  </p>
+                  {mutualQuery.state === "ready" && tier !== null ? null : mutualQuery.state ===
+                    "loading" ? (
+                    <>
+                      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                        Reading the pool from the chain.
+                      </p>
+                      <Slider
+                        disabled
+                        value={[DEFAULT_TIER]}
+                        min={0}
+                        max={2}
+                        step={1}
+                        aria-label="Coverage tier"
+                        className="max-w-[36rem]"
+                      />
+                      <div
+                        className="flex max-w-[36rem] justify-between"
+                        data-slot="tier-placeholders"
+                      >
+                        {[0, 1, 2].map((i) => (
+                          <span key={i} data-num className="font-mono text-sm text-muted-soft">
+                            {PARAM}
+                          </span>
+                        ))}
+                      </div>
+                      <p data-num className="font-mono text-base text-ink">
+                        {PARAM}
+                      </p>
+                    </>
+                  ) : mutualQuery.state === "error" ? (
+                    <>
+                      <p className="text-ink [font:var(--riprap-body-md)]">
+                        Couldn't reach the cluster.
+                      </p>
+                      <Button variant="outline" className="w-44" onClick={mutualQuery.retry}>
+                        Try again
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-ink [font:var(--riprap-body-md)]">
+                        Not live on this cluster
+                      </p>
+                      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                        The Blade Pool isn't deployed on this network. Switch networks to find it.
+                      </p>
+                      <ClusterSwitch />
+                    </>
+                  )}
+                </div>
+              )}
               {mutualQuery.state === "ready" && tier !== null ? (
                 <>
-                  {/* three stops, exactly tiers.length; value is a tier index;
-                  locked to the member's tier once covered (copy doc §
-                  Covered). The picker renders for every ready state —
-                  connected or not, deposits open or closed: tiers are chain
-                  data, browsing them never needed a wallet. */}
-                  <Slider
-                    disabled={covered}
-                    value={[Math.min(shownIndex, tiers === null ? 0 : tiers.length - 1)]}
-                    min={0}
-                    max={(tiers ?? []).length - 1}
-                    step={1}
-                    aria-label="Coverage tier"
-                    onValueChange={(v) => setTierIndex(v[0] ?? DEFAULT_TIER)}
-                    className="max-w-[36rem]"
-                  />
-                  <div className="flex max-w-[36rem] justify-between">
-                    {(tiers ?? []).map((t, i) => (
-                      <span
-                        key={t.name}
-                        data-num
-                        className={`font-mono text-sm transition-colors duration-[160ms] ease-out ${i === shownIndex ? "text-ink" : "text-muted-soft"
-                          }`}
-                      >
-                        {usd(t.fee)}
-                      </span>
-                    ))}
-                  </div>
+                  {/* three stops, exactly tiers.length; value is a tier index.
+                  The picker renders for every ready state — connected or not,
+                  deposits open or closed: tiers are chain data, browsing them
+                  never needed a wallet; once covered it hides entirely (copy
+                  doc § Covered, 2026-09-24). */}
+                  {!covered && (
+                    <>
+                      <Slider
+                        value={[Math.min(shownIndex, tiers === null ? 0 : tiers.length - 1)]}
+                        min={0}
+                        max={(tiers ?? []).length - 1}
+                        step={1}
+                        aria-label="Coverage tier"
+                        onValueChange={(v) => setTierIndex(v[0] ?? DEFAULT_TIER)}
+                        className="max-w-[36rem]"
+                      />
+                      <div className="flex max-w-[36rem] justify-between">
+                        {(tiers ?? []).map((t, i) => (
+                          <span
+                            key={t.name}
+                            data-num
+                            className={`font-mono text-sm transition-colors duration-[160ms] ease-out ${i === shownIndex ? "text-ink" : "text-muted-soft"
+                              }`}
+                          >
+                            {usd(t.fee)}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )}
                   <p data-num className="font-mono text-base text-ink">
                     {tier.name} · {usd(tier.fee)} entry · up to {usd(tier.cap)} maximum payout
                   </p>
@@ -408,7 +419,7 @@ export function PoolHero() {
               open={coveredOverlay}
               onDismiss={() => setCoveredOverlay(false)}
               stamp={`Covered — ${tier !== null ? tier.name : PARAM}`}
-              headline="You're in the ring."
+              headline="Welcome, friend!"
               figures={[
                 <span key="fee">
                   <span data-num className="font-mono">
@@ -423,12 +434,14 @@ export function PoolHero() {
                   </span>{" "}
                   out
                 </span>,
-                <span key="total">
-                  pool holds{" "}
-                  <span data-num className="font-mono">
-                    {poolTotal}
+                poolAmount > 2500 && (
+                  <span key="total">
+                    pool holds{" "}
+                    <span data-num className="font-mono">
+                      {poolTotal}
+                    </span>
                   </span>
-                </span>,
+                ),
               ]}
               juror={{
                 label: "Juror",
@@ -458,30 +471,30 @@ export function PoolHero() {
             <Settle delay={150}>
               <div data-slot="odds">
                 <table className="w-full border-collapse">
-                  <caption className="mb-2 text-left uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
+                  <caption className="mb-3 text-left uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
                     The odds
                   </caption>
                   <tbody>
                     {(
                       [
-                        ["You get stabbed at Breakpoint", "statistically negligible"],
-                        ["Accidental eye contact on the Tube", "certain"],
-                        ["The pool dissolves on schedule", "100% — it's a program"],
-                        ["You send this page to the group chat", "high"],
+                        ["You going to Breakpoint in London", "you betcha"],
+                        ["Accidental eye contact on the Tube", "dead sure"],
+                        ["You get stabbed at Breakpoint", "barely a blip"],
+                        ["You send this page to your friends", "dead cert"],
                       ] as const
                     ).map(([event, odds]) => (
                       <tr key={event} className="border-t border-hairline">
-                        <th className="py-2 pr-6 text-left font-normal text-body [font:var(--riprap-body-sm)]">
+                        <th className="py-3 pr-4 text-left align-top font-normal leading-snug text-body [font:var(--riprap-body-sm)]">
                           {event}
                         </th>
-                        <td className="py-2 text-right font-mono text-sm text-muted-foreground">
+                        <td className="py-3 pl-2 text-right align-top font-mono text-sm leading-snug text-muted-foreground whitespace-nowrap">
                           {odds}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </div>{" "}
             </Settle>
           </aside>
         </div>
