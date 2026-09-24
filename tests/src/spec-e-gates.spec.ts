@@ -22,7 +22,7 @@ import {
   getDissolveInstructionAsync,
   getFileClaimInstructionAsync,
   getJoinInstructionAsync,
-  getSettleClaimInstructionAsync,
+  getSettleClaimInstruction,
   getSettlePoolInstruction,
   Phase,
   SAS_PROGRAM_ADDRESS,
@@ -184,7 +184,7 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     if (!env.up) return; // offline CI lane — pnpm verify must stay green
 
     const fx = await setupMutualCohort(env, { nMembers: 10 });
-    const { mutual, poolPda, treasury, mint } = fx;
+    const { mutual, poolPda, treasury, feeFloat, mint } = fx;
 
     // Two claims: A gets paid (idempotence gates), B is stranded past the
     // pull window (unpaid amounts revert to the residual).
@@ -194,7 +194,7 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     // settle_pool with a pending claim reverts (even past the window).
     await warpToHarness(env, fx.claimsClose);
     await expectRevert(
-      env.sendIx(getSettlePoolInstruction({ cranker: env.payer, mutual, treasury })),
+      env.sendIx(getSettlePoolInstruction({ cranker: env.payer, mutual, treasury, feeFloat })),
       ERR.CLAIMS_UNRESOLVED,
     );
 
@@ -203,7 +203,7 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     await driveDispute(fx, claimB, [0n, 0n, 0n]);
     for (const claim of [claimA, claimB]) {
       await env.sendIx(
-        await getSettleClaimInstructionAsync({
+        await getSettleClaimInstruction({
           cranker: env.payer,
           mutual,
           claim: claim.claimPda,
@@ -211,8 +211,6 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
             await findMemberAccountPda({ mutual, claimant: claim.claimant.address })
           )[0],
           dispute: claim.dispute,
-          claimantAta: claim.claimantAta,
-          feeMint: mint,
         }),
       );
     }
@@ -221,7 +219,7 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
 
     // settle_pool succeeds now; dissolve while the pull window is STILL
     // OPEN reverts.
-    await env.sendIx(getSettlePoolInstruction({ cranker: env.payer, mutual, treasury }));
+    await env.sendIx(getSettlePoolInstruction({ cranker: env.payer, mutual, treasury, feeFloat }));
     const mutualS = await fetchMutualBySeed(env.rpc, { seed: fx.seed });
     expect(mutualS.data.phase).toBe(Phase.Settled);
     await expectRevert(
@@ -327,7 +325,7 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     if (!env.up) return; // offline CI lane — pnpm verify must stay green
 
     const fx = await setupMutualCohort(env, { nMembers: 4 });
-    const { mutual, mint } = fx;
+    const { mutual } = fx;
 
     // ── requested $2,500 on Standard ($2,000 cap): stored = the cap ──────
     const filed = await fileMemberClaim(fx, {
@@ -349,7 +347,7 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     // ── resolve it (Deny), then the SAME member can file again ───────────
     await driveDispute(fx, filed, [1n, 1n, 1n]);
     await env.sendIx(
-      await getSettleClaimInstructionAsync({
+      await getSettleClaimInstruction({
         cranker: env.payer,
         mutual,
         claim: filed.claimPda,
@@ -357,8 +355,6 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
           await findMemberAccountPda({ mutual, claimant: filed.claimant.address })
         )[0],
         dispute: filed.dispute,
-        claimantAta: filed.claimantAta,
-        feeMint: mint,
       }),
     );
     const denied = await fetchClaimByNonce(env.rpc, { mutual, nonce: 0n });

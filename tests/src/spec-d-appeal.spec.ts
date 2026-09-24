@@ -14,7 +14,7 @@ import {
   fetchClaimByNonce,
   fetchMutualBySeed,
   findMemberAccountPda,
-  getSettleClaimInstructionAsync,
+  getSettleClaimInstruction,
 } from "@riprap/hanse";
 import type { Address } from "@solana/kit";
 import {
@@ -170,7 +170,7 @@ describe("e2e spec d: appeal ladder (riprap-0zvk)", () => {
     expect((await balanceOf(env, payerAta)) - beforeRefund).toBe(cost.bond);
     // ── settle_claim reads the FINAL ruling: Denied despite round-0 Approve
     await env.sendIx(
-      await getSettleClaimInstructionAsync({
+      await getSettleClaimInstruction({
         cranker: env.payer,
         mutual,
         claim: filed.claimPda,
@@ -181,8 +181,6 @@ describe("e2e spec d: appeal ladder (riprap-0zvk)", () => {
           })
         )[0],
         dispute: filed.dispute,
-        claimantAta: filed.claimantAta,
-        feeMint: mint,
       }),
     );
     const claim = await fetchClaimByNonce(env.rpc, { mutual, nonce: 0n });

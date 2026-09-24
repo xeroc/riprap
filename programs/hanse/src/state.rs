@@ -114,6 +114,13 @@ pub struct Member {
     pub attestation: Pubkey,
     /// One Pending claim per member — the file_claim gate (§7).
     pub has_pending_claim: bool,
+    /// Tier cap consumed: Σ claim_amount over this member's Pending +
+    /// Approved claims (Denied/Failed release their reservation at
+    /// settle_claim). `file_claim` clamps to `max_payout − cap_used` — the
+    /// cap is per MEMBERSHIP, not per claim (audit H-1 2026-09-24: the
+    /// has_pending gate alone only serializes filings, so a member whose
+    /// claim settled could refile at the full cap before payout burns).
+    pub cap_used: u64,
     pub bump: u8,
 }
 
@@ -165,11 +172,12 @@ mod tests {
     }
 
     /// EVENT-MUTUAL §6: Member = mutual 32 + member 32 + tier 1 +
-    /// attestation 32 (§2.8 SAS membership) + has_pending_claim 1 + bump 1.
+    /// attestation 32 (§2.8 SAS membership) + has_pending_claim 1 +
+    /// cap_used 8 (cumulative tier cap, amendment 2026-09-24) + bump 1.
     #[test]
     fn member_space_matches_spec_layout() {
-        assert_eq!(Member::INIT_SPACE, 32 + 32 + 1 + 32 + 1 + 1);
-        assert_eq!(MEMBER_SPACE, 8 + 99);
+        assert_eq!(Member::INIT_SPACE, 32 + 32 + 1 + 32 + 1 + 8 + 1);
+        assert_eq!(MEMBER_SPACE, 8 + 107);
     }
 
     /// EVENT-MUTUAL §6: Claim = mutual 32 + member 32 + claim_amount 8 +

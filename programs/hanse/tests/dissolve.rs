@@ -87,6 +87,8 @@ fn settle_pool_crank(
             cranker: crank.pubkey(),
             mutual,
             treasury: pool_treasury(&pool_pda(cfg.seed), &env.mint),
+            fee_float: ata(&mutual, &env.mint),
+            token_program: spl_token_interface::ID,
         }
         .to_account_metas(None),
     );

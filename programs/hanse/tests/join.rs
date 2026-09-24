@@ -274,6 +274,8 @@ fn sponsored_join_residual_settles_to_sponsor() {
                 cranker: cranker_kp.pubkey(),
                 mutual,
                 treasury: pool_treasury(&pool, &env.mint),
+                fee_float: ata(&mutual, &env.mint),
+                token_program: spl_token_interface::ID,
             }
             .to_account_metas(None),
         )],

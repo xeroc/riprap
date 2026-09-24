@@ -88,6 +88,7 @@ function memberAccount(tier: number): MaybeAccount<Member> {
     tier,
     attestation: A,
     hasPendingClaim: false,
+    capUsed: 0n,
     bump: 255,
   } as Member);
 }

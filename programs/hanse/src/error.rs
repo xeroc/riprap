@@ -31,6 +31,8 @@ pub enum HanseError {
     WrongDepositor,
     #[msg("Wrong treasury: not the pool's canonical ATA")]
     WrongTreasury,
+    #[msg("Wrong fee float: not the mutual PDA's canonical ATA of the fee mint")]
+    WrongFloat,
     #[msg("Wrong dispute: not the Dispute PDA this filing creates")]
     WrongDispute,
     #[msg("Only the claim's own member can pull its payout")]
@@ -49,6 +51,8 @@ pub enum HanseError {
     NoRightsStake,
     #[msg("A pending claim already exists for this member: one at a time")]
     PendingClaimExists,
+    #[msg("Tier cap exhausted: this member's Pending + Approved claims already reach the tier's maximum payout")]
+    TierCapExhausted,
 
     // ── settle_claim ─────────────────────────────────────────────────────
     #[msg("The claim is already resolved")]
@@ -71,7 +75,7 @@ pub enum HanseError {
     PullWindowClosed,
     #[msg("The pull window is still open: dissolve waits until pull_close_at")]
     PullWindowOpen,
-    #[msg("Only approved claims pay out")]
+    #[msg("Only approved or failed claims pay out — approved pay claim + fee at ratio, failed pay the fee at ratio")]
     ClaimNotApproved,
     #[msg("This claim is already paid — payouts are once")]
     ClaimAlreadyPaid,

@@ -14,7 +14,7 @@ import {
   fetchMutualBySeed,
   findMemberAccountPda,
   getClaimPayoutInstructionAsync,
-  getSettleClaimInstructionAsync,
+  getSettleClaimInstruction,
   getSettlePoolInstruction,
   Phase,
 } from "@riprap/hanse";
@@ -60,7 +60,7 @@ describe("e2e spec c: over-treasury proportional pulls (riprap-e5t9)", () => {
   it("pays identical proportional amounts regardless of pull order", async () => {
     if (!env.up) return; // offline CI lane — pnpm verify stays green
 
-    const { mutual, poolPda, treasury, mint } = fx;
+    const { mutual, poolPda, treasury, feeFloat, mint } = fx;
     expect(EXPECTED_RATIO).toBe(909_090_909n);
     expect(EXPECTED_PAYOUT).toBe(99_999_999n);
     expect(DUST).toBe(2n);
@@ -80,7 +80,7 @@ describe("e2e spec c: over-treasury proportional pulls (riprap-e5t9)", () => {
       [1n, claimB],
     ] as const) {
       await env.sendIx(
-        await getSettleClaimInstructionAsync({
+        await getSettleClaimInstruction({
           cranker: env.payer,
           mutual,
           claim: claim.claimPda,
@@ -91,8 +91,6 @@ describe("e2e spec c: over-treasury proportional pulls (riprap-e5t9)", () => {
             })
           )[0],
           dispute: claim.dispute,
-          claimantAta: claim.claimantAta,
-          feeMint: mint,
         }),
       );
       const settled = await fetchClaimByNonce(env.rpc, { mutual, nonce });
@@ -105,7 +103,7 @@ describe("e2e spec c: over-treasury proportional pulls (riprap-e5t9)", () => {
 
     // ── settle_pool: over-treasury ⇒ ratio matches hand math ─────────────
     await warpToHarness(env, fx.claimsClose);
-    await env.sendIx(getSettlePoolInstruction({ cranker: env.payer, mutual, treasury }));
+    await env.sendIx(getSettlePoolInstruction({ cranker: env.payer, mutual, treasury, feeFloat }));
     const mutual2 = await fetchMutualBySeed(env.rpc, { seed: fx.seed });
     expect(mutual2.data.phase).toBe(Phase.Settled);
     expect(mutual2.data.ratio1e9).toBe(EXPECTED_RATIO); // < 1e9

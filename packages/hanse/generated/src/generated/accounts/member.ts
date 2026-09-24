@@ -33,6 +33,8 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  getU64Decoder,
+  getU64Encoder,
   type MaybeAccount,
   type MaybeEncodedAccount,
   type ReadonlyUint8Array,
@@ -62,6 +64,15 @@ export type Member = {
   attestation: Address;
   /** One Pending claim per member — the file_claim gate (§7). */
   hasPendingClaim: boolean;
+  /**
+   * Tier cap consumed: Σ claim_amount over this member's Pending +
+   * Approved claims (Denied/Failed release their reservation at
+   * settle_claim). `file_claim` clamps to `max_payout − cap_used` — the
+   * cap is per MEMBERSHIP, not per claim (audit H-1 2026-09-24: the
+   * has_pending gate alone only serializes filings, so a member whose
+   * claim settled could refile at the full cap before payout burns).
+   */
+  capUsed: bigint;
   bump: number;
 };
 
@@ -79,6 +90,15 @@ export type MemberArgs = {
   attestation: Address;
   /** One Pending claim per member — the file_claim gate (§7). */
   hasPendingClaim: boolean;
+  /**
+   * Tier cap consumed: Σ claim_amount over this member's Pending +
+   * Approved claims (Denied/Failed release their reservation at
+   * settle_claim). `file_claim` clamps to `max_payout − cap_used` — the
+   * cap is per MEMBERSHIP, not per claim (audit H-1 2026-09-24: the
+   * has_pending gate alone only serializes filings, so a member whose
+   * claim settled could refile at the full cap before payout burns).
+   */
+  capUsed: number | bigint;
   bump: number;
 };
 
@@ -92,6 +112,7 @@ export function getMemberEncoder(): FixedSizeEncoder<MemberArgs> {
       ["tier", getU8Encoder()],
       ["attestation", getAddressEncoder()],
       ["hasPendingClaim", getBooleanEncoder()],
+      ["capUsed", getU64Encoder()],
       ["bump", getU8Encoder()],
     ]),
     (value) => ({ ...value, discriminator: MEMBER_DISCRIMINATOR }),
@@ -107,6 +128,7 @@ export function getMemberDecoder(): FixedSizeDecoder<Member> {
     ["tier", getU8Decoder()],
     ["attestation", getAddressDecoder()],
     ["hasPendingClaim", getBooleanDecoder()],
+    ["capUsed", getU64Decoder()],
     ["bump", getU8Decoder()],
   ]);
 }
@@ -167,5 +189,5 @@ export async function fetchAllMaybeMember(
 }
 
 export function getMemberSize(): number {
-  return 107;
+  return 115;
 }

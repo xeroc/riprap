@@ -171,6 +171,7 @@ impl<'info> Join<'info> {
             m.tier = tier;
             m.attestation = attestation_pda;
             m.has_pending_claim = false;
+            m.cap_used = 0;
             m.bump = ctx.bumps.member_account;
         }
 

@@ -16,10 +16,8 @@ import {
   type FixedSizeEncoder,
   fixDecoderSize,
   fixEncoderSize,
-  getAddressEncoder,
   getBytesDecoder,
   getBytesEncoder,
-  getProgramDerivedAddress,
   getStructDecoder,
   getStructEncoder,
   type Instruction,
@@ -36,7 +34,6 @@ import {
 } from "@solana/kit";
 import {
   getAccountMetaFactory,
-  getAddressFromResolvedInstructionAccount,
   type ResolvedInstructionAccount,
 } from "@solana/program-client-core";
 import { HANSE_PROGRAM_ADDRESS } from "../programs";
@@ -56,12 +53,6 @@ export type SettleClaimInstruction<
   TAccountClaim extends string | AccountMeta<string> = string,
   TAccountMemberAccount extends string | AccountMeta<string> = string,
   TAccountDispute extends string | AccountMeta<string> = string,
-  TAccountFeeFloat extends string | AccountMeta<string> = string,
-  TAccountClaimantAta extends string | AccountMeta<string> = string,
-  TAccountFeeMint extends string | AccountMeta<string> = string,
-  TAccountTokenProgram extends
-    | string
-    | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -76,14 +67,6 @@ export type SettleClaimInstruction<
         ? WritableAccount<TAccountMemberAccount>
         : TAccountMemberAccount,
       TAccountDispute extends string ? ReadonlyAccount<TAccountDispute> : TAccountDispute,
-      TAccountFeeFloat extends string ? WritableAccount<TAccountFeeFloat> : TAccountFeeFloat,
-      TAccountClaimantAta extends string
-        ? WritableAccount<TAccountClaimantAta>
-        : TAccountClaimantAta,
-      TAccountFeeMint extends string ? ReadonlyAccount<TAccountFeeMint> : TAccountFeeMint,
-      TAccountTokenProgram extends string
-        ? ReadonlyAccount<TAccountTokenProgram>
-        : TAccountTokenProgram,
       ...TRemainingAccounts,
     ]
   >;
@@ -113,162 +96,12 @@ export function getSettleClaimInstructionDataCodec(): FixedSizeCodec<
   );
 }
 
-export type SettleClaimAsyncInput<
-  TAccountCranker extends string = string,
-  TAccountMutual extends string = string,
-  TAccountClaim extends string = string,
-  TAccountMemberAccount extends string = string,
-  TAccountDispute extends string = string,
-  TAccountFeeFloat extends string = string,
-  TAccountClaimantAta extends string = string,
-  TAccountFeeMint extends string = string,
-  TAccountTokenProgram extends string = string,
-> = {
-  /** Anyone — pays tx fees, gains nothing (permissionless crank). */
-  cranker: TransactionSigner<TAccountCranker>;
-  mutual: Address<TAccountMutual>;
-  claim: Address<TAccountClaim>;
-  memberAccount: Address<TAccountMemberAccount>;
-  /**
-   * The ruling, read directly — no get_ruling CPI (canon settle_item
-   * pattern). Ownership by the accord program is enforced by the type.
-   */
-  dispute: Address<TAccountDispute>;
-  /**
-   * Fee float — the Failed refund source (accord's cancel_dispute put the
-   * filer fee back here; verified: cancel refunds fee_vault →
-   * filer_token_account, which is this float).
-   */
-  feeFloat?: Address<TAccountFeeFloat>;
-  /** The claimant's fee-mint account — refund destination. */
-  claimantAta: Address<TAccountClaimantAta>;
-  feeMint: Address<TAccountFeeMint>;
-  tokenProgram?: Address<TAccountTokenProgram>;
-};
-
-export async function getSettleClaimInstructionAsync<
-  TAccountCranker extends string,
-  TAccountMutual extends string,
-  TAccountClaim extends string,
-  TAccountMemberAccount extends string,
-  TAccountDispute extends string,
-  TAccountFeeFloat extends string,
-  TAccountClaimantAta extends string,
-  TAccountFeeMint extends string,
-  TAccountTokenProgram extends string,
-  TProgramAddress extends Address = typeof HANSE_PROGRAM_ADDRESS,
->(
-  input: SettleClaimAsyncInput<
-    TAccountCranker,
-    TAccountMutual,
-    TAccountClaim,
-    TAccountMemberAccount,
-    TAccountDispute,
-    TAccountFeeFloat,
-    TAccountClaimantAta,
-    TAccountFeeMint,
-    TAccountTokenProgram
-  >,
-  config?: { programAddress?: TProgramAddress },
-): Promise<
-  SettleClaimInstruction<
-    TProgramAddress,
-    TAccountCranker,
-    TAccountMutual,
-    TAccountClaim,
-    TAccountMemberAccount,
-    TAccountDispute,
-    TAccountFeeFloat,
-    TAccountClaimantAta,
-    TAccountFeeMint,
-    TAccountTokenProgram
-  >
-> {
-  // Program address.
-  const programAddress = config?.programAddress ?? HANSE_PROGRAM_ADDRESS;
-
-  // Original accounts.
-  const originalAccounts = {
-    cranker: { value: input.cranker ?? null, isWritable: false },
-    mutual: { value: input.mutual ?? null, isWritable: true },
-    claim: { value: input.claim ?? null, isWritable: true },
-    memberAccount: { value: input.memberAccount ?? null, isWritable: true },
-    dispute: { value: input.dispute ?? null, isWritable: false },
-    feeFloat: { value: input.feeFloat ?? null, isWritable: true },
-    claimantAta: { value: input.claimantAta ?? null, isWritable: true },
-    feeMint: { value: input.feeMint ?? null, isWritable: false },
-    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
-  };
-  const accounts = originalAccounts as Record<
-    keyof typeof originalAccounts,
-    ResolvedInstructionAccount
-  >;
-
-  // Resolve default values.
-  if (!accounts.feeFloat.value) {
-    accounts.feeFloat.value = await getProgramDerivedAddress({
-      programAddress:
-        "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" as Address<"ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL">,
-      seeds: [
-        getAddressEncoder().encode(
-          getAddressFromResolvedInstructionAccount("mutual", accounts.mutual.value),
-        ),
-        getBytesEncoder().encode(
-          new Uint8Array([
-            6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206, 235, 121, 172, 28, 180,
-            133, 237, 95, 91, 55, 145, 58, 140, 245, 133, 126, 255, 0, 169,
-          ]),
-        ),
-        getAddressEncoder().encode(
-          getAddressFromResolvedInstructionAccount("feeMint", accounts.feeMint.value),
-        ),
-      ],
-    });
-  }
-  if (!accounts.tokenProgram.value) {
-    accounts.tokenProgram.value =
-      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" as Address<"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA">;
-  }
-
-  const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
-  return Object.freeze({
-    accounts: [
-      getAccountMeta("cranker", accounts.cranker),
-      getAccountMeta("mutual", accounts.mutual),
-      getAccountMeta("claim", accounts.claim),
-      getAccountMeta("memberAccount", accounts.memberAccount),
-      getAccountMeta("dispute", accounts.dispute),
-      getAccountMeta("feeFloat", accounts.feeFloat),
-      getAccountMeta("claimantAta", accounts.claimantAta),
-      getAccountMeta("feeMint", accounts.feeMint),
-      getAccountMeta("tokenProgram", accounts.tokenProgram),
-    ],
-    data: getSettleClaimInstructionDataEncoder().encode({}),
-    programAddress,
-  } as SettleClaimInstruction<
-    TProgramAddress,
-    TAccountCranker,
-    TAccountMutual,
-    TAccountClaim,
-    TAccountMemberAccount,
-    TAccountDispute,
-    TAccountFeeFloat,
-    TAccountClaimantAta,
-    TAccountFeeMint,
-    TAccountTokenProgram
-  >);
-}
-
 export type SettleClaimInput<
   TAccountCranker extends string = string,
   TAccountMutual extends string = string,
   TAccountClaim extends string = string,
   TAccountMemberAccount extends string = string,
   TAccountDispute extends string = string,
-  TAccountFeeFloat extends string = string,
-  TAccountClaimantAta extends string = string,
-  TAccountFeeMint extends string = string,
-  TAccountTokenProgram extends string = string,
 > = {
   /** Anyone — pays tx fees, gains nothing (permissionless crank). */
   cranker: TransactionSigner<TAccountCranker>;
@@ -280,16 +113,6 @@ export type SettleClaimInput<
    * pattern). Ownership by the accord program is enforced by the type.
    */
   dispute: Address<TAccountDispute>;
-  /**
-   * Fee float — the Failed refund source (accord's cancel_dispute put the
-   * filer fee back here; verified: cancel refunds fee_vault →
-   * filer_token_account, which is this float).
-   */
-  feeFloat: Address<TAccountFeeFloat>;
-  /** The claimant's fee-mint account — refund destination. */
-  claimantAta: Address<TAccountClaimantAta>;
-  feeMint: Address<TAccountFeeMint>;
-  tokenProgram?: Address<TAccountTokenProgram>;
 };
 
 export function getSettleClaimInstruction<
@@ -298,10 +121,6 @@ export function getSettleClaimInstruction<
   TAccountClaim extends string,
   TAccountMemberAccount extends string,
   TAccountDispute extends string,
-  TAccountFeeFloat extends string,
-  TAccountClaimantAta extends string,
-  TAccountFeeMint extends string,
-  TAccountTokenProgram extends string,
   TProgramAddress extends Address = typeof HANSE_PROGRAM_ADDRESS,
 >(
   input: SettleClaimInput<
@@ -309,11 +128,7 @@ export function getSettleClaimInstruction<
     TAccountMutual,
     TAccountClaim,
     TAccountMemberAccount,
-    TAccountDispute,
-    TAccountFeeFloat,
-    TAccountClaimantAta,
-    TAccountFeeMint,
-    TAccountTokenProgram
+    TAccountDispute
   >,
   config?: { programAddress?: TProgramAddress },
 ): SettleClaimInstruction<
@@ -322,11 +137,7 @@ export function getSettleClaimInstruction<
   TAccountMutual,
   TAccountClaim,
   TAccountMemberAccount,
-  TAccountDispute,
-  TAccountFeeFloat,
-  TAccountClaimantAta,
-  TAccountFeeMint,
-  TAccountTokenProgram
+  TAccountDispute
 > {
   // Program address.
   const programAddress = config?.programAddress ?? HANSE_PROGRAM_ADDRESS;
@@ -338,21 +149,11 @@ export function getSettleClaimInstruction<
     claim: { value: input.claim ?? null, isWritable: true },
     memberAccount: { value: input.memberAccount ?? null, isWritable: true },
     dispute: { value: input.dispute ?? null, isWritable: false },
-    feeFloat: { value: input.feeFloat ?? null, isWritable: true },
-    claimantAta: { value: input.claimantAta ?? null, isWritable: true },
-    feeMint: { value: input.feeMint ?? null, isWritable: false },
-    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
     ResolvedInstructionAccount
   >;
-
-  // Resolve default values.
-  if (!accounts.tokenProgram.value) {
-    accounts.tokenProgram.value =
-      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" as Address<"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA">;
-  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
@@ -362,10 +163,6 @@ export function getSettleClaimInstruction<
       getAccountMeta("claim", accounts.claim),
       getAccountMeta("memberAccount", accounts.memberAccount),
       getAccountMeta("dispute", accounts.dispute),
-      getAccountMeta("feeFloat", accounts.feeFloat),
-      getAccountMeta("claimantAta", accounts.claimantAta),
-      getAccountMeta("feeMint", accounts.feeMint),
-      getAccountMeta("tokenProgram", accounts.tokenProgram),
     ],
     data: getSettleClaimInstructionDataEncoder().encode({}),
     programAddress,
@@ -375,11 +172,7 @@ export function getSettleClaimInstruction<
     TAccountMutual,
     TAccountClaim,
     TAccountMemberAccount,
-    TAccountDispute,
-    TAccountFeeFloat,
-    TAccountClaimantAta,
-    TAccountFeeMint,
-    TAccountTokenProgram
+    TAccountDispute
   >);
 }
 
@@ -399,16 +192,6 @@ export type ParsedSettleClaimInstruction<
      * pattern). Ownership by the accord program is enforced by the type.
      */
     dispute: TAccountMetas[4];
-    /**
-     * Fee float — the Failed refund source (accord's cancel_dispute put the
-     * filer fee back here; verified: cancel refunds fee_vault →
-     * filer_token_account, which is this float).
-     */
-    feeFloat: TAccountMetas[5];
-    /** The claimant's fee-mint account — refund destination. */
-    claimantAta: TAccountMetas[6];
-    feeMint: TAccountMetas[7];
-    tokenProgram: TAccountMetas[8];
   };
   data: SettleClaimInstructionData;
 };
@@ -421,10 +204,10 @@ export function parseSettleClaimInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedSettleClaimInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 9) {
+  if (instruction.accounts.length < 5) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 9,
+      expectedAccountMetas: 5,
     });
   }
   let accountIndex = 0;
@@ -441,10 +224,6 @@ export function parseSettleClaimInstruction<
       claim: getNextAccount(),
       memberAccount: getNextAccount(),
       dispute: getNextAccount(),
-      feeFloat: getNextAccount(),
-      claimantAta: getNextAccount(),
-      feeMint: getNextAccount(),
-      tokenProgram: getNextAccount(),
     },
     data: getSettleClaimInstructionDataDecoder().decode(instruction.data),
   };

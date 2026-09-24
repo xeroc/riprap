@@ -92,23 +92,20 @@ describe("buildSettleClaim (hanse:settle-claim)", () => {
     const cranker = await keypairFromSeed(2);
     const member = "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1" as Address;
     const dispute = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNNjuMzEsDpysMhXYzj" as Address;
-    const mutual = { address: MUTUAL, feeMint: FEE_MINT };
+    const mutual = { address: MUTUAL };
     const claim = { address: POOL, member, dispute };
 
     const instruction = await buildSettleClaim({ mutual, claim, cranker });
     // [0]cranker [1]mutual [2]claim [3]memberAccount [4]dispute
-    // [5]feeFloat [6]claimantAta [7]feeMint
+    // (amendment 2026-09-25: no float/claimant/mint — settle moves no funds)
     const accounts = instruction.accounts ?? [];
+    expect(accounts.length).toBe(5);
     expect(accounts[0]?.address).toBe(cranker.address);
     expect(accounts[2]?.address).toBe(claim.address);
     expect(accounts[3]?.address).toBe(
       (await findMemberAccountPda({ mutual: MUTUAL, claimant: member }))[0],
     );
     expect(accounts[4]?.address).toBe(dispute); // ruling read directly, no get_ruling CPI
-    expect(accounts[5]?.address).toBe(
-      (await findFeeFloatPda({ mutual: MUTUAL, feeMint: FEE_MINT }))[0],
-    );
-    expect(accounts[6]?.address).toBe(await findAssociatedTokenAddress(FEE_MINT, member));
   });
 });
 

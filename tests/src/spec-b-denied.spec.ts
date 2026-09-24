@@ -14,7 +14,7 @@ import {
   fetchMutualBySeed,
   findMemberAccountPda,
   getDissolveInstructionAsync,
-  getSettleClaimInstructionAsync,
+  getSettleClaimInstruction,
   getSettlePoolInstruction,
   Phase,
 } from "@riprap/hanse";
@@ -65,7 +65,7 @@ describe("e2e spec b: denied claim (riprap-zuco)", () => {
   it("denies the claim, keeps the fee with jurors, residual intact", async () => {
     if (!env.up) return; // offline CI lane — pnpm verify must stay green
 
-    const { mutual, poolPda, treasury, mint } = fx;
+    const { mutual, poolPda, treasury, feeFloat } = fx;
 
     // ── file_claim, then vote Deny across the panel ──────────────────────
     const filed = await fileMemberClaim(fx, { requested: CLAIM_AMOUNT });
@@ -78,7 +78,7 @@ describe("e2e spec b: denied claim (riprap-zuco)", () => {
 
     // ── settle_claim: Denied, nothing owed, no refund ────────────────────
     await env.sendIx(
-      await getSettleClaimInstructionAsync({
+      await getSettleClaimInstruction({
         cranker: env.payer,
         mutual,
         claim: filed.claimPda,
@@ -86,8 +86,6 @@ describe("e2e spec b: denied claim (riprap-zuco)", () => {
           await findMemberAccountPda({ mutual, claimant: filed.claimant.address })
         )[0],
         dispute: filed.dispute,
-        claimantAta: filed.claimantAta,
-        feeMint: mint,
       }),
     );
 
@@ -110,7 +108,7 @@ describe("e2e spec b: denied claim (riprap-zuco)", () => {
 
     // ── settle_pool: empty denominator ⇒ ratio 1e9, everything residual ──
     await warpToHarness(env, fx.claimsClose);
-    await env.sendIx(getSettlePoolInstruction({ cranker: env.payer, mutual, treasury }));
+    await env.sendIx(getSettlePoolInstruction({ cranker: env.payer, mutual, treasury, feeFloat }));
     const mutual2 = await fetchMutualBySeed(env.rpc, { seed: fx.seed });
     expect(mutual2.data.phase).toBe(Phase.Settled);
     expect(mutual2.data.ratio1e9).toBe(1_000_000_000n);

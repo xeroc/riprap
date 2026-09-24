@@ -43,20 +43,27 @@ export default class HanseSettlePool extends ChainCommand {
 
     let pool: Address;
     let depositMint: Address;
+    let feeMint: Address;
     if (flags.pool && flags["deposit-mint"]) {
       pool = flags.pool as Address;
       depositMint = flags["deposit-mint"] as Address;
+      feeMint = depositMint; // single-asset v1: deposit_mint == fee_mint (§7)
     } else {
       const account = await fetchMutual(ctx.rpc, mutual);
       pool = account.data.pool;
       depositMint = account.data.depositMint;
+      feeMint = account.data.feeMint;
     }
     const treasury = await findAssociatedTokenAddress(depositMint, pool);
+    // Amendment 2026-09-25 (audit H-2): the fee float is swept into the
+    // treasury before the ratio freezes.
+    const feeFloat = await findAssociatedTokenAddress(feeMint, mutual);
 
     const instruction = await getSettlePoolInstruction({
       cranker: ctx.signer,
       mutual,
       treasury,
+      feeFloat,
     });
 
     if (flags["dry-run"]) {

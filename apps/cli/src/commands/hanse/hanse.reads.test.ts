@@ -79,6 +79,7 @@ function encodedMember(tier: number, hasPendingClaim: boolean): string {
       tier,
       attestation: "11111111111111111111111111111111" as Address,
       hasPendingClaim,
+      capUsed: 0n,
       bump: 254,
     }),
   );
@@ -173,5 +174,6 @@ describe("buildMemberView (hanse:member)", () => {
     expect(view.contribution).toBe(20_000_000n);
     expect(view.maxPayout).toBe(2_000_000_000n);
     expect(view.hasPendingClaim).toBe(true);
+    expect(view.capUsed).toBe(0n);
   });
 });

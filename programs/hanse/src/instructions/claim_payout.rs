@@ -34,8 +34,10 @@ pub struct ClaimPayout<'info> {
         mut,
         constraint = claim.mutual == mutual.key() @ HanseError::NotMember,
         constraint = claim.member == claimant.key() @ HanseError::NotClaimant,
-        constraint = matches!(claim.status, ClaimStatus::Approved | ClaimStatus::Paid)
-            @ HanseError::ClaimNotApproved,
+        constraint = matches!(
+            claim.status,
+            ClaimStatus::Approved | ClaimStatus::Failed | ClaimStatus::Paid
+        ) @ HanseError::ClaimNotApproved,
     )]
     pub claim: Box<Account<'info, Claim>>,
 
@@ -84,9 +86,13 @@ impl<'info> ClaimPayout<'info> {
         let mutual = &ctx.accounts.mutual;
 
         // Idempotence first: a Paid claim re-pulling gets the precise error,
-        // not the broad ClaimNotApproved.
+        // not the broad ClaimNotApproved. Approved pays claim + fee at ratio;
+        // Failed pays the fee at ratio only (amendment 2026-09-25, H-2).
         require!(
-            ctx.accounts.claim.status == ClaimStatus::Approved,
+            matches!(
+                ctx.accounts.claim.status,
+                ClaimStatus::Approved | ClaimStatus::Failed
+            ),
             HanseError::ClaimAlreadyPaid
         );
 
@@ -120,12 +126,17 @@ impl<'info> ClaimPayout<'info> {
 
         // payout = claim_amount × ratio / 1e9 + fee_paid × ratio / 1e9 —
         // u128 intermediates, each term floored (§7; §8: $2,015 solvent,
-        // $1,323.40 + $9.93 exhausted).
+        // $1,323.40 + $9.93 exhausted). A Failed claim never entered
+        // `obligations`: it pays the fee term only (amendment 2026-09-25).
         let r = u128::from(mutual.ratio_1e9);
-        let claim_part = u128::from(ctx.accounts.claim.claim_amount)
-            .checked_mul(r)
-            .and_then(|v| v.checked_div(1_000_000_000))
-            .ok_or(HanseError::MathOverflow)?;
+        let claim_part = if ctx.accounts.claim.status == ClaimStatus::Approved {
+            u128::from(ctx.accounts.claim.claim_amount)
+                .checked_mul(r)
+                .and_then(|v| v.checked_div(1_000_000_000))
+                .ok_or(HanseError::MathOverflow)?
+        } else {
+            0
+        };
         let fee_part = u128::from(ctx.accounts.claim.fee_paid)
             .checked_mul(r)
             .and_then(|v| v.checked_div(1_000_000_000))

@@ -1,18 +1,17 @@
 /**
  * `riprap hanse:settle-claim` — permissionless crank: reads the ruling
  * directly off the accord Dispute (no get_ruling CPI) and books the claim
- * Approved / Denied / Failed (Failed refunds the fee to the claimant).
- * The cranker pays fees and gains nothing.
+ * Approved / Denied / Failed (all bookkeeping — the Failed fee rides the
+ * settlement ratio, amendment 2026-09-25). The cranker pays fees, gains
+ * nothing.
  */
 import { Flags } from "@oclif/core";
 import {
   fetchClaim,
   fetchMutual,
-  findFeeFloatPda,
   findMemberAccountPda,
-  getSettleClaimInstructionAsync,
+  getSettleClaimInstruction,
 } from "@riprap/hanse";
-import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address, Instruction, TransactionSigner } from "@solana/kit";
 import { ChainCommand, chainFlags } from "../../lib/base-command";
 
@@ -22,7 +21,7 @@ import { ChainCommand, chainFlags } from "../../lib/base-command";
  * directly from the Dispute account).
  */
 export async function buildSettleClaim(input: {
-  mutual: { address: Address; feeMint: Address };
+  mutual: { address: Address };
   claim: { address: Address; member: Address; dispute: Address };
   cranker: TransactionSigner;
 }): Promise<Instruction> {
@@ -31,17 +30,12 @@ export async function buildSettleClaim(input: {
     mutual: mutual.address,
     claimant: claim.member,
   });
-  const claimantAta = await findAssociatedTokenAddress(mutual.feeMint, claim.member);
-  const [feeFloat] = await findFeeFloatPda({ mutual: mutual.address, feeMint: mutual.feeMint });
-  return await getSettleClaimInstructionAsync({
+  return getSettleClaimInstruction({
     cranker: input.cranker,
     mutual: mutual.address,
     claim: claim.address,
     memberAccount,
     dispute: claim.dispute,
-    feeFloat,
-    claimantAta,
-    feeMint: mutual.feeMint,
   });
 }
 
@@ -70,7 +64,7 @@ export default class HanseSettleClaim extends ChainCommand {
     const mutualAccount = await fetchMutual(ctx.rpc, claimAccount.data.mutual);
 
     const instruction = await buildSettleClaim({
-      mutual: { address: mutualAccount.address, feeMint: mutualAccount.data.feeMint },
+      mutual: { address: mutualAccount.address },
       claim: {
         address: claimAccount.address,
         member: claimAccount.data.member,

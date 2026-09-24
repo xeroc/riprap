@@ -130,8 +130,17 @@ impl<'info> FileClaim<'info> {
             HanseError::TierInvalid
         );
         // The tier the member bought — enforced clamp, not adjudicated (§2.3).
+        // The cap is per MEMBERSHIP, not per claim: cap_used carries the Σ of
+        // this member's Pending + Approved claim_amounts, so refiling after a
+        // settlement (has_pending cleared) cannot re-enter at the full cap —
+        // only at what remains of it (audit H-1 2026-09-24).
         let tier = mutual.tiers[member.tier as usize];
-        let claim_amount = requested.min(tier.max_payout);
+        let remaining = tier
+            .max_payout
+            .checked_sub(member.cap_used)
+            .ok_or(HanseError::MathOverflow)?;
+        require!(remaining > 0, HanseError::TierCapExhausted);
+        let claim_amount = requested.min(remaining);
 
         // Burned-out members have no cover: rights stake must be positive.
         let expected_depositor = Pubkey::find_program_address(
@@ -240,6 +249,12 @@ impl<'info> FileClaim<'info> {
         mutual.claims_filed += 1;
         mutual.claim_nonce += 1;
         ctx.accounts.member_account.has_pending_claim = true;
+        ctx.accounts.member_account.cap_used = ctx
+            .accounts
+            .member_account
+            .cap_used
+            .checked_add(claim_amount)
+            .ok_or(HanseError::MathOverflow)?;
 
         emit!(ClaimFiled {
             mutual: ctx.accounts.mutual.key(),

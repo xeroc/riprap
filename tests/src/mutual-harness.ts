@@ -72,6 +72,7 @@ export interface MutualFixture {
   mutual: Address;
   poolPda: Address;
   treasury: Address;
+  feeFloat: Address;
   mint: Address;
   feeVault: Address;
   depositsClose: bigint;
@@ -129,6 +130,7 @@ export async function setupMutualCohort(
   const [mutual] = await findMutualPda({ seed });
   const [poolPda] = await findPoolPda({ seed });
   const treasury = await ataOf(mint, poolPda);
+  const feeFloat = await ataOf(mint, mutual);
   const domainRef = subaccordDomainRef(seed, policyHash);
   const [subaccord] = await getProgramDerivedAddress({
     programAddress: env.accordProgramId,
@@ -245,6 +247,7 @@ export async function setupMutualCohort(
     mutual,
     poolPda,
     treasury,
+    feeFloat,
     mint,
     feeVault: await ataOf(mint, subaccord),
     depositsClose,

@@ -710,10 +710,6 @@ pub fn settle_claim_raw(
             claim,
             member_account: member_pda(&mutual, &c.member),
             dispute: c.dispute,
-            fee_float: ata(&mutual, &env.mint),
-            claimant_ata: ata(&c.member, &env.mint),
-            fee_mint: env.mint,
-            token_program: spl_token_interface::ID,
         }
         .to_account_metas(None),
     );

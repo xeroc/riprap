@@ -183,10 +183,6 @@ fn settle_claim_attacked(
             claim: claim_addr,
             member_account: member_pda(&mutual_addr, &c.member),
             dispute: c.dispute,
-            fee_float: ata(&mutual_addr, &env.mint),
-            claimant_ata: ata(&c.member, &env.mint),
-            fee_mint: env.mint,
-            token_program: spl_token_interface::ID,
         }
         .to_account_metas(None),
     );
@@ -203,6 +199,8 @@ fn settle_pool_now(env: &mut Env, cfg: &hanse::instructions::InitializeMutualCon
             cranker: crank.pubkey(),
             mutual,
             treasury: pool_treasury(&pool_pda(cfg.seed), &env.mint),
+            fee_float: ata(&mutual, &env.mint),
+            token_program: spl_token_interface::ID,
         }
         .to_account_metas(None),
     );

@@ -1,12 +1,15 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
 use crate::error::HanseError;
 use crate::events::ClaimSettled;
-use crate::state::{Claim, ClaimStatus, Member, Mutual, MUTUAL_SEED};
+use crate::state::{Claim, ClaimStatus, Member, Mutual};
 
 /// Account context for `settle_claim` — permissionless crank (EVENT-MUTUAL
-/// §7). Moves no pool funds except the Failed fee refund.
+/// §7). Moves no funds: both payout paths (Approved claim + fee, Failed fee)
+/// ride the settlement ratio and pay at `claim_payout` (amendment
+/// 2026-09-25, audit H-2: the float never backs a per-claim transfer here —
+/// accord's Failed refund is whatever it is, and the claimant is made whole
+/// at ratio instead).
 #[derive(Accounts)]
 pub struct SettleClaim<'info> {
     /// Anyone — pays tx fees, gains nothing (permissionless crank).
@@ -33,25 +36,6 @@ pub struct SettleClaim<'info> {
     /// pattern). Ownership by the accord program is enforced by the type.
     #[account(constraint = dispute.key() == claim.dispute @ HanseError::WrongDispute)]
     pub dispute: Box<Account<'info, accord::state::Dispute>>,
-
-    /// Fee float — the Failed refund source (accord's cancel_dispute put the
-    /// filer fee back here; verified: cancel refunds fee_vault →
-    /// filer_token_account, which is this float).
-    #[account(
-        mut,
-        associated_token::authority = mutual,
-        associated_token::mint = fee_mint,
-    )]
-    pub fee_float: Box<Account<'info, TokenAccount>>,
-
-    /// The claimant's fee-mint account — refund destination.
-    #[account(mut, token::mint = fee_mint, token::authority = claim.member)]
-    pub claimant_ata: Box<Account<'info, TokenAccount>>,
-
-    #[account(constraint = fee_mint.key() == mutual.fee_mint @ HanseError::WrongMint)]
-    pub fee_mint: Box<Account<'info, Mint>>,
-
-    pub token_program: Program<'info, Token>,
 }
 
 impl<'info> SettleClaim<'info> {
@@ -80,27 +64,33 @@ impl<'info> SettleClaim<'info> {
                 _ => return err!(HanseError::UnexpectedRuling),
             },
             accord::state::DisputeState::Failed => {
-                // Liveness escape: accord already refunded the filer fee into
-                // the float (cancel_dispute); forward it to the claimant,
-                // signed by the mutual PDA.
-                let seed_le = ctx.accounts.mutual.seed.to_le_bytes();
-                token::transfer(
-                    CpiContext::new_with_signer(
-                        ctx.accounts.token_program.key(),
-                        Transfer {
-                            from: ctx.accounts.fee_float.to_account_info(),
-                            to: ctx.accounts.claimant_ata.to_account_info(),
-                            authority: ctx.accounts.mutual.to_account_info(),
-                        },
-                        &[&[MUTUAL_SEED, seed_le.as_ref(), &[ctx.accounts.mutual.bump]]],
-                    ),
-                    ctx.accounts.claim.fee_paid,
-                )?;
+                // Liveness escape, ratio-routed (amendment 2026-09-25, audit
+                // H-2): accord refunds whatever it refunds into the float —
+                // hanse never measures it. The claimant is made whole on the
+                // fee through the settlement ratio, exactly like an approved
+                // fee; the float itself is swept into the treasury at
+                // settle_pool. No transfer here, no float dependency.
+                let m = &mut ctx.accounts.mutual;
+                m.fee_refunds = m
+                    .fee_refunds
+                    .checked_add(ctx.accounts.claim.fee_paid)
+                    .ok_or(HanseError::MathOverflow)?;
                 ClaimStatus::Failed
             }
             // Everything else is still live: appeals, redraws, unstarted.
             _ => return err!(HanseError::DisputeNotFinal),
         };
+        // Denied/Failed claims are unpaid — release their tier-cap
+        // reservation so only Approved (owed) claims consume the
+        // membership cap (audit H-1 fix 2026-09-24).
+        if status != ClaimStatus::Approved {
+            ctx.accounts.member_account.cap_used = ctx
+                .accounts
+                .member_account
+                .cap_used
+                .checked_sub(ctx.accounts.claim.claim_amount)
+                .ok_or(HanseError::MathOverflow)?;
+        }
 
         ctx.accounts.claim.status = status;
         ctx.accounts.claim.settled_at = now;

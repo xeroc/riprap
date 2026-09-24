@@ -17,11 +17,15 @@ export async function execute(
 ): Promise<CrankResult> {
   const mutual = await fetchMutual(ctx.rpc, action.mutual);
   const treasury = await findAssociatedTokenAddress(mutual.data.depositMint, mutual.data.pool);
+  // Amendment 2026-09-25 (audit H-2): the float is swept into the treasury
+  // before the ratio freezes.
+  const feeFloat = await findAssociatedTokenAddress(mutual.data.feeMint, action.mutual);
 
   const ix = await getSettlePoolInstruction({
     cranker: ctx.signer,
     mutual: action.mutual,
     treasury,
+    feeFloat,
   });
   const signature = await ctx.sendIx(ix);
   ctx.log("settle_pool", action.mutual, signature);

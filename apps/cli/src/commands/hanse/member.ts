@@ -15,6 +15,7 @@ export interface MemberView {
   contribution: bigint;
   maxPayout: bigint;
   hasPendingClaim: boolean;
+  capUsed: bigint;
 }
 
 export async function buildMemberView(
@@ -35,6 +36,7 @@ export async function buildMemberView(
     contribution: tier.contribution,
     maxPayout: tier.maxPayout,
     hasPendingClaim: account.hasPendingClaim,
+    capUsed: account.capUsed,
   };
 }
 
@@ -78,6 +80,7 @@ export default class HanseMember extends ChainCommand {
         `contribution : ${groupBigInt(view.contribution)}`,
         `max payout   : ${groupBigInt(view.maxPayout)}`,
         `pending claim: ${view.hasPendingClaim ? "yes (file-claim gated)" : "no"}`,
+        `cap used     : ${groupBigInt(view.capUsed)} of ${groupBigInt(view.maxPayout)} (cumulative tier cap)`,
       ],
     });
   }

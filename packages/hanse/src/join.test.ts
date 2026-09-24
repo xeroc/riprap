@@ -99,6 +99,7 @@ function encodedMember(tier: number): string {
       tier,
       attestation: SYSTEM_PROGRAM as Address,
       hasPendingClaim: false,
+      capUsed: 0n,
       bump: 255,
     }),
   );

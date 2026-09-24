@@ -130,6 +130,8 @@ fn settle_pool_raw(
             cranker: cranker.pubkey(),
             mutual,
             treasury: pool_treasury(&pool_pda(cfg.seed), &env.mint),
+            fee_float: ata(&mutual, &env.mint),
+            token_program: spl_token_interface::ID,
         }
         .to_account_metas(None),
     );
@@ -258,6 +260,80 @@ fn foreign_destination_reverts() {
     assert!(
         payout_tx(&mut env, &cfg, &admin, 0, Some(other_ata)).is_err(),
         "destination must be the claimant's own canonical ATA"
+    );
+}
+
+/// Amendment 2026-09-25 (audit H-2): a Failed claim pays the FEE at ratio
+/// only — its claim_amount never entered obligations and never pays. The
+/// full lifecycle incl. the float sweep: file → fail → settle → sweep →
+/// pull $15.
+#[test]
+fn failed_claim_pays_fee_only_at_ratio() {
+    // 1 member, 1 failed claim: fee_refunds = $15, obligations = 0.
+    let mut cfg = default_config(7);
+    cfg.subaccord.fee_per_juror = 5_000_000; // §8: $5/juror → $15 filing fee
+    let mut env = Env::setup().unwrap();
+    warp_clock(&mut env.svm, INIT_TEST_NOW);
+    init_mutual(&mut env, &cfg).unwrap();
+    init_accord_state(&mut env);
+    arm_subaccord(&mut env, &cfg, 3);
+    let (m, ata_addr) = member_with(&mut env, 3_000_000_000);
+    join_member(&mut env, &cfg, &m, &ata_addr, 1).unwrap();
+    env.svm.expire_blockhash();
+    file_claim_raw(&mut env, &cfg, &m, CLAIM).unwrap();
+    env.svm.expire_blockhash();
+    // accord's refund lands short — swept into the treasury at settle_pool
+    // (mint the short refund into the float)
+    {
+        use spl_token_interface::instruction as token_ix;
+        send(
+            &mut env.svm,
+            &[token_ix::mint_to(
+                &spl_token_interface::ID,
+                &env.mint,
+                &ata(&mutual_pda(cfg.seed), &env.mint),
+                &env.payer.pubkey(),
+                &[],
+                FEE - 5_000_000,
+            )
+            .unwrap()],
+            &mut [&env.payer],
+        );
+    }
+    let mutual = mutual_pda(cfg.seed);
+    force_failed(&mut env.svm, &dispute_pda(&mutual, 0));
+    let crank = cranker(&mut env);
+    settle_claim_raw(&mut env, &cfg, &crank, 0).unwrap();
+    env.svm.expire_blockhash();
+    warp_clock(&mut env.svm, cfg.claims_close_at);
+    settle_pool_raw(&mut env, &cfg, &crank).unwrap();
+    let admin = Keypair::try_from(&env.payer.to_bytes()[..]).unwrap();
+
+    let claimant_ata = ata(&m.pubkey(), &env.mint);
+    let before = token_amount(&env.svm, &claimant_ata);
+    payout_tx(&mut env, &cfg, &admin, 0, None).unwrap();
+
+    assert_eq!(
+        token_amount(&env.svm, &claimant_ata) - before,
+        FEE,
+        "failed claim pays the fee at ratio (ratio 1e9: $15)"
+    );
+    let c = read_claim(&env, cfg.seed, 0);
+    assert_eq!(c.status, hanse::state::ClaimStatus::Paid);
+    // Burn = min(payout, contribution) = $15 of the $20 (§2.4) — the
+    // failed claimant exits the residual by exactly what they were paid.
+    let d: pool::Depositor = anchor_lang::AccountDeserialize::try_deserialize(
+        &mut &env
+            .svm
+            .get_account(&pool_depositor(&pool_pda(cfg.seed), &m.pubkey()))
+            .unwrap()
+            .data[..],
+    )
+    .unwrap();
+    assert_eq!(
+        d.rights_stake,
+        (20_000_000 - FEE) as u128,
+        "burn = the fee-sized payout, not the claim"
     );
 }
 

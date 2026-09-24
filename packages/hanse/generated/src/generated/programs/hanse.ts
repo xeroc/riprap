@@ -54,7 +54,7 @@ import {
   getInitializeMutualInstructionAsync,
   getJoinInstructionAsync,
   getSetSubaccordParamInstruction,
-  getSettleClaimInstructionAsync,
+  getSettleClaimInstruction,
   getSettlePoolInstruction,
   type InitializeMutualAsyncInput,
   type JoinAsyncInput,
@@ -75,7 +75,7 @@ import {
   parseSettleClaimInstruction,
   parseSettlePoolInstruction,
   type SetSubaccordParamInput,
-  type SettleClaimAsyncInput,
+  type SettleClaimInput,
   type SettlePoolInput,
 } from "../instructions";
 import {
@@ -485,8 +485,8 @@ export type HansePluginInstructions = {
     input: SetSubaccordParamInput,
   ) => ReturnType<typeof getSetSubaccordParamInstruction> & SelfPlanAndSendFunctions;
   settleClaim: (
-    input: SettleClaimAsyncInput,
-  ) => ReturnType<typeof getSettleClaimInstructionAsync> & SelfPlanAndSendFunctions;
+    input: SettleClaimInput,
+  ) => ReturnType<typeof getSettleClaimInstruction> & SelfPlanAndSendFunctions;
   settlePool: (
     input: SettlePoolInput,
   ) => ReturnType<typeof getSettlePoolInstruction> & SelfPlanAndSendFunctions;
@@ -528,7 +528,7 @@ export function hanseProgram() {
           setSubaccordParam: (input) =>
             addSelfPlanAndSendFunctions(client, getSetSubaccordParamInstruction(input)),
           settleClaim: (input) =>
-            addSelfPlanAndSendFunctions(client, getSettleClaimInstructionAsync(input)),
+            addSelfPlanAndSendFunctions(client, getSettleClaimInstruction(input)),
           settlePool: (input) =>
             addSelfPlanAndSendFunctions(client, getSettlePoolInstruction(input)),
         },

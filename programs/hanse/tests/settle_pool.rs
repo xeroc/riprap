@@ -20,6 +20,8 @@ fn settle_pool_tx(env: &mut Env, cranker: &Keypair) -> Result<(), String> {
             cranker: cranker.pubkey(),
             mutual,
             treasury: pool_treasury(&pool_pda(1), &env.mint),
+            fee_float: ata(&mutual_pda(1), &env.mint),
+            token_program: spl_token_interface::ID,
         }
         .to_account_metas(None),
     );
@@ -179,4 +181,62 @@ fn double_settle_reverts() {
         settle_pool_tx(&mut env, &crank),
         hanse::HanseError::AlreadySettled,
     );
+}
+
+fn fund_float(env: &mut Env, amount: u64) {
+    use anchor_lang::solana_program::instruction::Instruction;
+    use spl_token_interface::instruction as token_ix;
+    let float = ata(&mutual_pda(1), &env.mint);
+    let ix: Instruction = token_ix::mint_to(
+        &spl_token_interface::ID,
+        &env.mint,
+        &float,
+        &env.payer.pubkey(),
+        &[],
+        amount,
+    )
+    .unwrap();
+    send(&mut env.svm, &[ix], &mut [&env.payer]);
+}
+
+/// Amendment 2026-09-25 (audit H-2): settle_pool sweeps the fee float into
+/// the treasury BEFORE freezing the ratio — a Failed claim's fee rides the
+/// ratio, and accord's (possibly short) refund joins the pot. A short float
+/// must not and does not revert settlement.
+#[test]
+fn failed_fee_float_swept_into_treasury_before_ratio() {
+    let (mut env, cfg) = setup_with_mutual(1);
+    init_accord_state(&mut env);
+    arm_subaccord(&mut env, &cfg, 3);
+    let (member, ata_addr) = member_with(&mut env, 50_000_000);
+    join_member(&mut env, &cfg, &member, &ata_addr, 1).unwrap();
+    env.svm.expire_blockhash();
+    file_claim_raw(&mut env, &cfg, &member, 1_000_000).unwrap();
+    env.svm.expire_blockhash();
+    // accord's resolve-then-fail refund lands short (pre-ADR-0033 shape)
+    fund_float(&mut env, 3_000_000 - 1_000_000);
+    let mutual = mutual_pda(1);
+    force_failed(&mut env.svm, &dispute_pda(&mutual, 0));
+    let crank = cranker(&mut env);
+    settle_claim_raw(&mut env, &cfg, &crank, 0).unwrap();
+    env.svm.expire_blockhash();
+    warp_clock(&mut env.svm, cfg.claims_close_at);
+
+    let treasury = pool_treasury(&pool_pda(1), &env.mint);
+    let treasury_before = token_amount(&env.svm, &treasury);
+    settle_pool_tx(&mut env, &crank).unwrap();
+
+    assert_eq!(
+        token_amount(&env.svm, &ata(&mutual, &env.mint)),
+        0,
+        "float swept"
+    );
+    assert_eq!(
+        token_amount(&env.svm, &treasury),
+        treasury_before + 2_000_000,
+        "treasury grew by the swept (short) refund"
+    );
+    let (r, _, phase) = ratio(&env);
+    assert_eq!(phase, hanse::state::Phase::Settled);
+    assert_eq!(r, 1_000_000_000, "solvent: 22e6 treasury ≥ 3e6 fee refunds");
 }

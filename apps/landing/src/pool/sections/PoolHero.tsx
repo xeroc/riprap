@@ -151,15 +151,15 @@ export function PoolHero() {
   const precheck =
     isConnected && context !== null && tiers !== null && tier !== null
       ? {
-        needsUsdc:
-          context.depositBalance <
-          (context.mutual.data.tiers[Math.min(shownIndex, context.mutual.data.tiers.length - 1)]
-            ?.contribution ?? 0n),
-        balanceUsd: microToUsd(context.depositBalance),
-        tierName: tier.name,
-        feeUsd: tier.fee,
-        insufficientSol: context.reason === "insufficient-sol",
-      }
+          needsUsdc:
+            context.depositBalance <
+            (context.mutual.data.tiers[Math.min(shownIndex, context.mutual.data.tiers.length - 1)]
+              ?.contribution ?? 0n),
+          balanceUsd: microToUsd(context.depositBalance),
+          tierName: tier.name,
+          feeUsd: tier.fee,
+          insufficientSol: context.reason === "insufficient-sol",
+        }
       : null;
   const blocked = precheck !== null && (precheck.needsUsdc || precheck.insufficientSol);
 
@@ -348,8 +348,9 @@ export function PoolHero() {
                           <span
                             key={t.name}
                             data-num
-                            className={`font-mono text-sm transition-colors duration-[160ms] ease-out ${i === shownIndex ? "text-ink" : "text-muted-soft"
-                              }`}
+                            className={`font-mono text-sm transition-colors duration-[160ms] ease-out ${
+                              i === shownIndex ? "text-ink" : "text-muted-soft"
+                            }`}
                           >
                             {usd(t.fee)}
                           </span>

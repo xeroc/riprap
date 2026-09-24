@@ -51,6 +51,10 @@ export type SettlePoolInstruction<
   TAccountCranker extends string | AccountMeta<string> = string,
   TAccountMutual extends string | AccountMeta<string> = string,
   TAccountTreasury extends string | AccountMeta<string> = string,
+  TAccountFeeFloat extends string | AccountMeta<string> = string,
+  TAccountTokenProgram extends
+    | string
+    | AccountMeta<string> = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
   TRemainingAccounts extends readonly AccountMeta<string>[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
@@ -60,7 +64,11 @@ export type SettlePoolInstruction<
         ? ReadonlySignerAccount<TAccountCranker> & AccountSignerMeta<TAccountCranker>
         : TAccountCranker,
       TAccountMutual extends string ? WritableAccount<TAccountMutual> : TAccountMutual,
-      TAccountTreasury extends string ? ReadonlyAccount<TAccountTreasury> : TAccountTreasury,
+      TAccountTreasury extends string ? WritableAccount<TAccountTreasury> : TAccountTreasury,
+      TAccountFeeFloat extends string ? WritableAccount<TAccountFeeFloat> : TAccountFeeFloat,
+      TAccountTokenProgram extends string
+        ? ReadonlyAccount<TAccountTokenProgram>
+        : TAccountTokenProgram,
       ...TRemainingAccounts,
     ]
   >;
@@ -91,6 +99,8 @@ export type SettlePoolInput<
   TAccountCranker extends string = string,
   TAccountMutual extends string = string,
   TAccountTreasury extends string = string,
+  TAccountFeeFloat extends string = string,
+  TAccountTokenProgram extends string = string,
 > = {
   /** Anyone — pays tx fees, gains nothing. */
   cranker: TransactionSigner<TAccountCranker>;
@@ -102,17 +112,40 @@ export type SettlePoolInput<
    * the type).
    */
   treasury: Address<TAccountTreasury>;
+  /**
+   * The fee float — swept into the treasury before the ratio freezes
+   * (amendment 2026-09-25, audit H-2): accord's Failed refunds land here,
+   * and with Failed fees riding the ratio the treasury must carry them.
+   * verified in the handler.
+   */
+  feeFloat: Address<TAccountFeeFloat>;
+  tokenProgram?: Address<TAccountTokenProgram>;
 };
 
 export function getSettlePoolInstruction<
   TAccountCranker extends string,
   TAccountMutual extends string,
   TAccountTreasury extends string,
+  TAccountFeeFloat extends string,
+  TAccountTokenProgram extends string,
   TProgramAddress extends Address = typeof HANSE_PROGRAM_ADDRESS,
 >(
-  input: SettlePoolInput<TAccountCranker, TAccountMutual, TAccountTreasury>,
+  input: SettlePoolInput<
+    TAccountCranker,
+    TAccountMutual,
+    TAccountTreasury,
+    TAccountFeeFloat,
+    TAccountTokenProgram
+  >,
   config?: { programAddress?: TProgramAddress },
-): SettlePoolInstruction<TProgramAddress, TAccountCranker, TAccountMutual, TAccountTreasury> {
+): SettlePoolInstruction<
+  TProgramAddress,
+  TAccountCranker,
+  TAccountMutual,
+  TAccountTreasury,
+  TAccountFeeFloat,
+  TAccountTokenProgram
+> {
   // Program address.
   const programAddress = config?.programAddress ?? HANSE_PROGRAM_ADDRESS;
 
@@ -120,12 +153,20 @@ export function getSettlePoolInstruction<
   const originalAccounts = {
     cranker: { value: input.cranker ?? null, isWritable: false },
     mutual: { value: input.mutual ?? null, isWritable: true },
-    treasury: { value: input.treasury ?? null, isWritable: false },
+    treasury: { value: input.treasury ?? null, isWritable: true },
+    feeFloat: { value: input.feeFloat ?? null, isWritable: true },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
     ResolvedInstructionAccount
   >;
+
+  // Resolve default values.
+  if (!accounts.tokenProgram.value) {
+    accounts.tokenProgram.value =
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" as Address<"TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA">;
+  }
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
@@ -133,10 +174,19 @@ export function getSettlePoolInstruction<
       getAccountMeta("cranker", accounts.cranker),
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("treasury", accounts.treasury),
+      getAccountMeta("feeFloat", accounts.feeFloat),
+      getAccountMeta("tokenProgram", accounts.tokenProgram),
     ],
     data: getSettlePoolInstructionDataEncoder().encode({}),
     programAddress,
-  } as SettlePoolInstruction<TProgramAddress, TAccountCranker, TAccountMutual, TAccountTreasury>);
+  } as SettlePoolInstruction<
+    TProgramAddress,
+    TAccountCranker,
+    TAccountMutual,
+    TAccountTreasury,
+    TAccountFeeFloat,
+    TAccountTokenProgram
+  >);
 }
 
 export type ParsedSettlePoolInstruction<
@@ -155,6 +205,14 @@ export type ParsedSettlePoolInstruction<
      * the type).
      */
     treasury: TAccountMetas[2];
+    /**
+     * The fee float — swept into the treasury before the ratio freezes
+     * (amendment 2026-09-25, audit H-2): accord's Failed refunds land here,
+     * and with Failed fees riding the ratio the treasury must carry them.
+     * verified in the handler.
+     */
+    feeFloat: TAccountMetas[3];
+    tokenProgram: TAccountMetas[4];
   };
   data: SettlePoolInstructionData;
 };
@@ -167,10 +225,10 @@ export function parseSettlePoolInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedSettlePoolInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
+  if (instruction.accounts.length < 5) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 3,
+      expectedAccountMetas: 5,
     });
   }
   let accountIndex = 0;
@@ -185,6 +243,8 @@ export function parseSettlePoolInstruction<
       cranker: getNextAccount(),
       mutual: getNextAccount(),
       treasury: getNextAccount(),
+      feeFloat: getNextAccount(),
+      tokenProgram: getNextAccount(),
     },
     data: getSettlePoolInstructionDataDecoder().decode(instruction.data),
   };

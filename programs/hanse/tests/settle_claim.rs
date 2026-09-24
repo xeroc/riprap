@@ -36,10 +36,6 @@ fn settle_tx(
             claim,
             member_account: member_pda(&mutual, &c.member),
             dispute,
-            fee_float: ata(&mutual, &env.mint),
-            claimant_ata: ata(&c.member, &env.mint),
-            fee_mint: env.mint,
-            token_program: spl_token_interface::ID,
         }
         .to_account_metas(None),
     );
@@ -185,13 +181,19 @@ fn deny_moves_nothing() {
     assert_eq!((m.obligations, m.fee_refunds, m.claims_resolved), (0, 0, 1));
 }
 
+/// Amendment 2026-09-25 (audit H-2): the Failed path rides the ratio —
+/// `settle_claim` books `fee_refunds` and moves NO funds. THE regression:
+/// the float holds only accord's (possibly short — pre-ADR-0033) refund and
+/// settlement still succeeds; the old float transfer would have reverted
+/// here and bricked the mutual.
 #[test]
-fn failed_refunds_fee_to_claimant() {
+fn failed_books_fee_refund_and_moves_no_funds() {
     let (mut env, cfg, _member, member_ata) = setup_filed(1, 100);
     let before = token_amount(&env.svm, &member_ata);
-    // accord's cancel_dispute refunds the filer fee vault -> float; simulate
-    // that refund landing, then settle forwards it to the claimant.
-    fund_float(&mut env, &cfg, FEE);
+    // Simulate accord's resolve-then-fail refund landing SHORT by one
+    // juror's participation fee (the pinned-rev shape; post-ADR-0033 it is
+    // full — hanse must not care either way).
+    fund_float(&mut env, &cfg, FEE - 1_000_000);
 
     force_failed(&mut env.svm, &dispute_pda(&mutual_pda(1), 0));
     let crank = cranker(&mut env);
@@ -199,15 +201,19 @@ fn failed_refunds_fee_to_claimant() {
 
     let c = read_claim(&env, 0);
     assert_eq!(c.status, hanse::state::ClaimStatus::Failed);
-    assert_eq!(token_amount(&env.svm, &member_ata), before + FEE);
-    assert_eq!(token_amount(&env.svm, &ata(&mutual_pda(1), &env.mint)), 0);
     let m: hanse::Mutual = anchor_lang::AccountDeserialize::try_deserialize(
         &mut &env.svm.get_account(&mutual_pda(1)).unwrap().data[..],
     )
     .unwrap();
-    assert_eq!((m.obligations, m.fee_refunds), (0, 0));
+    assert_eq!(m.fee_refunds, FEE, "full filing-time fee rides the ratio");
+    assert_eq!((m.obligations, m.claims_resolved), (0, 1));
+    assert_eq!(token_amount(&env.svm, &member_ata), before, "no funds moved");
+    assert_eq!(
+        token_amount(&env.svm, &ata(&mutual_pda(1), &env.mint)),
+        FEE - 1_000_000,
+        "the float is untouched — swept later at settle_pool"
+    );
 }
-
 #[test]
 fn double_settle_reverts() {
     let (mut env, cfg, _member, _) = setup_filed(1, 100);

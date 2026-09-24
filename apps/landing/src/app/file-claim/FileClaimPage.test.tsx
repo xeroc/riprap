@@ -152,6 +152,7 @@ function memberAccount(over: Partial<Member> = {}): MaybeAccount<Member> {
       tier: 1, // Standard
       attestation: A,
       hasPendingClaim: false,
+      capUsed: 0n,
       bump: 255,
       ...over,
     } as Member,

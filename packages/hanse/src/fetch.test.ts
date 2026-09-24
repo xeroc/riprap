@@ -116,6 +116,7 @@ function encodedMember(): string {
       tier: 2,
       attestation: "11111111111111111111111111111111" as Address,
       hasPendingClaim: false,
+      capUsed: 0n,
       bump: 255,
     }),
   );

@@ -23,7 +23,7 @@ import {
   findMemberAccountPda,
   getClaimPayoutInstructionAsync,
   getDissolveInstructionAsync,
-  getSettleClaimInstructionAsync,
+  getSettleClaimInstruction,
   getSettlePoolInstruction,
   Phase,
 } from "@riprap/hanse";
@@ -80,7 +80,7 @@ describe("e2e spec a: solvent lifecycle to the cent (riprap-efdw)", () => {
   it("drives the full mutual lifecycle with exact balances", async () => {
     if (!env.up) return; // offline CI lane — pnpm verify must stay green
 
-    const { mutual, poolPda, treasury, mint } = fx;
+    const { mutual, poolPda, treasury, feeFloat, mint } = fx;
 
     // ── cohort armed: 4 × $10, 4 × $20, 2 × $40 joined, 3 member-jurors ──
     const poolAcct0 = await fetchPoolBySeed(env.rpc, { seed: fx.seed });
@@ -113,7 +113,7 @@ describe("e2e spec a: solvent lifecycle to the cent (riprap-efdw)", () => {
 
     // ── settle_claim: Approved, obligations + fee refunds booked ─────────
     await env.sendIx(
-      await getSettleClaimInstructionAsync({
+      await getSettleClaimInstruction({
         cranker: env.payer,
         mutual,
         claim: filed.claimPda,
@@ -121,8 +121,6 @@ describe("e2e spec a: solvent lifecycle to the cent (riprap-efdw)", () => {
           await findMemberAccountPda({ mutual, claimant: filed.claimant.address })
         )[0],
         dispute: filed.dispute,
-        claimantAta: filed.claimantAta,
-        feeMint: mint,
       }),
     );
 
@@ -135,7 +133,7 @@ describe("e2e spec a: solvent lifecycle to the cent (riprap-efdw)", () => {
 
     // ── settle_pool: solvent ⇒ ratio exactly 1e9 ─────────────────────────
     await warpToHarness(env, fx.claimsClose);
-    await env.sendIx(getSettlePoolInstruction({ cranker: env.payer, mutual, treasury }));
+    await env.sendIx(getSettlePoolInstruction({ cranker: env.payer, mutual, treasury, feeFloat }));
     const mutual3 = await fetchMutualBySeed(env.rpc, { seed: fx.seed });
     expect(mutual3.data.phase).toBe(Phase.Settled);
     expect(mutual3.data.ratio1e9).toBe(1_000_000_000n);
