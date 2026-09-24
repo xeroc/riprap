@@ -1,11 +1,11 @@
 ---
 # riprap-q9dr
 title: 'Claim-filing wizard v1 — #/app/file-claim'
-status: todo
+status: completed
 type: milestone
 priority: high
 created_at: 2026-09-22T13:59:54Z
-updated_at: 2026-09-22T13:59:54Z
+updated_at: 2026-09-24T06:59:20Z
 ---
 
 The member-facing payout-request flow for the Blade Pool: wallet-gated wizard
@@ -73,3 +73,5 @@ recovery gate: sha256(manifest) == dispute.evidence_hashes[0]      // pure chain
 
 - Operator deployment (devnet/mainnet URLs + key) — `accord-5d0r` deploy pending; wizard resolves via metadata PDA, so only the PDA content changes. Assumption: operator live before devnet e2e week.
 - Rep-filing policy gap — deferred (CLAIM-WIZARD §9), not a wizard blocker.
+
+Closed 2026-09-24: all DoD items verified in tree (copy doc §/app + §#/app/file-claim, router + llms.txt, manifest/evidence/mount tests); dev-server browser pass + manual E2E attested by Fabian 2026-09-24. AGENTS.md evidence edge added (riprap-17xq).

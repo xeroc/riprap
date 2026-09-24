@@ -1,10 +1,11 @@
 ---
 # riprap-dw8b
 title: 'Hanse event mutual v1: pool burn + programs/hanse + SDK + Surfpool e2e'
-status: todo
+status: completed
 type: milestone
+priority: normal
 created_at: 2026-09-01T17:38:24Z
-updated_at: 2026-09-01T17:38:24Z
+updated_at: 2026-09-24T06:59:39Z
 ---
 
 Hanse event mutual v1: pool::burn + programs/hanse + @riprap/hanse SDK + Surfpool e2e. Implements meta/specs/EVENT-MUTUAL.md as amended by the 2026-09-01 implementation grill.
