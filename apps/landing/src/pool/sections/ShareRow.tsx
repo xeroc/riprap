@@ -15,13 +15,15 @@ import { toast } from "sonner";
 const POOL_URL = "https://riprap.xyz/#/2026-breakpoint-blade-pool";
 const HANDLE = "@riprapxyz";
 
-/** The prefilled message (copy doc § Covered overlay, verbatim minus slots). */
+/** The prefilled message (the 2026-09-24 rewrite; copy doc § Covered overlay
+ * reconciliation pending — bean riprap-k9jl). Unread tier: the figures
+ * fragments drop out — numbers are never faked (copy doc § Covered overlay). */
 export function shareText(fee: string | null, cap: string | null): string {
-  return `I just bought the weirdest hedge at Breakpoint for ${fee} 😳.
+  const forFee = fee === null ? "" : ` for ${fee}`;
+  const worst = cap === null ? "" : `\nWorst case: up to ${cap} out.`;
+  return `I just bought the weirdest hedge at Breakpoint${forFee} 😳.
 
-Get stabbed with friends. 🤯
-
-Worst case: up to ${cap} out.
+Get stabbed with friends. 🤯${worst}
 Best case: every cent back.
 Friends decide over the payouts.
 

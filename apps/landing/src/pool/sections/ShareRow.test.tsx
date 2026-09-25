@@ -14,18 +14,20 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("shareText — the prefilled message", () => {
-  it("carries @riprapxyz and the pool line; figures come from the props", () => {
+describe("shareText — the prefilled message (2026-09-24 rewrite)", () => {
+  it("carries @riprapxyz and the figures; figures come from the props", () => {
     const text = shareText("$20", "$2,000");
-    expect(text).toContain("$20 in, up to $2,000 out — ");
-    expect(text).toContain("Blade Pool at Breakpoint 2026");
+    expect(text).toContain("for $20 😳");
+    expect(text).toContain("Worst case: up to $2,000 out.");
     expect(text).toContain("@riprapxyz");
   });
 
-  it("unread tier drops the figures clause — numbers are never faked", () => {
+  it("unread tier drops the figures fragments — numbers are never faked", () => {
     const text = shareText(null, null);
     expect(text).not.toContain("$");
-    expect(text).toContain("Blade Pool at Breakpoint 2026, claims juried by members.");
+    expect(text).not.toContain("null");
+    expect(text).toContain("Get stabbed with friends.");
+    expect(text).toContain("@riprapxyz");
   });
 });
 
@@ -43,20 +45,20 @@ describe("ShareRow", () => {
   it("X / Farcaster / Telegram open composers with the message prefilled, new tab", () => {
     render(<ShareRow fee="$20" cap="$2,000" />);
     const text = shareText("$20", "$2,000");
-    const full = `${text} https://riprap.xyz/2026-breakpoint-blade-pool`;
-
+    // X/Farcaster carry the message only (mention-first, 2026-09-24 rewrite —
+    // doc reconciliation pending, bean riprap-k9jl); Telegram is link-first.
     const x = screen.getByRole("link", { name: "Share on X" });
     expect(x.getAttribute("href")).toBe(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(full)}`,
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
     );
     expect(x.getAttribute("target")).toBe("_blank");
     expect(x.getAttribute("rel")).toBe("noopener noreferrer");
 
     expect(screen.getByRole("link", { name: "Share on Farcaster" }).getAttribute("href")).toBe(
-      `https://warpcast.com/~/compose?text=${encodeURIComponent(full)}`,
+      `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`,
     );
     expect(screen.getByRole("link", { name: "Share on Telegram" }).getAttribute("href")).toBe(
-      `https://t.me/share/url?url=${encodeURIComponent("https://riprap.xyz/2026-breakpoint-blade-pool")}&text=${encodeURIComponent(text)}`,
+      `https://t.me/share/url?url=${encodeURIComponent("https://riprap.xyz/#/2026-breakpoint-blade-pool")}&text=${encodeURIComponent(text)}`,
     );
   });
 
@@ -67,7 +69,7 @@ describe("ShareRow", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
     await vi.waitFor(() => {
-      expect(writeText).toHaveBeenCalledWith("https://riprap.xyz/2026-breakpoint-blade-pool");
+      expect(writeText).toHaveBeenCalledWith("https://riprap.xyz/#/2026-breakpoint-blade-pool");
       expect(toast).toHaveBeenCalledWith("Link copied.");
     });
   });
