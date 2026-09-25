@@ -17,7 +17,13 @@ import { AppProvider, getDefaultConfig } from "@solana/connector";
 import type { Address, MaybeAccount } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
+import {
+  fetchMaybeDispute,
+  fetchMaybeJurorStake,
+  fetchMaybeRound,
+  fetchSubaccordMaybe,
+  type Subaccord,
+} from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMutual } from "../pool/fixtures";
 import { AppPage } from "./AppPage";
@@ -76,6 +82,9 @@ vi.mock("../shared/rpc", () => ({
   }),
 }));
 const subaccordMock = vi.mocked(fetchSubaccordMaybe);
+const stakeMock = vi.mocked(fetchMaybeJurorStake);
+const disputeMock = vi.mocked(fetchMaybeDispute);
+const roundMock = vi.mocked(fetchMaybeRound);
 const claimMock = vi.mocked(fetchMaybeClaimByNonce);
 const mutualMock = vi.mocked(fetchMaybeMutual);
 const memberMock = vi.mocked(fetchMaybeMemberByOwner);
@@ -258,6 +267,69 @@ describe("/app — membership + claims (data-bound to the chain)", () => {
     );
     expect(jurors?.textContent).toContain("You're not staked for jury duty.");
     expect(jurors?.querySelector("[data-num]")?.textContent).toBe("$10");
+  });
+
+  // --- jury-duty entry panel states (copy doc § /app/adjudicate entry panel,
+  // bean riprap-2qwq): not staked / staked-never-drawn / seat drawn ----------
+
+  it("entry panel, not staked: the serve CTA links the duty board", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual()));
+    memberMock.mockResolvedValue(memberAccount(1));
+    claimMock.mockResolvedValue({ exists: false, address: "C".repeat(32) } as MaybeAccount<Claim>);
+    stakeMock.mockResolvedValue({ exists: false, address: "J".repeat(32) } as never);
+    renderApp();
+
+    expect(await screen.findByText("You're not staked for jury duty.")).toBeTruthy();
+    const cta = screen.getByRole("link", { name: "Stake to serve" });
+    expect(cta.getAttribute("href")).toBe("#/app/adjudicate");
+  });
+
+  it("entry panel, staked and never drawn: the honest no-seat state", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual()));
+    memberMock.mockResolvedValue(memberAccount(1));
+    claimMock.mockResolvedValue({ exists: false, address: "C".repeat(32) } as MaybeAccount<Claim>);
+    stakeMock.mockResolvedValue({
+      exists: true,
+      address: "J".repeat(32),
+      data: { staked: 10_000_000n, feesEarned: 0n },
+    } as never);
+    renderApp();
+
+    expect(await screen.findByText("No seat drawn for you.")).toBeTruthy();
+    expect(screen.getByText("You stay in the draw. A drawn seat appears here.")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Open jury duty" })).toBeNull();
+  });
+
+  it("entry panel, seat drawn: the open-duty CTA", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    mutualMock.mockResolvedValue(maybe(fakeMutual({ claimNonce: 1n })));
+    memberMock.mockResolvedValue(memberAccount(1));
+    claimMock.mockResolvedValue(claimAccount(OTHER));
+    stakeMock.mockResolvedValue({
+      exists: true,
+      address: "J".repeat(32),
+      data: { staked: 10_000_000n, feesEarned: 0n },
+    } as never);
+    disputeMock.mockResolvedValue({
+      exists: true,
+      address: "D".repeat(32),
+      data: { currentRound: 0, state: 2 }, // DisputeState.Review
+    } as never);
+    roundMock.mockResolvedValue({
+      exists: true,
+      address: "R".repeat(32),
+      data: { jurors: [WALLET as Address], roundIdx: 0 },
+    } as never);
+    renderApp();
+
+    expect(await screen.findByText("Seat drawn for you.")).toBeTruthy();
+    const cta = screen.getByRole("link", { name: "Open jury duty" });
+    expect(cta.getAttribute("href")).toBe("#/app/adjudicate");
   });
   it("claims: only this wallet's claims render, every field from the chain", async () => {
     walletState.isConnected = true;
