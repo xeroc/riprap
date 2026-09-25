@@ -92,7 +92,13 @@ function leaf(js: { juror: Address; staked: bigint; treeIndex: number }): JurorS
  * retries / tree full / subaccord missing). Callers gate the UI on `isError`
  * and surface the message.
  */
-export function useStakingProof(subaccordAddr: Address | undefined, juror: Address | undefined) {
+export function useStakingProof(
+  subaccordAddr: Address | undefined,
+  juror: Address | undefined,
+  /** Fired when a root-mismatch retry starts — the copy doc's
+   * `The stake tree moved — rebuilding the proof.` state. */
+  onRetry?: () => void,
+) {
   const crpc = useClusterRpc();
 
   return useQuery<StakeProofResult>({
@@ -125,6 +131,7 @@ export function useStakingProof(subaccordAddr: Address | undefined, juror: Addre
           const isMismatch = msg.startsWith("AccumulatorRootMismatch");
           if (!isMismatch || attempt === MAX_ATTEMPTS - 1) throw err;
           // Stale data: the loop refetches root + stakes before retrying.
+          onRetry?.();
         }
       }
       throw new Error("Proof computation exhausted retries.");

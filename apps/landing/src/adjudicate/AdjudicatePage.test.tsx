@@ -72,6 +72,7 @@ vi.mock("../shared/rpc", () => ({
     rpc: {},
     rpcSubscriptions: {},
   }),
+  useHanseEnv: () => null, // read-only board; writes are ServeActions' tests
 }));
 
 const mutualMock = vi.mocked(fetchMaybeMutual);

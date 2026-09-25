@@ -27,6 +27,7 @@ import { formatUtc, microToUsd, resolveMutualAddress } from "../pool/mutual";
 import { useMinStake } from "../pool/useMinStake";
 import { useMutual } from "../pool/useMutual";
 import { phaseLabel, seatPhase } from "./phase";
+import { StakeToServe, WithdrawFees } from "./ServeActions";
 import { type JurorStakeQuery, useJurorStake } from "./useJurorStake";
 import { type Seat, tallyOf, terminalLabel, useRoundSeat, useSeats } from "./useSeats";
 
@@ -108,14 +109,29 @@ function SeatCard({ seat }: { seat: Seat }) {
   );
 }
 
-/** The serve panel's read side (copy doc § /app/adjudicate): stake status vs
- * the live floor, draw weight, earned fees. Not staked is a state, not an
- * error; the write CTAs (stake / withdraw fees) land with riprap-fy3q. */
-function ServePanel({ stake, minStake }: { stake: JurorStakeQuery; minStake: string }) {
+/** The serve panel (copy doc § /app/adjudicate): stake status vs the live
+ * floor, draw weight, earned fees, and the write actions — `Stake to serve`
+ * (amount defaulted to the tier contribution, §12) and `Withdraw fees`.
+ * Not staked is a state, not an error. No unstake / reconcile (CLI). */
+function ServePanel({
+  stake,
+  minStake,
+  subaccord,
+  wallet,
+  defaultAmountMicro,
+  attestation,
+}: {
+  stake: JurorStakeQuery;
+  minStake: string;
+  subaccord: Address;
+  wallet: Address;
+  defaultAmountMicro: bigint;
+  attestation: Address;
+}) {
   if (stake.state !== "ready") return null; // supplementary read; retries itself
   if (stake.stake === null) {
     return (
-      <div data-slot="serve" className="flex max-w-[36rem] flex-col gap-2">
+      <div data-slot="serve" className="flex max-w-[36rem] flex-col gap-3">
         <p className="text-ink [font:var(--riprap-body-md)]">You're not staked for jury duty.</p>
         <p data-num className="font-mono text-sm text-muted-foreground">
           Minimum {minStake} USDC.
@@ -123,11 +139,17 @@ function ServePanel({ stake, minStake }: { stake: JurorStakeQuery; minStake: str
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
           Stake is draw weight — more stake, better odds of a seat.
         </p>
+        <StakeToServe
+          subaccord={subaccord}
+          wallet={wallet}
+          defaultAmountMicro={defaultAmountMicro}
+          attestation={attestation}
+        />
       </div>
     );
   }
   return (
-    <div data-slot="serve" className="flex max-w-[36rem] flex-col gap-2">
+    <div data-slot="serve" className="flex max-w-[36rem] flex-col gap-3">
       <p data-num className="font-mono text-sm text-ink">
         Staked {usd(microToUsd(stake.stake.staked))} USDC · minimum {minStake} USDC
       </p>
@@ -137,6 +159,7 @@ function ServePanel({ stake, minStake }: { stake: JurorStakeQuery; minStake: str
       <p data-num className="font-mono text-sm text-muted-foreground">
         Fees earned {usd(microToUsd(stake.stake.feesEarned))} USDC
       </p>
+      <WithdrawFees subaccord={subaccord} wallet={wallet} feesEarned={stake.stake.feesEarned} />
     </div>
   );
 }
@@ -286,7 +309,17 @@ function Board({ wallet, session }: { wallet: Address; session: SessionRoute | n
         </h1>
       </Settle>
       <Settle delay={60}>
-        <ServePanel stake={stake} minStake={minStake} />
+        <ServePanel
+          stake={stake}
+          minStake={minStake}
+          subaccord={mutualQuery.mutual.subaccord}
+          wallet={wallet}
+          defaultAmountMicro={
+            mutualQuery.mutual.tiers[Math.min(member.tier, mutualQuery.mutual.tiers.length - 1)]
+              ?.contribution ?? 0n
+          }
+          attestation={member.attestation}
+        />
       </Settle>
       {seats.state === "loading" && (
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
