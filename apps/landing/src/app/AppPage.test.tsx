@@ -57,7 +57,17 @@ vi.mock("@solana/connector", async (importOriginal) => {
     useKitTransactionSigner: () => ({ signer: null }),
   };
 });
-vi.mock("@useaccord/sdk", () => ({ fetchSubaccordMaybe: vi.fn() }));
+vi.mock("@useaccord/sdk", () => ({
+  fetchSubaccordMaybe: vi.fn(),
+  // the jury-duty entry panel's reads (adjudicate module) — default: no
+  // stake, no seats; per-test overrides via mockResolvedValue.
+  findJurorStakePda: vi.fn(async () => ["J".repeat(32)]),
+  fetchMaybeJurorStake: vi.fn(async () => ({ exists: false })),
+  findRoundPda: vi.fn(async () => ["R".repeat(32)]),
+  fetchMaybeRound: vi.fn(async () => ({ exists: false })),
+  fetchMaybeDispute: vi.fn(async () => ({ exists: false })),
+  DisputeState: { RoundResolved: 5, Final: 6, Closed: 7, Failed: 8 },
+}));
 vi.mock("../shared/rpc", () => ({
   useClusterRpc: () => ({
     endpoint: "http://127.0.0.1:8899",
@@ -246,7 +256,7 @@ describe("/app — membership + claims (data-bound to the chain)", () => {
     expect(jurors?.textContent).toContain(
       "Claims are settled by members who stake $10 USDC and get drawn to read the evidence.",
     );
-    expect(jurors?.textContent).toContain("Staking opens here.");
+    expect(jurors?.textContent).toContain("You're not staked for jury duty.");
     expect(jurors?.querySelector("[data-num]")?.textContent).toBe("$10");
   });
   it("claims: only this wallet's claims render, every field from the chain", async () => {
