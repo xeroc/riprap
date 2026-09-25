@@ -52,3 +52,39 @@ When the accord release carrying ADR-0033 is cut, bump `programs/hanse/Cargo.tom
 
 Reports: `meta/security-reports/` (hanse-audit.md H-2 + post-audit
 re-evaluations; cross-program-audit.md addendum).
+
+## e2e (anchor test) findings — 2026-09-25
+
+The surfnet jest lane is blocked by TWO pre-existing sibling-binary drifts
+(neither is the H-1/H-2 change — the full Rust lane is green):
+
+1. **FeeDominatesSlash (0x17b6 / accord #70) on every initialize_mutual.**
+   `ensureAccordProgram` defaults to the sibling checkout's CURRENT build
+   (develop: ADR-0029's same-mint gate α·min_stake ≥ 2·fpj) while the pin is
+   `ba91bd8` (no gate). Pilot economics fail the gate 10× ($1 slash vs $10
+   required). **Workaround (verified):** run the e2e against a pinned-rev
+   build —
+   `ACCORD_SO=~/.cargo/git/checkouts/accord-*/ba91bd8/target/deploy/accord.so
+   ACCORD_KEYPAIR=../accord/target/deploy/accord-keypair.json anchor test`
+   (the pinned artifact must be built with the CANONICAL keypair present in
+   target/deploy before `anchor-1.0.2 build -p accord --arch v1 --ignore-keys`).
+
+2. **SAS (22zoJ…) is not loadable on Surfpool 1.5.** The jest-side
+   `ensureSasProgram` cheat-fabrication writes correct-looking loader
+   accounts, but Surfpool executes cheat-fabricated program accounts as
+   **2-CU no-ops** (verified with correct/incorrect PDA derivations, v0 and
+   v1 ELFs, and even a real buffer→Upgrade behind a fabricated pair — the
+   program still no-ops). Programs only execute when installed through the
+   runbook's `instant_surfnet_deployment` or a real DeployWithMaxDataLen —
+   and the canonical SAS keypair is not ours (the sibling keypair derives
+   `TaZnpez…`, and the txtx native resolver derives ids only from
+   keypair/idl). Until resolved, every spec that arms jurors fails at stake
+   with AttestationMalformed (#6059). Options: obtain the canonical SAS dev
+   keypair; request explicit-program-id deploy support from Surfpool/txtx;
+   or relax ADR-0004's hardcoded pin. LiteSVM is unaffected (its loader
+   executes fabricated programs) — the closed circle stays verified by
+   `programs/hanse/tests/attestation.rs`.
+
+Also noted: under anchor's `[scripts] test` route, `anchor test` does NOT
+start a validator or run `txtx.yml` — the runbook only runs when surfpool is
+started directly (`surfpool start` / `surfpool run --env localnet deployment`).
