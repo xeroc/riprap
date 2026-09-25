@@ -12,6 +12,7 @@ Money leaves a pool through exactly two governed doors: spending (adjudicated cl
 - [Blade Pool @ Breakpoint 2026](https://riprap.xyz/#/2026-breakpoint-blade-pool): the first pool — policy fineprint, tiers, coverage window. Hash route: renders client-side from the landing document.
 - [App](https://riprap.xyz/#/app): the member wallet surface — join and claims, reading on-chain pool state. Hash route: renders client-side from the landing document.
 - [File a payout request](https://riprap.xyz/#/app/file-claim): the payout-request wizard — the incident, the five required proofs, one on-chain claim. Hash route: renders client-side from the landing document.
+- [Adjudicate](https://riprap.xyz/#/app/adjudicate): the juror surface — drawn seats, the evidence, one commit-reveal vote. Hash route: renders client-side from the landing document.
 
 ## Policy: Blade Pool @ Breakpoint 2026 (the first pool)
 

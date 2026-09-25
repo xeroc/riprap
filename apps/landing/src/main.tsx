@@ -7,6 +7,7 @@ import App from "./App.tsx";
 const PoolRoute = lazy(() => import("./pool/entry.tsx"));
 const MemberRoute = lazy(() => import("./app/entry.tsx"));
 const FileClaimRoute = lazy(() => import("./app/file-claim/entry.tsx"));
+const AdjudicateRoute = lazy(() => import("./adjudicate/entry.tsx"));
 const BlurbRoute = lazy(() => import("./blurb/entry.tsx"));
 
 /** "#/app/" matches "#/app"; "" / "#" / "#/" (and in-page anchors) are platform. */
@@ -15,7 +16,30 @@ function routeHash(hash: string): string | null {
   return trimmed === "" || trimmed === "#" ? null : trimmed;
 }
 
+/** `#/app/adjudicate/<dispute>/<round>` → the session shell; anything else
+ * under the prefix (bare, trailing slash, malformed segments) is the board. */
+function parseAdjudicate(hash: string): { session: { dispute: string; round: number } | null } {
+  const rest = hash
+    .slice("#/app/adjudicate".length)
+    .replace(/\/+$/, "")
+    .split("/")
+    .slice(1) // drop the leading "" from "/dispute/round"
+    .map((segment) => decodeURIComponent(segment));
+  const [dispute, round] = rest;
+  if (dispute !== undefined && dispute !== "" && round !== undefined && /^\d+$/.test(round)) {
+    return { session: { dispute, round: Number(round) } };
+  }
+  return { session: null };
+}
+
 function matchRoute(hash: string | null): { title: string | null; element: ReactElement } {
+  if (hash?.startsWith("#/app/adjudicate")) {
+    const { session } = parseAdjudicate(hash);
+    return {
+      title: "Riprap: Adjudicate",
+      element: <AdjudicateRoute session={session} />,
+    };
+  }
   switch (hash) {
     case "#/2026-breakpoint-blade-pool":
       return { title: "Riprap: Blade Pool @ Breakpoint 2026", element: <PoolRoute /> };
