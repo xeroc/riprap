@@ -26,11 +26,10 @@ import {
 } from "@solana/connector";
 import type { Address } from "@solana/kit";
 import { type ComponentProps, useState } from "react";
-
+import { JuryDutyPanel } from "../adjudicate/AdjudicatePage";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
 import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../pool/mutual";
-import { useMinStake } from "../pool/useMinStake";
 import { useMutual } from "../pool/useMutual";
 import { useClaimPreflight } from "./file-claim/useClaimPreflight";
 import { type ClaimsQuery, useClaims } from "./useClaims";
@@ -211,7 +210,6 @@ function MemberSurface({ wallet }: { wallet: Address }) {
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const mutualAddress = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
   const mutualQuery = useMutual();
-  const minStake = useMinStake(mutualQuery.state === "ready" ? mutualQuery.mutual.subaccord : null);
   const membership = useMembership();
   const member = membership.state === "ready" ? membership.member : null;
   // The payout-request entry action's gate (copy doc § /app, CLAIM-WIZARD
@@ -310,24 +308,16 @@ function MemberSurface({ wallet }: { wallet: Address }) {
         <ClaimsBlock claims={claims} />
       </Settle>
       <Settle delay={240}>
-        {/* juror panel (copy doc § /app): the covered overlay's destination */}
-        <div
-          id="jurors"
-          data-slot="jurors"
-          className="flex max-w-[36rem] scroll-mt-24 flex-col gap-2"
-        >
-          <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-            Jurors
-          </p>
-          <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-sm)]">
-            Claims are settled by members who stake{" "}
-            <span data-num className="font-mono">
-              {minStake}
-            </span>{" "}
-            USDC and get drawn to read the evidence. Coherent jurors get paid; incoherent ones get
-            slashed. Unstake anytime. <span className="text-ink">Staking opens here.</span>
-          </p>
-        </div>
+        {/* jury-duty entry panel (copy doc § /app/adjudicate): mechanic line
+         * + one entry state — the #jurors anchor for the covered overlay. */}
+        {mutualAddress !== undefined && (
+          <JuryDutyPanel
+            subaccord={mutualQuery.mutual.subaccord}
+            mutual={mutualAddress}
+            claimNonce={mutualQuery.mutual.claimNonce}
+            wallet={wallet}
+          />
+        )}
       </Settle>
     </div>
   );
