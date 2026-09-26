@@ -11,9 +11,9 @@ use {
     solana_signer::Signer,
 };
 
-/// §8 pilot economics: $2,000 claim cap, $5-per-juror fee × 3 = $15.
+/// §8 pilot economics: $2,000 claim cap, $5-per-juror fee × (3 + 1) = $20 (ADR-0030).
 const CLAIM: u64 = 2_000_000_000;
-const FEE: u64 = 15_000_000;
+const FEE: u64 = 20_000_000; // (3 + 1) × $5 (ADR-0030 bounty unit rides the fee)
 
 fn payout_tx(
     env: &mut Env,
@@ -68,7 +68,8 @@ fn setup_payout_full(
     Keypair,
 ) {
     let mut cfg = default_config(7);
-    cfg.subaccord.fee_per_juror = 5_000_000; // §8: $5/juror → $15 filing fee
+    cfg.subaccord.fee_per_juror = 5_000_000; // §8: $5/juror → $20 filing fee (ADR-0030)
+    cfg.subaccord.alpha_bps = 10_000; // ADR-0029 same-mint gate at $5 fpj needs α·min_stake ≥ $10
     let mut env = Env::setup().unwrap();
     warp_clock(&mut env.svm, INIT_TEST_NOW);
     init_mutual(&mut env, &cfg).unwrap();
@@ -139,7 +140,7 @@ fn settle_pool_raw(
 }
 
 /// §8 solvent row: ratio 1e9 → the claimant pulls exactly $2,015
-/// (2_015_000_000 base units: $2,000 payout + $15 fee refund) and their
+/// (2_020_000_000 base units: $2,000 payout + $20 fee) and their
 /// rights stake burns to zero.
 #[test]
 fn solvent_payout_is_claim_plus_fee() {
@@ -154,7 +155,7 @@ fn solvent_payout_is_claim_plus_fee() {
 
     assert_eq!(
         token_amount(&env.svm, &ata_addr) - before,
-        2_015_000_000,
+        2_020_000_000,
         "§8: each claimant pulls $2,015 (payout + fee refund)"
     );
 
@@ -172,8 +173,8 @@ fn solvent_payout_is_claim_plus_fee() {
     assert_eq!(c.status, hanse::state::ClaimStatus::Paid);
 }
 
-/// §8 exhausted row: 15 claims at $2,000 + 15 fees vs $20,000 →
-/// ratio = floor(20e9 × 1e9 / 30_225_000_000); payout floors per term.
+/// §8 exhausted row: 15 claims at $2,000 + 15 fees ($20, ADR-0030) vs $20,000 →
+/// ratio = floor(20e9 × 1e9 / 30_300_000_000); payout floors per term.
 #[test]
 fn exhausted_payout_floors_per_term() {
     // 15 members × $20 = $300 → top up to §8's $20,000 (1,000 × $20).
@@ -191,7 +192,7 @@ fn exhausted_payout_floors_per_term() {
     .unwrap();
     assert_eq!(
         m.ratio_1e9,
-        (20_000_000_000u128 * 1_000_000_000u128 / 30_225_000_000u128) as u64,
+        (20_000_000_000u128 * 1_000_000_000u128 / 30_300_000_000u128) as u64,
         "§8 exhausted ratio"
     );
     let claim_part = CLAIM as u128 * m.ratio_1e9 as u128 / 1_000_000_000;
@@ -199,15 +200,15 @@ fn exhausted_payout_floors_per_term() {
     assert_eq!(
         token_amount(&env.svm, &ata_addr) - before,
         (claim_part + fee_part) as u64,
-        "§8: $1,323.40 + $9.93 — every claimant identically (two floors)"
+        "§8: $1,320.13 + $13.20 — every claimant identically (two floors)"
     );
     assert_eq!(
-        claim_part, 1_323_407_774,
-        "§8: $1,323.40 (floor of 2e9 × 661_703_887 / 1e9)"
+        claim_part, 1_320_132_012,
+        "§8: $1,320.13 (floor of 2e9 × 660_066_006 / 1e9)"
     );
     assert_eq!(
-        fee_part, 9_925_558,
-        "§8: $9.93 (floor of 15e6 × 661_703_887 / 1e9)"
+        fee_part, 13_201_320,
+        "§8: $13.20 (floor of 20e6 × 660_066_006 / 1e9)"
     );
 }
 
@@ -271,7 +272,8 @@ fn foreign_destination_reverts() {
 fn failed_claim_pays_fee_only_at_ratio() {
     // 1 member, 1 failed claim: fee_refunds = $15, obligations = 0.
     let mut cfg = default_config(7);
-    cfg.subaccord.fee_per_juror = 5_000_000; // §8: $5/juror → $15 filing fee
+    cfg.subaccord.fee_per_juror = 5_000_000; // §8: $5/juror → $20 filing fee (ADR-0030)
+    cfg.subaccord.alpha_bps = 10_000; // ADR-0029 same-mint gate at $5 fpj needs α·min_stake ≥ $10
     let mut env = Env::setup().unwrap();
     warp_clock(&mut env.svm, INIT_TEST_NOW);
     init_mutual(&mut env, &cfg).unwrap();

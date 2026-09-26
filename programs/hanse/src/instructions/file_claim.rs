@@ -178,11 +178,23 @@ impl<'info> FileClaim<'info> {
             HanseError::WrongDispute
         );
 
-        // ── Fee: min_jury_size × fee_per_juror, claimant-funded (§2.6) ────
-        let jury_fee = u64::from(ctx.accounts.subaccord.min_jury_size);
+        // ── Fee: (min_jury_size + 1) × fee_per_juror, claimant-funded
+        //    (§2.6 + ADR-0030): the +1 unit is the filer's flip-bounty
+        //    deposit — refunded with the fee on Failed and riding the ratio
+        //    when Approved. Matches accord's `filing_fee()` on develop
+        //    (post-0030; the ba91bd8 pin accepted J×fpj — pin-bump item,
+        //    bean riprap-h2pd). ────────────────────────────────────────────
+        let jury_fee = u64::from(ctx.accounts.subaccord.min_jury_size)
+            .checked_add(1)
+            .ok_or(HanseError::MathOverflow)?;
         let fee = jury_fee
             .checked_mul(ctx.accounts.subaccord.fee_per_juror)
             .ok_or(HanseError::MathOverflow)?;
+        #[cfg(target_os = "solana")]
+        msg!("fee_probe min_jury={} fpj={} fee={}",
+            ctx.accounts.subaccord.min_jury_size,
+            ctx.accounts.subaccord.fee_per_juror,
+            fee);
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.key(),

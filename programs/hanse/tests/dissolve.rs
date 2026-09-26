@@ -12,7 +12,7 @@ use {
 };
 
 const CLAIM: u64 = 2_000_000_000;
-const FEE: u64 = 15_000_000;
+const FEE: u64 = 20_000_000; // (3 + 1) × $5 (ADR-0030)
 
 /// Full §8-scale lifecycle to Settled (see claim_payout.rs): `members`
 /// joined at $20, `claims` approved at $2,000/$15, treasury topped to $20,000.
@@ -27,7 +27,8 @@ fn setup_settled(
     Keypair,
 ) {
     let mut cfg = default_config(9);
-    cfg.subaccord.fee_per_juror = 5_000_000; // §8: $5/juror → $15 fee
+    cfg.subaccord.fee_per_juror = 5_000_000; // §8: $5/juror
+    cfg.subaccord.alpha_bps = 10_000; // ADR-0029 gate at $5 fpj
     let mut env = Env::setup().unwrap();
     warp_clock(&mut env.svm, INIT_TEST_NOW);
     init_mutual(&mut env, &cfg).unwrap();
@@ -195,7 +196,7 @@ fn post_dissolve_crank_pays_only_non_burned_depositors() {
     assert_eq!(
         residual,
         20_000_000_000 - (CLAIM + FEE),
-        "§8: $20,000 − $2,015"
+        "§8: $20,000 − $2,020 (ADR-0030 fee)"
     );
 
     let pull_close_at = mutual_state(&env, &cfg).pull_close_at;

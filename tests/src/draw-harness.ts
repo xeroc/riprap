@@ -394,8 +394,12 @@ export async function armDispute(
   aggregation: Aggregation = Aggregation.Plurality,
 ): Promise<ArmedDispute> {
   const { env, subaccord, mint, vault, accordState } = fx;
-  const fee = requiredFee(FEE_PER_JUROR);
-  if (fee === null) throw new Error("fee overflow");
+  // (min_jury_size + 1) × fpj — develop's filing_fee() incl. the ADR-0030
+  // bounty unit. The pinned @useaccord/sdk@0.1.0's requiredFee() still
+  // computes J×fpj (pin-bump item, bean riprap-h2pd).
+  const baseFee = requiredFee(FEE_PER_JUROR);
+  if (baseFee === null) throw new Error("fee overflow");
+  const fee = baseFee + FEE_PER_JUROR;
 
   const filerAta = await ataOf(mint, env.payer.address);
 

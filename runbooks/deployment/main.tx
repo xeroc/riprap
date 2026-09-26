@@ -29,3 +29,17 @@ action "deploy_hanse" "svm::deploy_program" {
     payer = signer.payer
     instant_surfnet_deployment = input.network_id == "localnet"
 }
+
+action "deploy_sas" "svm::deploy_program" {
+    description = "Deploy the SAS binary (closed circle, §2.8) at its keypair address"
+    # Staged from ../solana-attestation-service into target/deploy by
+    # tests/deps/stage.sh. The canonical 22zoJ… keypair is not ours, so the
+    # binary deploys at the sibling keypair's address; the jest harness
+    # clones it to the canonical id via surfnet_cloneProgramAccount (see
+    # tests/src/setup/deploy.ts ensureSasProgram — raw setAccount
+    # fabrications do not execute on Surfpool).
+    program = svm::get_program_from_native_project("solana_attestation_service")
+    authority = signer.authority
+    payer = signer.payer
+    instant_surfnet_deployment = input.network_id == "localnet"
+}

@@ -34,6 +34,7 @@ import {
   driveRound,
   ensurePause,
   finalizeDisputeAfterAppealWindow,
+  warpTo as warpToHarness,
 } from "./draw-harness.js";
 import { readClock } from "./setup/cheats.js";
 import { ensureAccordProgram, ensureSasProgram } from "./setup/deploy.js";
@@ -118,7 +119,14 @@ export async function setupMutualCohort(
   const nMembers = tiers.length;
   const feePerJuror = 5_000_000n; // §12: $5
 
-  const now0 = (await readClock(env)).unixTimestamp;
+  // Pin the clock before reading it for the windows: a prior spec's
+  // surfnet_timeTravel can land between this read and the cohort's joins,
+  // closing the deposits window mid-setup (observed as flaky DepositsClosed
+  // on join). warpTo(now) forces Surfpool to re-derive a definite clock from
+  // the pinned value, so every subsequent read agrees.
+  let now0 = (await readClock(env)).unixTimestamp;
+  await warpToHarness(env, now0);
+  now0 = (await readClock(env)).unixTimestamp;
   const depositsClose = now0 + 3_600n;
   const claimsClose = now0 + 7_200n;
 
@@ -167,7 +175,7 @@ export async function setupMutualCohort(
     subaccordArg: {
       feePerJuror,
       minStake: 10_000_000n,
-      alphaBps: 1_000,
+      alphaBps: 10_000, // §12 (2026-09-26): ADR-0029 same-mint gate α·min_stake ≥ 2·fpj
       reviewWindow: 60n,
       commitWindow: 60n,
       revealWindow: 60n,
@@ -229,7 +237,11 @@ export async function setupMutualCohort(
     SUBACCORD_DEPTH,
     jurorSigners,
     // §12: default juror stake = the juror's own tier contribution
-    jurorTiers.map((t) => PILOT_TIERS[t]?.contribution),
+    // §12 (2026-09-26): draw eligibility = min_stake + slash_reserve =
+    // $10 + 100%·$10 = $20 per DRAW at α=100% (ADR-0029 gate), and each draw
+    // reserves another $10 — stake $40 so a juror can serve the full
+    // 3-round appeal ladder (rounds 0–2 reserve $30, free $10 + headroom).
+    jurorTiers.map(() => 40_000_000n),
     // §2.8: the gated pool requires each member-juror's join-issued
     // attestation as stake's remaining_accounts[0].
     await Promise.all(
@@ -284,7 +296,7 @@ export async function fileMemberClaim(
   const { env, mutual, mint, poolPda } = fx;
   const claimant = fx.members[memberIdx]!;
   const claimantAta = fx.memberAtas[memberIdx]!;
-  const fee = 3n * 5_000_000n; // min_jury_size × fee_per_juror (§12: $15)
+  const fee = 4n * 5_000_000n; // (min_jury_size + 1) × fee_per_juror — ADR-0030 bounty unit (§12: $20)
   const [claimantDepositor] = await findDepositorPda({
     pool: poolPda,
     owner: claimant.address,

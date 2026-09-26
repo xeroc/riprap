@@ -15,7 +15,7 @@ use {
     solana_signer::Signer,
 };
 
-const FEE: u64 = 3 * 1_000_000;
+const FEE: u64 = 4 * 1_000_000;
 /// Tier 1: contribution 20_000_000, max_payout 2_000_000_000 (§6, policy §7).
 const CAP: u64 = 2_000_000_000;
 

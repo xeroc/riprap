@@ -71,6 +71,7 @@ describe("e2e spec d: appeal ladder (riprap-0zvk)", () => {
     const payerSdk = payerAccord(env);
     const cost = appealCost(0, FEE_PER_JUROR)!;
     expect(cost.panel).toBe(7);
+    // SDK (pinned @useaccord/sdk 0.1.0) computes 70M — fee 35 + bond 35.
     expect(cost.total).toBe(70_000_000n);
     expect(cost.bond).toBe(35_000_000n);
 
@@ -110,9 +111,12 @@ describe("e2e spec d: appeal ladder (riprap-0zvk)", () => {
       ),
     );
 
-    // Appeal economics: cost.total custodied appellant → fee vault.
-    expect(appellantBefore - (await balanceOf(env, payerAta))).toBe(cost.total);
-    expect((await balanceOf(env, fx.feeVault)) - vaultBefore).toBe(cost.total);
+    // Appeal economics: develop custodies fee 35 + bond 35 + the ADR-0030
+    // bounty unit 5 = 75M (the pinned SDK's cost.total omits the bounty —
+    // pin-bump item, bean riprap-h2pd).
+    const developTotal = 75_000_000n;
+    expect(appellantBefore - (await balanceOf(env, payerAta))).toBe(developTotal);
+    expect((await balanceOf(env, fx.feeVault)) - vaultBefore).toBe(developTotal);
 
     // ── round 1: 7-panel redraw that FLIPS to Deny (4-3) ─────────────────
     expect(panelSizeForRound(1)).toBe(7);

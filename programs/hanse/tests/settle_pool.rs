@@ -90,19 +90,20 @@ fn solvent_settles_at_full_ratio() {
 #[test]
 fn over_treasury_ratio_matches_hand_math_exactly() {
     // Treasury 40_000_000 (2 × tier 1). Claims: 2 × 20_000_000 approved +
-    // fees 2 × 3_000_000 → denominator 46_000_000 > treasury → ratio floors.
+    // fees 2 × 4_000_000 ((3+1) × 1e6, ADR-0030) → denominator 48_000_000 >
+    // treasury → ratio floors.
     let (mut env, _cfg) = setup_settlement_big_claims();
     let crank = cranker(&mut env);
     settle_pool_tx(&mut env, &crank).unwrap();
 
     let treasury = 40_000_000u64;
-    let denominator = 2 * 20_000_000u64 + 2 * 3_000_000;
+    let denominator = 2 * 20_000_000u64 + 2 * 4_000_000;
     let expected = (treasury as u128 * 1_000_000_000u128 / denominator as u128) as u64;
     let (r, _, phase) = ratio(&env);
     assert_eq!(r, expected, "u128 floor division, §2.5 formula");
     assert_eq!(
-        r, 869_565_217,
-        "§8 hand math: 40e6 × 1e9 / 46e6 = 869565217.39 → floor"
+        r, 833_333_333,
+        "§8 hand math: 40e6 × 1e9 / 48e6 = 833333333.33 → floor"
     );
     assert_eq!(phase, hanse::state::Phase::Settled);
     assert!(r < 1_000_000_000);
@@ -214,7 +215,7 @@ fn failed_fee_float_swept_into_treasury_before_ratio() {
     file_claim_raw(&mut env, &cfg, &member, 1_000_000).unwrap();
     env.svm.expire_blockhash();
     // accord's resolve-then-fail refund lands short (pre-ADR-0033 shape)
-    fund_float(&mut env, 3_000_000 - 1_000_000);
+    fund_float(&mut env, 4_000_000 - 1_000_000);
     let mutual = mutual_pda(1);
     force_failed(&mut env.svm, &dispute_pda(&mutual, 0));
     let crank = cranker(&mut env);
@@ -233,10 +234,10 @@ fn failed_fee_float_swept_into_treasury_before_ratio() {
     );
     assert_eq!(
         token_amount(&env.svm, &treasury),
-        treasury_before + 2_000_000,
-        "treasury grew by the swept (short) refund"
+        treasury_before + 3_000_000,
+        "treasury grew by the swept (short) refund (4e6 fee − 1e6 consumed)"
     );
     let (r, _, phase) = ratio(&env);
     assert_eq!(phase, hanse::state::Phase::Settled);
-    assert_eq!(r, 1_000_000_000, "solvent: 22e6 treasury ≥ 3e6 fee refunds");
+    assert_eq!(r, 1_000_000_000, "solvent: 23e6 treasury ≥ 4e6 fee refunds");
 }

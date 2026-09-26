@@ -10,7 +10,7 @@ use {
     solana_signer::Signer,
 };
 
-const FEE: u64 = 3 * 1_000_000;
+const FEE: u64 = 4 * 1_000_000;
 
 fn settle_tx(
     env: &mut Env,

@@ -88,3 +88,24 @@ The surfnet jest lane is blocked by TWO pre-existing sibling-binary drifts
 Also noted: under anchor's `[scripts] test` route, `anchor test` does NOT
 start a validator or run `txtx.yml` — the runbook only runs when surfpool is
 started directly (`surfpool start` / `surfpool run --env localnet deployment`).
+
+## 2026-09-26 update — e2e runs against develop accord (6/7 suites green)
+
+The surfnet e2e now runs against a checked-in **develop-branch** accord
+binary (`tests/deps/accord.so` — see its README), with the ADR-0030 filing
+fee `(min_jury_size + 1) × fee_per_juror` implemented in hanse's
+`file_claim`, SAS cloned to the canonical id via `surfnet_cloneProgramAccount`
+(the runbook instant-deploys it at the sibling keypair's address), §12
+`alpha_bps` 1000→10000 (ADR-0029's same-mint gate), and the e2e economics
+re-derived for the $20 filing fee. spec-a/b/c/e + both harness suites pass
+live.
+
+**Remaining (this bean's core):** spec-d (appeal ladder) — the pinned
+`@useaccord/sdk@0.1.0` predates ADR-0029/0030: `requiredFee()` still returns
+`J × fpj` (the harness works around it locally), `appealCost()` omits the
+bounty unit, and its `settleRound` ix shape predates develop's fee-pot
+distribution (settle_round now wants the panel's JurorStake layout the SDK
+doesn't send). The pin bump (crate + SDK together) is what finishes spec-d.
+
+Also: after swapping `tests/deps` binaries, `rm -rf .surfpool` — Surfpool
+persists its ledger and stale programs keep executing otherwise.

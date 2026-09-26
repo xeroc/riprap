@@ -10,7 +10,7 @@ use {
     solana_signer::Signer,
 };
 
-const FEE: u64 = 3 * 1_000_000; // min_jury_size 3 × fee_per_juror 1_000_000
+const FEE: u64 = 4 * 1_000_000; // (min_jury_size 3 + 1) × fee_per_juror 1_000_000 (ADR-0030)
 
 fn file_claim_tx(
     env: &mut Env,

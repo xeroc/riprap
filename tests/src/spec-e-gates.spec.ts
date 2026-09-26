@@ -2,7 +2,7 @@
 // mutuals. Every gate asserts the revert carries the right anchor error code
 // (HanseError order in programs/hanse/src/error.rs, offset 6000):
 //   join after deposits_close_at        → 6001 DepositsClosed
-//   file_claim after claims_close_at    → 6016 ClaimsClosed
+//   file_claim after claims_close_at    → 6017 ClaimsClosed
 //   settle_pool with a pending claim    → 6023 ClaimsUnresolved
 //   file_claim while a claim is pending (same member) → 6019 PendingClaimExists
 //   requested above the member's tier cap → clamped to tiers[member].max_payout
@@ -47,18 +47,18 @@ import { createTestEnv, fundSigner, type TestEnv } from "./setup/env.js";
 import { ataOf, setTokenBalance } from "./setup/tokens.js";
 
 const CLAIM_AMOUNT = 95_000_000n;
-const FILING_FEE = 15_000_000n;
+const FILING_FEE = 20_000_000n; // (3 + 1) × $5 (ADR-0030)
 
 /** Anchor error codes (HanseError order, offset 6000). */
 const ERR = {
   DEPOSITS_CLOSED: 6001,
-  CLAIMS_CLOSED: 6016,
-  CLAIMS_UNRESOLVED: 6023,
-  PULL_WINDOW_CLOSED: 6026,
-  PULL_WINDOW_OPEN: 6027,
-  CLAIM_ALREADY_PAID: 6029,
-  UNAUTHORIZED: 6030,
-  PENDING_CLAIM_EXISTS: 6019,
+  CLAIMS_CLOSED: 6017,
+  CLAIMS_UNRESOLVED: 6025,
+  PULL_WINDOW_CLOSED: 6028,
+  PULL_WINDOW_OPEN: 6029,
+  CLAIM_ALREADY_PAID: 6031,
+  UNAUTHORIZED: 6032,
+  PENDING_CLAIM_EXISTS: 6020,
 } as const;
 
 /** Deep error text: message + cause chain (kit nests the anchor code in the

@@ -11,7 +11,7 @@
 // usize max_data_len. Account layouts: buffer = 37 B metadata + elf,
 // programdata = 45 B metadata + elf (PDA [program] / loader), program = 36 B.
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import {
@@ -26,7 +26,7 @@ import {
   lamports,
 } from "@solana/kit";
 import { ACCORD_PROGRAM_ID } from "@useaccord/sdk";
-import { setAccountRaw } from "./cheats.js";
+import { cheat } from "./cheats.js";
 import type { TestEnv } from "./env.js";
 
 /** BPFLoaderUpgradeab1e — the upgradeable loader program. */
@@ -312,12 +312,19 @@ export async function ensureAccordProgram(env: TestEnv): Promise<{
     return { programId: ACCORD_PROGRAM_ID, deployed: false };
   }
 
+  const deps = (name: string) => fileURLToPath(new URL(`../../deps/${name}`, import.meta.url));
   const soPath =
     process.env.ACCORD_SO ??
-    fileURLToPath(new URL("../../../../accord/target/deploy/accord.so", import.meta.url));
+    (existsSync(deps("accord.so"))
+      ? deps("accord.so")
+      : fileURLToPath(new URL("../../../../accord/target/deploy/accord.so", import.meta.url)));
   const keypairPath =
     process.env.ACCORD_KEYPAIR ??
-    fileURLToPath(new URL("../../../../accord/target/deploy/accord-keypair.json", import.meta.url));
+    (existsSync(deps("accord-keypair.json"))
+      ? deps("accord-keypair.json")
+      : fileURLToPath(
+          new URL("../../../../accord/target/deploy/accord-keypair.json", import.meta.url),
+        ));
 
   let elf: Uint8Array;
   let programSigner: KeyPairSigner;
@@ -347,18 +354,33 @@ export async function ensureAccordProgram(env: TestEnv): Promise<{
 export const SAS_PROGRAM_ID = "22zoJMtdu4tQc2PzL74ZUT7FrwgB1Udec8DdW4yw4BdG" as Address;
 
 /**
+ * The surfnet SAS deployment address — the sibling
+ * solana-attestation-service keypair (tests/deps/sas-keypair.json, ours to
+ * hold). `runbooks/deployment` instant-deploys the binary here; it cannot go
+ * to the canonical 22zoJ… directly (that keypair is not ours).
+ */
+export async function sasDeployAddress(): Promise<Address> {
+  const path =
+    process.env.SAS_KEYPAIR ??
+    fileURLToPath(new URL("../../deps/sas-keypair.json", import.meta.url));
+  const bytes = new Uint8Array(JSON.parse(readFileSync(path, "utf8")) as number[]);
+  const signer = await createKeyPairSignerFromBytes(bytes);
+  return signer.address;
+}
+
+/**
  * Idempotently ensure the SAS program exists on the surfnet — required
  * before any hanse initialize_mutual/join CPI (§2.8, bean riprap-7wa9).
  *
- * Unlike accord, the canonical SAS keypair is not ours to hold, so this
- * cannot go through real loader transactions: the two upgradeable-loader
- * accounts (program + programdata PDA) are fabricated directly via the
- * `surfnet_setAccount` cheatcode with the real ELF. Layouts per
- * solana-bpf-loader-program (same encoding deploy.ts documents above):
- * program = u32 tag 2 ‖ programdata pubkey (36 B, executable); programdata =
- * u32 tag 3 ‖ slot u64 ‖ bincode Option<Pubkey> authority (Some = 1 + 32) ‖
- * elf. The binary comes from the sibling solana-attestation-service
- * checkout (or `$SAS_SO`).
+ * The canonical 22zoJ… keypair is not ours to hold, so the program cannot
+ * be deployed there directly. Instead the deployment runbook instant-deploys
+ * the binary at the sibling keypair's address (SAS_DEPLOY_ADDRESS), and this
+ * helper clones it to the canonical id via `surfnet_cloneProgramAccount` —
+ * the clone path goes through Surfpool's program machinery and EXECUTES
+ * (unlike `surfnet_setAccount` fabrications, which run as 2-CU no-ops).
+ * SAS is Pinocchio and never checks its declared id at entry, and every PDA
+ * it derives uses the invoking program id — the canonical address — so the
+ * clone behaves identically to a native deploy.
  */
 export async function ensureSasProgram(env: TestEnv): Promise<{
   programId: Address;
@@ -368,47 +390,15 @@ export async function ensureSasProgram(env: TestEnv): Promise<{
   if (existing.value !== null) {
     return { programId: SAS_PROGRAM_ID, deployed: false };
   }
-
-  const soPath =
-    process.env.SAS_SO ??
-    fileURLToPath(
-      new URL(
-        "../../../../solana-attestation-service/target/deploy/solana_attestation_service.so",
-        import.meta.url,
-      ),
+  const source = process.env.SAS_SOURCE ?? (await sasDeployAddress());
+  const sourceAcc = await env.rpc.getAccountInfo(source as Address).send();
+  if (sourceAcc.value === null) {
+    throw new Error(
+      `SAS source program ${source} is not deployed on the surfnet. ` +
+        "The validator must be started via the deployment runbook " +
+        "(`surfpool start`, which deploys pool/hanse/SAS) — see tests/README.",
     );
-  const elf = new Uint8Array(readFileSync(soPath));
-
-  const [programdataPda] = await getProgramDerivedAddress({
-    programAddress: LOADER_ADDRESS,
-    seeds: [new TextEncoder().encode("programdata"), getAddressEncoder().encode(SAS_PROGRAM_ID)],
-  });
-
-  const programData = new Uint8Array(45 + elf.length);
-  new DataView(programData.buffer).setUint32(0, 3, true); // ProgramData tag
-  new DataView(programData.buffer).setBigUint64(4, 0n, true); // slot
-  programData[12] = 1; // authority: Some
-  programData.set(getAddressEncoder().encode(env.payer.address), 13);
-  programData.set(elf, 45);
-
-  const programAccountData = new Uint8Array(36);
-  new DataView(programAccountData.buffer).setUint32(0, 2, true); // Program tag
-  programAccountData.set(getAddressEncoder().encode(programdataPda), 4);
-  const [programRent, programdataRent] = await Promise.all([
-    env.rpc.getMinimumBalanceForRentExemption(36n).send(),
-    env.rpc.getMinimumBalanceForRentExemption(BigInt(programData.length)).send(),
-  ]);
-  await setAccountRaw(env, SAS_PROGRAM_ID, {
-    lamports: programRent,
-    data: programAccountData,
-    owner: LOADER_ADDRESS,
-    executable: true,
-  });
-  await setAccountRaw(env, programdataPda, {
-    lamports: programdataRent,
-    data: programData,
-    owner: LOADER_ADDRESS,
-    executable: false,
-  });
+  }
+  await cheat(env, "surfnet_cloneProgramAccount", [source, SAS_PROGRAM_ID]);
   return { programId: SAS_PROGRAM_ID, deployed: true };
 }

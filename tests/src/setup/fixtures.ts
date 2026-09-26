@@ -48,7 +48,7 @@ export function pilotSubaccordArgs(
     stakingToken,
     feeToken,
     minStake: PILOT_MIN_STAKE,
-    alphaBps: 1_000, // §12: 10%
+    alphaBps: 10_000, // §12 (2026-09-26): ADR-0029 same-mint gate α·min_stake ≥ 2·fpj ⇒ α = 100% at $10/$5
     reviewWindow: 172_800n, // §12: 48h
     commitWindow: 43_200n, // §12: 12h
     revealWindow: 43_200n, // §12: 12h

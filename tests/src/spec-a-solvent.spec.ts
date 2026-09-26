@@ -51,8 +51,8 @@ import { ensureAccordProgram } from "./setup/deploy.js";
 import { createTestEnv, type TestEnv } from "./setup/env.js";
 
 const N_MEMBERS = 10;
-const CLAIM_AMOUNT = 95_000_000n; // $95 — leaves residual $90 over $180 total
-const FILING_FEE = 15_000_000n; // $15
+const CLAIM_AMOUNT = 90_000_000n; // $90 + $20 fee (ADR-0030) → $110 payout — residual $90 over $180
+const FILING_FEE = 20_000_000n; // (3 + 1) × $5 (ADR-0030)
 const PAYOUT = CLAIM_AMOUNT + FILING_FEE; // $110
 /** Standard first: the claimant's $20 burn leaves pool total exactly $180,
  * so the $90 residual divides at $0.50 per dollar deposited (§2.5). */
