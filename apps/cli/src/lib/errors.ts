@@ -22,6 +22,9 @@ export interface CliError {
   error: string;
   message: string;
   hint?: string;
+  /** Transaction simulation/confirmation logs when kit attached them — the
+   * program's own log lines, including Anchor's `Error Code:` diagnostics. */
+  logs?: string[];
 }
 
 /** Anchor custom-error base for the pool program (error codes start at 6000). */
@@ -64,6 +67,32 @@ function findCustomCode(value: unknown, depth: number): number | null {
   return null;
 }
 
+/**
+ * Kit nests the simulation logs as a `logs` array somewhere inside the thrown
+ * `SolanaError` (exact depth depends on the failure path: preflight
+ * simulation vs confirmation). Bounded recursion, mirroring
+ * {@link findCustomCode}, finds the first all-string `logs` array.
+ */
+function findLogs(value: unknown, depth: number): string[] | null {
+  if (depth > 5) return null;
+  if (typeof value !== "object" || value === null) return null;
+  if ("logs" in value) {
+    const candidate = value.logs;
+    if (
+      Array.isArray(candidate) &&
+      candidate.length > 0 &&
+      candidate.every((line) => typeof line === "string")
+    ) {
+      return candidate as string[];
+    }
+  }
+  for (const nested of Object.values(value)) {
+    const found = findLogs(nested, depth + 1);
+    if (found !== null) return found;
+  }
+  return null;
+}
+
 function messageOf(err: unknown): string {
   if (err instanceof Error) return err.message;
   if (typeof err === "string") return err;
@@ -88,9 +117,10 @@ function extractProgramCode(err: unknown): number | null {
 export function toCliError(err: unknown): CliError {
   const code = extractProgramCode(err);
   const known = code !== null ? codeIndex[code] : undefined;
+  const logs = findLogs(err, 0) ?? undefined;
 
   if (known) {
-    return { exitCode: 1, error: known.name, message: known.message };
+    return { exitCode: 1, error: known.name, message: known.message, logs };
   }
 
   const msg = messageOf(err);
@@ -101,6 +131,7 @@ export function toCliError(err: unknown): CliError {
       error: "RpcUnreachable",
       message: msg,
       hint: "Is a validator/Surfpool running at the configured --rpc / $RIPRAP_RPC_URL?",
+      logs,
     };
   }
 
@@ -110,8 +141,9 @@ export function toCliError(err: unknown): CliError {
       error: `Custom_${code}`,
       message: msg,
       hint: `Program error code ${code} (Anchor base ${ANCHOR_ERROR_CODE_OFFSET}). Not in the known pool error map.`,
+      logs,
     };
   }
 
-  return { exitCode: 1, error: err instanceof Error ? err.name : "Error", message: msg };
+  return { exitCode: 1, error: err instanceof Error ? err.name : "Error", message: msg, logs };
 }

@@ -37,7 +37,7 @@ Every chain-touching command takes all of the above (`chainFlags`); `hanse:quote
 config:  balance, show
 pool:    init, deposit, spend, burn, liquidate, crank, update-authority, show, depositor
 hanse:   initialize, join, file-claim, settle-claim, settle-pool, claim-payout,
-         dissolve, set-subaccord-param, show, claim, member, quote
+         dissolve, set-subaccord-param, show, claim, member, list, quote
 ```
 
 - **config** — cluster/wallet introspection shared by both topics.

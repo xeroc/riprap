@@ -35,4 +35,37 @@ describe("toCliError", () => {
     expect(mapped.error).toBe("Error");
     expect(mapped.message).toBe("boom");
   });
+
+  it("carries simulation logs from a kit preflight failure (cause.data.logs)", () => {
+    // Shape per @solana/errors 7.1.1: the preflight SolanaError's `cause` is
+    // the raw JSON-RPC error; its `data.logs` are the simulation logs.
+    const err = new Error("Transaction simulation failed");
+    Object.assign(err, {
+      name: "SolanaError",
+      cause: {
+        code: -32005,
+        message: "Transaction simulation failed: Error processing Instruction 0",
+        data: {
+          err: { InstructionError: [0, { Custom: 6002 }] },
+          logs: [
+            "Program PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf invoke [1]",
+            "Program log: Instruction: Deposit",
+            "Program PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf failed: custom program error: 0x1772",
+          ],
+        },
+      },
+    });
+    const mapped = toCliError(err);
+    expect(mapped.error).toBe("TrackClosed");
+    expect(mapped.logs).toHaveLength(3);
+    expect(mapped.logs?.[2]).toContain("0x1772");
+  });
+
+  it("carries logs even when no program code is recoverable", () => {
+    const err = new Error("Transaction simulation failed");
+    Object.assign(err, { context: { logs: ["Program log:foobar"] } });
+    const mapped = toCliError(err);
+    expect(mapped.error).toBe("Error");
+    expect(mapped.logs).toEqual(["Program log:foobar"]);
+  });
 });
