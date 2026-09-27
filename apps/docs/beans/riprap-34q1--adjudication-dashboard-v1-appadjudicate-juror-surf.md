@@ -1,10 +1,11 @@
 ---
 # riprap-34q1
 title: 'Adjudication dashboard v1 — #/app/adjudicate (juror surface)'
-status: todo
+status: completed
 type: milestone
+priority: normal
 created_at: 2026-09-25T08:53:10Z
-updated_at: 2026-09-25T08:53:10Z
+updated_at: 2026-09-27T10:05:06Z
 ---
 
 Juror-facing adjudication surface for the mutual — the grilled-consensus spec
