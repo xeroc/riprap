@@ -105,6 +105,7 @@ export {
 } from "./ui/dropdown-menu";
 export { Input } from "./ui/input";
 export { Label } from "./ui/label";
+export { Radio } from "./ui/radio";
 export {
   Select,
   SelectContent,
