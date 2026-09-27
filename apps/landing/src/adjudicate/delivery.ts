@@ -136,7 +136,9 @@ export type DocumentVerification =
   | { state: "pending"; reason: string }
   | { state: "failed"; reason: string };
 
-async function errorText(res: Response): Promise<string> {
+/** The daemon's refusal reason (JSON `error` field) or `HTTP <status>` —
+ * shared by every adjudicate fetch against the daemon. */
+export async function errorText(res: Response): Promise<string> {
   const body = await res.json().catch(() => null);
   return (body !== null && typeof body.error === "string" && body.error) || `HTTP ${res.status}`;
 }
