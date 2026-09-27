@@ -79,7 +79,7 @@ describe("e2e spec d: appeal ladder (riprap-0zvk)", () => {
     const r0 = await driveRound(fx.fx, filed, [0n, 0n, 1n]);
     expect(await readDisputeState(env, filed.dispute)).toBe(DISPUTE_ROUND_RESOLVED);
     const r0view = await readRound(env, r0.roundPda);
-    expect(r0view!.result).toBe(0n); // Approve
+    expect(r0view?.result).toBe(0n); // Approve
 
     // ── appeal: appellant funds the new-round fee + bond ─────────────────
     await setTokenBalance(env, env.payer.address, mint, 1_000_000_000n);
@@ -118,8 +118,8 @@ describe("e2e spec d: appeal ladder (riprap-0zvk)", () => {
     expect(panelSizeForRound(1)).toBe(7);
     const r1 = await driveRound(fx.fx, filed, [1n, 1n, 1n, 1n, 0n, 0n, 0n], 1);
     const r1view = await readRound(env, r1.roundPda);
-    expect(r1view!.jurorCount).toBe(7);
-    expect(r1view!.result).toBe(1n); // Deny — the flip
+    expect(r1view?.jurorCount).toBe(7);
+    expect(r1view?.result).toBe(1n); // Deny — the flip
 
     // ── appeal window lapses; finalize with the bond as remaining acct ───
     await finalizeDisputeAfterAppealWindow(
