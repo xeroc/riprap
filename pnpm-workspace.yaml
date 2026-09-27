@@ -8,3 +8,6 @@ allowBuilds:
   bufferutil: true
   esbuild: true
   utf-8-validate: true
+
+minimumReleaseAgeExclude:
+  - '@useaccord/sdk@0.2.0'

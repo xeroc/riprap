@@ -109,3 +109,19 @@ doesn't send). The pin bump (crate + SDK together) is what finishes spec-d.
 
 Also: after swapping `tests/deps` binaries, `rm -rf .surfpool` — Surfpool
 persists its ledger and stale programs keep executing otherwise.
+
+## 2026-09-26 (later) — RESOLVED for the e2e: @useaccord/sdk@0.2.0
+
+Installed `@useaccord/sdk@0.2.0` from npm across `apps/cli`, `apps/cranker`,
+`apps/landing`, `tests`. Its `requiredFee()` now returns `(J+1)·fpj`
+(ADR-0030), `appealCost()` includes the bounty unit, and `settleRound`/
+`finalizeRound` match develop's post-0029 shapes. The local workarounds were
+removed and spec-d's appeal-ladder economics re-derived for the ADR-0030
+flip-bounty (flipped bond refunds bond + both bounty units = $45; net
+appellant cost = new-round fee − filer's unit = $30).
+
+**Full live suite green: 7/7 suites, 10/10 tests against develop accord
+(verified twice on fresh validators).** Remaining for this bean: only the
+Rust crate pin — bump `programs/hanse/Cargo.toml` `rev` past the release and
+re-run the pin checklist (filing-fee shape now matches; Closed-terminality
+and the real-path refund-exactness test still apply).

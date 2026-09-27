@@ -71,8 +71,7 @@ describe("e2e spec d: appeal ladder (riprap-0zvk)", () => {
     const payerSdk = payerAccord(env);
     const cost = appealCost(0, FEE_PER_JUROR)!;
     expect(cost.panel).toBe(7);
-    // SDK (pinned @useaccord/sdk 0.1.0) computes 70M — fee 35 + bond 35.
-    expect(cost.total).toBe(70_000_000n);
+    expect(cost.total).toBe(75_000_000n); // fee 35 + bond 35 + ADR-0030 bounty 5
     expect(cost.bond).toBe(35_000_000n);
 
     // ── file the claim; round 0 resolves Approve (2-1) ───────────────────
@@ -111,12 +110,9 @@ describe("e2e spec d: appeal ladder (riprap-0zvk)", () => {
       ),
     );
 
-    // Appeal economics: develop custodies fee 35 + bond 35 + the ADR-0030
-    // bounty unit 5 = 75M (the pinned SDK's cost.total omits the bounty —
-    // pin-bump item, bean riprap-h2pd).
-    const developTotal = 75_000_000n;
-    expect(appellantBefore - (await balanceOf(env, payerAta))).toBe(developTotal);
-    expect((await balanceOf(env, fx.feeVault)) - vaultBefore).toBe(developTotal);
+    // Appeal economics: cost.total custodied appellant → fee vault.
+    expect(appellantBefore - (await balanceOf(env, payerAta))).toBe(cost.total);
+    expect((await balanceOf(env, fx.feeVault)) - vaultBefore).toBe(cost.total);
 
     // ── round 1: 7-panel redraw that FLIPS to Deny (4-3) ─────────────────
     expect(panelSizeForRound(1)).toBe(7);
@@ -171,7 +167,10 @@ describe("e2e spec d: appeal ladder (riprap-0zvk)", () => {
         0,
       ),
     );
-    expect((await balanceOf(env, payerAta)) - beforeRefund).toBe(cost.bond);
+    // ADR-0030 flip-bounty: the lone flipping appellant's bond refunds with
+    // the whole bounty pool riding it — their own unit + the filer's unit
+    // (cost.bond 35 + 2 × fpj 5 = 45).
+    expect((await balanceOf(env, payerAta)) - beforeRefund).toBe(cost.bond + 2n * FEE_PER_JUROR);
     // ── settle_claim reads the FINAL ruling: Denied despite round-0 Approve
     await env.sendIx(
       await getSettleClaimInstruction({
@@ -194,8 +193,10 @@ describe("e2e spec d: appeal ladder (riprap-0zvk)", () => {
     expect(mutual1.data.obligations).toBe(0n); // the flip zeroed the payout
     expect(mutual1.data.feeRefunds).toBe(0n);
 
-    // Net appellant cost = the new-round fee only (the bond came back).
-    expect(appellantBefore - (await balanceOf(env, payerAta))).toBe(cost.total - cost.bond);
+    // Net appellant cost = the new-round fee MINUS the filer's bounty unit
+    // (the flip reward hands the filer's unit to the successful appellant —
+    // ADR-0030's "lone voice of reason" payoff): 75 − 45 = 30 = 35 − 5.
+    expect(appellantBefore - (await balanceOf(env, payerAta))).toBe(cost.fee - FEE_PER_JUROR);
 
     // The refunded bond is zeroed: a second claim reverts with no movement.
     const afterRefund = await balanceOf(env, payerAta);

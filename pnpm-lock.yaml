@@ -223,8 +223,8 @@ importers:
         specifier: ^7.0.0
         version: 7.1.1(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@useaccord/sdk':
-        specifier: 0.1.0
-        version: 0.1.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
+        specifier: 0.2.0
+        version: 0.2.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
     devDependencies:
       '@noble/curves':
         specifier: ^1.9.7
@@ -263,8 +263,8 @@ importers:
         specifier: ^7.0.0
         version: 7.1.1(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@useaccord/sdk':
-        specifier: 0.1.0
-        version: 0.1.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
+        specifier: 0.2.0
+        version: 0.2.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
     devDependencies:
       '@noble/curves':
         specifier: ^1.9.7
@@ -303,8 +303,8 @@ importers:
         specifier: ^5.62.0
         version: 5.103.1(react@19.2.8)
       '@useaccord/sdk':
-        specifier: 0.1.0
-        version: 0.1.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@6.0.3)(utf-8-validate@6.0.6)
+        specifier: 0.2.0
+        version: 0.2.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@6.0.3)(utf-8-validate@6.0.6)
       lucide-react:
         specifier: ^1.37.0
         version: 1.37.0(react@19.2.8)
@@ -648,8 +648,8 @@ importers:
         specifier: ^0.4.0
         version: 0.4.15(@solana/web3.js@1.99.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@useaccord/sdk':
-        specifier: 0.1.0
-        version: 0.1.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
+        specifier: 0.2.0
+        version: 0.2.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
       bn.js:
         specifier: ^5.2.1
         version: 5.2.5
@@ -4584,8 +4584,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@useaccord/sdk@0.1.0':
-    resolution: {integrity: sha512-UdM8Yz9clXAG/HnVJT3vIQw/xq9A0+C+aOJ9tRbX3a/eYV9DHfuVfkWFKmlrA+yap1qD05+8/5++XvBw31veYg==}
+  '@useaccord/sdk@0.2.0':
+    resolution: {integrity: sha512-SHrP2XzECQF9vBSk+2ehlsfmUuY54+npHEvxfBNBoVoJ13VGhd27PxZCWwUOujeANlDBFefG1WIV0Ar76nS2gg==}
 
   '@valibot/to-json-schema@1.7.1':
     resolution: {integrity: sha512-3qkmU6KXWh8GIThEAW3kuRHPQBMjWkKy+Ppz3WkUucx53DTpOa6siMn4xDGSOhlVyMrDaJTCTMLYPZVAIk1P0A==}
@@ -13677,7 +13677,7 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
-  '@useaccord/sdk@0.1.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)':
+  '@useaccord/sdk@0.2.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)':
     dependencies:
       '@noble/ciphers': 1.3.0
       '@noble/curves': 1.9.7
@@ -13690,7 +13690,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@useaccord/sdk@0.1.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@6.0.3)(utf-8-validate@6.0.6)':
+  '@useaccord/sdk@0.2.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@6.0.3)(utf-8-validate@6.0.6)':
     dependencies:
       '@noble/ciphers': 1.3.0
       '@noble/curves': 1.9.7

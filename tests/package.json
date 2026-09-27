@@ -13,7 +13,7 @@
     "@riprap/pool": "workspace:*",
     "@solana/kit": "^7.0.0",
     "@solana/spl-token": "^0.4.0",
-    "@useaccord/sdk": "0.1.0",
+    "@useaccord/sdk": "0.2.0",
     "bn.js": "^5.2.1"
   },
   "devDependencies": {

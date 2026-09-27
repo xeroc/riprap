@@ -394,12 +394,8 @@ export async function armDispute(
   aggregation: Aggregation = Aggregation.Plurality,
 ): Promise<ArmedDispute> {
   const { env, subaccord, mint, vault, accordState } = fx;
-  // (min_jury_size + 1) × fpj — develop's filing_fee() incl. the ADR-0030
-  // bounty unit. The pinned @useaccord/sdk@0.1.0's requiredFee() still
-  // computes J×fpj (pin-bump item, bean riprap-h2pd).
-  const baseFee = requiredFee(FEE_PER_JUROR);
-  if (baseFee === null) throw new Error("fee overflow");
-  const fee = baseFee + FEE_PER_JUROR;
+  const fee = requiredFee(FEE_PER_JUROR);
+  if (fee === null) throw new Error("fee overflow");
 
   const filerAta = await ataOf(mint, env.payer.address);
 
@@ -609,22 +605,19 @@ export async function finalizeRoundOnly(
   fx: DrawFixture,
   armed: ArmedDispute,
   roundPda: Address,
-  jurorStakeAccounts: Address[],
+  _jurorStakeAccounts?: Address[],
 ): Promise<void> {
   const { env, subaccord } = fx;
   await warpTo(env, (await readRound(env, roundPda))!.revealEnd);
+  // sdk 0.2.0: finalize_round no longer takes the panel's JurorStake PDAs
+  // (ADR-0029 — no fee credit at round resolution).
   await env.sendIx(
-    finalizeRound(
-      payerAccord(env).adapter,
-      env.accordProgramId,
-      {
-        signer: env.payer.address,
-        subaccord,
-        dispute: armed.dispute,
-        round: roundPda,
-      },
-      jurorStakeAccounts,
-    ),
+    finalizeRound(payerAccord(env).adapter, env.accordProgramId, {
+      signer: env.payer.address,
+      subaccord,
+      dispute: armed.dispute,
+      round: roundPda,
+    }),
   );
 }
 
