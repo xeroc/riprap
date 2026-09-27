@@ -1,6 +1,6 @@
 [package]
 name = "hanse"
-version = "0.1.0"
+version.workspace = true
 description = "Hanse event mutual orchestrator — bounded-lifetime mutual on top of the pool primitive"
 edition = "2021"
 

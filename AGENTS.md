@@ -134,6 +134,16 @@ Frontend-only work never requires `anchor build` or `cargo test` — those legs 
 - `pnpm build` builds every package. Artifacts: `apps/landing/dist/` (deploy to the static host serving `riprap.xyz` — immutable cache for hashed assets, revalidate `index.html`) and `packages/ui/storybook-static/` (from `build-storybook`, deploy as the docs site).
 - CI: `.github/workflows/landing-page.yaml` builds `apps/landing` and deploys it to GitHub Pages (`riprap.xyz`) on push to `main`. The completion gate stays manual and mandatory for every change; if you add more CI, keep the gate command identical.
 
+### Releases
+
+Versioning is [changesets](https://github.com/changesets/changesets), lockstep across the whole workspace (`.changeset/config.json` `fixed` group): any release bumps every package/app AND `[workspace.package].version` in the root `Cargo.toml` (both programs inherit it; Anchor stamps it into the IDL `metadata.version`). `@riprap/pool` is the only package published (everything else is `private: true`); CI publishes via npm **trusted publishing** (OIDC, `id-token: write` — no `NPM_TOKEN` secret; requires npm ≥ 11.5.1, which the `Release` workflow installs, because pnpm delegates `pnpm publish` to the npm CLI on PATH).
+
+- Every PR that changes shipped behavior adds a changeset in the same change: `pnpm changeset` at the root.
+- On push to `main`, `changesets/action` opens/updates the "chore(release): version packages" PR; merging it triggers `pnpm run release:version` (bump package.jsons + Cargo workspace + lockfile, write CHANGELOGs) → `pnpm run release:publish` (build + publish `@riprap/pool` with provenance) → tags `@riprap/pool@X.Y.Z` and `vX.Y.Z`.
+- Local release outside CI: `pnpm release` (needs `gh auth token` for the changelog formatter and an `npm login` for the publish step; local publishes have no provenance — that's CI-only). Afterwards `git push --follow-tags`.
+- One-time npm setup: add a trusted publisher for `@riprap/pool` on npmjs.com (repo `xeroc/riprap`, workflow `release.yml`).
+- Workspace consumers resolve `@riprap/pool` from `src` (dev unchanged); the published tarball switches to the bundled `dist` via `publishConfig` in `packages/pool/package.json`, applied by `pnpm publish` at release time.
+
 ## Pull Request Guidelines
 
 - Title format: `[ui] …` / `[landing] …` / `[meta] …` / `[repo] …`

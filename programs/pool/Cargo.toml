@@ -1,6 +1,6 @@
 [package]
 name = "pool"
-version = "0.1.0"
+version.workspace = true
 description = "Riprap pool program — deposited money with exactly two governed exits: spending and liquidation"
 edition = "2021"
 
