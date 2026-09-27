@@ -1,7 +1,12 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.1.0/schema.json",
   "baseBranch": "main",
-  "changelog": ["@changesets/changelog-github", { "repo": "xeroc/riprap" }],
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "xeroc/riprap"
+    }
+  ],
   "packages": ["packages/*", "apps/*", "tests"],
   "fixed": [
     [
@@ -19,6 +24,6 @@
   "updateInternalDependencies": "patch",
   "privatePackages": {
     "version": true,
-    "tag": false
+    "tag": true
   }
 }
