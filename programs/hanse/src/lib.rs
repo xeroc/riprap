@@ -31,7 +31,7 @@ pub use state::*;
 
 use anchor_lang::prelude::*;
 
-declare_id!("hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav");
+declare_id!("rip6LwufCPcuDsCp2G184dBLGwpTTNcv3F2aKUbfpk6");
 
 #[program]
 pub mod hanse {
