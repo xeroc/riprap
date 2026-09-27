@@ -126,6 +126,11 @@ export type Mutual = {
   /** Claim PDA nonce; one claim account per filing. */
   claimNonce: bigint;
   bump: number;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 export type MutualArgs = {
@@ -190,6 +195,11 @@ export type MutualArgs = {
   /** Claim PDA nonce; one claim account per filing. */
   claimNonce: number | bigint;
   bump: number;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 /** Gets the encoder for {@link MutualArgs} account data. */
@@ -219,6 +229,7 @@ export function getMutualEncoder(): FixedSizeEncoder<MutualArgs> {
       ["claimsResolved", getU32Encoder()],
       ["claimNonce", getU64Encoder()],
       ["bump", getU8Encoder()],
+      ["padding", fixEncoderSize(getBytesEncoder(), 64)],
     ]),
     (value) => ({ ...value, discriminator: MUTUAL_DISCRIMINATOR }),
   );
@@ -250,6 +261,7 @@ export function getMutualDecoder(): FixedSizeDecoder<Mutual> {
     ["claimsResolved", getU32Decoder()],
     ["claimNonce", getU64Decoder()],
     ["bump", getU8Decoder()],
+    ["padding", fixDecoderSize(getBytesDecoder(), 64)],
   ]);
 }
 
@@ -309,5 +321,5 @@ export async function fetchAllMaybeMutual(
 }
 
 export function getMutualSize(): number {
-  return 394;
+  return 458;
 }

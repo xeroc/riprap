@@ -69,6 +69,7 @@ function encodedPool(): string {
       seed: 0n,
       liquidationBalance: 0n,
       bump: 255,
+      padding: new Uint8Array(64),
     }),
   );
 }
@@ -124,6 +125,7 @@ async function depositorFixture(pool: Address, owner: Address, total: bigint, se
       rightsStake: 0n,
       yieldStake: 0n,
       settled,
+      padding: new Uint8Array(64),
     }),
   );
   return { pda, encoded };

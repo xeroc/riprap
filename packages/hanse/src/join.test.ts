@@ -87,6 +87,7 @@ function encodedMutual(depositsCloseAt: bigint): string {
       claimsResolved: 0,
       claimNonce: 0n,
       bump: 255,
+      padding: new Uint8Array(64),
     }),
   );
 }
@@ -101,6 +102,7 @@ function encodedMember(tier: number): string {
       hasPendingClaim: false,
       capUsed: 0n,
       bump: 255,
+      padding: new Uint8Array(64),
     }),
   );
 }

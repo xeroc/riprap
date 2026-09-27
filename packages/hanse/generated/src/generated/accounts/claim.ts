@@ -69,6 +69,11 @@ export type Claim = {
   filedAt: bigint;
   settledAt: bigint;
   bump: number;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 export type ClaimArgs = {
@@ -84,6 +89,11 @@ export type ClaimArgs = {
   filedAt: number | bigint;
   settledAt: number | bigint;
   bump: number;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 /** Gets the encoder for {@link ClaimArgs} account data. */
@@ -100,6 +110,7 @@ export function getClaimEncoder(): FixedSizeEncoder<ClaimArgs> {
       ["filedAt", getI64Encoder()],
       ["settledAt", getI64Encoder()],
       ["bump", getU8Encoder()],
+      ["padding", fixEncoderSize(getBytesEncoder(), 64)],
     ]),
     (value) => ({ ...value, discriminator: CLAIM_DISCRIMINATOR }),
   );
@@ -118,6 +129,7 @@ export function getClaimDecoder(): FixedSizeDecoder<Claim> {
     ["filedAt", getI64Decoder()],
     ["settledAt", getI64Decoder()],
     ["bump", getU8Decoder()],
+    ["padding", fixDecoderSize(getBytesDecoder(), 64)],
   ]);
 }
 
@@ -177,5 +189,5 @@ export async function fetchAllMaybeClaim(
 }
 
 export function getClaimSize(): number {
-  return 138;
+  return 202;
 }

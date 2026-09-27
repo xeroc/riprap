@@ -88,6 +88,11 @@ export type Pool = {
    * share (CONTEXT.md, Money-weighted share).
    */
   liquidationBalance: bigint;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 export type PoolArgs = {
@@ -122,6 +127,11 @@ export type PoolArgs = {
    * share (CONTEXT.md, Money-weighted share).
    */
   liquidationBalance: number | bigint;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 /** Gets the encoder for {@link PoolArgs} account data. */
@@ -141,6 +151,7 @@ export function getPoolEncoder(): FixedSizeEncoder<PoolArgs> {
       ["seed", getU64Encoder()],
       ["bump", getU8Encoder()],
       ["liquidationBalance", getU64Encoder()],
+      ["padding", fixEncoderSize(getBytesEncoder(), 64)],
     ]),
     (value) => ({ ...value, discriminator: POOL_DISCRIMINATOR }),
   );
@@ -162,6 +173,7 @@ export function getPoolDecoder(): FixedSizeDecoder<Pool> {
     ["seed", getU64Decoder()],
     ["bump", getU8Decoder()],
     ["liquidationBalance", getU64Decoder()],
+    ["padding", fixDecoderSize(getBytesDecoder(), 64)],
   ]);
 }
 
@@ -221,5 +233,5 @@ export async function fetchAllMaybePool(
 }
 
 export function getPoolSize(): number {
-  return 194;
+  return 258;
 }

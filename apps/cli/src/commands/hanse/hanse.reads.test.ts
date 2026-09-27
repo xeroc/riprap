@@ -64,6 +64,7 @@ function mutualFixture(): Mutual {
     claimsResolved: 15,
     claimNonce: 15n,
     bump: 255,
+    padding: new Uint8Array(64),
   };
 }
 
@@ -81,6 +82,7 @@ function encodedMember(tier: number, hasPendingClaim: boolean): string {
       hasPendingClaim,
       capUsed: 0n,
       bump: 254,
+      padding: new Uint8Array(64),
     }),
   );
 }
@@ -97,6 +99,7 @@ function encodedClaim(status: ClaimStatus): string {
       filedAt: 1_763_200_000n,
       settledAt: status === ClaimStatus.Pending ? 0n : 1_763_400_000n,
       bump: 253,
+      padding: new Uint8Array(64),
     }),
   );
 }

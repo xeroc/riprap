@@ -97,6 +97,9 @@ pub struct Mutual {
     /// Claim PDA nonce; one claim account per filing.
     pub claim_nonce: u64,
     pub bump: u8,
+    /// Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+    /// last field — future fields grow into it without migrating accounts.
+    pub padding: [u8; 64],
 }
 
 /// One member position (EVENT-MUTUAL §6, PDA ["member", mutual, member]).
@@ -122,6 +125,9 @@ pub struct Member {
     /// claim settled could refile at the full cap before payout burns).
     pub cap_used: u64,
     pub bump: u8,
+    /// Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+    /// last field — future fields grow into it without migrating accounts.
+    pub padding: [u8; 64],
 }
 
 /// One filed claim (EVENT-MUTUAL §6, PDA ["claim", mutual, nonce]).
@@ -140,6 +146,9 @@ pub struct Claim {
     pub filed_at: i64,
     pub settled_at: i64,
     pub bump: u8,
+    /// Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+    /// last field — future fields grow into it without migrating accounts.
+    pub padding: [u8; 64],
 }
 
 /// PDA domains (EVENT-MUTUAL §6; milestone: program named hanse, domain
@@ -161,31 +170,33 @@ mod tests {
     /// fee_mint — + policy_hash 32 + tiers 3×16 + three i64 timestamps) +
     /// settlement block (phase 1 + pull_close_at 8 + ratio 8 + obligations 8
     /// + fee_refunds 8 + claims_filed 4 + claims_resolved 4 + claim_nonce 8
-    /// + seed 8) + bump 1.
+    /// + seed 8) + bump 1 + padding 64.
     #[test]
     fn mutual_space_matches_spec_layout() {
         assert_eq!(
             Mutual::INIT_SPACE,
-            7 * 32 + 32 + 3 * 16 + 3 * 8 + 8 + 1 + 8 + 8 + 8 + 8 + 4 + 4 + 8 + 1
+            7 * 32 + 32 + 3 * 16 + 3 * 8 + 8 + 1 + 8 + 8 + 8 + 8 + 4 + 4 + 8 + 1 + 64
         );
-        assert_eq!(MUTUAL_SPACE, 8 + 386);
+        assert_eq!(MUTUAL_SPACE, 8 + 450);
     }
 
     /// EVENT-MUTUAL §6: Member = mutual 32 + member 32 + tier 1 +
     /// attestation 32 (§2.8 SAS membership) + has_pending_claim 1 +
-    /// cap_used 8 (cumulative tier cap, amendment 2026-09-24) + bump 1.
+    /// cap_used 8 (cumulative tier cap, amendment 2026-09-24) + bump 1 +
+    /// padding 64.
     #[test]
     fn member_space_matches_spec_layout() {
-        assert_eq!(Member::INIT_SPACE, 32 + 32 + 1 + 32 + 1 + 8 + 1);
-        assert_eq!(MEMBER_SPACE, 8 + 107);
+        assert_eq!(Member::INIT_SPACE, 32 + 32 + 1 + 32 + 1 + 8 + 1 + 64);
+        assert_eq!(MEMBER_SPACE, 8 + 171);
     }
 
     /// EVENT-MUTUAL §6: Claim = mutual 32 + member 32 + claim_amount 8 +
-    /// dispute 32 + fee_paid 8 + status 1 + filed_at 8 + settled_at 8 + bump 1.
+    /// dispute 32 + fee_paid 8 + status 1 + filed_at 8 + settled_at 8 +
+    /// bump 1 + padding 64.
     #[test]
     fn claim_space_matches_spec_layout() {
-        assert_eq!(Claim::INIT_SPACE, 32 + 32 + 8 + 32 + 8 + 1 + 8 + 8 + 1);
-        assert_eq!(CLAIM_SPACE, 8 + 130);
+        assert_eq!(Claim::INIT_SPACE, 32 + 32 + 8 + 32 + 8 + 1 + 8 + 8 + 1 + 64);
+        assert_eq!(CLAIM_SPACE, 8 + 194);
     }
 
     /// EVENT-MUTUAL §6: Tier = contribution 8 + max_payout 8 (policy doc tiers).

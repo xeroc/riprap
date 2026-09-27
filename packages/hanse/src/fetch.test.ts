@@ -104,6 +104,7 @@ function encodedMutual(): string {
       claimsResolved: 0,
       claimNonce: 0n,
       bump: 255,
+      padding: new Uint8Array(64),
     }),
   );
 }
@@ -118,6 +119,7 @@ function encodedMember(): string {
       hasPendingClaim: false,
       capUsed: 0n,
       bump: 255,
+      padding: new Uint8Array(64),
     }),
   );
 }
@@ -134,6 +136,7 @@ function encodedClaim(): string {
       filedAt: 100n,
       settledAt: 0n,
       bump: 255,
+      padding: new Uint8Array(64),
     }),
   );
 }

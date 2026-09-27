@@ -74,6 +74,11 @@ export type Member = {
    */
   capUsed: bigint;
   bump: number;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 export type MemberArgs = {
@@ -100,6 +105,11 @@ export type MemberArgs = {
    */
   capUsed: number | bigint;
   bump: number;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 /** Gets the encoder for {@link MemberArgs} account data. */
@@ -114,6 +124,7 @@ export function getMemberEncoder(): FixedSizeEncoder<MemberArgs> {
       ["hasPendingClaim", getBooleanEncoder()],
       ["capUsed", getU64Encoder()],
       ["bump", getU8Encoder()],
+      ["padding", fixEncoderSize(getBytesEncoder(), 64)],
     ]),
     (value) => ({ ...value, discriminator: MEMBER_DISCRIMINATOR }),
   );
@@ -130,6 +141,7 @@ export function getMemberDecoder(): FixedSizeDecoder<Member> {
     ["hasPendingClaim", getBooleanDecoder()],
     ["capUsed", getU64Decoder()],
     ["bump", getU8Decoder()],
+    ["padding", fixDecoderSize(getBytesDecoder(), 64)],
   ]);
 }
 
@@ -189,5 +201,5 @@ export async function fetchAllMaybeMember(
 }
 
 export function getMemberSize(): number {
-  return 115;
+  return 179;
 }

@@ -90,6 +90,7 @@ function memberAccount(tier: number): MaybeAccount<Member> {
     hasPendingClaim: false,
     capUsed: 0n,
     bump: 255,
+    padding: new Uint8Array(64),
   } as Member);
 }
 
@@ -108,6 +109,7 @@ function claimAccount(claimant: string, over: Partial<Claim> = {}): MaybeAccount
     filedAt: BigInt(Date.UTC(2026, 10, 16, 10, 0) / 1000),
     settledAt: 0n,
     bump: 255,
+    padding: new Uint8Array(64),
     ...over,
   } as Claim);
 }

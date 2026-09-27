@@ -182,6 +182,7 @@ function mutualItem(overrides: {
         claimsResolved: overrides.claimsResolved ?? 0,
         claimNonce: 1n,
         bump: 255,
+        padding: new Uint8Array(64),
       }),
     ),
   };
@@ -202,6 +203,7 @@ function claimItem(status: ClaimStatus): WorldItem {
         filedAt: 100n,
         settledAt: 0n,
         bump: 255,
+        padding: new Uint8Array(64),
       }),
     ),
   };
@@ -225,6 +227,7 @@ function poolItem(state: PoolState): WorldItem {
         state,
         liquidationBalance: 100n,
         bump: 255,
+        padding: new Uint8Array(64),
       }),
     ),
   };
@@ -246,6 +249,7 @@ async function depositorItem(owner: Address, total: bigint, settled: boolean): P
         rightsStake: 0n,
         yieldStake: 0n,
         settled,
+        padding: new Uint8Array(64),
       }),
     ),
   };

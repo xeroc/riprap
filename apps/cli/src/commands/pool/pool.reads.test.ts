@@ -44,6 +44,7 @@ function encodedPool(state: PoolState, totalAmount: bigint, liquidationBalance =
     seed: 7n,
     bump: 255,
     liquidationBalance,
+    padding: new Uint8Array(64),
   });
   return getBase64Decoder().decode(raw);
 }
@@ -57,6 +58,7 @@ function encodedDepositor(totalAmount: bigint): string {
     rightsStake: 2n * totalAmount,
     yieldStake: 0n,
     settled: false,
+    padding: new Uint8Array(64),
   });
   return getBase64Decoder().decode(raw);
 }
