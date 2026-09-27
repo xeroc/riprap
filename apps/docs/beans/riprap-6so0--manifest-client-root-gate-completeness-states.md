@@ -3,9 +3,9 @@
 title: Manifest client + root gate + completeness states
 status: todo
 type: task
-assigned: implementer
+priority: normal
 created_at: 2026-09-25T08:53:10Z
-updated_at: 2026-09-25T08:53:10Z
+updated_at: 2026-09-27T08:15:46Z
 parent: riprap-wxs8
 blocked_by:
     - riprap-r8wf
