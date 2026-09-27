@@ -1,7 +1,7 @@
 {
   "name": "@riprap/pitch-seed-raise",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Seed-raise deck (meta/PITCH.md) — 10 slides + appendix on the shared HexBackdrop, @riprap/ui tokens throughout.",
   "type": "module",
   "scripts": {

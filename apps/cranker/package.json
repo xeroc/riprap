@@ -1,6 +1,6 @@
 {
   "name": "@riprap/cranker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Riprap Cranker — advances mutuals through their lifecycle by calling the permissionless cranks (settle_claim, settle_pool, claim_payout, dissolve, pool::crank)",
   "type": "module",
