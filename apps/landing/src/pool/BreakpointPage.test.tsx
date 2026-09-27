@@ -186,19 +186,21 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
   // deposits-window line disabled in the hero (2026-09-24 hero split) — no
   // assertion until it ships again
 
-  it("the odds table carries the five ludic rows, jokes never touching the math", async () => {
+  it("the odds table carries the four ludic rows, jokes never touching the math", async () => {
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
     const { container } = renderPoolPage();
     await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
     const rows = [...container.querySelectorAll('[data-slot="odds"] tbody tr')].map(
       (tr) => tr.textContent,
     );
+    // The 2026-09-24 quieter-cover rewrite: four lowercase rows, the static
+    // dissolves-on-schedule row gone; copy doc §97 reconciliation pending
+    // (bean riprap-k9jl).
     expect(rows).toEqual([
-      "You going to Breakpoint in LondonYou betcha",
-      "Accidental eye contact on the Tubecertain",
-      "You get stabbed at Breakpointstatistically negligible",
-      "The pool dissolves on schedule100% — it's a program",
-      "You send this page to your friendshigh",
+      "You going to Breakpoint in Londonyou betcha",
+      "Accidental eye contact on the Tubedead sure",
+      "You get stabbed at Breakpointbarely a blip",
+      "You send this page to your friendsdead cert",
     ]);
   });
 
@@ -353,8 +355,9 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
       "Post it with @riprapxyz — everyone who shares lands on the front page as a supporter",
     );
     const shareX = dialog.querySelector('[data-slot="covered-share"] a[aria-label="Share on X"]');
+    expect(shareX?.getAttribute("href")).toContain(encodeURIComponent("for $20 😳"));
     expect(shareX?.getAttribute("href")).toContain(
-      encodeURIComponent("$20 in, up to $2,000 out — "),
+      encodeURIComponent("Worst case: up to $2,000 out."),
     );
     expect(shareX?.getAttribute("href")).toContain(encodeURIComponent("@riprapxyz"));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

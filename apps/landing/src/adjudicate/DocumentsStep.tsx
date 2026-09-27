@@ -62,6 +62,15 @@ function loadAnswers(storageKey: string): DocumentsAnswers {
   }
 }
 
+/** The wizard's step-1 gate, pure: every slot ticked + the closing
+ * cross-check (spec §4 — unverified evidence blocks nothing here; the
+ * package gate owns that; incomplete ticks block step 2). Reads persisted
+ * answers through the same loader the step renders. */
+export function documentsComplete(slots: DocumentSlot[], storageKey: string): boolean {
+  const answers = loadAnswers(storageKey);
+  return answers.samePerson && slots.every((slot) => slotComplete(answers.ticks[slot.path]));
+}
+
 /** The slots' MIME law (§6: images inline, PDFs open-in-tab): the daemon's
  * format gate is jpeg/png/pdf (CLAIM-WIZARD §4); anything else falls back
  * to a download-only octet stream. */
