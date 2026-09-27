@@ -202,6 +202,7 @@ mod tests {
             seed: 0,
             bump: 255,
             liquidation_balance: 0,
+            padding: [0; 64],
         }
     }
 
@@ -214,6 +215,7 @@ mod tests {
             rights_stake: 0,
             yield_stake: 0,
             settled: false,
+            padding: [0; 64],
         }
     }
 

@@ -68,6 +68,11 @@ export type Depositor = {
   yieldStake: bigint;
   /** A settled depositor cannot deposit again or receive another payout. */
   settled: boolean;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 export type DepositorArgs = {
@@ -88,6 +93,11 @@ export type DepositorArgs = {
   yieldStake: number | bigint;
   /** A settled depositor cannot deposit again or receive another payout. */
   settled: boolean;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 /** Gets the encoder for {@link DepositorArgs} account data. */
@@ -102,6 +112,7 @@ export function getDepositorEncoder(): FixedSizeEncoder<DepositorArgs> {
       ["rightsStake", getU128Encoder()],
       ["yieldStake", getU128Encoder()],
       ["settled", getBooleanEncoder()],
+      ["padding", fixEncoderSize(getBytesEncoder(), 64)],
     ]),
     (value) => ({ ...value, discriminator: DEPOSITOR_DISCRIMINATOR }),
   );
@@ -118,6 +129,7 @@ export function getDepositorDecoder(): FixedSizeDecoder<Depositor> {
     ["rightsStake", getU128Decoder()],
     ["yieldStake", getU128Decoder()],
     ["settled", getBooleanDecoder()],
+    ["padding", fixDecoderSize(getBytesDecoder(), 64)],
   ]);
 }
 
@@ -177,5 +189,5 @@ export async function fetchAllMaybeDepositor(
 }
 
 export function getDepositorSize(): number {
-  return 129;
+  return 193;
 }

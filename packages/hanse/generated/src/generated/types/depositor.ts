@@ -12,16 +12,21 @@ import {
   type FixedSizeCodec,
   type FixedSizeDecoder,
   type FixedSizeEncoder,
+  fixDecoderSize,
+  fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
   getBooleanDecoder,
   getBooleanEncoder,
+  getBytesDecoder,
+  getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
   getU64Encoder,
   getU128Decoder,
   getU128Encoder,
+  type ReadonlyUint8Array,
 } from "@solana/kit";
 
 /** One depositor position per pool per party (CONTEXT.md, Depositor). */
@@ -43,6 +48,11 @@ export type Depositor = {
   yieldStake: bigint;
   /** A settled depositor cannot deposit again or receive another payout. */
   settled: boolean;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 export type DepositorArgs = {
@@ -63,6 +73,11 @@ export type DepositorArgs = {
   yieldStake: number | bigint;
   /** A settled depositor cannot deposit again or receive another payout. */
   settled: boolean;
+  /**
+   * Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+   * last field — future fields grow into it without migrating accounts.
+   */
+  padding: ReadonlyUint8Array;
 };
 
 export function getDepositorEncoder(): FixedSizeEncoder<DepositorArgs> {
@@ -74,6 +89,7 @@ export function getDepositorEncoder(): FixedSizeEncoder<DepositorArgs> {
     ["rightsStake", getU128Encoder()],
     ["yieldStake", getU128Encoder()],
     ["settled", getBooleanEncoder()],
+    ["padding", fixEncoderSize(getBytesEncoder(), 64)],
   ]);
 }
 
@@ -86,6 +102,7 @@ export function getDepositorDecoder(): FixedSizeDecoder<Depositor> {
     ["rightsStake", getU128Decoder()],
     ["yieldStake", getU128Decoder()],
     ["settled", getBooleanDecoder()],
+    ["padding", fixDecoderSize(getBytesDecoder(), 64)],
   ]);
 }
 

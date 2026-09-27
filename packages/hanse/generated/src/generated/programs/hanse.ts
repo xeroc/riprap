@@ -87,7 +87,7 @@ import {
 } from "../pdas";
 
 export const HANSE_PROGRAM_ADDRESS =
-  "hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav" as Address<"hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav">;
+  "rip6LwufCPcuDsCp2G184dBLGwpTTNcv3F2aKUbfpk6" as Address<"rip6LwufCPcuDsCp2G184dBLGwpTTNcv3F2aKUbfpk6">;
 
 export enum HanseAccount {
   Claim,
@@ -354,7 +354,7 @@ export function identifyHanseInstruction(
 }
 
 export type ParsedHanseInstruction<
-  TProgram extends string = "hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav",
+  TProgram extends string = "rip6LwufCPcuDsCp2G184dBLGwpTTNcv3F2aKUbfpk6",
 > =
   | ({
       instructionType: HanseInstruction.ClaimPayout;

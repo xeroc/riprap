@@ -48,6 +48,9 @@ pub struct Pool {
     /// base so payout order can never dilute a depositor's money-weighted
     /// share (CONTEXT.md, Money-weighted share).
     pub liquidation_balance: u64,
+    /// Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+    /// last field — future fields grow into it without migrating accounts.
+    pub padding: [u8; 64],
 }
 
 impl Pool {
@@ -98,6 +101,9 @@ pub struct Depositor {
     pub yield_stake: u128,
     /// A settled depositor cannot deposit again or receive another payout.
     pub settled: bool,
+    /// Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
+    /// last field — future fields grow into it without migrating accounts.
+    pub padding: [u8; 64],
 }
 
 pub const POOL_SPACE: usize = 8 + Pool::INIT_SPACE;
@@ -121,23 +127,25 @@ mod tests {
             seed: 0,
             bump: 255,
             liquidation_balance: 0,
+            padding: [0; 64],
         }
     }
 
     /// Handoff §2: Pool = mint 32 + state 1 + rates 3×8 + authorities 3×32 +
     /// total 16 + seed 8 + bump 1 + liquidation_balance 8 (seed/bump restated
-    /// so the PDA can sign; balance frozen at liquidation).
+    /// so the PDA can sign; balance frozen at liquidation) + padding 64.
     #[test]
     fn pool_space_matches_handoff_layout() {
-        assert_eq!(Pool::INIT_SPACE, 32 + 1 + 3 * 8 + 3 * 32 + 16 + 8 + 1 + 8);
-        assert_eq!(POOL_SPACE, 8 + 186);
+        assert_eq!(Pool::INIT_SPACE, 32 + 1 + 3 * 8 + 3 * 32 + 16 + 8 + 1 + 8 + 64);
+        assert_eq!(POOL_SPACE, 8 + 250);
     }
 
-    /// Depositor = owner 32 + beneficiary 32 + total 8 + stakes 3×16 + settled 1.
+    /// Depositor = owner 32 + beneficiary 32 + total 8 + stakes 3×16 +
+    /// settled 1 + padding 64.
     #[test]
     fn depositor_space_matches_handoff_layout() {
-        assert_eq!(Depositor::INIT_SPACE, 32 + 32 + 8 + 3 * 16 + 1);
-        assert_eq!(DEPOSITOR_SPACE, 8 + 121);
+        assert_eq!(Depositor::INIT_SPACE, 32 + 32 + 8 + 3 * 16 + 1 + 64);
+        assert_eq!(DEPOSITOR_SPACE, 8 + 185);
     }
 
     /// Handoff §2 / pseudo-code: rate lookup per track, 0 = closed.

@@ -23,7 +23,7 @@ export async function findOwnershipAuthorityPda(
   config: { programAddress?: Address | undefined } = {},
 ): Promise<ProgramDerivedAddress> {
   const {
-    programAddress = "hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav" as Address<"hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav">,
+    programAddress = "rip6LwufCPcuDsCp2G184dBLGwpTTNcv3F2aKUbfpk6" as Address<"rip6LwufCPcuDsCp2G184dBLGwpTTNcv3F2aKUbfpk6">,
   } = config;
   return await getProgramDerivedAddress({
     programAddress,

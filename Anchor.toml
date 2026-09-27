@@ -7,16 +7,16 @@ package_manager = "pnpm"
 resolution = true
 skip-lint = false
 
-[programs.localnet]
-hanse = "hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav"
+[programs.devnet]
+hanse = "rip6LwufCPcuDsCp2G184dBLGwpTTNcv3F2aKUbfpk6"
 pool = "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf"
 
-[programs.devnet]
-hanse = "hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav"
+[programs.localnet]
+hanse = "rip6LwufCPcuDsCp2G184dBLGwpTTNcv3F2aKUbfpk6"
 pool = "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf"
 
 [programs.mainnet]
-hanse = "hanseP4mdA6Df5TXkd3cDLKPaFqzE4PNJAGKkkvgqav"
+hanse = "rip6LwufCPcuDsCp2G184dBLGwpTTNcv3F2aKUbfpk6"
 pool = "PuuLXN4dNzoZ363h93WZi76NHwbH2AZcafKUqjGgdkf"
 
 [provider]

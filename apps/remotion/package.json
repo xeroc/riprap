@@ -1,6 +1,6 @@
 {
   "name": "@riprap/remotion",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "@riprap/remotion — Remotion 4 video framework rendering @riprap/ui kit illustrations under the glyph clock. Videos under videos/ are local-only (gitignored); wav/render artifacts local-only.",
   "type": "module",
