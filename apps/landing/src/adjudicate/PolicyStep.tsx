@@ -66,6 +66,12 @@ function loadAnswers(storageKey: string): PolicyAnswers {
   }
 }
 
+/** The persisted answers, validated (§8) — shared by the step's state and
+ * the wizard's completeness gate. */
+export function loadPolicyAnswers(storageKey: string): PolicyAnswers {
+  return loadAnswers(storageKey);
+}
+
 /** One question row: the statement plus its three stations (native radio
  * group — one answer at a time, blank until taken). */
 function Question({

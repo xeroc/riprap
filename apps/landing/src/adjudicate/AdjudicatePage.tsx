@@ -6,6 +6,7 @@
 // Copy source: meta/marketing/03-website-copy/landing-page.md § "/app/adjudicate"
 // — rendered verbatim; unknown values render {{PARAM}} mono placeholders,
 // never static numbers.
+
 import {
   AddressChip,
   BadgeStamp,
@@ -17,6 +18,8 @@ import {
 } from "@riprap/ui";
 import { useCluster, useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
+import { useQuery } from "@tanstack/react-query";
+import { findRoundPda } from "@useaccord/sdk";
 import { useEffect, useState } from "react";
 
 import { AppNavControls, ClusterSwitch, ConnectWalletButton } from "../app/controls";
@@ -26,8 +29,11 @@ import { SiteNav } from "../components/SiteNav";
 import { formatUtc, microToUsd, resolveMutualAddress } from "../pool/mutual";
 import { useMinStake } from "../pool/useMinStake";
 import { useMutual } from "../pool/useMutual";
+import { currentDecryptDelivery, localDeliveryKeyStore } from "./delivery";
 import { phaseLabel, seatPhase } from "./phase";
+import { adjudicationPolicyFor } from "./policies";
 import { StakeToServe, WithdrawFees } from "./ServeActions";
+import { SessionWizard } from "./SessionWizard";
 import { type JurorStakeQuery, useJurorStake } from "./useJurorStake";
 import { type Seat, tallyOf, terminalLabel, useRoundSeat, useSeats } from "./useSeats";
 
@@ -168,7 +174,21 @@ function ServePanel({
  * not the dispute's current one. Not drawn for it — or it doesn't exist — is
  * one honest state: evidence never loads for a wallet that doesn't hold the
  * seat (the daemon enforces it too). */
-function SessionShell({ session, wallet }: { session: SessionRoute; wallet: Address }) {
+function SessionShell({
+  session,
+  wallet,
+  mutual,
+  subaccord,
+}: {
+  session: SessionRoute;
+  wallet: Address;
+  mutual: Address;
+  subaccord: Address;
+}) {
+  const roundPda = useQuery({
+    queryKey: ["round-pda", session.dispute, session.round],
+    queryFn: () => findRoundPda({ dispute: session.dispute as Address, roundIdx: session.round }),
+  });
   const roundSeat = useRoundSeat(session.dispute as Address, session.round);
   if (roundSeat.state === "loading") {
     return (
@@ -212,6 +232,34 @@ function SessionShell({ session, wallet }: { session: SessionRoute; wallet: Addr
       </Settle>
       <Settle delay={120}>
         <PhaseClock round={round} />
+      </Settle>
+      <Settle delay={180}>
+        {/* The composed lock-step wizard. Seam-honest v1: the delivery-key
+            registration interface is pending (spec §5/§9) — the package
+            gate renders the no-key state until it lands; the live reads
+            (amount, fee, ruling) wire with the shell's chain reads. */}
+        <SessionWizard
+          mutual={mutual}
+          subaccord={subaccord}
+          dispute={session.dispute as Address}
+          roundAddress={(roundPda.data?.[0] ?? ("R".repeat(32) as Address)) as Address}
+          round={round}
+          wallet={wallet}
+          policy={adjudicationPolicyFor(mutual)}
+          verification={
+            currentDecryptDelivery(localDeliveryKeyStore()) === null ? { state: "no-key" } : null
+          }
+          manifestSha256={null}
+          slots={[]}
+          amountMicro={null}
+          feeEarnedMicro={null}
+          ruling={null}
+          nowSec={BigInt(Math.floor(Date.now() / 1000))}
+          onRetry={() => {}}
+          onExit={() => {
+            window.location.hash = "#/app/adjudicate";
+          }}
+        />
       </Settle>
     </div>
   );
@@ -298,7 +346,14 @@ function Board({ wallet, session }: { wallet: Address; session: SessionRoute | n
   // member — the session route replaces the board list (copy doc: one
   // session per seat, deep-linkable).
   if (session !== null) {
-    return <SessionShell session={session} wallet={wallet} />;
+    return (
+      <SessionShell
+        session={session}
+        wallet={wallet}
+        mutual={mutualAddress as Address}
+        subaccord={mutualQuery.mutual.subaccord}
+      />
+    );
   }
 
   return (
