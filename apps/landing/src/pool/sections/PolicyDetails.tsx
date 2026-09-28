@@ -188,12 +188,18 @@ function buildSections(tiers: PoolTier[] | null, subaccord: Address | null): Pol
         <div className="flex flex-col gap-3">
           <p>
             A member may submit a payout request for a qualifying knife assault occurring during the
-            coverage period. All payments are discretionary: requests are adjudicated by a randomly
+            coverage period. Filing requires access to the member's own wallet and pre-pays an
+            adjudication fee. All payments are discretionary: requests are adjudicated by a randomly
             drawn jury of staked members; no member has a contractual or enforceable right to any
             payment; the jury's determination is final. The maximum payment is set by the member's
             coverage tier. If approved requests are less than the pool, the remaining funds are
-            returned to members. If approved requests exceed the pool, payments are reduced
-            proportionally so the mutual never pays more than it holds.
+            returned to members. If the total due — approved payments and returned adjudication fees
+            — exceeds the pool, payments and returns are reduced proportionally so the mutual never
+            pays more than it holds.
+          </p>
+          {/* §7 adjudication fee — policy-doc number (200 USDC), not a chain read */}
+          <p data-num className="font-mono text-xs text-stone">
+            ADJUDICATION FEE 200 USDC · FORFEITED IF DENIED · RETURNED IF ADJUDICATION FAILS
           </p>
           {/* §7 example: $20,000 pool, $12,000 approved requests, $8,000 returned — policy-doc numbers */}
           <p data-num className="font-mono text-xs text-stone">
