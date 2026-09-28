@@ -21,7 +21,13 @@ use {
     spl_token_interface::instruction as token_ix,
 };
 
-const WASM: &[u8] = include_bytes!("../../../target/deploy/pool.so");
+static WASM: std::sync::LazyLock<Vec<u8>> = std::sync::LazyLock::new(|| {
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/deploy/pool.so");
+    std::fs::read(&path).unwrap_or_else(|err| {
+        panic!("cannot read {} — run `anchor build` first ({err})", path.display())
+    })
+});
 
 struct Env {
     svm: LiteSVM,
@@ -45,7 +51,7 @@ impl Env {
         let rights_authority = Keypair::new();
 
         let mut svm = LiteSVM::new();
-        svm.add_program(program_id, WASM).unwrap();
+        svm.add_program(program_id, &WASM).unwrap();
         svm.airdrop(&payer.pubkey(), 50_000_000_000).unwrap();
         // Rent sponsor: pays depositor rent + tx fees on deposits, never the
         // owner (fee sponsoring).

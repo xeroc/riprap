@@ -2,9 +2,12 @@
 //! pattern, extended to three programs (hanse + pool + accord).
 //!
 //! Contract: `anchor build` must have produced `target/deploy/*.so` before
-//! `cargo test` runs (the `pnpm verify` gate guarantees the order). The
-//! accord binary is NOT in this repo — it is read at runtime from the
-//! sibling checkout (or `$ACCORD_SO`), see [`accord_bytes`].
+//! the tests RUN — the binaries are read at runtime, not `include_bytes!`:
+//! anchor's IDL pass compiles the integration tests before `build-sbf`
+//! writes the .so files, so a compile-time embed breaks `anchor build` on
+//! any machine without stale artifacts (fresh CI runners). The accord
+//! binary is NOT in this repo — it is read at runtime from the sibling
+//! checkout (or `$ACCORD_SO`), see [`accord_bytes`].
 
 // PDA/fabrication helpers exist for the instruction suites (sibling beans);
 // not every helper is used by the smoke tests yet.
@@ -26,8 +29,28 @@ use {
     spl_token_interface::instruction as token_ix,
 };
 
-pub const POOL_WASM: &[u8] = include_bytes!("../../../../target/deploy/pool.so");
-pub const HANSE_WASM: &[u8] = include_bytes!("../../../../target/deploy/hanse.so");
+static POOL_WASM: std::sync::LazyLock<Vec<u8>> =
+    std::sync::LazyLock::new(|| read_deploy_binary("pool.so"));
+static HANSE_WASM: std::sync::LazyLock<Vec<u8>> =
+    std::sync::LazyLock::new(|| read_deploy_binary("hanse.so"));
+
+/// `target/deploy/pool.so`, read at runtime (see the module contract).
+pub fn pool_wasm() -> &'static [u8] {
+    POOL_WASM.as_slice()
+}
+
+/// `target/deploy/hanse.so`, read at runtime (see the module contract).
+pub fn hanse_wasm() -> &'static [u8] {
+    HANSE_WASM.as_slice()
+}
+
+fn read_deploy_binary(name: &str) -> Vec<u8> {
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/deploy").join(name);
+    std::fs::read(&path).unwrap_or_else(|err| {
+        panic!("cannot read {} — run `anchor build` first ({err})", path.display())
+    })
+}
 
 /// Why the harness could not boot: the accord binary lives in the sibling
 /// repo (`Accord/accord`), which is not part of this workspace.
@@ -117,8 +140,8 @@ impl Env {
         let mint_kp = Keypair::new();
 
         let mut svm = LiteSVM::new();
-        svm.add_program(pool::id(), POOL_WASM).unwrap();
-        svm.add_program(hanse::id(), HANSE_WASM).unwrap();
+        svm.add_program(pool::id(), pool_wasm()).unwrap();
+        svm.add_program(hanse::id(), hanse_wasm()).unwrap();
         svm.add_program(accord::id(), &accord_bytes()?).unwrap();
         // The canonical SAS program id — LiteSVM loads by address, no
         // keypair needed (unlike the surfnet's loader-account fabrication).
