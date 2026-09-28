@@ -1,6 +1,6 @@
 # @riprap/landing
 
-The static Riprap site (riprap.xyz) — a single-entry Vite + React app, hash-routed: `/` (platform landing, Solana-free), `#/2026-breakpoint-blade-pool` (the pool page), `#/app` (the member wallet surface). Old MPA paths (`/2026-breakpoint-blade-pool/`, `/app/`) redirect to the hash routes via stubs in `public/`. Part of the [riprap monorepo](../../README.md) — setup, scripts, and architecture live there.
+The static Riprap site (riprap.xyz) — a single-entry Vite + React app, hash-routed: `/` (platform landing), `#/2026-breakpoint-blade-pool` (the pool page), `#/app` (the member wallet surface). Old MPA paths (`/2026-breakpoint-blade-pool/`, `/app/`) redirect to the hash routes via stubs in `public/`. Part of the [riprap monorepo](../../README.md) — setup, scripts, and architecture live there.
 
 - Copy source of truth: `meta/marketing/03-website-copy/landing-page.md`
 - Design law: `DESIGN.md` (repo root)

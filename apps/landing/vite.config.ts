@@ -5,9 +5,8 @@ import { defineConfig } from "vite";
 
 // One static entry (index.html → src/main.tsx). The pool page and the member
 // app are hash routes (#/2026-breakpoint-blade-pool, #/app) rendered by the
-// router in src/main.tsx; their route modules are lazy imports, so the
-// platform route's chunk stays @solana/*-free. Old MPA paths redirect from
-// stubs under public/.
+// router in src/main.tsx; route pages are lazy imports, so each route keeps
+// its own chunk. Old MPA paths redirect from stubs under public/.
 export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {

@@ -1,10 +1,10 @@
 /**
- * providers.tsx — the Solana-route provider stack.
+ * providers.tsx — the app-root Solana provider stack.
  *
  * ConnectorKit AppProvider (wallet + cluster) + TanStack Query + the kit
- * toast surface. Mounted by the pool and app route modules
- * (src/{pool,app}/entry.tsx) ONLY — the platform route's chunk must stay
- * Solana-free, so this file is never imported from the platform graph.
+ * toast surface. Mounted ONCE in src/main.tsx above the router, so a wallet
+ * connected on any route stays connected on every route (ADR-0007 — one
+ * connect per page session, pool → app → adjudicate → file-claim).
  *
  * Clusters: devnet (default) + mainnet-beta + localnet; RPC URLs come from
  * VITE_DEVNET_RPC / VITE_MAINNET_RPC with public defaults.

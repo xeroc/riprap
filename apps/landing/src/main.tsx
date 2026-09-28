@@ -3,12 +3,24 @@ import { lazy, StrictMode, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
+// One provider stack for every route (ADR-0007): a wallet connected on any
+// surface stays connected on all of them. Pages stay lazy so route code
+// keeps its own chunks.
+import { SolanaProviders } from "./shared/providers.tsx";
 
-const PoolRoute = lazy(() => import("./pool/entry.tsx"));
-const MemberRoute = lazy(() => import("./app/entry.tsx"));
-const FileClaimRoute = lazy(() => import("./app/file-claim/entry.tsx"));
-const AdjudicateRoute = lazy(() => import("./adjudicate/entry.tsx"));
-const BlurbRoute = lazy(() => import("./blurb/entry.tsx"));
+const PoolRoute = lazy(() =>
+  import("./pool/BreakpointPage.tsx").then((m) => ({ default: m.BreakpointPage })),
+);
+const MemberRoute = lazy(() => import("./app/AppPage.tsx").then((m) => ({ default: m.AppPage })));
+const FileClaimRoute = lazy(() =>
+  import("./app/file-claim/FileClaimPage.tsx").then((m) => ({ default: m.FileClaimPage })),
+);
+const AdjudicateRoute = lazy(() =>
+  import("./adjudicate/AdjudicatePage.tsx").then((m) => ({ default: m.AdjudicatePage })),
+);
+const BlurbRoute = lazy(() =>
+  import("./blurb/BlurbPage.tsx").then((m) => ({ default: m.BlurbPage })),
+);
 
 /** "#/app/" matches "#/app"; "" / "#" / "#/" (and in-page anchors) are platform. */
 function routeHash(hash: string): string | null {
@@ -92,7 +104,9 @@ const root = document.getElementById("root");
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      <Router />
+      <SolanaProviders>
+        <Router />
+      </SolanaProviders>
     </StrictMode>,
   );
 }
