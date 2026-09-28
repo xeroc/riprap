@@ -42,7 +42,7 @@ const FAQS = [
   },
   {
     q: "What does Riprap charge?",
-    a: "Nothing on the first pools. If a pool ever carries a take, that's a published term, visible before anyone joins. If a number isn't published, it isn't charged. The one cost inside a dispute is the juror fee, paid by the member who files.",
+    a: "Nothing on the first pools. If a pool ever carries a take, that's a published term, visible before anyone joins. If a number isn't published, it isn't charged. The one cost inside a dispute is the adjudication fee, paid by the member who files.",
   },
   {
     q: "Is this legal?",

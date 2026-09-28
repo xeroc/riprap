@@ -152,9 +152,10 @@ function renderApp(mutualAddress = MUTUAL_ADDR) {
   );
 }
 
-// The subaccord answers the pilot's live fee inputs (policy §12: 3 jurors ×
-// $5) + the juror panel's $10 stake floor; the wallet's fee ATA answers $15
-// USDC by default — exactly the juror fee, so preflight passes.
+// The subaccord answers the pilot's live fee inputs (policy §12: (3 + 1)
+// jurors × $5) + the juror panel's $10 stake floor; the wallet's fee ATA
+// answers $20 USDC by default — exactly the adjudication fee, so preflight
+// passes.
 beforeEach(() => {
   subaccordMock.mockResolvedValue({
     exists: true,
@@ -166,7 +167,7 @@ beforeEach(() => {
       evidenceOperator: "E".repeat(32),
     },
   } as unknown as MaybeAccount<Subaccord>);
-  feeBalanceMock.mockResolvedValue(15n * 1_000_000n);
+  feeBalanceMock.mockResolvedValue(20n * 1_000_000n);
 });
 afterEach(() => {
   cleanup();
@@ -400,7 +401,7 @@ describe("/app — payout-request entry action (copy doc § /app, CLAIM-WIZARD �
     mutualMock.mockResolvedValue(maybe(fakeMutual()));
     memberMock.mockResolvedValue(memberAccount(1));
     claimMock.mockResolvedValue({ exists: false, address: "C".repeat(32) } as MaybeAccount<Claim>);
-    feeBalanceMock.mockResolvedValue(1n * 1_000_000n); // $1 < the $15 juror fee
+    feeBalanceMock.mockResolvedValue(1n * 1_000_000n); // $1 < the $20 adjudication fee
     renderApp();
 
     // claims (started with the money reads) settled — preflight evaluated

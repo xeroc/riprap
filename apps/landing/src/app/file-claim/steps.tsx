@@ -409,8 +409,6 @@ export function StepReview({
   draft,
   tier,
   feeMicro,
-  minJurySize,
-  feePerJuror,
   incidentIso,
   operatorAddress,
   canSign,
@@ -420,8 +418,6 @@ export function StepReview({
   draft: ClaimDraft;
   tier: PoolTier;
   feeMicro: bigint;
-  minJurySize: number;
-  feePerJuror: bigint;
   incidentIso: string;
   /** sub.evidence_operator — the operator IS this pubkey; presented truncated. */
   operatorAddress: string;
@@ -435,12 +431,10 @@ export function StepReview({
     <StepFrame n={5} name="Review">
       <div className="flex max-w-3xl flex-col gap-2">
         <p data-num className="font-mono text-base text-ink">
-          Juror fee {usd(microToUsd(feeMicro))} USDC — {minJurySize} jurors at{" "}
-          {usd(microToUsd(feePerJuror))} USDC each, pre-paid from your USDC.
+          Adjudication fee {usd(microToUsd(feeMicro))} USDC, pre-paid from your USDC.
         </p>
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          Denied: the fee is kept. Approved: refunded with the payment. Failed adjudication:
-          returned.
+          Denied: the fee is forfeited. Failed adjudication: returned.
         </p>
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
           You'll also need SOL for network fees.
@@ -621,8 +615,7 @@ export function StepFiled({
         <span data-num className="font-mono">
           {feeUsd}
         </span>{" "}
-        USDC fee rides the outcome — refunded if approved, kept if denied, returned if adjudication
-        fails.
+        USDC adjudication fee is forfeited if the request is denied, returned if adjudication fails.
       </p>
       <p className="max-w-[42rem] leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
         Keep manifest.yaml. If evidence delivery failed, re-enter from the app surface — the

@@ -60,7 +60,7 @@ function buildFaqs(tiers: PoolTier[] | null): { q: string; a: ReactNode }[] {
       // policy §7
       q: "What do I have to show?",
       a: (
-        <Prose text="Five documents, all required: your event ticket in your own name, government photo ID, the police report, the treating practitioner's medical report, and a statutory declaration made before a solicitor or commissioner for oaths. An incomplete set is not adjudicated. Filing pre-pays the juror fee — 3 jurors at 50 USDC each, 150 USDC in total — refunded with an approved payment, kept on a denial, returned if adjudication fails." />
+        <Prose text="Five documents, all required: your event ticket in your own name, government photo ID, the police report, the treating practitioner's medical report, and a statutory declaration made before a solicitor or commissioner for oaths. An incomplete set is not adjudicated. Filing pre-pays the adjudication fee of 200 USDC — forfeited on a denial, returned if adjudication fails." />
       ),
     },
     {
@@ -81,7 +81,7 @@ function buildFaqs(tiers: PoolTier[] | null): { q: string; a: ReactNode }[] {
       // policy §5
       q: "Can I join at the door?",
       a: (
-        <Prose text="No. Joining closes when coverage begins, so a membership can't be created or reassigned after an incident has occurred. One membership per person. An employer or a friend can pay the entry fee, but the membership must be registered in your name before joining closes — payouts and refunds go to you, not the sponsor." />
+        <Prose text="No. Joining closes when coverage begins, so a membership can't be created after an incident has occurred. One membership per person. An employer or a friend can pay the entry fee: a claim payment goes to you, the unused remainder goes back to them." />
       ),
     },
     {

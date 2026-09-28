@@ -26,7 +26,7 @@ export function PoolMechanism() {
     {
       n: "01",
       h: "You pick a tier.",
-      p: "Entry is one payment, made before the conference opens — joining closes the moment coverage begins, so a membership can't be created or reassigned after an incident has occurred. One membership per person; a sponsor can pay, but it's registered in your name.",
+      p: "Entry is one payment, made before the conference opens — joining closes the moment coverage begins, so a membership can't be created after an incident has occurred. One membership per person; a sponsor can pay the entry fee — a claim payment goes to you, the unused remainder goes back to them.",
       range,
     },
     {
@@ -45,9 +45,8 @@ export function PoolMechanism() {
     {
       n: "04",
       h: "Peers rule.",
-      p: "A randomly drawn jury of staked members adjudicates on Accord, an arbitration protocol; votes are commit-reveal, incoherent jurors lose stake, an appeal redraws a doubled jury. A request carries five proofs — ticket, ID, police report, medical report, statutory declaration — and pre-pays the juror fee.",
-      stamp:
-        "JUROR FEE 3 × 50 USDC = 150 USDC · REFUNDED IF APPROVED · KEPT IF DENIED · RETURNED IF ADJUDICATION FAILS", // §7
+      p: "A randomly drawn jury of staked members adjudicates on Accord, an arbitration protocol; votes are commit-reveal, incoherent jurors lose stake, an appeal redraws a doubled jury. A request carries five proofs — ticket, ID, police report, medical report, statutory declaration — and pre-pays the adjudication fee.",
+      stamp: "ADJUDICATION FEE 200 USDC · FORFEITED IF DENIED · RETURNED IF ADJUDICATION FAILS", // §7
     },
     {
       n: "05",

@@ -329,8 +329,8 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     ]);
     // policy §5 outer bounds — chain-bound, never static fallbacks
     expect(container.textContent).toContain("$10 to $40 in · up to $1,000 to $4,000 out");
-    // §7 juror fee stamp (policy-doc static)
-    expect(container.textContent).toContain("JUROR FEE 3 × 50 USDC = 150 USDC");
+    // §7 adjudication fee stamp (policy-doc static)
+    expect(container.textContent).toContain("ADJUDICATION FEE 200 USDC");
     // §10 receipt band
     expect(container.textContent).toContain("The math, on the policy's example.");
   });
