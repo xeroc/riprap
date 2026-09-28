@@ -1,3 +1,4 @@
+import { useReducedMotion } from "motion/react";
 import type * as React from "react";
 import { cn } from "../../lib/utils";
 
@@ -29,12 +30,16 @@ function initials(author: string): string {
  * quote reads like an x.com light-mode post pinned onto the dark board),
  * the author's real avatar as the one sanctioned circle (DESIGN.md §
  * Shapes — the avatar disc), grotesk quote body, mono handle and date.
- * Ported from the Tributary wall (MIT, berkayoztunc/orquestra).
+ * With `href`, the X glyph top-right is the link to the source tweet (the
+ * card itself stays an article — interactive media must never nest in a
+ * link). Ported from the Tributary wall (MIT, berkayoztunc/orquestra).
  *
  * Data law: author/handle/text/date arrive as props, verbatim quotes —
  * this component never edits, summarizes, or invents content. Long quotes
  * truncate at `maxChars` with an ellipsis. `avatar` is a URL/path prop;
- * without it the card falls back to the initials tile. No fetches here.
+ * without it the card falls back to the initials tile. `media.video`
+ * swaps the poster `<img>` for a `<video controls>` using the same frame.
+ * No fetches here.
  */
 export interface TweetCardProps {
   /** display name, e.g. "bunjil" */
@@ -47,9 +52,15 @@ export interface TweetCardProps {
   date: string;
   /** avatar image URL/path; omit for the initials tile */
   avatar?: string;
+  /** attached photo / video poster frame, rendered 16:9 in a hairline frame;
+   * `video` swaps the img for a player, `autoPlay` starts it muted (honors
+   * prefers-reduced-motion — the frame stays still instead) */
+  media?: { src: string; alt: string; video?: string; autoPlay?: boolean };
+  /** mono stamp beside the date, e.g. engagement counts "1.1K views · 13 likes" */
+  meta?: string;
   /** quote-length limit before ellipsis (default 140) */
   maxChars?: number;
-  /** when given the card renders as a link to the tweet */
+  /** permalink — makes the X glyph top-right a link to the source tweet */
   href?: string;
   /** width is the consumer's call, e.g. "w-80" */
   className?: string;
@@ -61,10 +72,14 @@ export function TweetCard({
   text,
   date,
   avatar,
+  media,
+  meta,
   maxChars = 140,
   href,
   className,
 }: TweetCardProps) {
+  const reduce = useReducedMotion();
+  const auto = media?.autoPlay === true && !reduce;
   const clipped = text.length > maxChars ? `${text.slice(0, maxChars).trimEnd()}…` : text;
   const shell = cn(
     "flex w-fit flex-col gap-3 rounded-none border border-hairline bg-card p-4",
@@ -95,29 +110,50 @@ export function TweetCard({
             @{handle}
           </span>
         </span>
-        <XLogo className="ml-1 shrink-0 text-2xl text-muted-foreground" />
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`view @${handle}'s post on x`}
+            className="ml-1 shrink-0 text-ink transition-[opacity] duration-[160ms] ease-out outline-none hover:opacity-70 focus-visible:ring-3 focus-visible:ring-ring"
+          >
+            <XLogo className="text-2xl" />
+          </a>
+        ) : (
+          <XLogo className="ml-1 shrink-0 text-2xl text-muted-foreground" />
+        )}
       </div>
       <p className="m-0 w-full whitespace-pre-line text-left text-body [font:var(--riprap-body-sm)]">
         {clipped}
       </p>
-      <p className="m-0 w-full text-left uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
-        {date}
+      {media?.video ? (
+        <video
+          src={media.video}
+          poster={media.src}
+          aria-label={media.alt}
+          controls
+          playsInline
+          preload="metadata"
+          autoPlay={auto || undefined}
+          muted={auto || undefined}
+          className="aspect-video w-full border border-hairline bg-black"
+        />
+      ) : media ? (
+        <img
+          src={media.src}
+          alt={media.alt}
+          className="aspect-video w-full border border-hairline object-cover"
+        />
+      ) : null}
+      <p className="m-0 flex w-full items-baseline justify-between gap-3 text-left uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
+        <span className="shrink-0">{date}</span>
+        {meta ? <span data-num>{meta}</span> : null}
       </p>
     </>
   );
   const dataMode = { "data-mode": "paper" } as React.HTMLAttributes<HTMLElement>;
-  return href ? (
-    <a
-      {...dataMode}
-      data-slot="tweet-card"
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={shell}
-    >
-      {body}
-    </a>
-  ) : (
+  return (
     <article {...dataMode} data-slot="tweet-card" className={shell}>
       {body}
     </article>

@@ -7,7 +7,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BlurbPage } from "./BlurbPage";
-import { BRAND_COLORS, EMAIL_FULL, KUDOS, ONE_LINE } from "./content";
+import { BRAND_COLORS, EMAIL_FULL, EXPLAINERS, KUDOS, ONE_LINE } from "./content";
 
 const writeText = vi.fn(() => Promise.resolve());
 
@@ -52,7 +52,11 @@ describe("BlurbPage — the unlisted blurb & brand kit", () => {
     render(<BlurbPage />);
     const chats = [...document.querySelectorAll('[data-slot="chat-message"]')];
     expect(chats.length).toBe(2); // one line + short blurb
-    expect(screen.getAllByAltText("avatar of Fabian Schuh").length).toBe(2);
+    // scoped to the chats — the explainers band carries its own Fabian avatars
+    expect(
+      document.querySelectorAll('[data-slot="chat-message"] img[alt="avatar of Fabian Schuh"]')
+        .length,
+    ).toBe(2);
 
     // both chat CopyBlocks share the 2-column grid; the standard CopyBlock
     // is outside it and comes after both in document order
@@ -169,5 +173,49 @@ describe("BlurbPage — the unlisted blurb & brand kit", () => {
     render(<BlurbPage />);
     const card = document.querySelector('[data-slot="email-card-body"]');
     expect(card?.textContent).toContain("deck and terms on request");
+  });
+
+  it("explainers: six tweets ordered by what they explain, videos embedded, X glyph links to x.com", () => {
+    render(<BlurbPage />);
+    expect(screen.getByText("the explainers")).toBeTruthy();
+    // every kicker renders, in the teach order of content.ts
+    const kickers = EXPLAINERS.map((tweet) => screen.getByText(tweet.kicker));
+    for (const k of kickers.slice(1)) {
+      expect(kickers[0].compareDocumentPosition(k)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    }
+    // the tall full-pitch card (photo + YouTube embed) closes the band
+    expect(kickers.at(-1)?.textContent).toBe("06 · the full pitch");
+    // tweet bodies render verbatim (un-clipped closers)
+    expect(screen.getByText(/WE are building HANSE to fix this\./)).toBeTruthy();
+    expect(screen.getByText(/Links below 👇👇/)).toBeTruthy();
+    // the five native videos embed as controllable <video> with their poster
+    // frame; the demo-day card keeps its photo as an <img>
+    for (const tweet of EXPLAINERS) {
+      if (tweet.video) {
+        const video = screen.getByLabelText(tweet.mediaAlt);
+        expect(video.tagName).toBe("VIDEO");
+        expect(video.getAttribute("src")).toBe(tweet.video);
+        expect(video.getAttribute("poster")).toBe(tweet.media);
+        expect(video.hasAttribute("controls")).toBe(true);
+        // autoplay, muted
+        expect(video.hasAttribute("autoplay")).toBe(true);
+        // React sets muted as a property, not an attribute
+        expect((video as HTMLMediaElement).muted).toBe(true);
+      } else {
+        expect(screen.getByAltText(tweet.mediaAlt).getAttribute("src")).toBe(tweet.media);
+      }
+    }
+    // the X glyph on each card is the permalink to its source tweet
+    const xLinks = screen.getAllByRole("link", { name: "view @xer0c's post on x" });
+    expect(xLinks.map((link) => link.getAttribute("href"))).toEqual(
+      EXPLAINERS.map((tweet) => tweet.url),
+    );
+    // the demo-day card embeds the YouTube talk from its thread's first
+    // comment, plus the direct link
+    const embed = document.querySelector("iframe");
+    expect(embed?.getAttribute("src")).toBe("https://www.youtube-nocookie.com/embed/W816NeczDx8");
+    expect(screen.getByRole("link", { name: "full pitch on youtube ↗" }).getAttribute("href")).toBe(
+      "https://www.youtube.com/watch?v=W816NeczDx8",
+    );
   });
 });
