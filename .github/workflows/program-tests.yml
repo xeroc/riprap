@@ -1,0 +1,57 @@
+name: Anchor Tests
+
+env:
+  # sBPFv3 bytecode (SIMD-0178/0189/0377). Anchor 1.2 defaults to v3; pin it so
+  # a future default change can't silently shift CI to another bytecode format.
+  # (The Rust LiteSVM lane builds --arch v2 instead — litesvm 0.10 can't load
+  # v3; that lane is not run in CI.)
+  ANCHOR_BUILD_SBF_ARCH: v3
+
+on:
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: solana-foundation/github-actions/extract-versions@v0.2.15
+        id: versions
+
+      - uses: solana-foundation/github-actions/setup-all@v0.2.15
+        with:
+          solana_version: ${{ steps.versions.outputs.solana_version }}
+          anchor_version: ${{ steps.versions.outputs.anchor_version }}
+          node_version: 20
+
+      # Stage the checked-in SAS binary into target/deploy — the Surfpool
+      # deployment runbook (runbooks/deployment/main.tx) deploys it from there.
+      # accord.so is deployed by the jest harness itself from tests/deps.
+      - name: Stage external binaries (SAS)
+        run: bash tests/deps/stage.sh
+
+      # Starts Surfpool (auto-generates + funds ~/.config/solana/id.json), runs
+      # the txtx deployment runbook (pool, hanse, SAS), then the jest e2e
+      # ([scripts] test in Anchor.toml).
+      - uses: xeroc/github-actions/run-tests@main
+        with:
+          solana_version: ${{ steps.versions.outputs.solana_version }}
+          anchor_version: ${{ steps.versions.outputs.anchor_version }}
+          program: riprap
+          package_manager: pnpm
+
+      - name: Verify sBPFv3 bytecode
+        run: |
+          for so in target/deploy/pool.so target/deploy/hanse.so; do
+            readelf -h "$so" | grep -Eq 'Flags:.*0x3(,| |$)' || { echo "FAIL: $so is not sBPFv3"; exit 1; }
+            echo "OK: $so -> $(readelf -h "$so" | grep Flags:)"
+          done
