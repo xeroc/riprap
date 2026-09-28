@@ -27,7 +27,7 @@ import { useMembership } from "../app/useMembership";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
 import { formatUtc, microToUsd, resolveMutualAddress } from "../pool/mutual";
-import { useMinStake } from "../pool/useMinStake";
+import { useMinStake, useMinStakeMicro } from "../pool/useMinStake";
 import { useMutual } from "../pool/useMutual";
 import { currentDecryptDelivery, localDeliveryKeyStore } from "./delivery";
 import { phaseLabel, seatPhase } from "./phase";
@@ -117,11 +117,13 @@ function SeatCard({ seat }: { seat: Seat }) {
 
 /** The serve panel (copy doc § /app/adjudicate): stake status vs the live
  * floor, draw weight, earned fees, and the write actions — `Stake to serve`
- * (amount defaulted to the tier contribution, §12) and `Withdraw fees`.
- * Not staked is a state, not an error. No unstake / reconcile (CLI). */
+ * (amount defaulted to the tier contribution floored at the live minimum,
+ * §12) and `Withdraw fees`. Not staked is a state, not an error. No unstake /
+ * reconcile (CLI). */
 function ServePanel({
   stake,
   minStake,
+  minStakeMicro,
   subaccord,
   wallet,
   defaultAmountMicro,
@@ -129,6 +131,8 @@ function ServePanel({
 }: {
   stake: JurorStakeQuery;
   minStake: string;
+  /** the live floor in micro-USDC — the stake form's default clamp */
+  minStakeMicro: bigint | null;
   subaccord: Address;
   wallet: Address;
   defaultAmountMicro: bigint;
@@ -149,6 +153,7 @@ function ServePanel({
           subaccord={subaccord}
           wallet={wallet}
           defaultAmountMicro={defaultAmountMicro}
+          minStakeMicro={minStakeMicro}
           attestation={attestation}
         />
       </div>
@@ -277,6 +282,7 @@ function Board({ wallet, session }: { wallet: Address; session: SessionRoute | n
   // Rules of hooks: every read runs before the early returns.
   const subaccord = mutualQuery.state === "ready" ? mutualQuery.mutual.subaccord : null;
   const minStake = useMinStake(subaccord);
+  const minStakeMicro = useMinStakeMicro(subaccord);
   const stake = useJurorStake(
     subaccord !== null && member !== null ? { subaccord, juror: wallet } : null,
   );
@@ -367,6 +373,7 @@ function Board({ wallet, session }: { wallet: Address; session: SessionRoute | n
         <ServePanel
           stake={stake}
           minStake={minStake}
+          minStakeMicro={minStakeMicro}
           subaccord={mutualQuery.mutual.subaccord}
           wallet={wallet}
           defaultAmountMicro={

@@ -8,12 +8,11 @@ import {
   CopyBlock,
   EmailCard,
   HexBackdrop,
-  numeralSegments,
   SectionBand,
   Wordmark,
 } from "@riprap/ui";
 import { useState } from "react";
-
+import { Prose } from "../components/Prose";
 import { Settle } from "../components/Settle";
 import {
   BRAND_ASSETS,
@@ -38,24 +37,6 @@ import {
   X_FABIAN_URL,
   X_RIPRAP_URL,
 } from "./content";
-
-/** body text with every numeral run in mono (DESIGN.md § Typography — the
- * kit's numeralSegments does the splitting; used by rows, kudos, notes). */
-function Prose({ text }: { text: string }) {
-  return (
-    <>
-      {numeralSegments(text).map((segment, i) =>
-        segment.numeral ? (
-          <span key={i} data-num className="font-mono">
-            {segment.text}
-          </span>
-        ) : (
-          <span key={i}>{segment.text}</span>
-        ),
-      )}
-    </>
-  );
-}
 
 /** shared mono file-button chrome (AddressChip button look) */
 const FILE_BTN =

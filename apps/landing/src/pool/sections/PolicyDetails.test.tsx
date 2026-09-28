@@ -1,16 +1,18 @@
-// The anchored-terms band against the evidence daemon's domain-CAS contract
-// (SPEC.md §HTTP API, HANSE_DOMAIN_SPEC_UPLOAD §2/§4): GET by derived
-// domain_ref, 404 → upload remedy, hash-gated proof-mode PUT. The mutual is
-// mocked to the worked vector (seed 1, policy_hash d5756c2e… → domain_ref
-// f76adcdd…), so URL assertions double as derivation assertions. fetch is
-// stubbed — no network in jsdom.
+// The policy details' RAW POLICY tab against the evidence daemon's domain-CAS
+// contract (SPEC.md §HTTP API, HANSE_DOMAIN_SPEC_UPLOAD §2/§4): GET by derived
+// domain_ref, 404 → upload remedy, hash-gated proof-mode PUT. Ported from the
+// retired anchored-terms band's suite (2026-09-27) — the band was folded into
+// the collapsed policy as its raw tab. The mutual is mocked to the worked
+// vector (seed 1, policy_hash d5756c2e… → domain_ref f76adcdd…), so URL
+// assertions double as derivation assertions. fetch is stubbed — no network
+// in jsdom.
 import type { Mutual } from "@riprap/hanse";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMutual } from "../fixtures";
 import { type MutualQuery, useMutual } from "../useMutual";
-import { AnchoredTerms } from "./AnchoredTerms";
+import { PolicyDetails } from "./PolicyDetails";
 
 vi.mock("../useMutual", () => ({ useMutual: vi.fn() }));
 const mutualMock = vi.mocked(useMutual);
@@ -42,16 +44,19 @@ function response(status: number, body?: string): Response {
   return new Response(body ?? null, { status });
 }
 
-function renderBand() {
+/** Render the policy details and switch to the RAW POLICY tab — the old band's home. */
+function renderRawTab() {
   vi.stubEnv("VITE_EVIDENCE_URL", BASE);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
   });
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
-      <AnchoredTerms />
+      <PolicyDetails />
     </QueryClientProvider>,
   );
+  fireEvent.click(screen.getByRole("tab", { name: "Raw policy" }));
+  return result;
 }
 
 function pickFile(file: File) {
@@ -73,25 +78,53 @@ afterEach(() => {
   writeText.mockClear();
 });
 
-describe("anchored terms — GET by derived domain_ref (HANSE §4 vector)", () => {
+describe("policy details — collapsed by default, EXPLAINED first (copy doc § Policy details)", () => {
+  it("the native details starts shut; tab panels mount, one visible at a time", async () => {
+    fetchStub.mockResolvedValueOnce(response(200, DOC_TEXT));
+    const { container } = renderRawTab(); // switches to raw
+    const details = container.querySelector(
+      'details[data-slot="policy-details"]',
+    ) as HTMLDetailsElement | null;
+    expect(details).not.toBeNull();
+    expect(details?.open).toBe(false);
+    expect(details?.textContent).toContain("Open the policy — explained, or verbatim");
+    // both panels stay mounted; the inactive (explained) one hidden
+    expect(container.querySelector("#policy-panel-explained")?.hasAttribute("hidden")).toBe(true);
+    expect(container.querySelector("#policy-panel-raw")?.hasAttribute("hidden")).toBe(false);
+    // settle the doc query inside the test — a pending retry would otherwise
+    // leak past cleanup and eat the next test's fetch mock
+    await screen.findByText(/COVER TERMS · 50 BYTES · VERBATIM/);
+  });
+
+  it("tab buttons flip the panels (one visible at a time)", async () => {
+    fetchStub.mockResolvedValueOnce(response(200, DOC_TEXT));
+    const { container } = renderRawTab();
+    fireEvent.click(screen.getByRole("tab", { name: "Explained" }));
+    expect(container.querySelector("#policy-panel-explained")?.hasAttribute("hidden")).toBe(false);
+    expect(container.querySelector("#policy-panel-raw")?.hasAttribute("hidden")).toBe(true);
+    await screen.findByText(/COVER TERMS · 50 BYTES · VERBATIM/);
+  });
+});
+
+describe("raw policy tab — GET by derived domain_ref (HANSE §4 vector)", () => {
   it("serves the doc: immutable framing, anchor chips, framed verbatim document", async () => {
     fetchStub.mockResolvedValueOnce(response(200, DOC_TEXT));
-    renderBand();
-    const document = await screen.findByText(/Pilot v1 mutual cover terms/);
+    renderRawTab();
+    const docEl = await screen.findByText(/Pilot v1 mutual cover terms/);
     expect(
-      screen.getByRole("heading", { level: 2, name: "The immutable terms of this mutual." }),
+      screen.getByRole("heading", { level: 3, name: "The immutable terms of this mutual." }),
     ).toBeTruthy();
     expect(screen.getByLabelText("copy policy hash").textContent).toContain("d575…72b4");
     expect(screen.getByLabelText("copy domain ref").textContent).toContain("f76a…686e");
     // framed document: byte count + verbatim body
     expect(screen.getByText(/COVER TERMS · 50 BYTES · VERBATIM/)).toBeTruthy();
-    expect(document.closest('[data-slot="terms-document"]')).toBeTruthy();
+    expect(docEl.closest('[data-slot="terms-document"]')).toBeTruthy();
     expect(fetchStub).toHaveBeenCalledWith(`${BASE}/domains/${DOMAIN_REF}`);
   });
 
   it("copy icon writes the full document to the clipboard, swaps to a check", async () => {
     fetchStub.mockResolvedValueOnce(response(200, DOC_TEXT));
-    renderBand();
+    renderRawTab();
     await screen.findByText(/Pilot v1 mutual cover terms/);
     const copyButton = screen.getByRole("button", { name: "copy the cover terms" });
     expect(copyButton.querySelector(".lucide-copy")).toBeTruthy(); // icon, not the word
@@ -100,16 +133,16 @@ describe("anchored terms — GET by derived domain_ref (HANSE §4 vector)", () =
     expect(writeText).toHaveBeenCalledWith(DOC_TEXT);
   });
 
-  it("404 renders the upload remedy (copy doc § anchored terms band)", async () => {
+  it("404 renders the upload remedy (copy doc § anchored terms)", async () => {
     fetchStub.mockResolvedValueOnce(response(404));
-    renderBand();
+    renderRawTab();
     expect(await screen.findByText("Not published yet.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Upload the cover terms" })).toBeTruthy();
   });
 
   it("unreachable: one honest line + Try again", async () => {
     fetchStub.mockRejectedValue(new TypeError("fetch failed")); // hook retries once — keep rejecting
-    renderBand();
+    renderRawTab();
     expect(
       await screen.findByText("Couldn't reach the evidence server.", {}, { timeout: 4000 }),
     ).toBeTruthy();
@@ -117,12 +150,12 @@ describe("anchored terms — GET by derived domain_ref (HANSE §4 vector)", () =
   });
 });
 
-describe("anchored terms — proof-mode PUT (HANSE §2)", () => {
+describe("raw policy tab — proof-mode PUT (HANSE §2)", () => {
   it("matching file PUTs to the derived ref with preimage + offset=23, then refetches", async () => {
     fetchStub.mockResolvedValueOnce(response(404)); // initial GET
     fetchStub.mockResolvedValueOnce(response(201)); // PUT
     fetchStub.mockResolvedValueOnce(response(200, DOC_TEXT)); // refetch
-    renderBand();
+    renderRawTab();
     await screen.findByText("Not published yet.");
     pickFile(new File([DOC], "terms.md", { type: "text/markdown" }));
     await screen.findByText(/Pilot v1 mutual cover terms/);
@@ -137,7 +170,7 @@ describe("anchored terms — proof-mode PUT (HANSE §2)", () => {
 
   it("wrong bytes never reach the server — hash mismatch is client-side", async () => {
     fetchStub.mockResolvedValueOnce(response(404));
-    renderBand();
+    renderRawTab();
     await screen.findByText("Not published yet.");
     pickFile(new File(["not the anchored bytes"], "wrong.md", { type: "text/markdown" }));
     expect(
@@ -151,7 +184,7 @@ describe("anchored terms — proof-mode PUT (HANSE §2)", () => {
   it("409 surfaces the stored-conflict line", async () => {
     fetchStub.mockResolvedValueOnce(response(404));
     fetchStub.mockResolvedValueOnce(response(409));
-    renderBand();
+    renderRawTab();
     await screen.findByText("Not published yet.");
     pickFile(new File([DOC], "terms.md", { type: "text/markdown" }));
     expect(

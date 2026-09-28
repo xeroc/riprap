@@ -1,10 +1,13 @@
 // ServeActions — the serve panel's write actions (riprap-fy3q, spec §3):
 // `Stake to serve` (accord::stake through the MST proof worker — amount
-// defaulted to the member's tier contribution, EVENT-MUTUAL §12 UX
-// convention; the SAS attestation rides along, §2.8 gated subaccord) and
-// `Withdraw fees` (ungated, ADR-0020). No unstake / reconcile — the CLI stays
-// the operator path. Writes go through the landing's shared
-// simulate-then-send path; revert reasons surface from program logs.
+// defaulted to the member's tier contribution floored at the live subaccord
+// minimum, EVENT-MUTUAL §12 UX convention; a default below the floor reverts
+// on submit, and an under-floor amount is blocked inline before the send —
+// copy doc § /app/adjudicate serve panel, 2026-09-27; the SAS attestation
+// rides along, §2.8 gated subaccord) and `Withdraw fees` (ungated, ADR-0020).
+// No unstake / reconcile — the CLI stays the operator path. Writes go through
+// the landing's shared simulate-then-send path; revert reasons surface from
+// program logs.
 // Copy source: copy doc § /app/adjudicate serve panel.
 import { findAssociatedTokenAddress } from "@riprap/hanse";
 import { Button, Input, Label, usd } from "@riprap/ui";
@@ -66,17 +69,22 @@ async function stakingAccounts(sub: Account<Subaccord>, subaccord: Address, juro
 /**
  * `Stake to serve` — the CTA reveals the amount form; the proof builds while
  * the form is open (worker, root-mismatch retry surfaced as the copy doc's
- * moved-tree line), the tier contribution pre-fills the amount (§12).
+ * moved-tree line). The amount pre-fills at the higher of the tier
+ * contribution (§12) and the live floor; submit re-checks the floor from the
+ * fresh subaccord read and blocks under-floor amounts inline.
  */
 export function StakeToServe({
   subaccord,
   wallet,
   defaultAmountMicro,
+  minStakeMicro,
   attestation,
 }: {
   subaccord: Address;
   wallet: Address;
   defaultAmountMicro: bigint;
+  /** the live subaccord floor — the default's clamp; null while unread */
+  minStakeMicro: bigint | null;
   attestation: Address;
 }) {
   const env = useHanseEnv();
@@ -84,7 +92,12 @@ export function StakeToServe({
   const [open, setOpen] = useState(false);
   const [moved, setMoved] = useState(false);
   const [sendPhase, setSendPhase] = useState<SendPhase | null>(null);
-  const [amountUsdc, setAmountUsdc] = useState(() => String(microToUsd(defaultAmountMicro)));
+  const [floorError, setFloorError] = useState<string | null>(null);
+  const effectiveDefaultMicro =
+    minStakeMicro !== null && minStakeMicro > defaultAmountMicro
+      ? minStakeMicro
+      : defaultAmountMicro;
+  const [amountUsdc, setAmountUsdc] = useState(() => String(microToUsd(effectiveDefaultMicro)));
   const proof = useStakingProof(open ? subaccord : undefined, open ? wallet : undefined, () =>
     setMoved(true),
   );
@@ -100,11 +113,17 @@ export function StakeToServe({
   const submit = async () => {
     if (env === null || proof.data === undefined) return;
     setSendPhase("building");
+    setFloorError(null);
     try {
       const sub = await fetchMaybeSubaccord(env.rpc, subaccord);
       if (!sub.exists) throw new Error("Subaccord not found for this cluster.");
-      const accounts = await stakingAccounts(sub, subaccord, wallet);
       const amountMicro = BigInt(Math.round(Number.parseFloat(amountUsdc) * 1_000_000));
+      // The fresh read is the authority — the prop can be stale or unread.
+      if (amountMicro < sub.data.minStake) {
+        setFloorError(usd(microToUsd(sub.data.minStake)));
+        return;
+      }
+      const accounts = await stakingAccounts(sub, subaccord, wallet);
       const accord = new Accord({ endpoint: env.endpoint, signer: env.signer });
       const instruction = accord.methods.stake(accounts, amountMicro, proof.data.path, attestation);
       setSendPhase("wallet-signing");
@@ -131,15 +150,25 @@ export function StakeToServe({
         <Input
           id="stake-amount"
           type="number"
-          min={1}
+          min={minStakeMicro !== null ? microToUsd(minStakeMicro) : 1}
           step={1}
           disabled={busy}
           value={amountUsdc}
-          onChange={(e) => setAmountUsdc(e.target.value)}
+          onChange={(e) => {
+            setAmountUsdc(e.target.value);
+            setFloorError(null);
+          }}
         />
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]" data-num>
-          Defaults to your tier contribution — {usd(microToUsd(defaultAmountMicro))} USDC.
+          {effectiveDefaultMicro === defaultAmountMicro
+            ? `Defaults to your tier contribution — ${usd(microToUsd(defaultAmountMicro))} USDC.`
+            : `Defaults to the ${usd(microToUsd(effectiveDefaultMicro))} USDC minimum.`}
         </p>
+        {floorError !== null && (
+          <p className="text-sm text-error [font:var(--riprap-body-sm)]" data-num>
+            Below the {floorError} USDC minimum.
+          </p>
+        )}
       </div>
       {proof.isPending && (
         <p data-num className="font-mono text-sm text-muted-foreground">

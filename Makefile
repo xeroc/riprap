@@ -8,7 +8,7 @@ ANCHOR_VERSION ?= 1.2.0
 ANCHOR_PROGRAM ?= anchor-$(ANCHOR_VERSION)
 
 TODAY := $(shell date +%Y-%m-%d)
-DEPLOY_KEY_PATH := $(or $(ACCORD_DEPLOY_KEY_PATH),~/.config/solana/id.json)
+DEPLOY_KEY_PATH := $(or $(RIPRAP_DEPLOY_KEY_PATH),~/.config/solana/id.json)
 SOLANA_API := $(or $(SOLANA_API),https://api.mainnet-beta.solana.com)
 SOLANA_WS := $(subst https://,wss://,$(SOLANA_API))
 

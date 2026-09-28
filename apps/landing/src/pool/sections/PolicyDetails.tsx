@@ -1,17 +1,22 @@
-// /2026-breakpoint-blade-pool — the policy, in full, as the page's fineprint: every
-// category of "Micro Mutual — Knife Assault - Policy.md" rendered clearly in
-// small type below the offer. Copy is verbatim or lightly compressed from the
-// doc; numbers keep their § provenance in comments. The §5 tier table is bound
-// to the on-chain mutual.tiers (landing-page.md § "On-chain states + juror
-// modal": {{PARAM}} mono placeholders whenever the chain hasn't answered —
-// never static fallback numbers); §6/§7/§10 keep their policy-doc example
-// numbers (their source is the policy document, not the chain).
-import { Card, SectionBand, shortenAddress, TextLink, usd } from "@riprap/ui";
+// /2026-breakpoint-blade-pool — the policy, in full, hidden by default
+// (landing-page.md § /2026-breakpoint-blade-pool "Policy details", 2026-09-27):
+// a native <details>, collapsed on load, carrying two tabs — EXPLAINED (the
+// §1–§13 cards; copy verbatim or lightly compressed from the policy doc; §5
+// tier table bound to mutual.tiers with {{PARAM}} mono placeholders whenever
+// the chain hasn't answered — never static fallback numbers; §6/§7/§10 keep
+// their policy-doc example numbers, their source is the document not the
+// chain) and RAW POLICY (the anchored cover terms, folded in from the retired
+// band 2026-09-27, states unchanged — the exact pinned bytes off the evidence
+// daemon's CAS; 404 → upload remedy per HANSE_DOMAIN_SPEC_UPLOAD §2).
+import type { Mutual } from "@riprap/hanse";
+import { AddressChip, Button, Card, SectionBand, shortenAddress, TextLink, usd } from "@riprap/ui";
 import type { Address } from "@solana/kit";
-import type { ReactNode } from "react";
-
+import { CheckIcon, CopyIcon } from "lucide-react";
+import { type ChangeEvent, type ReactNode, useRef, useState } from "react";
+import { domainRefHex, hansePreimage, sha256Hex, toHex } from "../domainRef";
 import { type PoolTier, poolTiers, TIER_NAMES } from "../mutual";
 import { useMutual } from "../useMutual";
+import { evidenceBaseUrl, usePolicyDoc } from "../usePolicyDoc";
 
 // Kit data law: unknown values render as mono {{PARAM}} placeholders.
 const PARAM = "{{PARAM}}";
@@ -328,36 +333,292 @@ function buildSections(tiers: PoolTier[] | null, subaccord: Address | null): Pol
   ];
 }
 
-// The fineprint band: clear items, small type. Two columns on wide screens;
-// mono § numbers; hairline card chrome. The policy stays readable in order.
-export function PolicyFineprint() {
-  const mutualQuery = useMutual();
-  const tiers = mutualQuery.state === "ready" ? poolTiers(mutualQuery.mutual) : null;
-  const subaccord = mutualQuery.state === "ready" ? mutualQuery.mutual.subaccord : null;
+/** PUT failure → one deadpan line (copy doc). */
+function putFailureLine(status: number): string {
+  if (status === 404) return "The evidence server can't see the mutual yet. Try again in a moment.";
+  if (status === 400) {
+    return "The evidence server rejected the proof — these bytes don't match the on-chain anchor.";
+  }
+  if (status === 409) return "Different bytes are already stored at this anchor.";
+  return "The upload didn't go through. Try again.";
+}
+
+/** Proof-mode PUT per HANSE_DOMAIN_SPEC_UPLOAD §2 — hash checked BEFORE any PUT. */
+async function uploadTerms(
+  base: string,
+  mutual: Mutual,
+  file: File,
+): Promise<{ ok: true } | { ok: false; line: string }> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if ((await sha256Hex(bytes)) !== toHex(mutual.policyHash)) {
+    return {
+      ok: false,
+      line: "This file's hash doesn't match the mutual's policy hash. Nothing was uploaded.",
+    };
+  }
+  const ref = await domainRefHex(mutual.seed, mutual.policyHash);
+  const preimage = toHex(hansePreimage(mutual.seed, mutual.policyHash));
+  const query = `?subaccord=${encodeURIComponent(mutual.subaccord)}&preimage=${preimage}&offset=23`;
+  const response = await fetch(`${base}/domains/${ref}${query}`, {
+    method: "PUT",
+    headers: { "Content-Type": "text/markdown" },
+    body: bytes,
+  });
+  if (response.status === 201 || response.status === 200) return { ok: true };
+  return { ok: false, line: putFailureLine(response.status) };
+}
+
+/** `copy` ⇄ `copied` — the AddressChip settle-safe word swap, applied to the whole document. */
+function useCopyText(): { copied: boolean; copy: (text: string) => void } {
+  const [copied, setCopied] = useState(false);
+  return {
+    copied,
+    copy: (text: string) => {
+      navigator.clipboard
+        ?.writeText(text)
+        .then(() => {
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 2000);
+        })
+        .catch((error: unknown) => console.error("terms copy failed", error));
+    },
+  };
+}
+
+/** One anchor: mono label + a copy-chip carrying the full value. */
+function AnchorChip({ label, value }: { label: string; value: string }) {
   return (
-    <SectionBand id="policy" label="the policy" tone="soft">
+    <span
+      data-num
+      className="inline-flex items-center gap-2 text-muted-soft [font:var(--riprap-mono-label)]"
+    >
+      {label}
+      <AddressChip address={value} aria-label={`copy ${label.toLowerCase()}`} />
+    </span>
+  );
+}
+
+const TABS = [
+  { id: "explained", label: "Explained" },
+  { id: "raw", label: "Raw policy" },
+] as const;
+
+type Tab = (typeof TABS)[number]["id"];
+
+export function PolicyDetails() {
+  const mutualQuery = useMutual();
+  const mutual = mutualQuery.state === "ready" ? mutualQuery.mutual : null;
+  const tiers = mutual === null ? null : poolTiers(mutual);
+  const subaccord = mutual === null ? null : mutual.subaccord;
+  const doc = usePolicyDoc(mutual);
+  const { copied, copy } = useCopyText();
+  const [tab, setTab] = useState<Tab>("explained");
+
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const onPick = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = ""; // same file re-picked must re-fire onChange
+    if (file === undefined || mutual === null) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const result = await uploadTerms(evidenceBaseUrl(), mutual, file);
+      if (result.ok) {
+        await doc.refetch();
+      } else {
+        setUploadError(result.line);
+      }
+    } catch {
+      setUploadError("The upload didn't go through. Try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <SectionBand id="policy" label="the policy" tone="ground">
       <div className="flex flex-col gap-(--riprap-space-lg)">
         <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
-          The fineprint, in full.
+          The policy, in full.
         </h2>
-        <p className="text-muted-soft [font:var(--riprap-mono-label)]">
-          The comedy stops here. The policy is real.
+        <p data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
+          THE COMEDY STOPS HERE. THE POLICY IS REAL.
         </p>
-        <div className="grid gap-4 md:grid-cols-2" data-slot="policy-sections">
-          {buildSections(tiers, subaccord).map((s) => (
-            <Card key={s.n} data-slot="policy-section" className="gap-3 p-6">
-              <p className="flex items-baseline gap-3 text-muted-soft [font:var(--riprap-mono-label)]">
-                <span data-num>§ {s.n}</span>
-                <span className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground">
-                  {s.title}
-                </span>
-              </p>
-              <div className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-                {s.body}
+
+        {/* collapsed on load — native disclosure */}
+        <details data-slot="policy-details" className="group border-y border-hairline">
+          <summary className="flex cursor-pointer list-none items-baseline justify-between gap-6 py-6 [&::-webkit-details-marker]:hidden">
+            <h3 className="tracking-tight text-ink [font:var(--riprap-display-sm)]">
+              Open the policy — explained, or verbatim
+            </h3>
+            <span aria-hidden className="font-mono text-base text-accent">
+              <span className="group-open:hidden">+</span>
+              <span className="hidden group-open:inline">–</span>
+            </span>
+          </summary>
+
+          <div className="flex flex-col gap-6 pb-6">
+            <div
+              role="tablist"
+              aria-label="policy views"
+              className="flex gap-8 border-b border-hairline"
+            >
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  id={`policy-tab-${t.id}`}
+                  aria-selected={tab === t.id}
+                  aria-controls={`policy-panel-${t.id}`}
+                  className={[
+                    "-mb-px border-b-2 pb-3 tracking-(--riprap-tracking-stamp) uppercase [font:var(--riprap-mono-label)]",
+                    tab === t.id ? "border-accent text-ink" : "border-transparent text-muted-soft",
+                  ].join(" ")}
+                  onClick={() => setTab(t.id)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <div
+              role="tabpanel"
+              id="policy-panel-explained"
+              aria-labelledby="policy-tab-explained"
+              hidden={tab !== "explained"}
+            >
+              <div className="grid gap-4 md:grid-cols-2" data-slot="policy-sections">
+                {buildSections(tiers, subaccord).map((s) => (
+                  <Card key={s.n} data-slot="policy-section" className="gap-3 p-6">
+                    <p className="flex items-baseline gap-3 text-muted-soft [font:var(--riprap-mono-label)]">
+                      <span data-num>§ {s.n}</span>
+                      <span className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground">
+                        {s.title}
+                      </span>
+                    </p>
+                    <div className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
+                      {s.body}
+                    </div>
+                  </Card>
+                ))}
               </div>
-            </Card>
-          ))}
-        </div>
+            </div>
+
+            <div
+              role="tabpanel"
+              id="policy-panel-raw"
+              aria-labelledby="policy-tab-raw"
+              hidden={tab !== "raw"}
+            >
+              <div
+                className="flex max-w-[42rem] flex-col gap-(--riprap-space-lg)"
+                data-slot="terms"
+              >
+                <h3 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
+                  The immutable terms of this mutual.
+                </h3>
+                <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                  Fixed when the pool was created: the on-chain policy hash pins these exact bytes,
+                  so they can never change — different terms would be a different hash. Served by
+                  the Accord evidence server.
+                </p>
+                <Card data-slot="terms-card" className="gap-3 p-6">
+                  {doc.state === "idle" && (
+                    <p data-num className="font-mono text-sm text-ink">
+                      terms: {PARAM}
+                    </p>
+                  )}
+                  {doc.state === "loading" && (
+                    <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                      Reading the terms from the evidence server.
+                    </p>
+                  )}
+                  {doc.state === "error" && (
+                    <div className="flex flex-col gap-3">
+                      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                        Couldn't reach the evidence server.
+                      </p>
+                      <Button variant="outline" onClick={doc.retry}>
+                        Try again
+                      </Button>
+                    </div>
+                  )}
+                  {doc.state === "missing" && mutual !== null && (
+                    <div className="flex flex-col gap-3">
+                      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                        Not published yet.
+                      </p>
+                      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                        The cover terms aren't on the evidence server. Upload the file whose hash
+                        the mutual pins.
+                      </p>
+                      <input
+                        ref={fileInput}
+                        type="file"
+                        accept=".md,.markdown,text/markdown"
+                        className="hidden"
+                        onChange={(e) => void onPick(e)}
+                        aria-label="cover terms file"
+                      />
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          variant="outline"
+                          disabled={uploading}
+                          onClick={() => fileInput.current?.click()}
+                        >
+                          {uploading ? "Uploading…" : "Upload the cover terms"}
+                        </Button>
+                        {uploadError !== null && (
+                          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                            {uploadError}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {doc.state === "ready" && mutual !== null && (
+                    <div className="flex flex-col gap-4" data-slot="terms-ready">
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                        <AnchorChip label="POLICY HASH" value={toHex(mutual.policyHash)} />
+                        <AnchorChip label="DOMAIN REF" value={doc.ref} />
+                      </div>
+                      <div
+                        data-slot="terms-document"
+                        className="overflow-hidden rounded-sm border border-hairline"
+                      >
+                        <div className="flex items-center justify-between gap-3 border-b border-hairline px-3 py-2">
+                          <p data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
+                            COVER TERMS · {new TextEncoder().encode(doc.text).length} BYTES ·
+                            VERBATIM
+                          </p>
+                          <Button
+                            variant="ghost"
+                            className="size-7 p-0"
+                            aria-label="copy the cover terms"
+                            title={copied ? "copied" : "copy"}
+                            onClick={() => copy(doc.text)}
+                          >
+                            {copied ? (
+                              <CheckIcon aria-hidden="true" className="size-3.5" />
+                            ) : (
+                              <CopyIcon aria-hidden="true" className="size-3.5" />
+                            )}
+                          </Button>
+                        </div>
+                        <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap p-3 font-mono text-xs leading-relaxed text-ink">
+                          {doc.text}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              </div>
+            </div>
+          </div>
+        </details>
       </div>
     </SectionBand>
   );

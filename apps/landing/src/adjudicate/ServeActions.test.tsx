@@ -1,13 +1,15 @@
 // ServeActions (riprap-fy3q, spec §3) — the serve panel's writes: `Stake to
-// serve` (accord::stake, tier-contribution default per EVENT-MUTUAL §12, the
-// SAS attestation riding along on the gated subaccord, proof phases per copy
-// doc) and `Withdraw fees` (ungated). The instruction builders and the send
-// path are mocked at the seams; the fake Worker speaks the real proof
-// protocol.
+// serve` (accord::stake, default = tier contribution floored at the live
+// subaccord minimum per EVENT-MUTUAL §12 — a default below the floor reverts
+// on submit, so the floor wins; the SAS attestation rides along on the gated
+// subaccord, proof phases per copy doc) and `Withdraw fees` (ungated). The
+// instruction builders and the send path are mocked at the seams; the fake
+// Worker speaks the real proof protocol.
 
-import type { Address } from "@solana/kit";
+import type { Address, MaybeAccount } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { Subaccord } from "@useaccord/sdk";
 import { Accord, fetchMaybeSubaccord } from "@useaccord/sdk";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -58,12 +60,12 @@ const ATTESTATION = "1".repeat(32) as Address;
 const STAKING_TOKEN = "1".repeat(32) as Address;
 const FEE_TOKEN = "1".repeat(32) as Address;
 
-function subaccordAccount() {
+function subaccordAccount(minStake = 10_000_000n): MaybeAccount<Subaccord> {
   return {
     exists: true,
     address: SUBACCORD,
-    data: { stakingToken: STAKING_TOKEN, feeToken: FEE_TOKEN, minStake: 10_000_000n },
-  };
+    data: { stakingToken: STAKING_TOKEN, feeToken: FEE_TOKEN, minStake },
+  } as unknown as MaybeAccount<Subaccord>;
 }
 
 const stakeInstruction = { kind: "stake" } as const;
@@ -104,16 +106,21 @@ beforeEach(() => {
     subaccordAccount() as unknown as Awaited<ReturnType<typeof fetchMaybeSubaccord>>,
   );
   accordCtor.mockReset();
-  // a regular function — `new Accord(...)` needs a constructable impl
-  accordCtor.mockImplementation(function () {
-    return {
-      methods: {
-        stake: vi.fn(() => stakeInstruction),
-        withdrawFees: vi.fn(() => withdrawFeesInstruction),
-      },
-    } as unknown as Accord;
-  });
+  // a named function declaration — `new Accord(...)` needs a constructable
+  // impl (an arrow's [[Construct]] is absent; Biome's useArrowFunction
+  // leaves declarations alone)
+  accordCtor.mockImplementation(accordInstance);
 });
+
+/** The mocked `new Accord(...)` instance — constructable, both methods. */
+function accordInstance(this: unknown) {
+  return {
+    methods: {
+      stake: vi.fn(() => stakeInstruction),
+      withdrawFees: vi.fn(() => withdrawFeesInstruction),
+    },
+  } as unknown as Accord;
+}
 
 afterEach(() => {
   cleanup();
@@ -129,13 +136,14 @@ function ui(children: ReactNode) {
 }
 
 describe("StakeToServe (copy doc § /app/adjudicate serve panel)", () => {
-  it("CTA reveals the form; the amount defaults to the tier contribution (§12)", async () => {
+  it("CTA reveals the form; the amount defaults to the tier contribution while it is at least the floor (§12)", async () => {
     render(
       ui(
         <StakeToServe
           subaccord={SUBACCORD}
           wallet={WALLET}
           defaultAmountMicro={20_000_000n}
+          minStakeMicro={10_000_000n}
           attestation={ATTESTATION}
         />,
       ),
@@ -144,6 +152,58 @@ describe("StakeToServe (copy doc § /app/adjudicate serve panel)", () => {
     const input = await screen.findByLabelText("Stake (USDC)");
     expect((input as HTMLInputElement).value).toBe("20");
     expect(screen.getByText(/Defaults to your tier contribution — \$20 USDC\./)).toBeTruthy();
+  });
+
+  it("a floor above the tier contribution wins the default and the helper says so", async () => {
+    subaccordMock.mockResolvedValue(subaccordAccount(200_000_000n));
+    render(
+      ui(
+        <StakeToServe
+          subaccord={SUBACCORD}
+          wallet={WALLET}
+          defaultAmountMicro={20_000_000n}
+          minStakeMicro={200_000_000n}
+          attestation={ATTESTATION}
+        />,
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Stake to serve" }));
+    const input = await screen.findByLabelText("Stake (USDC)");
+    expect((input as HTMLInputElement).value).toBe("200");
+    expect(screen.getByText(/Defaults to the \$200 USDC minimum\./)).toBeTruthy();
+  });
+
+  it("an under-floor amount is blocked inline against the fresh floor read — nothing is sent", async () => {
+    subaccordMock.mockResolvedValue(subaccordAccount(200_000_000n));
+    render(
+      ui(
+        <StakeToServe
+          subaccord={SUBACCORD}
+          wallet={WALLET}
+          defaultAmountMicro={20_000_000n}
+          minStakeMicro={200_000_000n}
+          attestation={ATTESTATION}
+        />,
+      ),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Stake to serve" }));
+    const input = await screen.findByLabelText("Stake (USDC)");
+    fireEvent.change(input, { target: { value: "5" } });
+    await waitFor(
+      () => {
+        expect(
+          (screen.getAllByRole("button", { name: "Stake to serve" }).at(-1) as HTMLButtonElement)
+            .disabled,
+        ).toBe(false);
+      },
+      { timeout: 5000 },
+    );
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Stake to serve" }).at(-1) as HTMLElement,
+    );
+    await waitFor(() => expect(screen.getByText(/Below the \$200 USDC minimum\./)).toBeTruthy());
+    expect(sendInstructionMock).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Stake (USDC)")).toBeTruthy();
   });
 
   it("a root mismatch retries and recovers — submit opens once the proof lands", async () => {
@@ -161,6 +221,7 @@ describe("StakeToServe (copy doc § /app/adjudicate serve panel)", () => {
           subaccord={SUBACCORD}
           wallet={WALLET}
           defaultAmountMicro={20_000_000n}
+          minStakeMicro={10_000_000n}
           attestation={ATTESTATION}
         />,
       ),
@@ -183,6 +244,7 @@ describe("StakeToServe (copy doc § /app/adjudicate serve panel)", () => {
           subaccord={SUBACCORD}
           wallet={WALLET}
           defaultAmountMicro={20_000_000n}
+          minStakeMicro={10_000_000n}
           attestation={ATTESTATION}
         />,
       ),
@@ -236,6 +298,7 @@ describe("StakeToServe (copy doc § /app/adjudicate serve panel)", () => {
           subaccord={SUBACCORD}
           wallet={WALLET}
           defaultAmountMicro={20_000_000n}
+          minStakeMicro={10_000_000n}
           attestation={ATTESTATION}
         />,
       ),
