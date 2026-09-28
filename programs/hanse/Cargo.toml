@@ -37,7 +37,7 @@ anchor-spl = "1.2.0"
 # 3.1.x fails E0277. The lock pins that edge; a blind `cargo update` can regress it.
 pool = { path = "../pool", features = ["cpi"] }
 solana-program = "3"
-accord = { git = "ssh://git@github.com/xeroc/accord.git", rev = "ba91bd8b8b374091c174909b115688ffb9b231ff", features = [
+accord = { git = "https://github.com/xeroc/accord.git", rev = "ba91bd8b8b374091c174909b115688ffb9b231ff", features = [
     "cpi",
 ] }
 

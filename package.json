@@ -4,6 +4,7 @@
   "private": true,
   "description": "Riprap — mutuals as a protocol on Solana: permissionless protection pools, any terms, any lifetime. Frontend: @riprap/ui (illustration kit) + @riprap/landing (static site); on-chain: programs/pool (Anchor) + @riprap/pool (Codama client).",
   "type": "module",
+  "packageManager": "pnpm@11.3.0",
   "scripts": {
     "changeset": "changeset",
     "release": "pnpm run release:version",

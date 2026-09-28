@@ -50,8 +50,6 @@ jobs:
           fetch-depth: 0 # status diffs packages against the merge base
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:
@@ -84,8 +82,6 @@ jobs:
           fetch-depth: 0
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:

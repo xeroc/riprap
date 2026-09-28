@@ -299,6 +299,8 @@ test("spend without --mint needs the pool account (unreachable rpc errors cleanl
       DESTINATION,
       "--amount",
       "1",
+      "--keypair",
+      keypairPath,
       "--dry-run",
     ],
     {
