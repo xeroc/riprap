@@ -186,19 +186,21 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
   // deposits-window line disabled in the hero (2026-09-24 hero split) — no
   // assertion until it ships again
 
-  it("the odds table carries the five ludic rows, jokes never touching the math", async () => {
+  it("the odds table carries the four ludic rows, jokes never touching the math", async () => {
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
     const { container } = renderPoolPage();
     await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
     const rows = [...container.querySelectorAll('[data-slot="odds"] tbody tr')].map(
       (tr) => tr.textContent,
     );
+    // The 2026-09-24 quieter-cover rewrite: four lowercase rows, the static
+    // dissolves-on-schedule row gone; copy doc §97 reconciliation pending
+    // (bean riprap-k9jl).
     expect(rows).toEqual([
-      "You going to Breakpoint in LondonYou betcha",
-      "Accidental eye contact on the Tubecertain",
-      "You get stabbed at Breakpointstatistically negligible",
-      "The pool dissolves on schedule100% — it's a program",
-      "You send this page to your friendshigh",
+      "You going to Breakpoint in Londonyou betcha",
+      "Accidental eye contact on the Tubedead sure",
+      "You get stabbed at Breakpointbarely a blip",
+      "You send this page to your friendsdead cert",
     ]);
   });
 
@@ -239,7 +241,7 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     expect(joinMock).not.toHaveBeenCalled();
   });
 
-  it("fineprint: all 13 policy categories, all 8 exclusions, §5 table from mutual.tiers", async () => {
+  it("policy details: all 13 policy categories, all 8 exclusions, §5 table from mutual.tiers", async () => {
     fetchMock.mockResolvedValue(maybe(fakeMutual()));
     const { container } = renderPoolPage();
     await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
@@ -283,8 +285,8 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     expect(stampLinks[0].getAttribute("title")).toBe("1".repeat(32));
     expect(stampLinks[0].textContent).toContain("1111…1111");
     expect(container.textContent).toContain("ADJUDICATION · SUBACCORD");
-    // the anchored-terms band is wired under the fineprint (heading per copy
-    // doc § Anchored terms band, 2026-09-21 revision)
+    // the anchored terms ride inside the policy details' RAW POLICY tab
+    // (heading per copy doc § anchored terms, 2026-09-27 fold-in)
     expect(container.textContent).toContain("The immutable terms of this mutual.");
     // §7/§12: discretion and liability stated plainly — counsel recs 2 and 3
     expect(container.textContent).toContain("enforceable right to any payment");
@@ -292,6 +294,57 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     // §13: the five counsel recommendations render
     const recs = container.querySelectorAll('[data-slot="policy-recommendations"] li');
     expect(recs.length).toBe(5);
+  });
+
+  it("policy hidden by default: details closed, EXPLAINED shown, RAW POLICY one click away", async () => {
+    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    const { container } = renderPoolPage();
+    await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
+    // collapsed on load (copy doc § Policy details, 2026-09-27)
+    const details = container.querySelector(
+      'details[data-slot="policy-details"]',
+    ) as HTMLDetailsElement | null;
+    expect(details).not.toBeNull();
+    expect(details?.open).toBe(false);
+    // EXPLAINED is the default tab; RAW POLICY is mounted but hidden
+    expect(container.querySelector("#policy-panel-explained")?.hasAttribute("hidden")).toBe(false);
+    expect(container.querySelector("#policy-panel-raw")?.hasAttribute("hidden")).toBe(true);
+    fireEvent.click(screen.getByRole("tab", { name: "Raw policy" }));
+    expect(container.querySelector("#policy-panel-explained")?.hasAttribute("hidden")).toBe(true);
+    expect(container.querySelector("#policy-panel-raw")?.hasAttribute("hidden")).toBe(false);
+    expect(container.textContent).toContain("The immutable terms of this mutual.");
+  });
+
+  it("how this pool runs: five steps with the actual values, tier range from the chain", async () => {
+    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    const { container } = renderPoolPage();
+    await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
+    const steps = [...container.querySelectorAll('[data-slot="pool-step"]')];
+    expect(steps.map((s) => s.querySelector("h3")?.textContent)).toEqual([
+      "You pick a tier.",
+      "The money gathers.",
+      "The worst case is narrow.",
+      "Peers rule.",
+      "It ends.",
+    ]);
+    // policy §5 outer bounds — chain-bound, never static fallbacks
+    expect(container.textContent).toContain("$10 to $40 in · up to $1,000 to $4,000 out");
+    // §7 adjudication fee stamp (policy-doc static)
+    expect(container.textContent).toContain("ADJUDICATION FEE 200 USDC");
+    // §10 receipt band
+    expect(container.textContent).toContain("The math, on the policy's example.");
+  });
+
+  it("FAQ: the nine Breakpoint questions, caps and fees from the chain", async () => {
+    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    const { container } = renderPoolPage();
+    await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
+    expect(container.querySelectorAll('[data-slot="pool-faqs"] > details').length).toBe(9);
+    // §5 caps and fees, mono, chain-bound ({{PARAM}} while loading — below)
+    expect(container.textContent).toContain(
+      "BASIC UP TO $1,000 · STANDARD UP TO $2,000 · PREMIUM UP TO $4,000",
+    );
+    expect(container.textContent).toContain("$10 · $20 · $40 BY TIER");
   });
 });
 
@@ -345,7 +398,7 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
       "get drawn to read the evidence, get paid when coherent. Unstake anytime.",
     );
     expect(dialog.querySelector('[data-slot="covered-juror"] a')?.getAttribute("href")).toBe(
-      "#/app#jurors",
+      "#/app/adjudicate",
     );
     // the share field (copy doc § Covered overlay, 2026-09-24): the note with
     // the supporter twist, composer intents carrying the member's figures
@@ -353,8 +406,9 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
       "Post it with @riprapxyz — everyone who shares lands on the front page as a supporter",
     );
     const shareX = dialog.querySelector('[data-slot="covered-share"] a[aria-label="Share on X"]');
+    expect(shareX?.getAttribute("href")).toContain(encodeURIComponent("for $20 😳"));
     expect(shareX?.getAttribute("href")).toContain(
-      encodeURIComponent("$20 in, up to $2,000 out — "),
+      encodeURIComponent("Worst case: up to $2,000 out."),
     );
     expect(shareX?.getAttribute("href")).toContain(encodeURIComponent("@riprapxyz"));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

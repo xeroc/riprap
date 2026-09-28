@@ -45,11 +45,11 @@ node apps/cli/bin/run.js config:balance --rpc <RPC>
 
 ### 1.2 Wallets
 
-| Wallet                         | Used for                                               | Notes                                                                                                                                                                                                                                                                                                                |
-| ------------------------------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Operator/admin keypair**     | `hanse:initialize`                                     | Becomes the mutual's immutable `authority`: the payout pass-gate cranker (`hanse:claim-payout` — the claimant never signs) and the only key that can propose `set-subaccord-param` (EVENT-MUTUAL §2.10). Not recoverable or transferable later — use a dedicated operations keypair (target: Squads 2/3 multisig per §12 "Upgrade authority"), never a personal key. |
-| **Member keypairs**            | `hanse:join`, `hanse:file-claim`                       | One per member; each is its own claim key. Payouts need NO member signature — the operator (or anyone, once the pilot gate retires) cranks them into the member's ATA.                                                                                                                                               |
-| **Sponsor keypair (optional)** | `hanse:join --sponsor`                                 | Pays a member's contribution, receives the residual; claim rights stay the member's.                                                                                                                                                                                                                                 |
+| Wallet                         | Used for                         | Notes                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------ | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operator/admin keypair**     | `hanse:initialize`               | Becomes the mutual's immutable `authority`: the payout pass-gate cranker (`hanse:claim-payout` — the claimant never signs) and the only key that can propose `set-subaccord-param` (EVENT-MUTUAL §2.10). Not recoverable or transferable later — use a dedicated operations keypair (target: Squads 2/3 multisig per §12 "Upgrade authority"), never a personal key. |
+| **Member keypairs**            | `hanse:join`, `hanse:file-claim` | One per member; each is its own claim key. Payouts need NO member signature — the operator (or anyone, once the pilot gate retires) cranks them into the member's ATA.                                                                                                                                                                                               |
+| **Sponsor keypair (optional)** | `hanse:join --sponsor`           | Pays a member's contribution, receives the residual; claim rights stay the member's.                                                                                                                                                                                                                                                                                 |
 
 Every wallet needs SOL for fees/rent. The initializer additionally pays rent for the Mutual, Pool, and fee-float accounts; each joiner (or their sponsor) pays Member + Depositor rent.
 
@@ -160,7 +160,24 @@ riprap hanse:initialize \
   --reveal-threshold-bps 6666 --max-draw-attempts 3 \
   --evidence-operator 8EVBvLDVhJUw1nkAUp73mPyxviVFK9Wza5ba1GRANEw1 \
   --dry-run
+```
 
+Concrete example for mainnet:
+
+```bash
+riprap hanse:initialize \
+  --seed 0 \
+  --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
+  --tier 10000000:1000000000 --tier 20000000:2000000000 --tier 40000000:4000000000 \
+  --policy-hash {{POLICY_HASH}} \
+  --deposits-close-at $(date +%s -u -d "2026-11-15T00:00:00") \
+  --claims-close-at $(date +%s -u -d "2026-11-27T23:59:59") \
+  --min-stake 100000000 --alpha-bps 5000 \
+  --review-window 172800 --commit-window 86400 --reveal-window 86400 \
+  --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 50000000 \
+  --reveal-threshold-bps 6666 --max-draw-attempts 3 \
+  --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
+  --dry-run
 ```
 
 Inspect the printed accounts: the instruction must carry `hanse`, `pool`, and `accord` program ids matching §1.1.

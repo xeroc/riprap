@@ -137,11 +137,16 @@ export abstract class BaseCommand extends Command {
           error: cliError.error,
           message: cliError.message,
           hint: cliError.hint,
+          logs: cliError.logs,
         })}\n`,
       );
     } else {
       process.stderr.write(`✗ ${cliError.error}: ${cliError.message}\n`);
       if (cliError.hint) process.stderr.write(`  hint: ${cliError.hint}\n`);
+      // Simulation logs are the program's own account of the failure — the
+      // Anchor `Error Code:` line names the exact revert. Print them all;
+      // they cost nothing when absent.
+      for (const line of cliError.logs ?? []) process.stderr.write(`  log | ${line}\n`);
     }
     this.exit(cliError.exitCode);
   }

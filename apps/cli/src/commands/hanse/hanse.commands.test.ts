@@ -1,6 +1,7 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,11 +15,14 @@ import {
   findPoolPda,
   getInitializeMutualInstructionDataDecoder,
   getJoinInstructionDataDecoder,
+  getMutualEncoder,
   getSetSubaccordParamInstructionDataDecoder,
   HANSE_PROGRAM_ADDRESS,
+  MUTUAL_DISCRIMINATOR,
+  Phase,
 } from "@riprap/hanse";
 import { findAssociatedTokenAddress } from "@riprap/pool";
-import { type Address, createKeyPairSignerFromBytes } from "@solana/kit";
+import { type Address, createKeyPairSignerFromBytes, getBase64Decoder } from "@solana/kit";
 import { findPendingUpdatePda } from "@useaccord/sdk";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
@@ -156,7 +160,7 @@ const INIT_ARGS = [
   EVIDENCE_OPERATOR,
 ];
 
-test("hanse topic help lists all twelve commands", () => {
+test("hanse topic help lists all thirteen commands", () => {
   const res = spawnSync("bun", [devJs, "hanse", "--help"], { encoding: "utf8", cwd: cliRoot });
   expect(res.status).toBe(0);
   for (const name of [
@@ -171,6 +175,7 @@ test("hanse topic help lists all twelve commands", () => {
     "hanse:show",
     "hanse:claim",
     "hanse:member",
+    "hanse:list",
     "hanse:quote",
   ]) {
     expect(res.stdout).toContain(name);
@@ -349,6 +354,121 @@ test("file-claim without a reachable rpc errors cleanly (nonce + fee are chain s
   );
   expect(res.status).not.toBe(0);
   expect(res.stderr).toContain("RpcUnreachable");
+});
+
+describe("hanse:list (getProgramAccounts scan)", () => {
+  // One canned Mutual, SDK-encoded — decodes only against the current
+  // layout, padding included. Lazy: the PDAs it binds only exist after
+  // beforeAll.
+  const encodedMutual = () =>
+    getBase64Decoder().decode(
+      getMutualEncoder().encode({
+        authority: wallet,
+        pool: poolPda,
+        subaccord: subaccordPda,
+        jurorCredential: wallet,
+        jurorSchema: wallet,
+        depositMint: DEPOSIT_MINT,
+        feeMint: FEE_MINT,
+        policyHash: Uint8Array.from(
+          POLICY_HASH.match(/../g)?.map((h: string) => Number.parseInt(h, 16)) ?? [],
+        ),
+        tiers: [
+          { contribution: 10_000_000n, maxPayout: 1_000_000_000n },
+          { contribution: 20_000_000n, maxPayout: 2_000_000_000n },
+          { contribution: 40_000_000n, maxPayout: 4_000_000_000n },
+        ],
+        depositsCloseAt: 1_763_174_400n,
+        claimsCloseAt: 1_793_469_600n,
+        pullWindow: 15_552_000n,
+        seed: SEED,
+        phase: Phase.Active,
+        pullCloseAt: 0n,
+        ratio1e9: 0n,
+        obligations: 0n,
+        feeRefunds: 0n,
+        claimsFiled: 5,
+        claimsResolved: 3,
+        claimNonce: 5n,
+        bump: 255,
+        padding: new Uint8Array(64),
+      }),
+    );
+
+  test("lists every mutual via the discriminator-filtered scan", { timeout: 30_000 }, async () => {
+    // A canned JSON-RPC server: the getProgramAccounts reply carries the
+    // encoded Mutual; the request is captured so the discriminator filter
+    // (the SDK's server-side scan contract) can be asserted.
+    let capturedFilters: unknown;
+    const server = createServer((req, res) => {
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk;
+      });
+      req.on("end", () => {
+        const parsed = JSON.parse(body) as { id: number; method: string; params?: unknown[] };
+        if (parsed.method === "getProgramAccounts") {
+          capturedFilters = parsed.params?.[1];
+        }
+        const result =
+          parsed.method === "getProgramAccounts"
+            ? [
+                {
+                  pubkey: mutualPda,
+                  account: { data: [encodedMutual(), "base64"] },
+                },
+              ]
+            : [];
+        res.setHeader("content-type", "application/json");
+        res.end(JSON.stringify({ jsonrpc: "2.0", id: parsed.id, result }));
+      });
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const port = (server.address() as { port: number }).port;
+
+    try {
+      // Async spawn (NOT spawnSync): the canned server lives in THIS
+      // process's event loop — spawnSync would block it and deadlock the
+      // child's rpc call.
+      const child = spawn("bun", [devJs, "hanse:list", "--json", "--keypair", keypairPath], {
+        cwd: cliRoot,
+        env: { ...process.env, RIPRAP_RPC_URL: `http://127.0.0.1:${port}` },
+      });
+      let stdout = "";
+      let stderr = "";
+      child.stdout.on("data", (chunk) => {
+        stdout += chunk;
+      });
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk;
+      });
+      const status = await new Promise<number | null>((resolve, reject) => {
+        child.on("exit", (code) => resolve(code));
+        child.on("error", reject);
+      });
+      expect(status).toBe(0);
+      expect(stderr).toBe("");
+      const rows = JSON.parse(stdout) as Array<{ address: string; phase: string }>;
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.address).toBe(mutualPda);
+      expect(capturedFilters).toEqual({
+        commitment: "confirmed",
+        encoding: "base64",
+        filters: [
+          {
+            memcmp: {
+              offset: 0,
+              bytes: getBase64Decoder().decode(MUTUAL_DISCRIMINATOR),
+              encoding: "base64",
+            },
+          },
+        ],
+      });
+    } finally {
+      server.closeAllConnections();
+      server.close();
+    }
+  });
 });
 
 describe("hanse:quote (pure, offline)", () => {

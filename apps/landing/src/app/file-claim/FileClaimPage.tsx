@@ -169,7 +169,7 @@ function PreflightGate({ onPass }: { onPass: () => void }) {
   // loading and the pass instant before onPass advances
   return (
     <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-      Checking your membership, the claims window, and the juror fee.
+      Checking your membership, the claims window, and the adjudication fee.
     </p>
   );
 }
@@ -228,7 +228,7 @@ function BlockedState({ block }: { block: PreflightBlock }) {
       return (
         <div className="flex max-w-3xl flex-col gap-2" data-slot="fee-short">
           <p className="text-ink [font:var(--riprap-body-md)]">
-            Juror fee short by{" "}
+            Adjudication fee short by{" "}
             <span data-num className="font-mono">
               {usd(microToUsd(shortfall))}
             </span>{" "}
@@ -239,15 +239,7 @@ function BlockedState({ block }: { block: PreflightBlock }) {
             <span data-num className="font-mono">
               {usd(microToUsd(block.feeMicro))}
             </span>{" "}
-            USDC —{" "}
-            <span data-num className="font-mono">
-              {block.minJurySize}
-            </span>{" "}
-            jurors at{" "}
-            <span data-num className="font-mono">
-              {usd(microToUsd(block.feePerJuror))}
-            </span>{" "}
-            USDC each — from this wallet's USDC, plus a little SOL for rent and fees.
+            USDC from this wallet's USDC, plus a little SOL for rent and fees.
           </p>
         </div>
       );
@@ -585,8 +577,6 @@ function Wizard({ wallet }: { wallet: Address }) {
           draft={draft}
           tier={tier}
           feeMicro={pass.feeMicro}
-          minJurySize={pass.minJurySize}
-          feePerJuror={pass.feePerJuror}
           incidentIso={incidentIso}
           operatorAddress={pass.evidenceOperator}
           canSign={manifest !== null && hanseEnv !== null && filed === null}

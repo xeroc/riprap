@@ -2,7 +2,7 @@
 // (CLAIM-WIZARD §3, copy doc § /app/file-claim "Step 0 preflight"): all
 // chain reads, no user input. Order is the spec's: Member PDA exists →
 // rights_stake > 0 → !has_pending → now < claims_close_at → fee ATA ≥
-// min_jury_size × fee_per_juror (live subaccord read — never a constant).
+// (min_jury_size + 1) × fee_per_juror — the on-chain filing cost (ADR-0030).
 // The first failure wins and renders its honest copy state.
 
 import {
@@ -30,12 +30,10 @@ export type PreflightBlock =
   | { kind: "window-closed"; closedAt: bigint }
   | {
       kind: "fee-short";
-      /** The fee, micro USDC: min_jury_size × fee_per_juror (live). */
+      /** The adjudication fee, micro USDC: (min_jury_size + 1) × fee_per_juror (live). */
       feeMicro: bigint;
       /** The wallet's fee-mint ATA balance (missing ATA = 0), micro. */
       balanceMicro: bigint;
-      minJurySize: number;
-      feePerJuror: bigint;
     }
   | { kind: "no-sol" };
 
@@ -43,7 +41,7 @@ export type PreflightBlock =
 export interface PreflightPass {
   mutual: Mutual;
   member: Member;
-  /** min_jury_size × fee_per_juror, micro USDC — the live subaccord read. */
+  /** (min_jury_size + 1) × fee_per_juror, micro USDC — the live subaccord read. */
   feeMicro: bigint;
   minJurySize: number;
   feePerJuror: bigint;
@@ -140,7 +138,9 @@ export function useClaimPreflight(): ClaimPreflight {
     // fake zero fee.
     return { state: "error", source: "cluster", retry: () => void money.refetch() };
   }
-  const feeMicro = BigInt(reads.minJurySize) * reads.feePerJuror;
+  // The chain charges (min_jury_size + 1) × fee_per_juror — the +1 unit is
+  // the filer's flip-bounty deposit (ADR-0030; file_claim.rs fee_probe).
+  const feeMicro = BigInt(reads.minJurySize + 1) * reads.feePerJuror;
   if (reads.feeBalance < feeMicro) {
     return {
       state: "blocked",
@@ -148,8 +148,6 @@ export function useClaimPreflight(): ClaimPreflight {
         kind: "fee-short",
         feeMicro,
         balanceMicro: reads.feeBalance,
-        minJurySize: reads.minJurySize,
-        feePerJuror: reads.feePerJuror,
       },
     };
   }

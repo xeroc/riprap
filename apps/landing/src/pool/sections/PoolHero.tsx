@@ -456,7 +456,7 @@ export function PoolHero() {
                   </>
                 ),
                 action: "Become a juror",
-                href: "#/app#jurors",
+                href: "#/app/adjudicate",
               }}
               share={
                 <ShareRow

@@ -38,7 +38,7 @@ function commandFiles(dir: string, prefix = ""): { id: string; path: string }[] 
 const files = commandFiles(commandsRoot);
 
 test("every command file loads and carries summary + examples", async () => {
-  expect(files.length).toBeGreaterThanOrEqual(21); // config 2 + pool 9 + hanse 12
+  expect(files.length).toBeGreaterThanOrEqual(22); // config 2 + pool 9 + hanse 13
   for (const { id, path } of files) {
     const mod = (await import(path)) as CommandModule;
     const cmd = mod.default;

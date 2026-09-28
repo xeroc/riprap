@@ -1,6 +1,6 @@
 import { CheckIcon, CopyIcon } from "lucide-react";
 import type * as React from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "../../lib/utils";
 
@@ -27,13 +27,27 @@ export interface CopyBlockProps extends React.ComponentProps<"article"> {
 
 export function CopyBlock({ label, value, hint, className, children, ...props }: CopyBlockProps) {
   const [copied, setCopied] = useState(false);
+  // The revert timer belongs to this component: clear it on unmount so it
+  // never fires into a torn-down environment (jsdom teardown ReferenceError),
+  // and clear before re-arming so a second copy keeps the full 2s.
+  const revertRef = useRef<number | undefined>(undefined);
+  useEffect(
+    () => () => {
+      clearTimeout(revertRef.current);
+    },
+    [],
+  );
 
   const handleCopy: React.MouseEventHandler<HTMLButtonElement> = () => {
     navigator.clipboard
       ?.writeText(value)
       .then(() => {
         setCopied(true);
-        window.setTimeout(() => setCopied(false), 2000);
+        clearTimeout(revertRef.current);
+        revertRef.current = window.setTimeout(() => {
+          revertRef.current = undefined;
+          setCopied(false);
+        }, 2000);
       })
       .catch((error: unknown) => console.error("copy-block copy failed", error));
   };

@@ -346,16 +346,98 @@ describe("TweetCard — quoted evidence, verbatim", () => {
   it("handle and date are mono (numerals/stamps); quote body is grotesk", () => {
     render(<TweetCard {...TWEET} />);
     expect(screen.getByText("@bunjil").className).toContain("[font:var(--riprap-mono-label)]");
-    expect(screen.getByText("Dec 12, 2025").className).toContain("[font:var(--riprap-mono-label)]");
+    // the date sits in the stamp row (mono on the row, inherited by the span)
+    expect(screen.getByText("Dec 12, 2025").closest("p")?.className).toContain(
+      "[font:var(--riprap-mono-label)]",
+    );
     const quote = screen.getByText(/getting stabbed/i);
     expect(quote.className).toContain("[font:var(--riprap-body-sm)]");
   });
 
-  it("renders as a link to the source tweet when href is given", () => {
+  it("with href the X glyph top-right is the permalink; the card stays an article", () => {
     render(<TweetCard {...TWEET} href="https://x.com/bunjil/status/1999412271404187937" />);
-    const link = screen.getByRole("link");
+    const link = screen.getByRole("link", { name: "view @bunjil's post on x" });
     expect(link.getAttribute("href")).toBe("https://x.com/bunjil/status/1999412271404187937");
     expect(link.getAttribute("target")).toBe("_blank");
+    // the card itself is never the link — interactive media can't nest in one
+    const card = screen.getByText("@bunjil").closest('[data-slot="tweet-card"]');
+    expect(card?.tagName).toBe("ARTICLE");
+    expect(card?.contains(link)).toBe(true);
+  });
+
+  it("media.video swaps the poster img for a controllable video element", () => {
+    render(
+      <TweetCard
+        {...TWEET}
+        media={{
+          src: "/blurb/accord-verdict-30s.jpg",
+          alt: "ACCORD explainer poster frame",
+          video: "/blurb/accord-verdict-30s.mp4",
+        }}
+      />,
+    );
+    const video = screen.getByLabelText("ACCORD explainer poster frame");
+    expect(video.tagName).toBe("VIDEO");
+    expect(video.getAttribute("src")).toBe("/blurb/accord-verdict-30s.mp4");
+    expect(video.getAttribute("poster")).toBe("/blurb/accord-verdict-30s.jpg");
+    expect(video.hasAttribute("controls")).toBe(true);
+    expect(screen.queryByAltText("ACCORD explainer poster frame")).toBeNull();
+  });
+
+  it("media.autoPlay starts the video muted; without it the clip stays still", () => {
+    const { rerender } = render(
+      <TweetCard
+        {...TWEET}
+        media={{
+          src: "/blurb/hanse-mutuals.jpg",
+          alt: "HANSE explainer poster frame",
+          video: "/blurb/hanse-mutuals.mp4",
+          autoPlay: true,
+        }}
+      />,
+    );
+    const video = screen.getByLabelText("HANSE explainer poster frame");
+    expect(video.hasAttribute("autoplay")).toBe(true);
+    // React sets muted as a property, not an attribute
+    expect((video as HTMLMediaElement).muted).toBe(true);
+    rerender(
+      <TweetCard
+        {...TWEET}
+        media={{
+          src: "/blurb/hanse-mutuals.jpg",
+          alt: "HANSE explainer poster frame",
+          video: "/blurb/hanse-mutuals.mp4",
+        }}
+      />,
+    );
+    expect(screen.getByLabelText("HANSE explainer poster frame").hasAttribute("autoplay")).toBe(
+      false,
+    );
+  });
+
+  it("media renders 16:9 in a hairline frame; meta sits beside the date, mono data-num", () => {
+    render(
+      <TweetCard
+        {...TWEET}
+        media={{ src: "/blurb/hanse-mutuals.jpg", alt: "HANSE explainer poster frame" }}
+        meta="1,046 views · 13 likes"
+      />,
+    );
+    const img = screen.getByAltText("HANSE explainer poster frame");
+    expect(img.getAttribute("src")).toBe("/blurb/hanse-mutuals.jpg");
+    expect(img.className).toContain("aspect-video");
+    expect(img.className).toContain("border-hairline");
+    // both stamps ride one row: date left, counts right
+    const date = screen.getByText("Dec 12, 2025");
+    const counts = screen.getByText("1,046 views · 13 likes");
+    expect(date.parentElement).toBe(counts.parentElement);
+    expect(counts.hasAttribute("data-num")).toBe(true);
+  });
+
+  it("no media frame or counts row when omitted", () => {
+    render(<TweetCard {...TWEET} />);
+    expect(screen.queryByAltText(/poster frame/i)).toBeNull();
+    expect(screen.queryByText(/views/)).toBeNull();
   });
 });
 

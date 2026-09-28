@@ -8,12 +8,12 @@ import {
   CopyBlock,
   EmailCard,
   HexBackdrop,
-  numeralSegments,
   SectionBand,
+  TweetCard,
   Wordmark,
 } from "@riprap/ui";
 import { useState } from "react";
-
+import { Prose } from "../components/Prose";
 import { Settle } from "../components/Settle";
 import {
   BRAND_ASSETS,
@@ -27,6 +27,8 @@ import {
   EMAIL_FULL,
   EMAIL_SUBJECT,
   EMAIL_TO,
+  EXPLAINERS,
+  EXPLAINERS_INTRO,
   INTRO,
   KUDOS,
   ONE_LINE,
@@ -38,24 +40,6 @@ import {
   X_FABIAN_URL,
   X_RIPRAP_URL,
 } from "./content";
-
-/** body text with every numeral run in mono (DESIGN.md § Typography — the
- * kit's numeralSegments does the splitting; used by rows, kudos, notes). */
-function Prose({ text }: { text: string }) {
-  return (
-    <>
-      {numeralSegments(text).map((segment, i) =>
-        segment.numeral ? (
-          <span key={i} data-num className="font-mono">
-            {segment.text}
-          </span>
-        ) : (
-          <span key={i}>{segment.text}</span>
-        ),
-      )}
-    </>
-  );
-}
 
 /** shared mono file-button chrome (AddressChip button look) */
 const FILE_BTN =
@@ -180,6 +164,73 @@ function WordsBand() {
           {STANDARD_BLURB}
         </p>
       </CopyBlock>
+    </SectionBand>
+  );
+}
+
+/** The explainers — the founder's short videos and talks, ordered by
+ *  what they explain (kicker ordinals), two per row. Each card is the
+ *  kit's TweetCard: paper-quoted post with the tweet's native video
+ *  embedded (poster frame + local mp4) and an engagement stamp; the X
+ *  glyph links to the source post. The demo-day card carries the YouTube
+ *  talk from its thread, embedded inline. */
+function ExplainerBand() {
+  return (
+    <SectionBand label="the explainers">
+      <p className="m-0 max-w-[70ch] text-body [font:var(--riprap-body-sm)] text-muted-foreground">
+        <Prose text={EXPLAINERS_INTRO} />
+      </p>
+      <div className="grid items-start gap-(--riprap-space-lg) sm:grid-cols-2">
+        {EXPLAINERS.map((tweet) => (
+          <figure key={tweet.url} className="flex w-full flex-col gap-3">
+            <figcaption className="flex flex-col gap-1">
+              <span
+                className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]"
+                data-num
+              >
+                {tweet.kicker}
+              </span>
+              <span className="text-left text-muted-soft [font:var(--riprap-body-sm)]">
+                <Prose text={tweet.note} />
+              </span>
+            </figcaption>
+            <TweetCard
+              author="Fabian Schuh"
+              handle="xer0c"
+              avatar="/people/fabian.webp"
+              text={tweet.text}
+              date={tweet.date}
+              meta={tweet.meta}
+              media={{ src: tweet.media, alt: tweet.mediaAlt, video: tweet.video, autoPlay: true }}
+              maxChars={640}
+              href={tweet.url}
+              className="w-full"
+            />
+            {tweet.youtubeEmbed ? (
+              <div className="flex flex-col gap-2">
+                <iframe
+                  src={tweet.youtubeEmbed}
+                  title="Solana mtnDAO Demo Day (August 2026) — Accord and Mutual Risk Pools"
+                  loading="lazy"
+                  allowFullScreen
+                  className="aspect-video w-full border border-hairline"
+                />
+                {tweet.youtubeUrl ? (
+                  <a
+                    href={tweet.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-fit text-left font-mono text-sm text-accent underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring"
+                    data-num
+                  >
+                    full pitch on youtube ↗
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
+          </figure>
+        ))}
+      </div>
     </SectionBand>
   );
 }
@@ -432,6 +483,7 @@ export function BlurbPage() {
         <Header />
         <WordsBand />
         <EmailBand />
+        <ExplainerBand />
         <TeamBand />
         <BrandBand />
         <ContactBand />

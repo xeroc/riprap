@@ -239,7 +239,7 @@ beforeEach(() => {
     data: fakeMutual() as Mutual,
   } as unknown as MaybeAccount<Mutual>);
   memberMock.mockResolvedValue(memberAccount());
-  feeBalanceMock.mockResolvedValue(15n * 1_000_000n);
+  feeBalanceMock.mockResolvedValue(20n * 1_000_000n);
   sendMock.mockReset();
   sendMock.mockResolvedValue("SIG");
   localStorage.clear();
@@ -316,12 +316,12 @@ describe("#/app/file-claim — frame + gates", () => {
   it("fee short shows the exact shortfall and the live fee math", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    feeBalanceMock.mockResolvedValue(10n * 1_000_000n); // $10 of $15
+    feeBalanceMock.mockResolvedValue(15n * 1_000_000n); // $15 of $20
     renderWizard();
     await waitFor(() => {
       const slot = document.querySelector('[data-slot="fee-short"]');
-      expect(slot?.textContent).toContain("Juror fee short by $5 USDC.");
-      expect(slot?.textContent).toContain("Filing pre-pays $15 USDC — 3 jurors at $5 USDC each");
+      expect(slot?.textContent).toContain("Adjudication fee short by $5 USDC.");
+      expect(slot?.textContent).toContain("Filing pre-pays $20 USDC from this wallet");
     });
   });
 });
@@ -390,16 +390,14 @@ describe("#/app/file-claim — the walk (0→5)", () => {
     // step 5: review — live fee numbers + the operator line + Sign and file
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(await screen.findByText(/Step 5 of 5 — Review/i)).toBeTruthy();
-    expect(screen.getByText(/Juror fee \$15 USDC — 3 jurors at \$5 USDC each/)).toBeTruthy();
+    expect(screen.getByText(/Adjudication fee \$20 USDC, pre-paid/)).toBeTruthy();
     const operatorLine = screen.getByText(/Evidence is encrypted for/);
     // the operator is presented as its pubkey, truncated (AddressChip) —
     // never the full 32/44-char dump, never a pretend name
     expect(operatorLine.textContent).toContain("EEEE…EEEE");
     expect(operatorLine.textContent).not.toContain("E".repeat(32));
     expect(
-      screen.getByText(
-        "Denied: the fee is kept. Approved: refunded with the payment. Failed adjudication: returned.",
-      ),
+      screen.getByText("Denied: the fee is forfeited. Failed adjudication: returned."),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Sign and file" })).toHaveProperty("disabled", false);
 

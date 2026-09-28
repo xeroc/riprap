@@ -17,8 +17,10 @@ import { microToUsd } from "./mutual";
 
 const PARAM = "{{PARAM}}";
 
-/** The formatted stake floor ("$10"), or {{PARAM}} until the chain answers. */
-export function useMinStake(subaccord: Address | null): string {
+/** One shared read: the subaccord floor in micro-USDC, or null until the
+ * chain answers. The formatted hook below and the stake form's default clamp
+ * ride the same query key — one fetch, two projections. */
+function useMinStakeMicroRaw(subaccord: Address | null): bigint | null {
   const clusterRpc = useClusterRpc();
   const enabled = clusterRpc !== null && subaccord !== null;
 
@@ -34,5 +36,18 @@ export function useMinStake(subaccord: Address | null): string {
     retry: 1,
   });
 
-  return query.data?.exists ? usd(microToUsd(query.data.data.minStake)) : PARAM;
+  return query.data?.exists ? query.data.data.minStake : null;
+}
+
+/** The formatted stake floor ("$10"), or {{PARAM}} until the chain answers. */
+export function useMinStake(subaccord: Address | null): string {
+  const micro = useMinStakeMicroRaw(subaccord);
+  return micro !== null ? usd(microToUsd(micro)) : PARAM;
+}
+
+/** The floor in micro-USDC — the stake form's default clamp (a pre-filled
+ * default below the floor reverts on submit; copy doc § /app/adjudicate
+ * serve panel, 2026-09-27). Null while unread. */
+export function useMinStakeMicro(subaccord: Address | null): bigint | null {
+  return useMinStakeMicroRaw(subaccord);
 }
