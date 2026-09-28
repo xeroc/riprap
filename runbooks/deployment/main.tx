@@ -32,6 +32,10 @@ action "deploy_hanse" "svm::deploy_program" {
 
 action "deploy_sas" "svm::deploy_program" {
     description = "Deploy the SAS binary (closed circle, §2.8) at its keypair address"
+    # SAS is a localnet-only fixture (the jest harness clones it to the
+    # canonical 22zoJ… id via surfnet_cloneProgramAccount); it never deploys
+    # to devnet or mainnet — the canonical program already lives there.
+    when = input.network_id == "localnet"
     # Staged from ../solana-attestation-service into target/deploy by
     # tests/deps/stage.sh. The canonical 22zoJ… keypair is not ours, so the
     # binary deploys at the sibling keypair's address; the jest harness
