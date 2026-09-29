@@ -3,10 +3,25 @@
 // and hashchange re-render without a reload. Route pages are stubbed —
 // their real graphs are covered by the BreakpointPage, AppPage, and
 // FileClaimPage suites.
+
+import type * as Connector from "@solana/connector";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Router } from "./main";
 
+// The platform route's navbar carries the wallet controls (§0, 2026-09-29) —
+// stub the connector hooks; route-matching tests don't need the real stack.
+vi.mock("@solana/connector", async (importOriginal) => {
+  const actual = await importOriginal<typeof Connector>();
+  return {
+    ...actual,
+    useWallet: () => ({ isConnected: false, account: null }),
+    useCluster: () => ({ clusters: [], cluster: null, setCluster: vi.fn() }),
+    useWalletConnectors: () => [],
+    useConnectWallet: () => ({ connect: vi.fn() }),
+    useDisconnectWallet: () => ({ disconnect: vi.fn() }),
+  };
+});
 vi.mock("./pool/BreakpointPage", () => ({
   BreakpointPage: () => <div data-testid="pool-route" />,
 }));

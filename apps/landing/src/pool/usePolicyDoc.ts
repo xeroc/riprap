@@ -8,17 +8,8 @@
 
 import type { Mutual } from "@riprap/hanse";
 import { useQuery } from "@tanstack/react-query";
-
 import { domainRefHex, toHex } from "./domainRef";
-
-/**
- * Evidence-daemon base URL. Default is the production host; tests and local
- * dev point it at a local daemon via VITE_EVIDENCE_URL.
- */
-export function evidenceBaseUrl(): string {
-  const override = import.meta.env.VITE_EVIDENCE_URL as string | undefined;
-  return override ?? "https://api.useaccord.xyz";
-}
+import { useEvidenceDaemonUrl } from "./evidenceServer";
 
 export type PolicyDocQuery =
   | { state: "idle" } // mutual not answered yet — nothing to derive from
@@ -30,7 +21,7 @@ export type PolicyDocQuery =
 export function usePolicyDoc(mutual: Mutual | null): PolicyDocQuery & { refetch: () => void } {
   const seed = mutual?.seed ?? null;
   const policyHashHex = mutual ? toHex(mutual.policyHash) : null;
-  const base = evidenceBaseUrl();
+  const base = useEvidenceDaemonUrl();
 
   const query = useQuery({
     queryKey: ["policy-doc", base, seed === null ? null : seed.toString(), policyHashHex],

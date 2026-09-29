@@ -1,14 +1,15 @@
 // The one navbar for every surface (platform, pool, #/app) — copy doc §0 NAV.
 // Brand lockup + launch chip, How it works (→ the platform page's mechanism
 // section; the router scrolls after the cross-route swap), X with the official
-// glyph. The right side is the route's: `actions` when a route supplies its
-// own (the app route's cluster select + wallet controls), else the Open App
-// CTA. Solana-free by construction — the app route's controls arrive as props.
+// glyph. Right side on EVERY surface: the cluster select + wallet controls
+// (2026-09-29 — copy doc §0); the Open App CTA rides along except inside
+// /app, where it's dropped. The wallet hooks ride on the router-level
+// provider stack (ADR-0007).
 import { LogoLockup, TopNav, XLogo } from "@riprap/ui";
-import type { ReactNode } from "react";
+import { AppNavControls } from "../app/controls";
 import { X_URL } from "../sections/shared";
 
-export function SiteNav({ actions }: { actions?: ReactNode }) {
+export function SiteNav({ inApp = false }: { inApp?: boolean }) {
   return (
     <TopNav
       className="sticky top-0 z-40"
@@ -34,8 +35,8 @@ export function SiteNav({ actions }: { actions?: ReactNode }) {
           </span>
         </span>
       }
-      actions={actions}
-      cta={actions ? undefined : { href: "#/app", label: "Open App" }}
+      actions={<AppNavControls />}
+      cta={inApp ? undefined : { href: "#/app", label: "Open App" }}
     />
   );
 }

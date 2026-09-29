@@ -14,6 +14,16 @@ import { fakeMutual } from "../fixtures";
 import { type MutualQuery, useMutual } from "../useMutual";
 import { PolicyDetails } from "./PolicyDetails";
 
+// PolicyDetails resolves the daemon URL from the ACTIVE cluster — stub the
+// connector hook (devnet) so the suite exercises the default→devnet path.
+vi.mock("@solana/connector", () => ({
+  useCluster: () => ({
+    clusters: [{ id: "solana:devnet", label: "Devnet" }],
+    cluster: { id: "solana:devnet", label: "Devnet" },
+    setCluster: vi.fn(),
+  }),
+}));
+
 vi.mock("../useMutual", () => ({ useMutual: vi.fn() }));
 const mutualMock = vi.mocked(useMutual);
 
@@ -46,7 +56,7 @@ function response(status: number, body?: string): Response {
 
 /** Render the policy details and switch to the RAW POLICY tab — the old band's home. */
 function renderRawTab() {
-  vi.stubEnv("VITE_EVIDENCE_URL", BASE);
+  vi.stubEnv("VITE_EVIDENCE_DAEMON_URL_DEVNET", BASE);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
   });

@@ -8,10 +8,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SolanaProviders } from "./providers";
 import { useClusterRpc, useHanseEnv } from "./rpc";
 
-// A local `.env` override (documented VITE_DEVNET_RPC) must not flip this
+// A local `.env` override (documented VITE_MAINNET_RPC) must not flip this
 // suite's "default endpoint" assertion. providers.tsx captures the value at
 // module init, and ES imports hoist above a plain stubEnv — hoist the stub.
-vi.hoisted(() => vi.stubEnv("VITE_DEVNET_RPC", undefined));
+vi.hoisted(() => vi.stubEnv("VITE_MAINNET_RPC", undefined));
 
 function Probe() {
   const clusterRpc = useClusterRpc();
@@ -35,11 +35,11 @@ function renderProbe() {
 afterEach(cleanup);
 
 describe("SolanaProviders (ConnectorKit AppProvider under React 19)", () => {
-  it("mounts and binds read-only RPC to the default devnet cluster", () => {
+  it("mounts and binds read-only RPC to the default mainnet cluster", () => {
     renderProbe();
-    // a local .env may point devnet at a private RPC pool — the invariant is
-    // the default CLUSTER (devnet), not the public fallback URL
-    expect(screen.getByTestId("endpoint").textContent).toContain("devnet");
+    // a local .env may point mainnet at a private RPC pool — the invariant is
+    // the default CLUSTER (mainnet), not the public fallback URL
+    expect(screen.getByTestId("endpoint").textContent).toContain("mainnet");
   });
 
   it("useHanseEnv stays null until a wallet connects", () => {

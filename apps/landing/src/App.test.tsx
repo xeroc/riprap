@@ -1,7 +1,22 @@
+import type * as Connector from "@solana/connector";
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "./App";
+
+// The navbar carries the wallet controls on every surface (§0, 2026-09-29) —
+// stub the connector hooks; structure tests don't need the provider stack.
+vi.mock("@solana/connector", async (importOriginal) => {
+  const actual = await importOriginal<typeof Connector>();
+  return {
+    ...actual,
+    useWallet: () => ({ isConnected: false, account: null }),
+    useCluster: () => ({ clusters: [], cluster: null, setCluster: vi.fn() }),
+    useWalletConnectors: () => [],
+    useConnectWallet: () => ({ connect: vi.fn() }),
+    useDisconnectWallet: () => ({ disconnect: vi.fn() }),
+  };
+});
 
 afterEach(cleanup);
 
