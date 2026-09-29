@@ -170,7 +170,7 @@ riprap hanse:initialize \
   --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
   --tier 10000000:1000000000 --tier 20000000:2000000000 --tier 40000000:4000000000 \
   --policy-hash {{POLICY_HASH}} \
-  --deposits-close-at $(date +%s -u -d "2026-11-15T00:00:00") \
+  --deposits-close-at $(date +%s -u -d "2026-11-15T08:00:00") \
   --claims-close-at $(date +%s -u -d "2026-11-27T23:59:59") \
   --min-stake 100000000 --alpha-bps 5000 \
   --review-window 172800 --commit-window 86400 --reveal-window 86400 \

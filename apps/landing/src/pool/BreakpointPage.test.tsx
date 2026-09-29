@@ -263,11 +263,11 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
       "Legal status",
       "Counsel's recommendations",
     ]);
-    // §4: exactly the eight exclusions from the policy
+    // §4: all eleven exclusions from the policy, verbatim and in order
     const exclusions = container.querySelectorAll(
       '[data-slot="policy-section"] [data-slot="policy-exclusions"] li',
     );
-    expect(exclusions.length).toBe(8);
+    expect(exclusions.length).toBe(11);
     // §5: table bound to mutual.tiers — all six prices present, mono, data-num
     const nums = [...container.querySelectorAll('[data-slot="policy-section"] td[data-num]')].map(
       (td) => td.textContent,

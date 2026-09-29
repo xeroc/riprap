@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "accord"
 version = "0.1.0"
-source = "git+ssh://git@github.com/xeroc/accord.git?rev=ba91bd8b8b374091c174909b115688ffb9b231ff#ba91bd8b8b374091c174909b115688ffb9b231ff"
+source = "git+https://github.com/xeroc/accord.git?rev=ba91bd8b8b374091c174909b115688ffb9b231ff#ba91bd8b8b374091c174909b115688ffb9b231ff"
 dependencies = [
  "anchor-lang",
  "anchor-spl",

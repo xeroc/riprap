@@ -18,11 +18,9 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Build packages/*
+        run: pnpm install && pnpm run -r --filter "./packages/*" build
 
       - uses: solana-foundation/github-actions/extract-versions@v0.2.15
         id: versions
