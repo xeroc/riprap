@@ -84,7 +84,7 @@ pnpm dev:ui         # Storybook → http://localhost:6006
 pnpm dev:remotion   # Remotion studio → http://localhost:3000
 ```
 
-Node 26+, pnpm 11+. Rust 1.89.0 (pinned in `rust-toolchain.toml`, auto-installed by rustup) and Anchor CLI 1.2.0 (via `avm`) — required only when the change touches the on-chain half (see the scoped gate below).
+Node 26+, pnpm 11+. Rust stable (pinned in `rust-toolchain.toml`, auto-installed by rustup) and Anchor CLI 1.2.0 (via `avm`) — required only when the change touches the on-chain half (see the scoped gate below).
 
 ## Completion Gate (REQUIRED, scoped to the change)
 
