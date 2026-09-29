@@ -88,13 +88,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      - uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: Install cargo-edit (workspace version bump)
-        run: cargo install cargo-edit --locked
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
