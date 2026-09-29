@@ -1,6 +1,6 @@
 {
   "name": "@riprap/hanse",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Generated Codama client for the Riprap hanse program — bounded-lifetime event mutual orchestrator on top of the pool primitive.",
   "type": "module",
