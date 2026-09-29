@@ -1,6 +1,6 @@
 {
   "name": "@riprap/tests",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Riprap e2e integration suite — jest against a Surfpool surfnet (harness ported from the accord tests/src/setup)",
   "scripts": {
