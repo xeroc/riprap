@@ -92,13 +92,8 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      # `+stable`: rust-toolchain.toml pins 1.89.0, which overrides the
-      # toolchain step for every cargo run in the checkout, and current
-      # cargo-edit needs rustc >= 1.92 (accord's pin is `stable`, so a plain
-      # install works there). The installed cargo-set-version binary runs
-      # under any cargo launcher.
       - name: Install cargo-edit (workspace version bump)
-        run: cargo +stable install cargo-edit --locked
+        run: cargo install cargo-edit --locked
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

@@ -35,7 +35,7 @@ Riprap is a platform for **event-scoped mutual protection pools** on Solana: one
 - **Test**: Vitest + @testing-library/react (jsdom)
 - **Lint/format**: Biome 2.x (single root config, CSS parser with Tailwind directives enabled)
 - **Build**: Vite (app build for the landing, lib build for the ui package)
-- **On-chain**: Rust 1.89 + Anchor 1.0.2 (`programs/`), Codama-generated clients (`packages/pool`, `packages/hanse`), LiteSVM unit tests, jest e2e on Surfpool
+- **On-chain**: Rust stable + Anchor 1.0.2 (`programs/`), Codama-generated clients (`packages/pool`, `packages/hanse`), LiteSVM unit tests, jest e2e on Surfpool
 
 ## Prerequisites
 
@@ -43,7 +43,7 @@ Riprap is a platform for **event-scoped mutual protection pools** on Solana: one
 - pnpm 11 or higher (`corepack enable` or `npm i -g pnpm`)
 - Git
 - A browser (for Storybook and the landing dev server)
-- Rust 1.89.0 (pinned in `rust-toolchain.toml`) and Anchor CLI 1.0.2 (`avm`) — required by the `anchor build` / `cargo test` legs of `pnpm verify`
+- Rust stable (pinned in `rust-toolchain.toml`) and Anchor CLI 1.0.2 (`avm`) — required by the `anchor build` / `cargo test` legs of `pnpm verify`
 - For a live e2e run only: a built sibling checkout of the accord repo (see [Testing](#testing))
 
 > [!NOTE]
