@@ -1,4 +1,8 @@
+# Host toolchain for anchor-cli and host crates (litesvm tests, cargo test);
+# program ELFs build through the sbpf-solana toolchains, not this channel.
+# Matches the accord pin — a fixed version here strands CI tooling that
+# tracks current stable (e.g. cargo-edit in the Release workflow).
 [toolchain]
-channel = "1.89.0"
+channel = "stable"
 components = ["rustfmt", "clippy"]
 profile = "minimal"
