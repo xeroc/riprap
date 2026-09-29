@@ -22,7 +22,7 @@ import { useQuery } from "@tanstack/react-query";
 import { findRoundPda } from "@useaccord/sdk";
 import { useEffect, useState } from "react";
 
-import { AppNavControls, ClusterSwitch, ConnectWalletButton } from "../app/controls";
+import { ClusterSwitch, ConnectWalletButton } from "../app/controls";
 import { useMembership } from "../app/useMembership";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
@@ -509,7 +509,7 @@ export function AdjudicatePage({ session = null }: { session?: SessionRoute | nu
 
   return (
     <>
-      <SiteNav actions={<AppNavControls />} />
+      <SiteNav inApp />
       <main>
         <div className="relative">
           <HexBackdrop className="pointer-events-none absolute inset-0 z-0 size-full" />

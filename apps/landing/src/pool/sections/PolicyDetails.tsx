@@ -14,9 +14,10 @@ import type { Address } from "@solana/kit";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { type ChangeEvent, type ReactNode, useRef, useState } from "react";
 import { domainRefHex, hansePreimage, sha256Hex, toHex } from "../domainRef";
+import { useEvidenceDaemonUrl } from "../evidenceServer";
 import { type PoolTier, poolTiers, TIER_NAMES } from "../mutual";
 import { useMutual } from "../useMutual";
-import { evidenceBaseUrl, usePolicyDoc } from "../usePolicyDoc";
+import { usePolicyDoc } from "../usePolicyDoc";
 
 // Kit data law: unknown values render as mono {{PARAM}} placeholders.
 const PARAM = "{{PARAM}}";
@@ -416,6 +417,7 @@ type Tab = (typeof TABS)[number]["id"];
 
 export function PolicyDetails() {
   const mutualQuery = useMutual();
+  const evidenceBase = useEvidenceDaemonUrl();
   const mutual = mutualQuery.state === "ready" ? mutualQuery.mutual : null;
   const tiers = mutual === null ? null : poolTiers(mutual);
   const subaccord = mutual === null ? null : mutual.subaccord;
@@ -434,7 +436,7 @@ export function PolicyDetails() {
     setUploading(true);
     setUploadError(null);
     try {
-      const result = await uploadTerms(evidenceBaseUrl(), mutual, file);
+      const result = await uploadTerms(evidenceBase, mutual, file);
       if (result.ok) {
         await doc.refetch();
       } else {

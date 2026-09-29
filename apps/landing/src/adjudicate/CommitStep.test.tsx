@@ -77,9 +77,8 @@ beforeEach(() => {
   });
   commitMock.mockClear();
   accordCtor.mockReset();
-  // a regular function — `new Accord(...)` needs a constructable impl
-  // a regular function — `new Accord(...)` needs a constructable impl
-  // (biome useArrowFunction is warning-class here; the arrow can't construct)
+  // `new Accord(...)` needs a constructable impl — the arrow can't construct
+  // biome-ignore lint/complexity/useArrowFunction: the mock ctor must be constructable
   accordCtor.mockImplementation(function () {
     return { methods: { commit: commitMock } } as unknown as Accord;
   });

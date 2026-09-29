@@ -24,7 +24,7 @@ import { SiteNav } from "../../components/SiteNav";
 import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../../pool/mutual";
 import { useClusterRpc, useHanseEnv } from "../../shared/rpc";
 import { describeError, sendInstruction } from "../../shared/transaction";
-import { AppNavControls, ClusterSwitch, ConnectWalletButton } from "../controls";
+import { ClusterSwitch, ConnectWalletButton } from "../controls";
 import { intakeDocument } from "./documents";
 import {
   type ClaimDraft,
@@ -614,7 +614,7 @@ export function FileClaimPage() {
 
   return (
     <>
-      <SiteNav actions={<AppNavControls />} />
+      <SiteNav inApp />
       <main>
         <div className="relative">
           <HexBackdrop className="pointer-events-none absolute inset-0 z-0 size-full" />

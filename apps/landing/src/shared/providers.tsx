@@ -6,8 +6,8 @@
  * connected on any route stays connected on every route (ADR-0007 — one
  * connect per page session, pool → app → adjudicate → file-claim).
  *
- * Clusters: devnet (default) + mainnet-beta + localnet; RPC URLs come from
- * VITE_DEVNET_RPC / VITE_MAINNET_RPC with public defaults.
+ * Clusters: mainnet-beta (default, 2026-09-29) + devnet + localnet; RPC URLs
+ * come from VITE_MAINNET_RPC / VITE_DEVNET_RPC with public defaults.
  */
 
 import { Toaster } from "@riprap/ui";
@@ -28,7 +28,7 @@ const MAINNET_RPC = import.meta.env.VITE_MAINNET_RPC ?? "https://api.mainnet-bet
 
 const connectorConfig = getDefaultConfig({
   appName: "Riprap",
-  network: "devnet",
+  network: "mainnet",
   clusters: [
     createSolanaDevnet(DEVNET_RPC),
     createSolanaMainnet(MAINNET_RPC),

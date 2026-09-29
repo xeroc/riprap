@@ -1,9 +1,29 @@
 // The one navbar (copy doc §0): identical brand/links on every surface; the
-// right side is the route's — the Open App CTA by default, the caller's
-// controls (the app route's cluster select + wallet button) when passed.
+// right side carries the cluster select + wallet controls on EVERY surface
+// (2026-09-29), plus the Open App CTA except inside /app (`inApp`).
+
+import type * as Connector from "@solana/connector";
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SiteNav } from "./SiteNav";
+
+// The navbar owns the wallet controls — stub the connector hooks they read;
+// structure tests don't need the real AppProvider stack.
+vi.mock("@solana/connector", async (importOriginal) => {
+  const actual = await importOriginal<typeof Connector>();
+  return {
+    ...actual,
+    useWallet: () => ({ isConnected: false, account: null }),
+    useCluster: () => ({
+      clusters: [{ id: "mainnet", label: "mainnet-beta" }],
+      cluster: { id: "mainnet", label: "mainnet-beta" },
+      setCluster: vi.fn(),
+    }),
+    useWalletConnectors: () => [],
+    useConnectWallet: () => ({ connect: vi.fn() }),
+    useDisconnectWallet: () => ({ disconnect: vi.fn() }),
+  };
+});
 
 afterEach(cleanup);
 
@@ -19,14 +39,17 @@ describe("SiteNav", () => {
     expect(screen.getByText("launch: Breakpoint 2026")).toBeTruthy();
   });
 
-  it("default right side is the Open App CTA → #/app", () => {
+  it("right side on every surface: cluster select + Connect wallet, plus the Open App CTA → #/app", () => {
     render(<SiteNav />);
+    expect(screen.getByRole("combobox", { name: "cluster" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Connect wallet" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Open App" }).getAttribute("href")).toBe("#/app");
   });
 
-  it("actions replace the CTA — the app route's controls take the slot", () => {
-    render(<SiteNav actions={<button type="button">Connect wallet</button>} />);
-    expect(screen.queryByRole("link", { name: "Open App" })).toBeNull();
+  it("inApp: same wallet controls, no Open App CTA", () => {
+    render(<SiteNav inApp />);
+    expect(screen.getByRole("combobox", { name: "cluster" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Connect wallet" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Open App" })).toBeNull();
   });
 });

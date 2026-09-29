@@ -61,7 +61,6 @@ vi.mock("@useaccord/sdk", () => ({ fetchSubaccordMaybe: vi.fn() }));
 // The anchored-terms band fetches from the evidence daemon — keep page tests
 // off the network; the band's own suite covers its states.
 vi.mock("../usePolicyDoc", () => ({
-  evidenceBaseUrl: () => "https://api.useaccord.xyz",
   usePolicyDoc: vi.fn(() => ({ state: "idle", refetch: () => {} })),
 }));
 
@@ -608,7 +607,9 @@ describe("mutual absent on the cluster — switch-cluster empty state", () => {
         "The Blade Pool isn't deployed on this network. Switch networks to find it.",
       ),
     ).toBeTruthy();
-    expect(screen.getByRole("combobox")).toBeTruthy();
+    // the navbar's cluster select (all surfaces, §0 2026-09-29) + the inline
+    // switch this empty state points at
+    expect(screen.getAllByRole("combobox").length).toBe(2);
     // no fallback tiers, no chip-in
     expect(screen.queryByText(/entry · up to/)).toBeNull();
     expect(screen.queryByRole("button", { name: /Chip in/ })).toBeNull();
