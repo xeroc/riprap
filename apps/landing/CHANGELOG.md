@@ -1,5 +1,19 @@
 # @riprap/landing
 
+## 0.5.0
+
+### Minor Changes
+
+- [#5](https://github.com/xeroc/riprap/pull/5) [`e934966`](https://github.com/xeroc/riprap/commit/e934966c3d2496e19187a04b99de763f8cc3037a) Thanks [@xeroc](https://github.com/xeroc)! - Evidence daemon URL is now cluster-aware: devnet resolves api.devnet.useaccord.xyz, mainnet api.useaccord.xyz, localnet shares the resolved devnet host unless pinned. The single VITE_EVIDENCE_URL override is replaced by VITE_EVIDENCE_DAEMON_URL_DEVNET / _MAINNET / _LOCALNET (defaults baked in, so unset env keeps working). The anchored-terms read and the sponsor policy upload now follow the navbar's cluster selector instead of always hitting the mainnet host.
+
+- [#5](https://github.com/xeroc/riprap/pull/5) [`e934966`](https://github.com/xeroc/riprap/commit/e934966c3d2496e19187a04b99de763f8cc3037a) Thanks [@xeroc](https://github.com/xeroc)! - Navbar: the cluster select + wallet controls now render on every surface (platform, pool, /app family); the Open App CTA stays on the platform and pool pages and is dropped inside /app. The default cluster is now mainnet-beta (was devnet) — visitors without a persisted cluster choice land on mainnet, where the Blade Pool isn't deployed yet, so the pool/app surfaces open in their not-live state until a cluster with a deployment is selected.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @riprap/hanse@0.5.0
+  - @riprap/ui@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes
