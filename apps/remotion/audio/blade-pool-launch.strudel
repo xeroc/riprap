@@ -1,0 +1,36 @@
+// blade-pool-launch — "passive pulse" (Strudel score), riprap family
+//
+// Prebaked to public/audio/blade-pool-launch.wav (gitignored artifact):
+//   pnpm --filter @riprap/remotion score blade-pool-launch 10
+// Pasteable into https://strudel.cc as-is.
+//
+// 120 BPM grid: cpm 30 → 1 bar = 2.000s = 60 frames @30fps.
+// Family: riprap — Gb major; see blade-pool-intro-30s.strudel (the canonical
+// implementation) and MUSIC.md for the house style.
+// Scene map: fear b1–2 (hammered quotes, shadow @3.0) · hook 4–7s (the
+// what-if, almost nothing) · live 7–10s (cut tick @7.0, stamp slam @7.75,
+// bloom @8.5, button @9.0 — the video's 1.5s fade-out carries the tail).
+setcpm(30)
+
+// ── bed ──
+const tick = s("~ hh ~ hh").gain(.09).hpf(9000)           // whisper hats
+const arpGb = note("gb3 [bb3 db4] [f4 ab4] ~").s("piano").gain(.34).room(.35)
+const pad = x => note(x).s("triangle").fm("<0 2 4>").clip(1).attack(.8).release(1.2).gain(.22).room(.4)
+
+// ── S0 fear · 0–4s — the pile builds, peaks @3.0 ──
+const b1 = stack(s("bd ~ ~ ~").bank("RolandTR909").gain(.45), pad("gb2"))
+const b2 = stack(s("bd ~ bd ~").bank("RolandTR909").gain(.42), tick, pad("gb2"),
+  note("~ ~ ~ db3").s("piano").gain(.18).room(.5).release(2))       // shadow — pile peaks @3.0
+
+// ── S1 hook · 4–7s — almost nothing; the what-if lands @4.0 ──
+const b3 = stack(s("bd ~ ~ ~").bank("RolandTR909").gain(.45),
+  note("[gb4,db4] ~ ~ ~").s("piano").gain(.22).room(.45), pad("gb2"))
+
+// ── S2 live · 7–10s — cut tick @7.0, the stamp slams @7.75 ──
+const b4 = stack(s("bd ~ ~ ~").bank("RolandTR909").gain(.45), pad("gb2"),
+  s("~ ~ rim ~").gain(.13),                                          // cut — endcard @7.0
+  note("~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ gb2 ~").s("piano").gain(.3).room(.4).release(.6)) // stamp slam @7.75
+const b5 = stack(s("bd ~ bd ~").bank("RolandTR909").gain(.42), arpGb, tick, pad("gb2"),
+  note("~ ~ ~ ~ [gb4,bb4,db5,f5,ab5] ~ ~ ~ [gb4,gb5] ~ ~ ~ ~ ~ ~").s("piano").gain(.26).room(.5).release(1.5)) // bloom @8.5 · button @9.0
+cat(b1, b2, b3, b4, b5)
+  .gain(.48)
