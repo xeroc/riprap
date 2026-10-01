@@ -49,6 +49,7 @@ import { useMinStake } from "../useMinStake";
 import { useMutual } from "../useMutual";
 import { usePoolTotal } from "../usePoolTotal";
 import { JoinPrecheck } from "./JoinPrecheck";
+import { PolicyAcceptNote } from "./PolicyAcceptNote";
 import { ShareRow } from "./ShareRow";
 
 // Policy §5 default: Standard is the middle tier (index 1 of exactly three).
@@ -96,6 +97,7 @@ function ConnectWalletCta() {
       <Button size="lg" data-participate onClick={() => setOpen(true)}>
         Connect a wallet to chip in
       </Button>
+      <PolicyAcceptNote />
       <WalletDialog
         open={open}
         onOpenChange={setOpen}
@@ -393,6 +395,7 @@ export function PoolHero() {
                             ? `Chip in ${usd(tier.fee)}`
                             : phaseLabel[phase]}
                         </Button>
+                        <PolicyAcceptNote />
                         {precheck !== null && <JoinPrecheck isDevnet={isDevnet} {...precheck} />}
                       </div>
                     ) : (
