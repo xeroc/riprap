@@ -76,7 +76,7 @@ Launch copy runs on one portable claim in two layers that never blend. Layer 1 i
 
 > "Your group's got you covered."
 
-Hero thesis (landing H1): "Finance went P2P. Risk Cover can too." Runner-up, differentiator-forward: "Peer-to-peer cover." Plain gloss where the audience needs it: "Group cover, no middleman." Ecosystem variant (bio/deck): "Peer-to-peer cover on Solana." Set by the tagline pass, 2026-09-15; "no company" retired — a company may one day take a rate (open question 7), the middleman can't come back.
+Hero law (2026-10-05 platform-story pass): member-voice hero (landing H1): "Your group's got you covered." Ecosystem hero (deck, talks): "DeFi rebuilt finance. Insurance is next." One-liner: "DeFi for insurance." Plain gloss where the audience needs it: "Group cover, no middleman." Retired by the same pass — the 2026-09-15 hero "Finance went P2P. Risk Cover can too." and its "Peer-to-peer cover" line set (risk-narrow; mutuals are the category, cover is use case #1 — canon: `marketing/07-brand-assets/brand-story.md`, law: messaging-guide § Platform-Story Pass). Still standing from 2026-09-15: "no company" stays retired — a company may one day take a rate (open question 7), the middleman can't come back.
 
 **Layer 2 — the event-specific pilot** (`Riprap: Blade Pool @ Breakpoint 2026`; instance surfaces and ads only — the platform hero stays numberless):
 
