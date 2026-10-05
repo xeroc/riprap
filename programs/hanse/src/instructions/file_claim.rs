@@ -33,14 +33,12 @@ pub struct FileClaim<'info> {
     )]
     pub mutual: Box<Account<'info, Mutual>>,
 
-    /// One Pending claim per member — the flip lives in the handler.
     #[account(
         mut,
         seeds = [crate::state::MEMBER_SEED, mutual.key().as_ref(), claimant.key().as_ref()],
         bump,
         constraint = member_account.mutual == mutual.key() @ HanseError::NotMember,
         constraint = member_account.member == claimant.key() @ HanseError::NotMember,
-        constraint = !member_account.has_pending_claim @ HanseError::PendingClaimExists,
     )]
     pub member_account: Box<Account<'info, Member>>,
 
@@ -53,10 +51,6 @@ pub struct FileClaim<'info> {
     )]
     pub claim: Box<Account<'info, Claim>>,
 
-    /// The member's pool position. CHECK: PDA ["depositor", pool, member]
-    /// under the pool program, verified in the handler; ownership by the pool
-    /// program is enforced by the Account type.
-    pub depositor: Box<Account<'info, pool::Depositor>>,
 
     /// The subaccord this mutual owns — the live source of the filing fee.
     /// mut: accord's create_dispute writes fee tracking on it.
@@ -131,9 +125,9 @@ impl<'info> FileClaim<'info> {
         );
         // The tier the member bought — enforced clamp, not adjudicated (§2.3).
         // The cap is per MEMBERSHIP, not per claim: cap_used carries the Σ of
-        // this member's Pending + Approved claim_amounts, so refiling after a
-        // settlement (has_pending cleared) cannot re-enter at the full cap —
-        // only at what remains of it (audit H-1 2026-09-24).
+        // this member's Pending + Approved claim_amounts, so concurrent
+        // filings and post-settlement refilings all clamp to what remains of
+        // it (audit H-1 2026-09-24) — reservations release on Denied/Failed.
         let tier = mutual.tiers[member.tier as usize];
         let remaining = tier
             .max_payout
@@ -142,26 +136,11 @@ impl<'info> FileClaim<'info> {
         require!(remaining > 0, HanseError::TierCapExhausted);
         let claim_amount = requested.min(remaining);
 
-        // Burned-out members have no cover: rights stake must be positive.
-        let expected_depositor = Pubkey::find_program_address(
-            &[
-                b"depositor",
-                mutual.pool.as_ref(),
-                ctx.accounts.claimant.key().as_ref(),
-            ],
-            &pool::ID,
-        )
-        .0;
-        require_keys_eq!(
-            ctx.accounts.depositor.key(),
-            expected_depositor,
-            HanseError::WrongDepositor
-        );
-        require!(
-            ctx.accounts.depositor.rights_stake > 0,
-            HanseError::NoRightsStake
-        );
-
+        // Multiple claims per membership are allowed — the cumulative tier
+        // cap above is the ONLY filing limiter (multi-claim amendment; the
+        // removed `rights_stake > 0` read confused the pool's residual
+        // weight with cover and locked chunked claimants out after
+        // contribution-worth of payouts).
 
         // Dispute PDA bound to this mutual + this nonce (filer = mutual PDA).
         let (expected_dispute, _) = Pubkey::find_program_address(
@@ -260,7 +239,6 @@ impl<'info> FileClaim<'info> {
         let mutual = &mut ctx.accounts.mutual;
         mutual.claims_filed += 1;
         mutual.claim_nonce += 1;
-        ctx.accounts.member_account.has_pending_claim = true;
         ctx.accounts.member_account.cap_used = ctx
             .accounts
             .member_account

@@ -69,7 +69,7 @@ fn ratio(env: &Env) -> (u64, i64, hanse::state::Phase) {
 /// §2.5/§8: solvent — treasury covers obligations + refunds: ratio = 1e9.
 #[test]
 fn solvent_settles_at_full_ratio() {
-    let (mut env, cfg) = setup_settlement(2, 1);
+    let (mut env, _cfg) = setup_settlement(2, 1);
     let before = env.svm.get_sysvar::<solana_clock::Clock>().unix_timestamp;
     let crank = cranker(&mut env);
     settle_pool_tx(&mut env, &crank).unwrap();

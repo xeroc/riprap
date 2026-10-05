@@ -25,8 +25,6 @@ import {
   fixEncoderSize,
   getAddressDecoder,
   getAddressEncoder,
-  getBooleanDecoder,
-  getBooleanEncoder,
   getBytesDecoder,
   getBytesEncoder,
   getStructDecoder,
@@ -62,15 +60,14 @@ export type Member = {
    * credential — the closed circle.
    */
   attestation: Address;
-  /** One Pending claim per member — the file_claim gate (§7). */
-  hasPendingClaim: boolean;
   /**
    * Tier cap consumed: Σ claim_amount over this member's Pending +
    * Approved claims (Denied/Failed release their reservation at
-   * settle_claim). `file_claim` clamps to `max_payout − cap_used` — the
-   * cap is per MEMBERSHIP, not per claim (audit H-1 2026-09-24: the
-   * has_pending gate alone only serializes filings, so a member whose
-   * claim settled could refile at the full cap before payout burns).
+   * settle_claim). `file_claim` clamps to `max_payout − cap_used` —
+   * the cap is per MEMBERSHIP, not per claim (audit H-1 2026-09-24),
+   * and since the multi-claim amendment it is the ONLY filing
+   * limiter: concurrent claims share it (each filing reserves before
+   * the next can read the remainder).
    */
   capUsed: bigint;
   bump: number;
@@ -93,15 +90,14 @@ export type MemberArgs = {
    * credential — the closed circle.
    */
   attestation: Address;
-  /** One Pending claim per member — the file_claim gate (§7). */
-  hasPendingClaim: boolean;
   /**
    * Tier cap consumed: Σ claim_amount over this member's Pending +
    * Approved claims (Denied/Failed release their reservation at
-   * settle_claim). `file_claim` clamps to `max_payout − cap_used` — the
-   * cap is per MEMBERSHIP, not per claim (audit H-1 2026-09-24: the
-   * has_pending gate alone only serializes filings, so a member whose
-   * claim settled could refile at the full cap before payout burns).
+   * settle_claim). `file_claim` clamps to `max_payout − cap_used` —
+   * the cap is per MEMBERSHIP, not per claim (audit H-1 2026-09-24),
+   * and since the multi-claim amendment it is the ONLY filing
+   * limiter: concurrent claims share it (each filing reserves before
+   * the next can read the remainder).
    */
   capUsed: number | bigint;
   bump: number;
@@ -121,7 +117,6 @@ export function getMemberEncoder(): FixedSizeEncoder<MemberArgs> {
       ["member", getAddressEncoder()],
       ["tier", getU8Encoder()],
       ["attestation", getAddressEncoder()],
-      ["hasPendingClaim", getBooleanEncoder()],
       ["capUsed", getU64Encoder()],
       ["bump", getU8Encoder()],
       ["padding", fixEncoderSize(getBytesEncoder(), 64)],
@@ -138,7 +133,6 @@ export function getMemberDecoder(): FixedSizeDecoder<Member> {
     ["member", getAddressDecoder()],
     ["tier", getU8Decoder()],
     ["attestation", getAddressDecoder()],
-    ["hasPendingClaim", getBooleanDecoder()],
     ["capUsed", getU64Decoder()],
     ["bump", getU8Decoder()],
     ["padding", fixDecoderSize(getBytesDecoder(), 64)],
@@ -201,5 +195,5 @@ export async function fetchAllMaybeMember(
 }
 
 export function getMemberSize(): number {
-  return 179;
+  return 178;
 }

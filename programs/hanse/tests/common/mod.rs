@@ -661,7 +661,6 @@ pub fn file_claim_raw(
     )
     .unwrap();
     let nonce = m.claim_nonce;
-    let pool = pool_pda(cfg.seed);
     let domain_ref = hanse::instructions::subaccord_domain_ref(cfg.seed, &cfg.policy_hash);
     let subaccord = Pubkey::find_program_address(
         &[
@@ -691,7 +690,6 @@ pub fn file_claim_raw(
             mutual,
             member_account: member_pda(&mutual, &member.pubkey()),
             claim: claim_pda(&mutual, nonce),
-            depositor: pool_depositor(&pool, &member.pubkey()),
             subaccord,
             member_fee_ata: ata(&member.pubkey(), &env.mint),
             fee_float: ata(&mutual, &env.mint),

@@ -17,7 +17,7 @@ import {
   usd,
 } from "@riprap/ui";
 import { Settle } from "../../components/Settle";
-import { microToUsd, type PoolTier } from "../../pool/mutual";
+import { microToUsd } from "../../pool/mutual";
 import type { ClaimDraft, DocSlot } from "./draft";
 import { DOC_SLOTS } from "./draft";
 
@@ -191,19 +191,20 @@ export function StepIncident({
 
 export function StepAmount({
   draft,
-  tier,
+  capUsdc,
   onChange,
   onBack,
   onContinue,
 }: {
   draft: ClaimDraft;
-  tier: PoolTier;
+  /** The REMAINING cap (tier max − cap_used): concurrent filings share it. */
+  capUsdc: number;
   onChange: (patch: Partial<ClaimDraft>) => void;
   onBack: () => void;
   onContinue: () => void;
 }) {
   const amount = Number.parseFloat(draft.amountUsdc);
-  const overCap = Number.isFinite(amount) && amount > tier.cap;
+  const overCap = Number.isFinite(amount) && amount > capUsdc;
   const valid = Number.isFinite(amount) && amount > 0 && !overCap;
   return (
     <StepFrame n={2} name="Amount">
@@ -220,13 +221,13 @@ export function StepAmount({
             onChange={(e) => onChange({ amountUsdc: e.target.value })}
           />
           <p data-num className="font-mono text-sm text-muted-foreground">
-            Your cap: {usd(tier.cap)}
+            Your cap: {usd(capUsdc)}
           </p>
           {overCap ? (
             <p className="text-error [font:var(--riprap-body-sm)]">
               Above your cap —{" "}
               <span data-num className="font-mono">
-                {usd(tier.cap)}
+                {usd(capUsdc)}
               </span>{" "}
               USDC is the most this membership can request.
             </p>
@@ -407,7 +408,7 @@ function SummaryRow({ label, mono }: { label: string; mono: string }) {
 
 export function StepReview({
   draft,
-  tier,
+  capUsdc,
   feeMicro,
   incidentIso,
   operatorAddress,
@@ -416,7 +417,8 @@ export function StepReview({
   onSign,
 }: {
   draft: ClaimDraft;
-  tier: PoolTier;
+  /** The REMAINING cap (tier max − cap_used) — what this filing clamps to. */
+  capUsdc: number;
   feeMicro: bigint;
   incidentIso: string;
   /** sub.evidence_operator — the operator IS this pubkey; presented truncated. */
@@ -442,7 +444,7 @@ export function StepReview({
       </div>
       <dl className="flex max-w-3xl flex-col gap-2">
         <SummaryRow label="Requested" mono={Number.isFinite(amount) ? usd(amount) : "{{PARAM}}"} />
-        <SummaryRow label="Your cap" mono={usd(tier.cap)} />
+        <SummaryRow label="Your cap" mono={usd(capUsdc)} />
         <SummaryRow label="Incident" mono={incidentIso} />
         <SummaryRow label="Where" mono={draft.incidentPlace || "{{PARAM}}"} />
       </dl>
@@ -453,9 +455,6 @@ export function StepReview({
         </p>
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
           A denial can be appealed within the adjudication protocol — each round draws a fresh jury.
-        </p>
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          One open claim per member.
         </p>
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
           Evidence is encrypted for <AddressChipInline value={operatorAddress} />, the pool's

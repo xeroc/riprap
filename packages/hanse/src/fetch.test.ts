@@ -116,7 +116,6 @@ function encodedMember(): string {
       member: OWNER,
       tier: 2,
       attestation: "11111111111111111111111111111111" as Address,
-      hasPendingClaim: false,
       capUsed: 0n,
       bump: 255,
       padding: new Uint8Array(64),
@@ -170,7 +169,7 @@ describe("fetchMemberByOwner", () => {
     const account = await fetchMemberByOwner(spy.rpc, { mutual, member: OWNER });
     expect(spy.queried).toBeDefined();
     expect(account.data.tier).toBe(2);
-    expect(account.data.hasPendingClaim).toBe(false);
+    expect(account.data.capUsed).toBe(0n);
   });
 
   test("fetchMaybeMemberByOwner returns exists:false on missing account", async () => {

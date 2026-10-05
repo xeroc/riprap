@@ -52,38 +52,34 @@ export const HANSE_ERROR__WRONG_PENDING_UPDATE = 0x1780; // 6016
 export const HANSE_ERROR__CLAIMS_CLOSED = 0x1781; // 6017
 /** NotMember: Not a member of this mutual */
 export const HANSE_ERROR__NOT_MEMBER = 0x1782; // 6018
-/** NoRightsStake: No rights stake: a member without stake has no cover and cannot file */
-export const HANSE_ERROR__NO_RIGHTS_STAKE = 0x1783; // 6019
-/** PendingClaimExists: A pending claim already exists for this member: one at a time */
-export const HANSE_ERROR__PENDING_CLAIM_EXISTS = 0x1784; // 6020
 /** TierCapExhausted: Tier cap exhausted: this member's Pending + Approved claims already reach the tier's maximum payout */
-export const HANSE_ERROR__TIER_CAP_EXHAUSTED = 0x1785; // 6021
+export const HANSE_ERROR__TIER_CAP_EXHAUSTED = 0x1783; // 6019
 /** ClaimNotPending: The claim is already resolved */
-export const HANSE_ERROR__CLAIM_NOT_PENDING = 0x1786; // 6022
+export const HANSE_ERROR__CLAIM_NOT_PENDING = 0x1784; // 6020
 /** DisputeNotFinal: The dispute has not reached a final ruling or failed yet */
-export const HANSE_ERROR__DISPUTE_NOT_FINAL = 0x1787; // 6023
+export const HANSE_ERROR__DISPUTE_NOT_FINAL = 0x1785; // 6021
 /** ClaimsWindowOpen: The claims window is still open: settlement waits until claims_close_at */
-export const HANSE_ERROR__CLAIMS_WINDOW_OPEN = 0x1788; // 6024
+export const HANSE_ERROR__CLAIMS_WINDOW_OPEN = 0x1786; // 6022
 /** ClaimsUnresolved: Claims are still unresolved: settlement waits for the last dispute */
-export const HANSE_ERROR__CLAIMS_UNRESOLVED = 0x1789; // 6025
+export const HANSE_ERROR__CLAIMS_UNRESOLVED = 0x1787; // 6023
 /** AlreadySettled: The pool is already settled or dissolved */
-export const HANSE_ERROR__ALREADY_SETTLED = 0x178a; // 6026
+export const HANSE_ERROR__ALREADY_SETTLED = 0x1788; // 6024
 /** NotSettled: The mutual is not in the Settled phase: payouts pull only after settle_pool */
-export const HANSE_ERROR__NOT_SETTLED = 0x178b; // 6027
+export const HANSE_ERROR__NOT_SETTLED = 0x1789; // 6025
 /** PullWindowClosed: The pull window is closed: unpaid amounts have reverted to the residual */
-export const HANSE_ERROR__PULL_WINDOW_CLOSED = 0x178c; // 6028
+export const HANSE_ERROR__PULL_WINDOW_CLOSED = 0x178a; // 6026
 /** PullWindowOpen: The pull window is still open: dissolve waits until pull_close_at */
-export const HANSE_ERROR__PULL_WINDOW_OPEN = 0x178d; // 6029
+export const HANSE_ERROR__PULL_WINDOW_OPEN = 0x178b; // 6027
 /** ClaimNotApproved: Only approved or failed claims pay out — approved pay claim + fee at ratio, failed pay the fee at ratio */
-export const HANSE_ERROR__CLAIM_NOT_APPROVED = 0x178e; // 6030
+export const HANSE_ERROR__CLAIM_NOT_APPROVED = 0x178c; // 6028
 /** ClaimAlreadyPaid: This claim is already paid — payouts are once */
-export const HANSE_ERROR__CLAIM_ALREADY_PAID = 0x178f; // 6031
+export const HANSE_ERROR__CLAIM_ALREADY_PAID = 0x178d; // 6029
 /** Unauthorized: Unauthorized: this instruction is gated to the mutual authority (admin knob or the pilot payout crank gate) */
-export const HANSE_ERROR__UNAUTHORIZED = 0x1790; // 6032
+export const HANSE_ERROR__UNAUTHORIZED = 0x178e; // 6030
 /** MathOverflow: Checked math overflowed — the amounts do not fit the accounting */
-export const HANSE_ERROR__MATH_OVERFLOW = 0x1791; // 6033
+export const HANSE_ERROR__MATH_OVERFLOW = 0x178f; // 6031
 /** AttestationAccountMismatch: SAS account mismatch: credential/schema must be the mutual's own and the attestation the member's (§2.8 closed circle) */
-export const HANSE_ERROR__ATTESTATION_ACCOUNT_MISMATCH = 0x1792; // 6034
+export const HANSE_ERROR__ATTESTATION_ACCOUNT_MISMATCH = 0x1790; // 6032
 
 export type HanseError =
   | typeof HANSE_ERROR__ALREADY_SETTLED
@@ -102,11 +98,9 @@ export type HanseError =
   | typeof HANSE_ERROR__MATH_OVERFLOW
   | typeof HANSE_ERROR__MUTUAL_NOT_ACTIVE
   | typeof HANSE_ERROR__NONCE_MISMATCH
-  | typeof HANSE_ERROR__NO_RIGHTS_STAKE
   | typeof HANSE_ERROR__NOT_CLAIMANT
   | typeof HANSE_ERROR__NOT_MEMBER
   | typeof HANSE_ERROR__NOT_SETTLED
-  | typeof HANSE_ERROR__PENDING_CLAIM_EXISTS
   | typeof HANSE_ERROR__PULL_WINDOW_CLOSED
   | typeof HANSE_ERROR__PULL_WINDOW_OPEN
   | typeof HANSE_ERROR__TIER_CAP_EXHAUSTED
@@ -141,11 +135,9 @@ if (process.env["NODE_ENV"] !== "production") {
     [HANSE_ERROR__MATH_OVERFLOW]: `Checked math overflowed — the amounts do not fit the accounting`,
     [HANSE_ERROR__MUTUAL_NOT_ACTIVE]: `The mutual is not Active: filing closed with its window`,
     [HANSE_ERROR__NONCE_MISMATCH]: `Claim nonce mismatch: the Claim PDA seed must be the mutual's next claim_nonce`,
-    [HANSE_ERROR__NO_RIGHTS_STAKE]: `No rights stake: a member without stake has no cover and cannot file`,
     [HANSE_ERROR__NOT_CLAIMANT]: `Only the claim's own member can pull its payout`,
     [HANSE_ERROR__NOT_MEMBER]: `Not a member of this mutual`,
     [HANSE_ERROR__NOT_SETTLED]: `The mutual is not in the Settled phase: payouts pull only after settle_pool`,
-    [HANSE_ERROR__PENDING_CLAIM_EXISTS]: `A pending claim already exists for this member: one at a time`,
     [HANSE_ERROR__PULL_WINDOW_CLOSED]: `The pull window is closed: unpaid amounts have reverted to the residual`,
     [HANSE_ERROR__PULL_WINDOW_OPEN]: `The pull window is still open: dissolve waits until pull_close_at`,
     [HANSE_ERROR__TIER_CAP_EXHAUSTED]: `Tier cap exhausted: this member's Pending + Approved claims already reach the tier's maximum payout`,

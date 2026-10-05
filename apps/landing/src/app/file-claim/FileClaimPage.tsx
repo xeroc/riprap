@@ -187,23 +187,12 @@ function BlockedState({ block }: { block: PreflightBlock }) {
           </p>
         </div>
       );
-    case "no-rights-stake":
+    case "cap-exhausted":
       return (
-        <div className="flex max-w-3xl flex-col gap-2" data-slot="no-rights-stake">
-          <p className="text-ink [font:var(--riprap-body-md)]">
-            No rights stake left on this membership.
-          </p>
+        <div className="flex max-w-3xl flex-col gap-2" data-slot="cap-exhausted">
+          <p className="text-ink [font:var(--riprap-body-md)]">Your tier cap is used up.</p>
           <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-            It cannot file a payout request.
-          </p>
-        </div>
-      );
-    case "claim-open":
-      return (
-        <div className="flex max-w-3xl flex-col gap-2" data-slot="claim-open">
-          <p className="text-ink [font:var(--riprap-body-md)]">You already have an open claim.</p>
-          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-            One open claim per member. Follow it on{" "}
+            This membership has already requested its maximum payout. Follow your claims on{" "}
             <TextLink href="#/app">the app surface</TextLink>.
           </p>
         </div>
@@ -283,20 +272,19 @@ function Wizard({ wallet }: { wallet: Address }) {
   const [conflictPath, setConflictPath] = useState<string | undefined>(undefined);
   const [operatorDown, setOperatorDown] = useState(false);
 
-  const tier =
-    pass === null
-      ? null
-      : poolTiers(pass.mutual)[Math.min(pass.member.tier, poolTiers(pass.mutual).length - 1)];
-
   // Draft persistence: field changes land in localStorage (fields + hashes
   // only — file bytes never).
   useEffect(() => {
     if (mutualAddress !== undefined) saveDraft(mutualAddress, draft);
   }, [mutualAddress, draft]);
 
-  const patch = (changes: Partial<ClaimDraft>) =>
-    setDraft((current) => ({ ...current, ...changes }));
-
+  const tier =
+    pass === null
+      ? null
+      : poolTiers(pass.mutual)[Math.min(pass.member.tier, poolTiers(pass.mutual).length - 1)];
+  /** The REMAINING cap (chain truth): tier max − cap_used — concurrent
+   * filings share the cumulative cap (multi-claim amendment). */
+  const capUsdc = pass === null ? 0 : Number(pass.capRemainingMicro) / 1_000_000;
   const attach = async (slot: DocSlot, file: File) => {
     try {
       const result = await intakeDocument(slot, file);
@@ -322,9 +310,13 @@ function Wizard({ wallet }: { wallet: Address }) {
     }
   };
 
-  // Entering step 2: default the amount to the tier cap (copy doc § AMOUNT).
+  const patch = (changes: Partial<ClaimDraft>) =>
+    setDraft((current) => ({ ...current, ...changes }));
+
+  // Entering step 2: default the amount to the remaining cap (copy doc §
+  // AMOUNT — concurrent filings clamp to what the membership has left).
   const enterAmount = () => {
-    if (draft.amountUsdc === "" && tier !== null) patch({ amountUsdc: String(tier.cap) });
+    if (draft.amountUsdc === "" && tier !== null) patch({ amountUsdc: String(capUsdc) });
     setStep(2);
   };
 
@@ -545,7 +537,7 @@ function Wizard({ wallet }: { wallet: Address }) {
       ) : step === 2 ? (
         <StepAmount
           draft={draft}
-          tier={tier}
+          capUsdc={capUsdc}
           onChange={patch}
           onBack={() => setStep(1)}
           onContinue={() => setStep(3)}
@@ -575,7 +567,7 @@ function Wizard({ wallet }: { wallet: Address }) {
       ) : step === 5 ? (
         <StepReview
           draft={draft}
-          tier={tier}
+          capUsdc={capUsdc}
           feeMicro={pass.feeMicro}
           incidentIso={incidentIso}
           operatorAddress={pass.evidenceOperator}

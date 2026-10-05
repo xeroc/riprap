@@ -7,7 +7,6 @@
 
 import {
   buildFileClaim,
-  fetchMaybeDepositorByOwner,
   fetchMaybeMemberByOwner,
   fetchMaybeMutual,
   type Member,
@@ -52,11 +51,6 @@ vi.mock("@riprap/hanse", async (importOriginal) => {
     ...actual,
     fetchMaybeMutual: vi.fn(),
     fetchMaybeMemberByOwner: vi.fn(),
-    fetchMaybeDepositorByOwner: vi.fn(async () => ({
-      exists: true,
-      address: "D".repeat(32),
-      data: { rightsStake: 20n * 1_000_000n },
-    })),
     findAssociatedTokenAddress: vi.fn(async () => "1".repeat(32) as Address),
     tokenBalanceOrZero: vi.fn(),
     // nonce-faithful PDAs: stale (0) and fresh (1) are distinguishable — the
@@ -151,7 +145,6 @@ function memberAccount(over: Partial<Member> = {}): MaybeAccount<Member> {
       member: WALLET as Address,
       tier: 1, // Standard
       attestation: A,
-      hasPendingClaim: false,
       capUsed: 0n,
       bump: 255,
       ...over,
@@ -261,7 +254,6 @@ afterEach(() => {
   memberMock.mockReset();
   feeBalanceMock.mockReset();
   buildFileClaimMock.mockClear(); // calls are per-test; the factory impl stays
-  vi.mocked(fetchMaybeDepositorByOwner).mockClear();
 });
 
 describe("#/app/file-claim — frame + gates", () => {
@@ -302,12 +294,12 @@ describe("#/app/file-claim — frame + gates", () => {
     ).toBe("#/2026-breakpoint-blade-pool");
   });
 
-  it("open claim blocks entry with its copy and the #/app link", async () => {
+  it("an exhausted tier cap blocks entry with its copy and the #/app link", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    memberMock.mockResolvedValue(memberAccount({ hasPendingClaim: true }));
+    memberMock.mockResolvedValue(memberAccount({ capUsed: 2_000_000_000n }));
     renderWizard();
-    expect(await screen.findByText("You already have an open claim.")).toBeTruthy();
+    expect(await screen.findByText("Your tier cap is used up.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "the app surface" }).getAttribute("href")).toBe(
       "#/app",
     );
@@ -646,21 +638,36 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     );
   });
 
-  it("zero rights stake: honest no-stake state", async () => {
+  it("partially used cap still enters and clamps the amount to the remainder", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    const { fetchMaybeDepositorByOwner } = await import("@riprap/hanse");
-    vi.mocked(fetchMaybeDepositorByOwner).mockResolvedValueOnce({
-      exists: true,
-      address: "D".repeat(32),
-      data: { rightsStake: 0n },
-    } as unknown as MaybeAccount<never>);
+    memberMock.mockResolvedValue(memberAccount({ capUsed: 500_000_000n }));
     renderWizard();
-    await waitFor(() => {
-      const slot = document.querySelector('[data-slot="no-rights-stake"]');
-      expect(slot?.textContent).toContain("No rights stake left on this membership.");
-      expect(slot?.textContent).toContain("It cannot file a payout request.");
+    // step 1 must pass its gates first (fields + the four self-screen boxes)
+    expect(await screen.findByText(/Step 1 of 5 — Incident/i)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "2026-11-15T18:05" } });
+    fireEvent.change(screen.getByLabelText("Where"), {
+      target: { value: "Olympia Conference Centre, Level 1, west corridor" },
     });
+    fireEvent.change(screen.getByLabelText("What happened"), {
+      target: { value: "Assault in the west corridor; treated by on-site medics." },
+    });
+    for (const label of [
+      "Another person used a knife or blade against me",
+      "It happened during the coverage window",
+      "It happened inside the covered area",
+      "It caused bodily injury",
+    ]) {
+      fireEvent.click(screen.getByLabelText(label));
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    // step 2: the amount defaults to the REMAINING $1,500, not the tier max
+    // (concurrent filings share the cumulative cap).
+    expect(await screen.findByText(/Step 2 of 5 — Amount/i)).toBeTruthy();
+    expect((screen.getByLabelText("Requested payout (USDC)") as HTMLInputElement).value).toBe(
+      "1500",
+    );
+    expect(screen.getByText("Your cap: $1,500")).toBeTruthy();
   });
 
   it("claims window closed: the close date and the no-requests line (chain truth)", async () => {

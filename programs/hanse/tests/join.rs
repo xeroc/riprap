@@ -169,7 +169,6 @@ fn join_mints_rights_stake_and_enrolls_member() {
         "signer = the mutual PDA"
     );
     assert_eq!(att.data[165..173], 0i64.to_le_bytes(), "expiry: never");
-    assert!(!m.has_pending_claim);
 }
 
 /// Sponsored cover, the full arc (§7 sponsorship, pool option C): the

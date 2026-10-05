@@ -293,14 +293,10 @@ export async function fileMemberClaim(
 ): Promise<FiledClaim> {
   const memberIdx = opts.memberIdx ?? 0;
   const requested = opts.requested ?? 95_000_000n;
-  const { env, mutual, mint, poolPda } = fx;
+  const { env, mutual, mint } = fx;
   const claimant = fx.members[memberIdx]!;
   const claimantAta = fx.memberAtas[memberIdx]!;
   const fee = 4n * 5_000_000n; // (min_jury_size + 1) × fee_per_juror — ADR-0030 bounty unit (§12: $20)
-  const [claimantDepositor] = await findDepositorPda({
-    pool: poolPda,
-    owner: claimant.address,
-  });
 
   // fund the fee (join drained the contribution; the filing fee is extra)
   await setTokenBalance(env, claimant.address, mint, fee);
@@ -320,7 +316,6 @@ export async function fileMemberClaim(
     claimant,
     rentPayer: claimant,
     mutual,
-    depositor: claimantDepositor,
     subaccord: fx.fx.subaccord,
     memberFeeAta: claimantAta,
     feeMint: mint,
