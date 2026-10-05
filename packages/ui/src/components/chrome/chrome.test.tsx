@@ -8,6 +8,8 @@ import { DissolutionBand } from "./DissolutionBand";
 import { FeatureCard } from "./FeatureCard";
 import { FooterBand } from "./FooterBand";
 import { MechanismCard } from "./MechanismCard";
+import { MemberRow } from "./MemberRow";
+import { PoolCard } from "./PoolCard";
 import { ProblemSolutionCard } from "./ProblemSolutionCard";
 import { SectionBand } from "./SectionBand";
 import { StampBadge } from "./StampBadge";
@@ -548,5 +550,38 @@ describe("Container", () => {
     expect(container.querySelector('[data-slot="container"]')?.className).toContain(
       "max-w-(--riprap-content-max)",
     );
+  });
+});
+describe("PoolCard — the platform register is numberless", () => {
+  it("prints the risk as the mono stamp and the group name in display type (category law)", () => {
+    render(<PoolCard name="harbor fishing crew" risk="lost haul" state="open" />);
+    const stamp = screen.getByText("lost haul");
+    expect(stamp.className).toContain("[font:var(--riprap-mono-label)]");
+    expect(screen.getByText("open").className).toContain("[font:var(--riprap-mono-label)]");
+    const name = screen.getByText("harbor fishing crew");
+    expect(name.className).toContain("[font:var(--riprap-display-sm)]");
+  });
+
+  it("carries no number law: identifiers/data-num only on the state word, never a price", () => {
+    const { container } = render(<PoolCard name="climbing club" risk="gear damage" />);
+    expect(container.textContent).not.toMatch(/\$[\d,]/); // numberless register
+    expect(container.textContent).toContain("climbing club");
+  });
+});
+
+describe("MemberRow — identifier mono, disc the only circle", () => {
+  it("renders handle and status verbatim in mono", () => {
+    render(<MemberRow handle="@dana" initial="D" status="in" />);
+    expect(screen.getByText("@dana").className).toContain("[font:var(--riprap-mono-number)]");
+    expect(screen.getByText("in").className).toContain("[font:var(--riprap-mono-label)]");
+  });
+
+  it("disc is round, rows are hairline-divided, never pills", () => {
+    const { container } = render(<MemberRow handle="@dana" initial="D" />);
+    const row = container.querySelector('[data-slot="member-row"]') as HTMLElement;
+    expect(row.className).toContain("border-hairline");
+    expect(row.className).not.toContain("rounded-full");
+    const disc = row.querySelector("span[aria-hidden='true']") as HTMLElement;
+    expect(disc.className).toContain("rounded-full");
   });
 });
