@@ -11,7 +11,7 @@ tracked — everything else under `videos/` is gitignored.
 apps/remotion/
   remotion.config.ts        webpack override: PostCSS (Tailwind v4) before css-loader
   postcss.config.js         @tailwindcss/postcss — must stay .js at package root
-  audio/<name>.strudel      the scores (committed) — pasteable into strudel.cc
+  audio/<name>.strudel      optional Strudel scores (committed) — pasteable into strudel.cc
   public/audio/<name>.wav   baked artifacts (gitignored; regenerate with score)
   src/
     index.ts                registerRoot + theme.css import (the entry)
@@ -103,31 +103,36 @@ Rules that are enforced by convention — follow them:
 - Never commit anything under `videos/` except `_example`/`_template` —
   the `.gitignore` already enforces this.
 
-## Score-driven audio — no audio binaries in the repo
+## Audio
 
-Background music is authored as Strudel code and prebaked to a wav
-**build artifact** (gitignored, like `out/`) before rendering. The wav is
-strudel's own output, relayed verbatim — mix level, headroom and fades
-are authored in the score (`.gain`, `.release`), never post-processed.
-The CLI warns when the direct render peaks at full scale (clipping).
+Music is any wav under `public/audio/` (gitignored build assets, like
+`out/`). Declare it as `music` in `defineVideo` — the framework mounts it
+(Root wraps the component, see `src/framework/music.tsx`) and applies the
+fades via a `volume` callback, so no video ever renders `<Html5Audio>`
+itself and Studio draws the volume curve. Videos with SFX bake them into
+the mounted wav with a small mix script in the video dir (see
+`videos/riprap-promo-2026-10/scripts/mix.mjs` for the pattern: SHOTS-
+relative pins, per-file peak-lag compensation, dual full/sfx-only bakes).
 
-Declare the artifact as `music` in `defineVideo` — the framework mounts
-it (Root wraps the component, see `src/framework/music.tsx`) and applies
-the fades via a `volume` callback, so no video ever renders
-`<Html5Audio>` itself and Studio draws the volume curve.
+Two rules regardless of source:
 
-- The score's `setcpm` is parsed by the command; pass the composition
-  length in seconds as the second argument (defaults to 30).
-- Sync is time-based by construction: score grid (MUSIC.md; e.g. 30 cpm
-  → 2s bars) ↔ composition seconds ↔ frames — scene boundaries sit on
-  the bar grid.
-- Runs entirely in Node (`node-web-audio-api` backs the engine's
-  WebAudio calls; no browser involved). Needs network once per render:
-  sample manifests load from raw.githubusercontent.com. Silence-guarded —
-  a failed render errors loudly instead of producing a muted wav.
-- `@strudel/web` is AGPL-3.0: fine for internal build tooling, and the
-  wav/mp4 output is your own music — revisit before distributing this
-  package's code.
+- **Licensing is part of done.** Third-party tracks carry their license
+  and attribution in the video dir (source URL, license name, date) —
+  same discipline as `@riprap/ui` tokens: no orphan binaries.
+- **Loudness is authored, never accidental.** Whatever the source, the
+  mounted wav's peak/headroom are measured (`ffmpeg -af volumedetect`)
+  and recorded; the mix script normalizes.
+
+**Optional — Strudel scoring.** Original scores can be authored as
+Strudel code in `audio/<name>.strudel` (committed) and prebaked to the
+wav artifact with `pnpm --filter @riprap/remotion score <name> [seconds]`
+(`setcpm` is parsed; pass the composition length in seconds). The house
+style lives in `MUSIC.md`. Sync is time-based by construction: score grid
+↔ composition seconds ↔ frames. Runs in Node (`node-web-audio-api`; needs
+network once per bake for sample manifests); silence-guarded.
+`@strudel/web` is AGPL-3.0 — fine for internal build tooling, and the
+wav/mp4 output is your own music; revisit before distributing this
+package's code.
 
 ## Obedience to @riprap/ui (non-negotiable)
 

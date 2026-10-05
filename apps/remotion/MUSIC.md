@@ -1,15 +1,16 @@
 ---
 version: alpha
 name: Passive Pulse — Riprap video score house style
-purpose: soundtrack
+purpose: soundtrack (optional house style for Strudel-scored audio — see README § Audio; not a requirement)
 key: riprap family — Gb major
 bpm: 120
 timeSignature: 4/4
 structure: fixed
 duration: 30–90 s, set per video by its scene map
 references:
+  - "OPTIONAL: this style applies when a video chooses the Strudel path (README § Audio). Found/commissioned music needs no conformance to it."
   - "the Accord Project's MUSIC.md (../accord worktree) is the parent brief — this file records only the Riprap family deltas"
-  - "audio/blade-pool-intro-30s.strudel — the canonical Riprap implementation; read it before composing anything"
+  - "audio/blade-pool-intro-30s.strudel — the canonical Strudel implementation; read it before composing a score in this family"
 ---
 
 # Overview
