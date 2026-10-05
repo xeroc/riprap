@@ -24,7 +24,50 @@ describe("landing", () => {
   it("renders the approved hero headline as the single h1", () => {
     render(<App />);
     const h1 = screen.getByRole("heading", { level: 1 });
-    expect(h1.textContent).toBe("Finance went P2P. Risk Cover can too.");
+    expect(h1.textContent).toBe("DeFi rebuilt finance. Insurance is next.");
+    expect(screen.getByText("Mutuals on Solana")).toBeTruthy();
+    // v4: the browse action is primary; the hero names no pool and carries
+    // no instance numbers (copy doc §1)
+    const cta = screen.getByRole("link", { name: "Browse the mutuals" });
+    expect(cta.getAttribute("href")).toBe("#mutuals");
+    expect(screen.queryByText(/\$20 in · up to \$2,000 out/)).toBeNull();
+    expect(screen.queryByLabelText(/Blade Pool at Breakpoint/)).toBeNull();
+  });
+
+  it("mutuals band: one card per pool from the policy docs, Show all routes to the directory (copy doc §1.2)", () => {
+    const { container } = render(<App />);
+    const band = container.querySelector("section#mutuals");
+    expect(band).not.toBeNull();
+    expect(screen.getByText("The mutuals.")).toBeTruthy();
+    // the four first-batch pools, by name (meta/Breakpoint policy docs)
+    for (const name of ["Blade Pool", "NGMI Hairline", "Chairmageddon", "Coffee Apocalypse"]) {
+      expect(band?.textContent).toContain(name);
+    }
+    // real tier numbers on the cards (policy §5 — Blade Pool final, drafts TODO-confirm)
+    expect(band?.textContent).toContain("$10–$40");
+    expect(band?.textContent).toContain("up to $4,000");
+    expect(band?.textContent).toContain("$5–$20");
+    expect(band?.textContent).toContain("up to $200");
+    expect(band?.textContent).toContain("$10");
+    expect(band?.textContent).toContain("up to $40");
+    // demo stats rows render (placeholder numbers, deterministic per pool)
+    const stats = [...(band?.querySelectorAll("[data-num]") ?? [])].map((d) => d.textContent);
+    expect(stats.filter((s) => /^\d+$/.test(s ?? "")).length).toBeGreaterThanOrEqual(4);
+    // the directory CTA and the pool's own surface link
+    const showAll = screen.getByRole("link", { name: "Show all" });
+    expect(showAll.getAttribute("href")).toBe("#/mutuals");
+    const viewPool = screen.getByRole("link", { name: "View the pool" });
+    expect(viewPool.getAttribute("href")).toBe("#/2026-breakpoint-blade-pool");
+    // drafts have no surface — honest state instead of a dead link
+    expect(band?.textContent).toContain("policy in review");
+    // carousel controls exist
+    expect(screen.getByRole("button", { name: "Previous pools" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "More pools" })).toBeTruthy();
+  });
+
+  it('never says "insurer" anywhere on the page — founder law (v2)', () => {
+    const { container } = render(<App />);
+    expect(container.textContent).not.toMatch(/insurer/i);
   });
 
   it("explains the five lifecycle steps in order — guarantees folded in", () => {
@@ -49,8 +92,61 @@ describe("landing", () => {
   it("states the lineage — the primitive replaces the institution", () => {
     render(<App />);
     expect(screen.getByText("The mutual is old. The Solana primitive is new.")).toBeTruthy();
+    // OnRe pass: the two dated rows lead with sourced facts (copy doc §4)
+    expect(screen.getByText(/London ship owners pooled their losses/)).toBeTruthy();
+    expect(
+      screen.getByText(/State Farm — is a mutual, owned by the people it covers/),
+    ).toBeTruthy();
     expect(screen.getByText(/Programmatic custody holds the Treasury/)).toBeTruthy();
     expect(screen.getByText("Protection without a protector.")).toBeTruthy();
+  });
+
+  it("why-on-chain band: transparency, cost, composability (copy doc §1.5, v2)", () => {
+    const { container } = render(<App />);
+    const band = container.querySelector("section#why-on-chain");
+    expect(band).not.toBeNull();
+    expect(screen.getByText("Better on-chain.")).toBeTruthy();
+    for (const stamp of ["Transparent", "Cost", "Composable"]) {
+      expect(band?.textContent).toContain(stamp);
+    }
+    expect(screen.getByText("Every number is public.")).toBeTruthy();
+    expect(screen.getByText("The back office is transaction fees.")).toBeTruthy();
+    expect(screen.getByText("Plugs into all of Solana.")).toBeTruthy();
+    // composability tense law: no stacking/nesting/reinsurance claims
+    expect(band?.textContent).not.toMatch(/stack|nest|reinsur/i);
+  });
+
+  it("comparison band: mutual vs insurance vs nothing — seven rows, prominent Riprap column (copy doc §1.7, v2)", () => {
+    const { container } = render(<App />);
+    const table = container.querySelector('[data-slot="compare"]');
+    expect(table).not.toBeNull();
+    const heads = [...(table?.querySelectorAll("thead th") ?? [])].map((th) => th.textContent);
+    expect(heads).toEqual(["", "A Riprap pool", "An insurance policy", "Nothing"]);
+    const rows = [...(table?.querySelectorAll("tbody tr") ?? [])].map(
+      (tr) => tr.querySelector("th")?.textContent,
+    );
+    expect(rows).toEqual([
+      "What you put in",
+      "Who holds the money",
+      "Who decides a claim",
+      "Your worst case",
+      "If nobody claims",
+      "Small or narrow risks",
+      "How it ends",
+    ]);
+    // the Riprap column is framed and tinted on the cell (v3 — cells fill
+    // the row, spans don't), the text span carries the cascade
+    const riprapCells = table?.querySelectorAll("tbody td:nth-child(2)");
+    expect(riprapCells?.[0].className).toContain("border-accent");
+    expect(riprapCells?.[0].className).toContain("bg-(--riprap-accent)/10");
+    expect(riprapCells?.[0].className).toContain("group-hover:bg-(--riprap-accent)/20");
+    const riprapSpan = riprapCells?.[0].querySelector("span");
+    expect(riprapSpan?.className).toContain("data-[arrived=false]:opacity-0");
+    const policyCol = table?.querySelectorAll("tbody td:nth-child(3)");
+    expect(policyCol?.[0].className).toContain("text-muted-foreground");
+    expect(table?.textContent).toContain("when the group decides — or never");
+    // the v1 footnote is dead by founder call
+    expect(screen.queryByText("A pool is not a policy")).toBeNull();
   });
 
   it("renders the waitlist form exactly once per capture point (hero + final CTA)", () => {

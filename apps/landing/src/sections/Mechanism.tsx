@@ -30,7 +30,7 @@ const STEPS = [
   {
     n: "05",
     h: "Liquidate.",
-    p: "Money leaves a pool only by spending (governed by adjudication) or liquidation. No third path, no discretionary signer, nobody who can decide.",
+    p: "A pool ends the way its terms say: finite pools settle their claims and dissolve; ongoing pools run until the members end them. Money moves only by an adjudicated payout or the pool's wind-down — no admin key, no discretionary signer.",
   },
 ];
 

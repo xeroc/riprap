@@ -2,13 +2,26 @@ import { SectionBand } from "@riprap/ui";
 
 import { Settle } from "../components/Settle";
 
-// §4 — lineage without traction claims.
-
+// §4 — lineage without traction claims. OnRe experiment pass v2 (2026-10-05):
+// two dated, sourced rows lead (Lloyd's 1688 origin; mutuals at scale today —
+// State Farm, NAMIC majority-share states), the blocker and the two programs
+// follow. "Insurer" is off the page (founder call). Provenance in copy doc §4.
 const lineage = [
   {
-    when: "oldest",
-    name: "Mutual aid",
-    body: "Peers pool money, qualifying losses get paid, whatever is left returns. The oldest fix there is.",
+    when: "1688",
+    name: "The original form",
+    body: "London ship owners pooled their losses in a coffee house — peers carrying peers, no company, no reserves. Lloyd's of London grew out of it.",
+  },
+  {
+    when: "today",
+    name: "The structure won",
+    body: (
+      <>
+        The biggest home-and-auto insurance company in America — State Farm — is a mutual, owned by
+        the people it covers; in 11 US states, companies organized as mutuals hold the majority of
+        the market. The structure works at any scale. It just takes an institution to run one.
+      </>
+    ),
   },
   {
     when: "the blocker",
@@ -24,7 +37,12 @@ const lineage = [
   {
     when: "now",
     name: "Two programs",
-    body: "Programmatic custody holds the Treasury. Solana's high-speed, low-cost transaction processing implements the logic.",
+    body: (
+      <>
+        Programmatic custody holds the Treasury; peer adjudication rules the claims. The treasurer
+        and the judge are programs now — the fixed cost that made small cover unsellable is gone.
+      </>
+    ),
   },
 ];
 

@@ -39,10 +39,10 @@ vi.mock("./adjudicate/AdjudicatePage", () => ({
     />
   ),
 }));
-vi.mock("./blurb/BlurbPage", () => ({
-  BlurbPage: () => <div data-testid="blurb-route" />,
+vi.mock("./mutuals/MutualsPage", () => ({
+  MutualsPage: () => <div data-testid="mutuals-route" />,
 }));
-const PLATFORM_H1 = "Finance went P2P. Risk Cover can too.";
+const PLATFORM_H1 = "DeFi rebuilt finance. Insurance is next."; // OnRe experiment v2 (copy doc §1)
 
 function goHash(hash: string) {
   window.location.hash = hash;
@@ -88,11 +88,12 @@ describe("hash router", () => {
     await waitFor(() => expect(document.title).toBe("Riprap: File a payout request"));
   });
 
-  it("renders the blurb route on #/blurb and titles it", async () => {
-    window.location.hash = "#/blurb";
+  it("renders the mutuals directory route on #/mutuals and titles it", async () => {
+    window.location.hash = "#/mutuals";
     render(<Router />);
-    expect(await screen.findByTestId("blurb-route")).toBeTruthy();
-    await waitFor(() => expect(document.title).toBe("Riprap: blurb & brand kit"));
+    expect(await screen.findByTestId("mutuals-route")).toBeTruthy();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    await waitFor(() => expect(document.title).toBe("Riprap: Mutuals"));
   });
 
   it("renders the adjudicate board on #/app/adjudicate and titles it", async () => {

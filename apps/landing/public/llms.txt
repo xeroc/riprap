@@ -8,15 +8,23 @@ Money leaves a pool through exactly two governed doors: spending (adjudicated cl
 
 ## Pages
 
-- [Platform landing](https://riprap.xyz/): what a peer-to-peer risk pool is, the five-step lifecycle, ten honest FAQ answers, waitlist. The peril never appears on this page.
+- [Platform landing](https://riprap.xyz/): what a peer-to-peer risk pool is, the mutuals directory, the five-step lifecycle, ten honest FAQ answers, waitlist. The peril never appears in the platform copy; the directory cards carry each pool's own peril, per its policy.
+- [Mutuals](https://riprap.xyz/#/mutuals): the tabular pool directory — every pool with what it covers, its entry fees, and its maximum payouts. Hash route: renders client-side from the landing document.
 - [Blade Pool @ Breakpoint 2026](https://riprap.xyz/#/2026-breakpoint-blade-pool): the first pool — policy fineprint, tiers, coverage window. Hash route: renders client-side from the landing document.
 - [App](https://riprap.xyz/#/app): the member wallet surface — join and claims, reading on-chain pool state. Hash route: renders client-side from the landing document.
 - [File a payout request](https://riprap.xyz/#/app/file-claim): the payout-request wizard — the incident, the five required proofs, one on-chain claim. Hash route: renders client-side from the landing document.
 - [Adjudicate](https://riprap.xyz/#/app/adjudicate): the juror surface — drawn seats, the evidence, one commit-reveal vote. Hash route: renders client-side from the landing document.
 
+## Pools in the first batch (Breakpoint 2026)
+
+- Blade Pool — knife assault cover: bodily injury caused by another person with a knife or blade during the conference. Tiers: $10/$20/$40 entry, up to $1,000/$2,000/$4,000 payout (final). Live surface: the pool page above.
+- NGMI Hairline — new gray hair first visible during the conference, graded I–IV ("a countable few" to "basically Gandalf"). Draft tiers: $5/$10/$20 entry, up to $50/$100/$200 payout (prices TODO-confirm in policy).
+- Chairmageddon — every seat taken at the opening ceremony and the member stood the whole thing. Draft tier: $10 entry, $40 payout (price TODO-confirm in policy).
+- Coffee Apocalypse — the coffee point runs out while the member is standing in the queue. Draft tier: $10 entry, $25 payout (price TODO-confirm in policy).
+
 ## Policy: Blade Pool @ Breakpoint 2026 (the first pool)
 
-- Peril: knife assault — bodily injury caused by another person intentionally using a knife or other sharp-edged/bladed instrument against the member.
+- Peril: knife assault — bodily injury caused by another person intentionally using a knife or bladed instrument against the member.
 - Coverage window: 15–17 November 2026 — opens with the conference, closes with the conference (daily hours per the published event schedule).
 - Covered area: Olympia Convention Centre and designated event area, London.
 - Tiers: Basic $10 entry, max payout $1,000 · Standard $20 entry, max payout $2,000 · Premium $40 entry, max payout $4,000. The max payout is the total a member can receive for qualifying claims from the covered event.
