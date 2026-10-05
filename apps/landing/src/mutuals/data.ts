@@ -5,10 +5,13 @@
 // verbatim. CAVEAT: every pool except Blade Pool carries "[TODO: confirm
 // prices]" — draft values, not final.
 //
+// Each pool pins the on-chain MUTUAL pubkey (route `#/m/<pubkey>`); until a
+// pool deploys, its slug routes and `pubkey` stays unset. All pools go live
+// together when they go on-chain, so no status field exists.
+//
 // Demo stats (members / pot size) are deterministic placeholders — founder
 // ask, experiment only, NOT FOR DEPLOY: replace with chain reads when pools
-// deploy. The hash keeps the numbers stable per pool across renders.
-// Badges ("Most popular", "Certified ridiculous") are founder-set
+// deploy. Badges ("Most popular", "Certified ridiculous") are founder-set
 // merchandising on the experiment, not metrics.
 
 import { SUPPORTERS, type Supporter } from "../sections/Supporters";
@@ -29,28 +32,30 @@ export const MUTUALS: MutualListing[] = [
   {
     name: "Chairmageddon",
     kind: "mutual",
+    slug: "chairmageddon",
     // policy: Micro Mutual — Chairmageddon - Policy.md §3/§5 (prices TODO-confirm)
     tagline: "Every seat taken at the opening ceremony — and you stood the whole thing.",
     tiers: [{ name: "Flat", fee: 10, cap: 40 }],
-    status: "Policy draft",
     badge: "Most popular",
   },
   {
     name: "Blade Pool",
     kind: "mutual",
-    // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5
+    slug: "blade-pool",
+    // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
+    // mutual address is env-driven (pool/mutual.ts) — pin pubkey at deploy.
     tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
     tiers: [
       { name: "Basic", fee: 10, cap: 1000 },
       { name: "Standard", fee: 20, cap: 2000 },
       { name: "Premium", fee: 40, cap: 4000 },
     ],
-    status: "First pool",
     href: "#/2026-breakpoint-blade-pool",
   },
   {
     name: "NGMI Hairline",
     kind: "mutual",
+    slug: "ngmi-hairline",
     // policy: Micro Mutual — NGMI Hairline - Policy.md §3/§5 (prices TODO-confirm)
     tagline:
       "New gray hair first visible during the conference — graded from a countable few to basically Gandalf.",
@@ -59,55 +64,64 @@ export const MUTUALS: MutualListing[] = [
       { name: "Standard", fee: 10, cap: 100 },
       { name: "Premium", fee: 20, cap: 200 },
     ],
-    status: "Policy draft",
     badge: "Certified ridiculous",
   },
   {
     name: "Coffee Apocalypse",
     kind: "mutual",
+    slug: "coffee-apocalypse",
     // policy: Micro Mutual — Coffee Apocalypse - Policy.md §3/§5 (prices TODO-confirm)
     tagline:
       "The coffee point runs out while you're standing in the queue. You leave with nothing.",
     tiers: [{ name: "Flat", fee: 10, cap: 25 }],
-    status: "Policy draft",
   },
   {
     name: "OnlyFriends",
     kind: "bounty",
+    slug: "onlyfriends",
     // terms: Micro Bounty — OnlyFriends - Terms.md §3/§5 (prices TODO-confirm)
     tagline:
       "Confirmed introductions of a member to a listed VIP — paid per introduction, capped at ten.",
     tiers: [{ name: "Flat", fee: 25, cap: 150 }],
-    status: "Terms draft",
   },
   {
     name: "Operation Keep Raj Warm",
     kind: "bounty",
+    slug: "keep-raj-warm",
     // terms: Micro Bounty — Operation Keep Raj Warm - Terms.md §3/§5 (TODO-confirm)
     tagline:
       "Bring Raj a hot drink he asked for — hand to hand, still hot, confirmed by Raj himself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
-    status: "Terms draft",
   },
   {
     name: "Lily's Liquid Lifeline",
     kind: "bounty",
+    slug: "lilys-liquid-lifeline",
     // terms: Micro Bounty — Lily's Liquid Lifeline - Terms.md §3/§5 (TODO-confirm)
     tagline:
       "Bring Lily a hot drink she asked for — hand to hand, still hot, confirmed by Lily herself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
-    status: "Terms draft",
   },
   {
     name: "Toly Needs His Fuel",
     kind: "bounty",
+    slug: "toly-needs-his-fuel",
     // terms: Micro Bounty — Toly Needs His Fuel - Terms.md §3/§5 (TODO-confirm)
     tagline:
       "Bring Toly a hot drink he asked for — hand to hand, still hot, confirmed by Toly himself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
-    status: "Terms draft",
   },
 ];
+
+/** The pool's detail-route id — the pinned pubkey, else the slug. */
+export function poolRouteId(m: MutualListing): string {
+  return m.pubkey ?? m.slug;
+}
+
+/** The pool's detail route, `#/m/<pubkey-or-slug>`. */
+export function poolRoute(m: MutualListing): string {
+  return `#/m/${poolRouteId(m)}`;
+}
 
 /** `$10` or `$10–$40` — the entry-fee span across tiers (docs §5). */
 export function entryRange(m: MutualListing): string {

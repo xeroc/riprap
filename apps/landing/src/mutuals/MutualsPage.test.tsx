@@ -1,7 +1,7 @@
 import type * as Connector from "@solana/connector";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { demoStats, entryRange, MUTUALS } from "./data";
+import { demoStats, entryRange, MUTUALS, poolRoute } from "./data";
 import { MutualsPage } from "./MutualsPage";
 
 // The navbar carries the wallet controls (§0) — stub the connector hooks;
@@ -21,18 +21,18 @@ vi.mock("@solana/connector", async (importOriginal) => {
 afterEach(cleanup);
 
 describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
-  it("renders one row per pool, in data order, mutuals then bounties by kind column", () => {
+  it("renders one row per pool with the kind under the name — no status column", () => {
     const { container } = render(<MutualsPage />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Mutuals.");
     const rows = [...container.querySelectorAll("tbody tr")];
     expect(rows.length).toBe(MUTUALS.length);
-    expect(container.textContent).toContain("Every pool on Riprap, with its terms.");
-    const kinds = [...container.querySelectorAll("tbody td:nth-child(2)")].map(
-      (td) => td.textContent,
-    );
+    // kind renders under the name, in the Pool column (founder call)
+    const heads = [...container.querySelectorAll("thead th")].map((th) => th.textContent);
+    expect(heads).toEqual(["Pool", "Covers", "Entry", "Max payout"]);
+    const kinds = [...container.querySelectorAll("tbody th p")].map((p) => p.textContent);
     expect(kinds.slice(0, 4)).toEqual(["mutual", "mutual", "mutual", "mutual"]);
     expect(kinds.slice(4)).toEqual(["bounty", "bounty", "bounty", "bounty"]);
-    expect(container.textContent).toContain("Terms draft");
+    expect(container.textContent).not.toContain("Status");
     expect(container.textContent).toContain("Bounties share no risk");
   });
 
@@ -53,11 +53,15 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     for (const td of nums) expect(td.className).toContain("font-mono");
   });
 
-  it("links the Blade Pool row to its surface; drafts render name-only", () => {
+  it("links every pool name to its detail route", () => {
     render(<MutualsPage />);
-    const link = screen.getByRole("link", { name: "Blade Pool" });
-    expect(link.getAttribute("href")).toBe("#/2026-breakpoint-blade-pool");
-    expect(screen.queryByRole("link", { name: "NGMI Hairline" })).toBeNull(); // not a link
+    for (const pool of MUTUALS) {
+      const link = screen.getByRole("link", { name: pool.name });
+      expect(link.getAttribute("href")).toBe(poolRoute(pool));
+    }
+    expect(screen.getByRole("link", { name: "Blade Pool" }).getAttribute("href")).toBe(
+      "#/m/blade-pool",
+    );
   });
 
   it("states the event frame and the draft-price caveat honestly", () => {

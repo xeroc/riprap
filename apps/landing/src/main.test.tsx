@@ -96,6 +96,13 @@ describe("hash router", () => {
     await waitFor(() => expect(document.title).toBe("Riprap: Mutuals"));
   });
 
+  it("renders the Blade Pool page on its new #/m route id too (legacy route kept)", async () => {
+    window.location.hash = "#/m/blade-pool";
+    render(<Router />);
+    expect(await screen.findByTestId("pool-route")).toBeTruthy();
+    await waitFor(() => expect(document.title).toBe("Riprap: Blade Pool"));
+  });
+
   it("renders the adjudicate board on #/app/adjudicate and titles it", async () => {
     window.location.hash = "#/app/adjudicate";
     render(<Router />);

@@ -22,7 +22,8 @@ const MutualsRoute = lazy(() =>
   import("./mutuals/MutualsPage.tsx").then((m) => ({ default: m.MutualsPage })),
 );
 
-/** "#/app/" matches "#/app"; "" / "#" / "#/" (and in-page anchors) are platform. */
+import { POOL_PAGES, poolTitle } from "./mutuals/registry";
+
 function routeHash(hash: string): string | null {
   const trimmed = hash.replace(/\/+$/, "");
   return trimmed === "" || trimmed === "#" ? null : trimmed;
@@ -45,6 +46,11 @@ function parseAdjudicate(hash: string): { session: { dispute: string; round: num
 }
 
 function matchRoute(hash: string | null): { title: string | null; element: ReactElement } {
+  if (hash?.startsWith("#/m/")) {
+    const id = hash.slice("#/m/".length).replace(/\/+$/, "");
+    const Page = POOL_PAGES[id];
+    if (Page) return { title: poolTitle(id) ?? null, element: <Page /> };
+  }
   if (hash?.startsWith("#/app/adjudicate")) {
     const { session } = parseAdjudicate(hash);
     return {

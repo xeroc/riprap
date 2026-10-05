@@ -5,7 +5,7 @@
 // in the hero — the primary CTA scrolls to the mutuals band (§1.2); the
 // waitlist stays, low priority (copy doc § waitlist for the final-CTA
 // capture point). "Insurer" is off the page. Provisional, NOT FOR DEPLOY.
-import { HexBackdrop, Logomark, SectionBand, Button } from "@riprap/ui";
+import { Button, HexBackdrop, Logomark, SectionBand } from "@riprap/ui";
 import { Settle } from "../components/Settle";
 import { Waitlist } from "../components/Waitlist";
 

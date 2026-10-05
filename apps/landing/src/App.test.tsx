@@ -82,26 +82,38 @@ describe("landing", () => {
     for (const k of kinds.slice(0, 8)) {
       expect(k.dashed).toBe(k.kind === "bounty");
     }
-    expect(kinds[0].stamp).toBe("pool · Policy draft");
-    expect(kinds[4].stamp).toBe("bounty · Terms draft");
+    expect(kinds[0].stamp).toBe("pool");
+    expect(kinds[4].stamp).toBe("bounty");
+    // no status anywhere — all pools go live together (founder call)
+    expect(band?.textContent).not.toMatch(/policy in review|terms in review|First pool|draft/i);
     // demo stats rows render (placeholder numbers, deterministic per pool)
     const stats = [...(band?.querySelectorAll("dd[data-num]") ?? [])].map((d) => d.textContent);
     expect(stats.filter((s) => /^\d+$/.test(s ?? "")).length).toBeGreaterThanOrEqual(8);
-    // the directory CTA and the pool's own surface link
+    // the directory CTA; no arrows — the drift and drag carry the carousel
     const showAll = screen.getByRole("link", { name: "Show all" });
     expect(showAll.getAttribute("href")).toBe("#/mutuals");
-    const viewPool = screen.getByRole("link", { name: "View the pool" });
-    expect(viewPool.getAttribute("href")).toBe("#/2026-breakpoint-blade-pool");
-    // drafts have no surface — honest states instead of dead links
-    expect(band?.textContent).toContain("policy in review");
-    expect(band?.textContent).toContain("terms in review");
-    // carousel controls exist; the track autoplays (drift) and hides its scrollbar
-    expect(screen.getByRole("button", { name: "Previous pools" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "More pools" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Previous pools" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "More pools" })).toBeNull();
+    // every card is one link to the pool's detail route (stretched over the
+    // card — cursor: pointer everywhere; discs keep their own links above)
+    const cardLinks = [...(band?.querySelectorAll("article > a.absolute") ?? [])].map((a) =>
+      a.getAttribute("href"),
+    );
+    expect(cardLinks.slice(0, 8)).toEqual([
+      "#/m/chairmageddon",
+      "#/m/blade-pool",
+      "#/m/ngmi-hairline",
+      "#/m/coffee-apocalypse",
+      "#/m/onlyfriends",
+      "#/m/keep-raj-warm",
+      "#/m/lilys-liquid-lifeline",
+      "#/m/toly-needs-his-fuel",
+    ]);
+    // the track autoplays (drift) and hides its scrollbar; the duplicated
+    // rail keeps the wrap seamless with clones inert to AT
     const track = band?.querySelector(".no-scrollbar");
     expect(track?.className).toContain("no-scrollbar");
     expect(track?.getAttribute("data-autoplay")).toMatch(/^(on|off)$/);
-    // the rail duplicates the set for the seamless wrap — clones are inert to AT
     const articles = band?.querySelectorAll("article") ?? [];
     expect(articles.length).toBe(16);
     expect(band?.querySelectorAll('div[aria-hidden="true"] article').length).toBe(8);

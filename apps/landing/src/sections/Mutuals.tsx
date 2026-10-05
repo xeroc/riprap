@@ -1,15 +1,15 @@
 // §1.2 — MUTUALS: the directory band right below the hero (copy doc §1.2).
-// A drifting carousel of cards — one per pool — that scrolls itself
-// horizontally and pauses on hover, focus, drag, and reduced motion; no
-// visible scrollbar (the arrows and the drag carry the affordance). Cards
-// carry each pool's real tier numbers (docs §5), deterministic demo stats
-// (placeholder, NOT FOR DEPLOY), a rotation of the supporter discs, founder
-// badges ("Most popular", "Certified ridiculous"), and the pool-class
-// distinction: mutuals hairline, bounties dashed + a BOUNTY stamp.
-// "Show all" routes to #/mutuals, the tabular directory.
+// A drifting carousel of cards that scrolls itself horizontally and pauses
+// on hover, focus, drag, and reduced motion; no visible scrollbar. Every
+// card is one clickable link to the pool's detail route (`#/m/<id>`) —
+// stretched-link pattern: the link overlays the whole card (cursor: pointer
+// everywhere), the supporter discs sit above it with their own links. Cards
+// carry each pool's real tier numbers (docs §5) and deterministic demo
+// stats (placeholder, NOT FOR DEPLOY). Bounties render dashed with a BOUNTY
+// stamp; mutuals hairline. "Show all" routes to #/mutuals.
 //
 // The drift is a time-based rAF marquee over a duplicated card rail: past
-// the halfway point it wraps by exactly one set — seamless. It only runs
+// the halfway point it wraps by exactly one set — seamlessly. It only runs
 // while the band is in view, not hovered/focused/dragged, and motion is
 // allowed; otherwise the track is an ordinary scrollable row.
 
@@ -24,18 +24,18 @@ import {
   entryRange,
   MUTUALS,
   payoutWord,
+  poolRoute,
   supportersFor,
 } from "../mutuals/data";
 import type { MutualListing } from "../mutuals/types";
 
-const CARD_STEP = 336; // card width (w-80 = 320) + gap-4 (16)
 const DRIFT_PX_PER_S = 42; // gentle — a slow walk, not a slide
 
 function CardDiscs({ pool }: { pool: MutualListing }) {
   const list = supportersFor(pool);
   if (list.length === 0) return null;
   return (
-    <div className="flex items-center -space-x-2">
+    <div className="relative z-10 flex items-center -space-x-2">
       {list.map((s) => (
         <a
           key={s.url}
@@ -70,13 +70,20 @@ function PoolCard({ pool }: { pool: MutualListing }) {
   const stats = demoStats(pool);
   const bounty = pool.kind === "bounty";
   return (
-    // the class distinction, in the chrome: mutuals hairline, bounties dashed
+    // the whole card is the pool's detail link (stretched over the card);
+    // the class distinction: mutuals hairline, bounties dashed
     <article
       data-kind={pool.kind}
-      className={`flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${
+      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${
         bounty ? "border-dashed border-hairline-strong" : "border-hairline"
       } bg-surface-card`}
     >
+      <a
+        href={poolRoute(pool)}
+        className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring"
+      >
+        <span className="sr-only">{pool.name} — details</span>
+      </a>
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3">
           <h3 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
@@ -92,7 +99,7 @@ function PoolCard({ pool }: { pool: MutualListing }) {
           data-slot="kind"
           className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]"
         >
-          {bounty ? "bounty" : "pool"} · {pool.status}
+          {bounty ? "bounty" : "pool"}
         </p>
       </div>
       <p className="leading-relaxed text-body [font:var(--riprap-body-sm)]">{pool.tagline}</p>
@@ -125,18 +132,6 @@ function PoolCard({ pool }: { pool: MutualListing }) {
       </dl>
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
         <CardDiscs pool={pool} />
-        {pool.href ? (
-          <a
-            href={pool.href}
-            className="shrink-0 text-accent underline underline-offset-4 [font:var(--riprap-body-sm)]"
-          >
-            View the pool
-          </a>
-        ) : (
-          <p className="shrink-0 text-muted-soft [font:var(--riprap-mono-label)]">
-            {bounty ? "terms in review" : "policy in review"}
-          </p>
-        )}
       </div>
     </article>
   );
@@ -192,13 +187,6 @@ export function Mutuals() {
     };
   }, []);
 
-  const nudge = (direction: 1 | -1) => {
-    trackRef.current?.scrollBy({
-      left: direction * CARD_STEP,
-      behavior: reduce ? "auto" : "smooth",
-    });
-  };
-
   const driftOn = !reduce && inView;
 
   return (
@@ -213,22 +201,9 @@ export function Mutuals() {
               One card per pool. The first batch runs at Breakpoint 2026, London.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label="Previous pools"
-              onClick={() => nudge(-1)}
-            >
-              ←
-            </Button>
-            <Button variant="outline" size="sm" aria-label="More pools" onClick={() => nudge(1)}>
-              →
-            </Button>
-            <Button asChild size="sm" className="ml-2">
-              <a href="#/mutuals">Show all</a>
-            </Button>
-          </div>
+          <Button asChild size="sm">
+            <a href="#/mutuals">Show all</a>
+          </Button>
         </div>
 
         <div

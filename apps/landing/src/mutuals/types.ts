@@ -17,9 +17,18 @@ export interface MutualListing {
   /** one-liner, deadpan — the peril (or the paid act) named plainly */
   tagline: string;
   tiers: MutualTier[];
-  status: "First pool" | "Policy draft" | "Terms draft";
   /** merchandising badge (founder-set, experiment only) — e.g. "Most popular" */
   badge?: string;
+  /**
+   * The on-chain mutual address this pool's detail route is keyed by — the
+   * pool's MUTUAL pubkey. Fill at deployment; until then the route uses the
+   * slug. The Blade Pool's live address is env-driven per cluster
+   * (pool/mutual.ts resolveMutualAddress) — the slug keeps routing until a
+   * single canonical key is pinned here.
+   */
+  pubkey?: string;
+  /** route id until the pubkey is pinned — e.g. "blade-pool" */
+  slug: string;
   /** instance surface when one exists */
   href?: string;
 }

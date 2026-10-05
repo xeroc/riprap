@@ -10,7 +10,7 @@ Money leaves a pool through exactly two governed doors: spending (adjudicated cl
 
 - [Platform landing](https://riprap.xyz/): what a peer-to-peer risk pool is, the mutuals directory, the five-step lifecycle, ten honest FAQ answers, waitlist. The peril never appears in the platform copy; the directory cards carry each pool's own peril, per its policy.
 - [Mutuals](https://riprap.xyz/#/mutuals): the tabular pool directory — every pool with what it covers, its entry fees, and its maximum payouts. Hash route: renders client-side from the landing document.
-- [Blade Pool @ Breakpoint 2026](https://riprap.xyz/#/2026-breakpoint-blade-pool): the first pool — policy fineprint, tiers, coverage window. Hash route: renders client-side from the landing document.
+- [Pool details](https://riprap.xyz/#/m/blade-pool): every pool resolves at #/m/<mutual-pubkey-or-slug> — the Blade Pool's full policy page (legacy #/2026-breakpoint-blade-pool route kept), and a placeholder detail page per draft pool (definition, exclusions, claims proof, worked math, the end) extracted from its policy/terms document. Hash routes: render client-side from the landing document.
 - [App](https://riprap.xyz/#/app): the member wallet surface — join and claims, reading on-chain pool state. Hash route: renders client-side from the landing document.
 - [File a payout request](https://riprap.xyz/#/app/file-claim): the payout-request wizard — the incident, the five required proofs, one on-chain claim. Hash route: renders client-side from the landing document.
 - [Adjudicate](https://riprap.xyz/#/app/adjudicate): the juror surface — drawn seats, the evidence, one commit-reveal vote. Hash route: renders client-side from the landing document.
