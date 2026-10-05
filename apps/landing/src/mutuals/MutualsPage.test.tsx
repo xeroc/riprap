@@ -21,24 +21,32 @@ vi.mock("@solana/connector", async (importOriginal) => {
 afterEach(cleanup);
 
 describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
-  it("renders one row per pool, in data order", () => {
+  it("renders one row per pool, in data order, mutuals then bounties by kind column", () => {
     const { container } = render(<MutualsPage />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Mutuals.");
     const rows = [...container.querySelectorAll("tbody tr")];
     expect(rows.length).toBe(MUTUALS.length);
     expect(container.textContent).toContain("Every pool on Riprap, with its terms.");
+    const kinds = [...container.querySelectorAll("tbody td:nth-child(2)")].map(
+      (td) => td.textContent,
+    );
+    expect(kinds.slice(0, 4)).toEqual(["mutual", "mutual", "mutual", "mutual"]);
+    expect(kinds.slice(4)).toEqual(["bounty", "bounty", "bounty", "bounty"]);
+    expect(container.textContent).toContain("Terms draft");
+    expect(container.textContent).toContain("Bounties share no risk");
   });
 
-  it("carries each pool's real tier prices (policy §5) and cap — mono, data-num", () => {
+  it("carries each pool's real tier prices (docs §5) and cap — mono, data-num", () => {
     const { container } = render(<MutualsPage />);
     // Blade Pool (final): $10/$20/$40 entry, up to $4,000 out
     expect(container.textContent).toContain("$10–$40");
     expect(container.textContent).toContain("up to $4,000");
-    // drafts carry their policy-draft tables
+    // drafts carry their policy/terms-draft tables (bounties included)
     expect(container.textContent).toContain("$5–$20");
     expect(container.textContent).toContain("up to $200");
     expect(container.textContent).toContain("up to $40");
     expect(container.textContent).toContain("up to $25");
+    expect(container.textContent).toContain("up to $150");
     // prices are mono numerals per the type law
     const nums = [...container.querySelectorAll("td[data-num]")];
     expect(nums.length).toBe(MUTUALS.length * 2);

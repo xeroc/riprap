@@ -34,35 +34,77 @@ describe("landing", () => {
     expect(screen.queryByLabelText(/Blade Pool at Breakpoint/)).toBeNull();
   });
 
-  it("mutuals band: one card per pool from the policy docs, Show all routes to the directory (copy doc §1.2)", () => {
+  it("mutuals band: one card per pool from the policy/terms docs, Show all routes to the directory (copy doc §1.2)", () => {
     const { container } = render(<App />);
     const band = container.querySelector("section#mutuals");
     expect(band).not.toBeNull();
     expect(screen.getByText("The mutuals.")).toBeTruthy();
-    // the four first-batch pools, by name (meta/Breakpoint policy docs)
-    for (const name of ["Blade Pool", "NGMI Hairline", "Chairmageddon", "Coffee Apocalypse"]) {
+    // the eight first-batch pools — four mutuals, four bounties
+    for (const name of [
+      "Chairmageddon",
+      "Blade Pool",
+      "NGMI Hairline",
+      "Coffee Apocalypse",
+      "OnlyFriends",
+      "Operation Keep Raj Warm",
+      "Lily's Liquid Lifeline",
+      "Toly Needs His Fuel",
+    ]) {
       expect(band?.textContent).toContain(name);
     }
-    // real tier numbers on the cards (policy §5 — Blade Pool final, drafts TODO-confirm)
+    // founder order: Chairmageddon leads (copy doc §1.2)
+    const names = [...(band?.querySelectorAll("article h3") ?? [])].map((h) => h.textContent);
+    expect(names.slice(0, 8)).toEqual([
+      "Chairmageddon",
+      "Blade Pool",
+      "NGMI Hairline",
+      "Coffee Apocalypse",
+      "OnlyFriends",
+      "Operation Keep Raj Warm",
+      "Lily's Liquid Lifeline",
+      "Toly Needs His Fuel",
+    ]);
+    // real tier numbers on the cards (docs §5 — Blade Pool final, rest TODO-confirm)
     expect(band?.textContent).toContain("$10–$40");
     expect(band?.textContent).toContain("up to $4,000");
-    expect(band?.textContent).toContain("$5–$20");
-    expect(band?.textContent).toContain("up to $200");
-    expect(band?.textContent).toContain("$10");
     expect(band?.textContent).toContain("up to $40");
+    expect(band?.textContent).toContain("up to $150");
+    // founder badges (experiment merchandising, not metrics)
+    expect(band?.textContent).toContain("Most popular");
+    expect(band?.textContent).toContain("Certified ridiculous");
+    // the pool-class distinction: bounties render dashed, mutuals hairline
+    const kinds = [...(band?.querySelectorAll("article") ?? [])].map((a) => ({
+      kind: a.getAttribute("data-kind"),
+      dashed: a.className.includes("border-dashed"),
+      stamp: a.querySelector('[data-slot="kind"]')?.textContent,
+    }));
+    expect(kinds.slice(0, 8).filter((k) => k.kind === "bounty").length).toBe(4);
+    for (const k of kinds.slice(0, 8)) {
+      expect(k.dashed).toBe(k.kind === "bounty");
+    }
+    expect(kinds[0].stamp).toBe("pool · Policy draft");
+    expect(kinds[4].stamp).toBe("bounty · Terms draft");
     // demo stats rows render (placeholder numbers, deterministic per pool)
-    const stats = [...(band?.querySelectorAll("[data-num]") ?? [])].map((d) => d.textContent);
-    expect(stats.filter((s) => /^\d+$/.test(s ?? "")).length).toBeGreaterThanOrEqual(4);
+    const stats = [...(band?.querySelectorAll("dd[data-num]") ?? [])].map((d) => d.textContent);
+    expect(stats.filter((s) => /^\d+$/.test(s ?? "")).length).toBeGreaterThanOrEqual(8);
     // the directory CTA and the pool's own surface link
     const showAll = screen.getByRole("link", { name: "Show all" });
     expect(showAll.getAttribute("href")).toBe("#/mutuals");
     const viewPool = screen.getByRole("link", { name: "View the pool" });
     expect(viewPool.getAttribute("href")).toBe("#/2026-breakpoint-blade-pool");
-    // drafts have no surface — honest state instead of a dead link
+    // drafts have no surface — honest states instead of dead links
     expect(band?.textContent).toContain("policy in review");
-    // carousel controls exist
+    expect(band?.textContent).toContain("terms in review");
+    // carousel controls exist; the track autoplays (drift) and hides its scrollbar
     expect(screen.getByRole("button", { name: "Previous pools" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "More pools" })).toBeTruthy();
+    const track = band?.querySelector(".no-scrollbar");
+    expect(track?.className).toContain("no-scrollbar");
+    expect(track?.getAttribute("data-autoplay")).toMatch(/^(on|off)$/);
+    // the rail duplicates the set for the seamless wrap — clones are inert to AT
+    const articles = band?.querySelectorAll("article") ?? [];
+    expect(articles.length).toBe(16);
+    expect(band?.querySelectorAll('div[aria-hidden="true"] article').length).toBe(8);
   });
 
   it('never says "insurer" anywhere on the page — founder law (v2)', () => {

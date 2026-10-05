@@ -19,8 +19,8 @@ Money leaves a pool through exactly two governed doors: spending (adjudicated cl
 
 - Blade Pool — knife assault cover: bodily injury caused by another person with a knife or blade during the conference. Tiers: $10/$20/$40 entry, up to $1,000/$2,000/$4,000 payout (final). Live surface: the pool page above.
 - NGMI Hairline — new gray hair first visible during the conference, graded I–IV ("a countable few" to "basically Gandalf"). Draft tiers: $5/$10/$20 entry, up to $50/$100/$200 payout (prices TODO-confirm in policy).
-- Chairmageddon — every seat taken at the opening ceremony and the member stood the whole thing. Draft tier: $10 entry, $40 payout (price TODO-confirm in policy).
-- Coffee Apocalypse — the coffee point runs out while the member is standing in the queue. Draft tier: $10 entry, $25 payout (price TODO-confirm in policy).
+- OnlyFriends (bounty) — confirmed introductions of a member to a listed VIP, paid per introduction. Draft: $25 entry, $15 per intro up to $150 (TODO-confirm in terms).
+- Operation Keep Raj Warm / Lily's Liquid Lifeline / Toly Needs His Fuel (bounties) — bring the named person (Raj Gokal, Lily Liu, Anatoly Yakovenko) a hot drink they asked for, hand to hand, still hot, confirmed by them. Draft: $5 entry, $50 bounty each (TODO-confirm in terms). Bounties share no risk — they pay for verified acts on the same rails as the mutuals.
 
 ## Policy: Blade Pool @ Breakpoint 2026 (the first pool)
 

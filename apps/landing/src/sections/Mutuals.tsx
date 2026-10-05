@@ -1,20 +1,35 @@
 // §1.2 — MUTUALS: the directory band right below the hero (copy doc §1.2).
-// A scroll-snap carousel of cards — one per pool — with the pool's real tier
-// numbers (policy §5), deterministic demo stats (placeholder, NOT FOR
-// DEPLOY), and a rotation of the supporter discs. "Show all" routes to
-// #/mutuals, the tabular directory. Native scroll keeps the carousel
-// interruptible by construction; the buttons scroll by one card, smooth
-// unless reduced motion.
+// A drifting carousel of cards — one per pool — that scrolls itself
+// horizontally and pauses on hover, focus, drag, and reduced motion; no
+// visible scrollbar (the arrows and the drag carry the affordance). Cards
+// carry each pool's real tier numbers (docs §5), deterministic demo stats
+// (placeholder, NOT FOR DEPLOY), a rotation of the supporter discs, founder
+// badges ("Most popular", "Certified ridiculous"), and the pool-class
+// distinction: mutuals hairline, bounties dashed + a BOUNTY stamp.
+// "Show all" routes to #/mutuals, the tabular directory.
+//
+// The drift is a time-based rAF marquee over a duplicated card rail: past
+// the halfway point it wraps by exactly one set — seamless. It only runs
+// while the band is in view, not hovered/focused/dragged, and motion is
+// allowed; otherwise the track is an ordinary scrollable row.
 
 import { Button, SectionBand } from "@riprap/ui";
-import { useReducedMotion } from "motion/react";
-import { useRef } from "react";
+import { useInView, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 import { Settle } from "../components/Settle";
-import { capRange, demoStats, entryRange, MUTUALS, supportersFor } from "../mutuals/data";
+import {
+  capRange,
+  demoStats,
+  entryRange,
+  MUTUALS,
+  payoutWord,
+  supportersFor,
+} from "../mutuals/data";
 import type { MutualListing } from "../mutuals/types";
 
 const CARD_STEP = 336; // card width (w-80 = 320) + gap-4 (16)
+const DRIFT_PX_PER_S = 42; // gentle — a slow walk, not a slide
 
 function CardDiscs({ pool }: { pool: MutualListing }) {
   const list = supportersFor(pool);
@@ -53,14 +68,31 @@ function CardDiscs({ pool }: { pool: MutualListing }) {
 
 function PoolCard({ pool }: { pool: MutualListing }) {
   const stats = demoStats(pool);
+  const bounty = pool.kind === "bounty";
   return (
-    <article className="flex w-72 shrink-0 snap-start flex-col gap-4 border border-hairline bg-surface-card p-5 sm:w-80">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
-          {pool.name}
-        </h3>
-        <p className="shrink-0 uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-          {pool.status}
+    // the class distinction, in the chrome: mutuals hairline, bounties dashed
+    <article
+      data-kind={pool.kind}
+      className={`flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${
+        bounty ? "border-dashed border-hairline-strong" : "border-hairline"
+      } bg-surface-card`}
+    >
+      <div className="flex flex-col gap-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
+            {pool.name}
+          </h3>
+          {pool.badge ? (
+            <p className="shrink-0 border border-accent px-1.5 py-0.5 uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
+              {pool.badge}
+            </p>
+          ) : null}
+        </div>
+        <p
+          data-slot="kind"
+          className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]"
+        >
+          {bounty ? "bounty" : "pool"} · {pool.status}
         </p>
       </div>
       <p className="leading-relaxed text-body [font:var(--riprap-body-sm)]">{pool.tagline}</p>
@@ -72,7 +104,7 @@ function PoolCard({ pool }: { pool: MutualListing }) {
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-muted-foreground">cover</dt>
+          <dt className="text-muted-foreground">{payoutWord(pool)}</dt>
           <dd data-num className="text-ink">
             {capRange(pool)}
           </dd>
@@ -85,7 +117,7 @@ function PoolCard({ pool }: { pool: MutualListing }) {
           </dd>
         </div>
         <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-muted-foreground">pool</dt>
+          <dt className="text-muted-foreground">{bounty ? "pot" : "pool"}</dt>
           <dd data-num className="text-ink">
             ${stats.pool.toLocaleString("en-US")}
           </dd>
@@ -102,7 +134,7 @@ function PoolCard({ pool }: { pool: MutualListing }) {
           </a>
         ) : (
           <p className="shrink-0 text-muted-soft [font:var(--riprap-mono-label)]">
-            policy in review
+            {bounty ? "terms in review" : "policy in review"}
           </p>
         )}
       </div>
@@ -113,13 +145,61 @@ function PoolCard({ pool }: { pool: MutualListing }) {
 export function Mutuals() {
   const trackRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
+  const inView = useInView(trackRef); // live — drift runs only while visible
+  const [hovered, setHovered] = useState(false);
 
-  const scrollBy = (direction: 1 | -1) => {
+  // pause causes, read by the rAF loop through a ref (no re-render churn)
+  const pausedRef = useRef({ hovered: false, focused: false, dragging: false });
+  pausedRef.current.hovered = hovered;
+
+  useEffect(() => {
+    if (reduce) return; // reduced motion: an ordinary scrollable row
+    const track = trackRef.current;
+    if (!track) return;
+    let raf = 0;
+    let last = performance.now();
+    const step = (now: number) => {
+      raf = requestAnimationFrame(step);
+      const delta = Math.min((now - last) / 1000, 0.1);
+      last = now;
+      const { hovered: h, focused: f, dragging: d } = pausedRef.current;
+      if (h || f || d) return;
+      track.scrollLeft += DRIFT_PX_PER_S * delta;
+      // the rail is the card list twice — wrap by exactly one set, seamlessly
+      const half = track.scrollWidth / 2;
+      if (track.scrollLeft >= half) track.scrollLeft -= half;
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [reduce]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const onFocusIn = () => (pausedRef.current.focused = true);
+    const onFocusOut = () => (pausedRef.current.focused = false);
+    const onPointerDown = () => (pausedRef.current.dragging = true);
+    const onPointerUp = () => (pausedRef.current.dragging = false);
+    track.addEventListener("focusin", onFocusIn);
+    track.addEventListener("focusout", onFocusOut);
+    track.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointerup", onPointerUp);
+    return () => {
+      track.removeEventListener("focusin", onFocusIn);
+      track.removeEventListener("focusout", onFocusOut);
+      track.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, []);
+
+  const nudge = (direction: 1 | -1) => {
     trackRef.current?.scrollBy({
       left: direction * CARD_STEP,
       behavior: reduce ? "auto" : "smooth",
     });
   };
+
+  const driftOn = !reduce && inView;
 
   return (
     <SectionBand id="mutuals" label="mutuals" tone="ground">
@@ -138,11 +218,11 @@ export function Mutuals() {
               variant="outline"
               size="sm"
               aria-label="Previous pools"
-              onClick={() => scrollBy(-1)}
+              onClick={() => nudge(-1)}
             >
               ←
             </Button>
-            <Button variant="outline" size="sm" aria-label="More pools" onClick={() => scrollBy(1)}>
+            <Button variant="outline" size="sm" aria-label="More pools" onClick={() => nudge(1)}>
               →
             </Button>
             <Button asChild size="sm" className="ml-2">
@@ -153,11 +233,22 @@ export function Mutuals() {
 
         <div
           ref={trackRef}
-          className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2"
+          data-autoplay={driftOn ? "on" : "off"}
+          data-paused={hovered ? "true" : "false"}
+          onPointerEnter={() => setHovered(true)}
+          onPointerLeave={() => setHovered(false)}
+          className="no-scrollbar flex w-full gap-4 overflow-x-auto pb-2"
           tabIndex={-1}
         >
           {MUTUALS.map((pool) => (
-            <PoolCard key={pool.name} pool={pool} />
+            <div key={pool.name}>
+              <PoolCard pool={pool} />
+            </div>
+          ))}
+          {MUTUALS.map((pool) => (
+            <div key={`${pool.name}-clone`} aria-hidden="true">
+              <PoolCard pool={pool} />
+            </div>
           ))}
         </div>
       </Settle>

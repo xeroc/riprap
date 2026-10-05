@@ -1,8 +1,9 @@
 // /mutuals — the tabular directory (copy doc § /mutuals). One row per pool
-// from meta/Breakpoint's Micro Mutual policy docs: tier prices are policy §5
-// (draft prices still TODO-confirm in three policies — the footnote says
-// so). Wayfinding: the shared navbar + footer; the pool row links to the
-// pool's instance surface when one exists.
+// from meta/Breakpoint's policy/terms docs: prices are the docs' §5 tables
+// (all but Blade Pool still TODO-confirm — the footnote says so). Two
+// classes share the rails: risk-protection mutuals and verified-act
+// bounties (Kind column). Wayfinding: the shared navbar + footer; a pool's
+// name links to its instance surface when one exists.
 import { SectionBand } from "@riprap/ui";
 import { SiteNav } from "../components/SiteNav";
 import { Footer } from "../sections/Footer";
@@ -26,13 +27,14 @@ export function MutualsPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[48rem] border-collapse">
+              <table className="w-full min-w-[52rem] border-collapse">
                 <caption className="sr-only">
-                  All Riprap pools: what each covers, entry fees, maximum payouts, status.
+                  All Riprap pools: what each covers or pays for, entry fees, maximum payouts,
+                  status.
                 </caption>
                 <thead>
                   <tr className="border-b border-hairline text-left">
-                    {["Pool", "Covers", "Entry", "Max payout", "Status"].map((h) => (
+                    {["Pool", "Kind", "Covers", "Entry", "Max payout", "Status"].map((h) => (
                       <th
                         key={h}
                         scope="col"
@@ -58,6 +60,9 @@ export function MutualsPage() {
                           pool.name
                         )}
                       </th>
+                      <td className="py-4 pr-4 align-top uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
+                        {pool.kind}
+                      </td>
                       <td className="py-4 pr-4 align-top text-body [font:var(--riprap-body-sm)]">
                         {pool.tagline}
                       </td>
@@ -83,8 +88,9 @@ export function MutualsPage() {
             </div>
 
             <p className="max-w-2xl leading-relaxed text-muted-soft [font:var(--riprap-body-sm)]">
-              Prices are the tier tables of each pool's policy document. The three draft pools'
-              prices are still marked TODO-confirm in their policies; the Blade Pool's are final.
+              Prices are the tier tables of each pool's policy or terms document; every pool except
+              the Blade Pool is still marked TODO-confirm there. Bounties share no risk — they pay
+              for verified acts, on the same rails as the mutuals.
             </p>
           </div>
         </SectionBand>

@@ -90,3 +90,14 @@ samp {
     transform: scale(1.6);
   }
 }
+
+/* no-scrollbar — the mutuals carousel drifts on its own; the horizontal
+   scrollbar would only double the affordance (the arrows and the drag do
+   that job). Reduced to hidden tracks in both engines; scrolling stays
+   keyboard- and pointer-operable. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
