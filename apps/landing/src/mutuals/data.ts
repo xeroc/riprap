@@ -156,7 +156,11 @@ export function entryRange(m: MutualListing): string {
 
 /** `up to $4,000` — the highest tier cap (docs §5): cover for mutuals, the earned bounty for bounties. */
 export function capRange(m: MutualListing): string {
-  return `$${Math.max(...m.tiers.map((t) => t.cap)).toLocaleString("en-US")}`;
+  return `up to $${Math.max(...m.tiers.map((t) => t.cap)).toLocaleString("en-US")}`;
+}
+
+export function capSymbol(m: MutualListing): string {
+  return `<$${Math.max(...m.tiers.map((t) => t.cap)).toLocaleString("en-US")}`;
 }
 
 /** The payout stat's label — bounties earn, mutuals are covered. */

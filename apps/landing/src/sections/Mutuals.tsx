@@ -84,9 +84,8 @@ function PoolCard({ pool }: { pool: MutualListing }) {
     // the class distinction: mutuals hairline, bounties dashed
     <article
       data-kind={pool.kind}
-      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${
-        bounty ? "border-dashed border-hairline-strong" : "border-hairline"
-      } bg-surface-card`}
+      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${bounty ? "border-dashed border-hairline-strong" : "border-hairline"
+        } bg-surface-card`}
     >
       <EventBadge />
       <a

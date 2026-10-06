@@ -11,7 +11,7 @@ import { SectionBand } from "@riprap/ui";
 import { BpBadge } from "../components/BpBadge";
 import { SiteNav } from "../components/SiteNav";
 import { Footer } from "../sections/Footer";
-import { capRange, entryRange, MUTUALS, poolRoute } from "./data";
+import { capSymbol, entryRange, MUTUALS, poolRoute } from "./data";
 
 export function MutualsPage() {
   return (
@@ -94,7 +94,7 @@ export function MutualsPage() {
                       {entryRange(pool)}
                     </td>
                     <td data-num className="py-4 px-2 font-mono text-sm whitespace-nowrap text-ink">
-                      <span className="bg-accent p-1 px-2.5 text-xl">{capRange(pool)}</span>
+                      <span className="bg-accent p-1 px-2.5 text-xl">{capSymbol(pool)}</span>
                     </td>
                   </tr>
                 ))}
@@ -102,9 +102,8 @@ export function MutualsPage() {
             </table>
 
             <p className="max-w-2xl leading-relaxed text-muted-soft [font:var(--riprap-body-sm)]">
-              Prices are the tier tables of each pool's policy or terms document; every pool except
-              Blade Pool, NGMI Hairline, and Mert of the Year is still marked TODO-confirm there.
-              Bounties share no risk — they pay for verified acts, on the same rails as the mutuals.
+              Prices are the tier tables of each pool's policy or terms document. Bounties share not
+              risk but bounty pool - they pay for verified acts, on the same rails as the mutuals.
             </p>
           </div>
         </SectionBand>
