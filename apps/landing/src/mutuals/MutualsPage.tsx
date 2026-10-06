@@ -1,8 +1,9 @@
 // /mutuals — the tabular directory (copy doc § /mutuals). One row per pool
 // from meta/Breakpoint's policy/terms docs: prices are the docs' §5 tables
 // (all but Blade Pool, NGMI Hairline, and Mert of the Year still
-// TODO-confirm — the footnote says so). The kind
-// renders under the pool's name, not as its own column; no status column —
+// TODO-confirm — the footnote says so). The first column is the badge rail
+// (copy doc § /mutuals v12): full-height strips rotated 90°, zero spacing —
+// BP26, founder badge, kind. No status column —
 // all pools go live together when they go on-chain. Every name links to the
 // pool's detail route (#/m/<pubkey-or-slug>). Wayfinding: shared navbar +
 // footer.
@@ -50,44 +51,50 @@ export function MutualsPage() {
               <tbody>
                 {MUTUALS.map((pool) => (
                   <tr key={pool.name} className="border-b border-hairline last:border-b-0">
-                    {/* the event lockup, rotated 90° — a pink strip running
-                          the full height of the row (founder ask) */}
-                    <td className="relative w-5 overflow-hidden p-0">
-                      <span aria-hidden="true" className="absolute inset-0 bg-(--bp-2026-pink)" />
-                      <BpBadge className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 rotate-90" />
+                    {/* the badge rail (copy doc § /mutuals v12): full-height
+                        strips rotated 90°, side by side, zero spacing — BP26
+                        on the event pink, the founder badge when present (the
+                        founder badge when present, then the kind
+                        strip. */}
+                    <td className="relative h-24 p-0 pr-18">
+                      <div className="absolute inset-y-0 left-0 flex">
+                        <div className="relative w-5 overflow-hidden">
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-0 bg-(--bp-2026-pink)"
+                          />
+                          <BpBadge className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 rotate-90" />
+                        </div>
+                        <div className="relative w-5 overflow-hidden border-x border-hairline bg-card">
+                          <span className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 rotate-90 px-2 uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
+                            {pool.kind}
+                          </span>
+                        </div>
+                        {pool.badge ? (
+                          <div className="relative w-5 overflow-hidden bg-accent">
+                            <span className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 rotate-90 px-2 py-0.5 text-ink uppercase tracking-(--riprap-tracking-stamp) [font:var(--riprap-mono-label)]">
+                              {pool.badge}
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
                     </td>
-                    <th scope="row" className="py-4 pl-2 pr-4 text-left align-top">
+                    <th scope="row" className="py-4 pr-4 text-left">
                       <a
                         href={poolRoute(pool)}
                         className="font-medium text-ink underline decoration-transparent underline-offset-4 transition-colors hover:decoration-current [font:var(--riprap-body-sm)]"
                       >
                         {pool.name}
                       </a>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                        {pool.badge ? (
-                          <span className="border border-accent px-1.5 py-0.5 uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
-                            {pool.badge}
-                          </span>
-                        ) : null}
-                        <span className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-                          {pool.kind}
-                        </span>
-                      </div>
                     </th>
-                    <td className="hidden py-4 pr-4 align-top text-body sm:table-cell [font:var(--riprap-body-sm)]">
+                    <td className="hidden py-4 pr-4 text-body sm:table-cell [font:var(--riprap-body-sm)]">
                       {pool.tagline}
                     </td>
-                    <td
-                      data-num
-                      className="py-4 pr-4 align-top font-mono text-sm whitespace-nowrap text-ink"
-                    >
+                    <td data-num className="py-4 pr-4 font-mono text-sm whitespace-nowrap text-ink">
                       {entryRange(pool)}
                     </td>
-                    <td
-                      data-num
-                      className="py-4 align-top font-mono text-sm whitespace-nowrap text-ink"
-                    >
-                      {capRange(pool)}
+                    <td data-num className="py-4 px-2 font-mono text-sm whitespace-nowrap text-ink">
+                      <span className="bg-accent p-1 px-2.5 text-xl">{capRange(pool)}</span>
                     </td>
                   </tr>
                 ))}

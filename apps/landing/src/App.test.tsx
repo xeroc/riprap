@@ -86,7 +86,7 @@ describe("landing", () => {
     expect(band?.textContent).toContain("up to $150");
     // founder badges (experiment merchandising, not metrics)
     expect(band?.textContent).toContain("Most popular");
-    expect(band?.textContent).toContain("Certified ridiculous");
+    expect(band?.textContent).toContain("Ridiculous");
     // the pool-class distinction: bounties render dashed, mutuals hairline
     const kinds = [...(band?.querySelectorAll("article") ?? [])].map((a) => ({
       kind: a.getAttribute("data-kind"),

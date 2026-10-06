@@ -21,12 +21,11 @@ vi.mock("@solana/connector", async (importOriginal) => {
 afterEach(cleanup);
 
 describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
-  it("renders one row per pool, kind under the name with the BP26 chip and founder badges", () => {
+  it("renders one row per pool with the strip rail — full-height, rotated 90°, zero spacing (copy doc § /mutuals v12)", () => {
     const { container } = render(<MutualsPage />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Mutuals.");
     const rows = [...container.querySelectorAll("tbody tr")];
     expect(rows.length).toBe(MUTUALS.length);
-    // the first header cell is the (aria-hidden) strip column
     expect([...container.querySelectorAll("thead th")].map((th) => th.textContent)).toEqual([
       "",
       "Pool",
@@ -34,26 +33,51 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
       "Entry",
       "Max payout",
     ]);
-    // every row wears the event lockup (founder ask, copy doc § /mutuals v9)
+    // every rail leads with the event lockup strip, rotated 90° (v12)
     const chips = [...container.querySelectorAll('span[role="img"]')].filter(
       (c) => c.getAttribute("aria-label") === "Breakpoint 2026",
     );
     expect(chips.length).toBe(MUTUALS.length);
-    expect(container.textContent).toContain("Most popular");
-    expect(container.textContent).toContain("Certified ridiculous");
-    expect(container.textContent).toContain("Certified paranoid");
-    // the chip is the rotated strip: pink background running the full row
-    // height, lockup rotated 90° and centered (founder ask, v10)
-    const strips = [...container.querySelectorAll("tbody td.relative > span")].filter((s) =>
-      (s.getAttribute("class") ?? "").includes("inset-0"),
-    );
-    expect(strips.length).toBe(MUTUALS.length);
     expect(chips[0].className).toContain("rotate-90");
-    const kinds = [...container.querySelectorAll("tbody th span:last-child")].map(
-      (p) => p.textContent,
-    );
-    expect(kinds.slice(0, 4)).toEqual(["mutual", "mutual", "mutual", "mutual"]);
-    expect(kinds.slice(4)).toEqual(["bounty", "bounty", "bounty", "bounty", "bounty"]);
+    expect(container.textContent).toContain("Most popular");
+    expect(container.textContent).toContain("Ridiculous");
+    expect(container.textContent).toContain("Paranoid");
+    // the rail: full-height strips side by side, zero gap — the kind strip
+    // carries the pool class
+    const rails = [...container.querySelectorAll("tbody td:first-child")];
+    expect(rails.length).toBe(MUTUALS.length);
+    for (const rail of rails) {
+      const track = rail.querySelector("div");
+      expect(track?.className).toContain("flex");
+      expect(track?.className).not.toContain("gap"); // zero spacing
+      for (const strip of [...(track?.querySelectorAll(":scope > div") ?? [])]) {
+        expect(strip.className).toContain("w-5");
+        expect(strip.className).toContain("overflow-hidden");
+      }
+    }
+    const kinds = rails.map((td) => {
+      const strip = [...td.querySelectorAll("span")].find((s) =>
+        /^(mutual|bounty)$/.test(s.textContent ?? ""),
+      );
+      return strip?.textContent;
+    });
+    expect(kinds).toEqual([
+      "mutual",
+      "mutual",
+      "mutual",
+      "mutual",
+      "bounty",
+      "bounty",
+      "bounty",
+      "bounty",
+      "bounty",
+    ]);
+    // strip counts: the three badged pools carry 3, the rest 2
+    const stripCounts = rails.map((td) => td.querySelectorAll(":scope > div > div").length);
+    expect(stripCounts).toEqual([3, 3, 3, 2, 2, 2, 2, 2, 2]);
+    // the name cell carries only the linked name
+    const nameCells = [...container.querySelectorAll("tbody th")];
+    expect(nameCells.every((th) => th.querySelector("span, p") === null)).toBe(true);
     expect(container.textContent).not.toContain("Status");
     expect(container.textContent).toContain("Bounties share no risk");
   });

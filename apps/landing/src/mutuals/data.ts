@@ -11,7 +11,7 @@
 //
 // Demo stats (members / pot size) are deterministic placeholders — founder
 // ask, experiment only, NOT FOR DEPLOY: replace with chain reads when pools
-// deploy. Badges ("Most popular", "Certified ridiculous") are founder-set
+// deploy. Badges ("Most popular", "Ridiculous") are founder-set
 // merchandising on the experiment, not metrics.
 
 import { SUPPORTERS, type Supporter } from "../sections/Supporters";
@@ -54,7 +54,7 @@ export const MUTUALS: MutualListing[] = [
     ],
     // §5: the smallest tier's cap ($1,000 Basic) is the smallest success
     smallestPayout: 1000,
-    badge: "Certified paranoid", // founder call 2026-10-06: the one severe pool gets the self-aware label
+    badge: "Paranoid", // founder call 2026-10-06: the one severe pool gets the self-aware label
     href: "#/2026-breakpoint-blade-pool",
   },
   {
@@ -68,7 +68,7 @@ export const MUTUALS: MutualListing[] = [
     tiers: [{ name: "Flat", fee: 25, cap: 200 }],
     // §5: grade I pays 10% of the $200 maximum = $20 — the smallest success
     smallestPayout: 20,
-    badge: "Certified ridiculous",
+    badge: "Ridiculous",
   },
   {
     name: "Coffee Apocalypse",
@@ -156,7 +156,7 @@ export function entryRange(m: MutualListing): string {
 
 /** `up to $4,000` — the highest tier cap (docs §5): cover for mutuals, the earned bounty for bounties. */
 export function capRange(m: MutualListing): string {
-  return `up to $${Math.max(...m.tiers.map((t) => t.cap)).toLocaleString("en-US")}`;
+  return `$${Math.max(...m.tiers.map((t) => t.cap)).toLocaleString("en-US")}`;
 }
 
 /** The payout stat's label — bounties earn, mutuals are covered. */
