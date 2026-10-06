@@ -1,7 +1,7 @@
 {
   "name": "@riprap/pool",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Generated Codama client for the Riprap pool program — deposited money with exactly two governed exits: spending and liquidation.",
   "repository": {
     "type": "git",
