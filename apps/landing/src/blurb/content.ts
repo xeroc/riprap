@@ -1,6 +1,10 @@
 // The blurb page copy. Founder call (2026-09-23): copy lives inline here
 // for now — the meta/marketing/03-website-copy doc lands in its own vault
 // commit; until then every string's provenance rides in the comments.
+// Positioning pass (2026-10-06): cover-led hierarchy — pooled cover is
+// the one market, bounties ride as a clause, insurance is the roadmap
+// destination (risk capital in, yield out). Source: brand-story.md +
+// messaging-guide.md § Payout-Pool Pass.
 // Register law: meta/marketing/07-brand-assets/messaging-guide.md — line
 // set, banned words, numbers with sources. Pre-round law (2026-09-23
 // founder call): no round numbers appear on this page or in the email —
@@ -13,31 +17,28 @@ export const INTRO =
 /** Status line — the ask without numbers (pre-round law). */
 export const STATUS = "raising a pre-seed now · terms and deck on request";
 
-/** One-liner for chats — ecosystem line (messaging-guide line set,
- * 2026-09-15) + domain. */
-export const ONE_LINE = "riprap — real-world risk protection on solana. riprap.xyz";
+/** One-liner for chats — pooled-cover line (payout-pool pass,
+ * 2026-10-06) + domain. */
+export const ONE_LINE = "riprap — pooled cover on solana, settled by peers. riprap.xyz";
 
-/** Short blurb, ~60 words — mechanism sentence (messaging-guide, verbatim)
- * + first pool (bound facts: Breakpoint, November, London) + founder. */
+/** Short blurb — 20% stat (kept) + mechanism sentence + bounty clause
+ * (payout-pool pass, 2026-10-06) + first batch (bound facts: Breakpoint,
+ * November, London; nine pools = mutuals/data.ts MUTUALS) + founder. */
 export const SHORT_BLURB = `Over 20% of every insurance dollar vanishes before a single claim is paid.
 
-riprap is to insurance what DeFi is to finance.
+riprap is pooled cover on Solana, settled by peers: any group chips in, drawn peers settle. The same rails pay bounties for verified acts — cover when it goes wrong, a bounty when it goes right. Risk capital and yield next: insurance as rails.
 
-Mutual risk pools are humanity's oldest protection — the original insurance. riprap puts them on-chain: peers chip in, peers settle claims. That changes what they can do.
-
-Pilot: Blade Pool @ Breakpoint 2026, London, this November.
+Pilot: nine pools @ Breakpoint 2026, London, this November.
 
 Built by Dr.-Ing. Fabian Schuh (full-time crypto since 2014) with Corinna, an AI agent on shift 24/7.
 
-Insurance is next. riprap.xyz`;
+riprap.xyz`;
 
-/** Standard blurb, ~150 words — llms.txt platform paragraph (approved
- * copy) + two-exit-doors law (PROJECT.md) + team + first pool. */
-export const STANDARD_BLURB = `Over 20% of every insurance dollar vanishes before a single claim is paid.
+/** Standard blurb — mechanism + how-it-works + bounty clause + roadmap
+ * close (payout-pool pass, 2026-10-06) + team + first batch. */
+export const STANDARD_BLURB = `Over 20% of every insurance dollar vanishes before a single claim is paid. The risks no insurer can sell — too small, too new, too narrow — were never priced at all.
 
-On-chain, they become composable, permissionless, and globally accessible 24/7. They plug into other protocols, open to anyone, and run without borders or gatekeepers. Faster, Cheaper and more transparent.
-
-Mutual risk pools are humanity's oldest protection — the original insurance. riprap puts them on-chain: peers chip in, peers settle claims. That changes what they can do.
+Mutual risk pools are humanity's oldest protection — the original insurance. riprap puts them on-chain: peers chip in, peers settle claims. On-chain, pools are composable, permissionless, and globally accessible 24/7 — they plug into other protocols, open to anyone, run without borders or gatekeepers.
 
 How it works:
 
@@ -46,11 +47,13 @@ How it works:
  - Verdicts run on Accord, a Schelling-point arbitration protocol.
  - Approved claims pay out of the pool.
 
-At scale, this produces what traditional insurers structurally can't — the same way DeFi outran TradFi. This is how we rebuild insurance: layer by layer, starting here.
+The same rails pay bounties for verified acts — cover when it goes wrong, a bounty when it goes right.
+
+Where it goes: risk capital stakes into pools and earns a rule-set share of the surplus; pools stack on pools. Insurance, rebuilt as rails — starting with the cover the incumbents can't sell.
 
 Built by Dr.-Ing. Fabian Schuh — full-time crypto since 2014 — with Corinna, an AI agent on shift 24/7.
 
-Pilot: Blade Pool @ Breakpoint 2026, Olympia, London, 15–17 Nov. riprap.xyz`;
+Pilot: nine pools @ Breakpoint 2026, Olympia, London, 15–17 Nov. riprap.xyz`;
 
 /** Forwardable email — written in the introducer's voice ("I want to
  * introduce you to Fabian…"), plain text, no links except the blurb page.
@@ -58,22 +61,22 @@ Pilot: Blade Pool @ Breakpoint 2026, Olympia, London, 15–17 Nov. riprap.xyz`;
  * terms deliberately absent (pre-round law). */
 export const EMAIL_TO = "[investor name]";
 
-export const EMAIL_SUBJECT = "Intro: riprap is to insurance what DeFi is to finance.";
+export const EMAIL_SUBJECT = "Intro: riprap — pooled cover, settled by peers.";
 
 export const EMAIL_BODY = `Hi [name],
 
 Meet Fabian. He's building riprap.
 
-Mutual risk pools are humanity's oldest protection — the original insurance. riprap puts them on-chain: peers chip in, peers settle claims.
-
-On-chain, they become composable, permissionless, and globally accessible 24/7. They plug into other protocols, open to anyone, and run without borders or gatekeepers. Faster, Cheaper and more transparent.
+Pooled cover on Solana, settled by peers: any group chips into one pool, and drawn peers settle the claims. First market — the risks no insurer can sell: too small, too new, too narrow. The same rails pay bounties for verified acts.
 
 They already built the rails this runs on:
 
  - Pull payments for recurring premiums — tributary.so
  - On-chain claims adjudication — useaccord.xyz
 
-First pool goes live at Breakpoint, Solana's flagship conference — 15–17 Nov 2026, London.
+Roadmap: risk capital stakes into pools and earns a rule-set share of the surplus — insurance, rebuilt as rails. A quarter of the world's cover already runs on the mutual structure ($1.61T, ICMIF 2024 data).
+
+First pools go live at Breakpoint, Solana's flagship conference — 15–17 Nov 2026, London.
 
 Why Fabian: full-time in crypto since 2014. He was the first hire ever paid directly by a blockchain, and he built BitShares' escrow and worker-proposal treasury. He ships with Corinna, an AI agent on shift 24/7.
 

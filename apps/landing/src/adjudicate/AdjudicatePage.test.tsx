@@ -91,13 +91,11 @@ const A = "1".repeat(32) as Address;
 function maybe<T extends object>(data: T): MaybeAccount<T> {
   return { exists: true, address: MUTUAL_ADDR, data } as unknown as MaybeAccount<T>;
 }
-
 const MEMBER: MaybeAccount<Member> = maybe({
   mutual: MUTUAL_ADDR as Address,
   member: WALLET,
   tier: 1,
   attestation: A,
-  hasPendingClaim: false,
   bump: 255,
 } as Member);
 

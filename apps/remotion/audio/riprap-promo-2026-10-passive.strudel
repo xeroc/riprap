@@ -1,0 +1,69 @@
+// riprap-promo-2026-10-passive — "passive pulse" (Strudel score), riprap family
+// ALTERNATIVE bed (unused): the film mixes found music (see the video dir's
+// ATTRIBUTION.md). Named "-passive" so its bake target
+// (public/audio/riprap-promo-2026-10-passive.wav) can never overwrite the
+// mixed artifact the composition mounts.
+//
+// Prebaked to public/audio/riprap-promo-2026-10.wav (gitignored artifact):
+//   pnpm --filter @riprap/remotion score riprap-promo-2026-10-passive 21
+// Pasteable into https://strudel.cc as-is.
+//
+// 120 BPM grid: cpm 30 → 1 bar = 2.000s = 60 frames @30fps.
+// Family: riprap — Gb major, V spelled Dbmaj9 (MUSIC.md; the dough piano
+// map carries no Cb — enharmonic C does the refusing-to-resolve job).
+// Scene map (SHOTS, frames absolute): open b1–2 (brand ink, f0–75)
+// · deal b3 (chase, f75–195) · hero b4–5 (push/hover/scan, f195–315)
+// · rows b6 (gather, f315–390) · rule b7–8 (draw, f390–465)
+// · claim b9 (flyline, f465–525) · end b9 (dissolve shadow)
+// · close b10 (bloom f570, button f585).
+// Marker law: wood tick on cuts, shadow on gravitas, bloom on the brand
+// line, octave-doubled tonic button on the link. ≥70% of bars marker-free.
+setcpm(30)
+
+// ── bed ──
+const kick = s("bd ~ bd ~").bank("RolandTR909").gain(.45) // pulse on 1 & 3
+const tick = s("~ hh ~ hh").gain(.09).hpf(9000)           // whisper hats
+const rimt = s("~ ~ rim ~").gain(.13)                     // one wooden tick per bar
+// chord loop (one chord per bar): Gbmaj9 · Ebm9 · Dbmaj9
+const arpGb = note("gb3 [bb3 db4] [f4 ab4] ~").s("piano").gain(.34).room(.35)
+const arpEb = note("eb3 [gb3 bb3] [db4 eb4] ~").s("piano").gain(.32).room(.35)
+const arpDb = note("db3 [f3 ab3] [c4 eb4] ~").s("piano").gain(.32).room(.35)
+const pad = x => note(x).s("triangle").fm("<0 2 4>").clip(1).attack(.8).release(1.2).gain(.22).room(.4)
+
+// ── b1–b2 · open (f0–120) — almost nothing; the name arrives ──
+const b1 = stack(s("bd ~ ~ ~").bank("RolandTR909").gain(.45), pad("gb2"))
+const b2 = stack(s("bd ~ ~ ~").bank("RolandTR909").gain(.45),
+  note("[gb4,db4] ~ ~ ~").s("piano").gain(.22).room(.45), pad("gb2"))
+
+// ── b3 · the wall deals in (f120–180) — arps enter on the chase ──
+const b3 = stack(kick, arpGb, tick, pad("gb2"),
+  note("[~ bb5] ~ ~ ~").s("piano").gain(.16).room(.5))              // rise — deal accelerates @f121
+
+// ── b4 · hero under the spotlight (f180–240) — shadow on the rise ──
+const b4 = stack(kick, arpEb, tick, rimt, pad("eb2"),
+  note("~ ~ gb3 ~").s("piano").gain(.19).room(.5).release(1.5))     // shadow — card rises @f237
+
+// ── b5 · scan + reseat (f240–300) — steady, marker-free ──
+const b5 = stack(kick, arpDb, tick, rimt, pad("db2"))
+
+// ── b6 · rows embed (f300–360) — shadow on the reseat landing ──
+const b6 = stack(kick, arpGb, tick, pad("gb2"),
+  note("~ ~ ~ db3").s("piano").gain(.18).room(.5).release(2))       // shadow — reseat @f300
+
+// ── b7 · money gathers → peers drawn (f360–420) ──
+const b7 = stack(kick, arpEb, tick, rimt, pad("eb2"), note("~ ~ ~ ~ ~ ab4 ~ ~").s("piano").gain(.14).room(.5))
+
+// ── b8 · the draw (f420–480) — steady, marker-free ──
+const b8 = stack(kick, arpDb, tick, rimt, pad("db2"))
+
+// ── b9 · a claim is paid, then it ends (f480–540) ──
+const b9 = stack(s("bd ~ bd ~").bank("RolandTR909").gain(.4), arpGb.release(1.5), pad("gb2"),
+  note("~ ~ ~ ~ ~ gb3 ~ ~").s("piano").gain(.2).room(.5).release(2)) // shadow — payout lands @f495
+
+// ── b10 · close (f540–600) — bloom on the brand line, button on the link ──
+const b10 = stack(s("bd ~ bd ~").bank("RolandTR909").gain(.42), arpDb.release(.6), pad("gb2"),
+  note("~ ~ ~ ~ ~ ~ ~ [gb4,bb4,db5,f5,ab5]").s("piano").gain(.3).room(.5).release(1.5), // bloom — line @f570
+  note("~ ~ ~ ~ ~ ~ ~ ~ ~ ~ [gb4,gb5] ~").s("piano").gain(.24).room(.45).release(.5),   // button — riprap.xyz @f585
+  note("[gb3,bb3,db4,ab4]").s("piano").sustain(.2).release(2.4).gain(.26).room(.5))     // Gbmaj9 shell — decays out by 21
+cat(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10)
+  .gain(.48)

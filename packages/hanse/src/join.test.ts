@@ -99,7 +99,6 @@ function encodedMember(tier: number): string {
       member: WALLET,
       tier,
       attestation: SYSTEM_PROGRAM as Address,
-      hasPendingClaim: false,
       capUsed: 0n,
       bump: 255,
       padding: new Uint8Array(64),

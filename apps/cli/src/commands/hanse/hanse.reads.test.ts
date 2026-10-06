@@ -72,15 +72,14 @@ function encodedMutual(): string {
   return getBase64Decoder().decode(getMutualEncoder().encode(mutualFixture()));
 }
 
-function encodedMember(tier: number, hasPendingClaim: boolean): string {
+function encodedMember(tier: number, capUsed = 0n): string {
   return getBase64Decoder().decode(
     getMemberEncoder().encode({
       mutual: MUTUAL_ADDR,
       member: MEMBER,
       tier,
       attestation: "11111111111111111111111111111111" as Address,
-      hasPendingClaim,
-      capUsed: 0n,
+      capUsed,
       bump: 254,
       padding: new Uint8Array(64),
     }),
@@ -170,13 +169,12 @@ describe("buildMemberView (hanse:member)", () => {
     const [memberPda] = await findMemberAccountPda({ mutual: MUTUAL_ADDR, claimant: MEMBER });
     const rpc = mockRpc({
       [MUTUAL_ADDR]: encodedMutual(),
-      [memberPda]: encodedMember(1, true),
+      [memberPda]: encodedMember(1, 500_000_000n),
     });
     const view = await buildMemberView(rpc, { mutual: MUTUAL_ADDR, member: MEMBER }, COMMITMENT);
     expect(view.tier).toBe(1);
     expect(view.contribution).toBe(20_000_000n);
     expect(view.maxPayout).toBe(2_000_000_000n);
-    expect(view.hasPendingClaim).toBe(true);
-    expect(view.capUsed).toBe(0n);
+    expect(view.capUsed).toBe(500_000_000n);
   });
 });

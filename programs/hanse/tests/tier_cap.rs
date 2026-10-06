@@ -1,15 +1,13 @@
-//! tier-cap aggregation tests (audit H-1 fix, 2026-09-24): the tier cap is
-//! per MEMBERSHIP, not per claim. `Member.cap_used` carries the Σ of Pending +
-//! Approved claim_amounts; `file_claim` clamps to `max_payout − cap_used` and
+//! tier_cap.rs — the cumulative per-membership cap (audit H-1 2026-09-24,
+//! EVENT-MUTUAL §2.3): `file_claim` clamps to `max_payout − cap_used` and
 //! reverts `TierCapExhausted` at zero remaining. Denied/Failed claims release
-//! their reservation at settle_claim — has_pending alone only serialized
-//! filings, so a member whose claim settled could refile at the full cap
-//! before payout burns the stake (the H-1 window).
+//! their reservation at settle_claim. Since the multi-claim amendment this is
+//! the only filing limiter — concurrent claims share the cap.
 
 mod common;
 
 use {
-    anchor_lang::{solana_program::pubkey::Pubkey, AccountDeserialize},
+    anchor_lang::solana_program::pubkey::Pubkey,
     common::*,
     solana_keypair::Keypair,
     solana_signer::Signer,
@@ -68,8 +66,7 @@ fn fund_float(env: &mut Env, amount: u64) {
 }
 
 /// H-1 core regression: an Approved settlement consumes the cap for good —
-/// the settle→payout window (has_pending cleared, stake unburned) must not
-/// re-open the full cap.
+/// the settle→payout window must not re-open the full cap.
 #[test]
 fn approved_claim_exhausts_cap_against_refile() {
     let (mut env, cfg, member, _) = setup();
@@ -81,7 +78,6 @@ fn approved_claim_exhausts_cap_against_refile() {
     settle_claim_raw(&mut env, &cfg, &crank, 0).unwrap();
 
     let mem = member_of(&env, &member.pubkey());
-    assert!(!mem.has_pending_claim, "settlement clears the pending gate");
     assert_eq!(mem.cap_used, CAP, "Approved keeps the reservation");
 
     env.svm.expire_blockhash();

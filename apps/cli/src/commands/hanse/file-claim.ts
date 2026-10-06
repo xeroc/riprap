@@ -9,7 +9,6 @@ import { Flags } from "@oclif/core";
 import {
   fetchMutual,
   findClaimPda,
-  findDepositorPda,
   findFeeFloatPda,
   getFileClaimInstructionAsync,
 } from "@riprap/hanse";
@@ -60,7 +59,6 @@ export async function buildFileClaim(input: {
   const nonce = mutual.claimNonce;
 
   const [claim] = await findClaimPda({ mutual: mutual.address, nonce });
-  const [depositor] = await findDepositorPda({ pool: mutual.pool, owner: claimant.address });
   const memberFeeAta = await findAssociatedTokenAddress(mutual.feeMint, claimant.address);
   const [feeFloat] = await findFeeFloatPda({ mutual: mutual.address, feeMint: mutual.feeMint });
   const [dispute] = await findDisputePda({ filer: mutual.address, nonce });
@@ -72,7 +70,6 @@ export async function buildFileClaim(input: {
     rentPayer: claimant,
     mutual: mutual.address,
     claim,
-    depositor,
     subaccord: mutual.subaccord,
     memberFeeAta,
     feeFloat,
@@ -92,10 +89,11 @@ export default class HanseFileClaim extends ChainCommand {
 
   static description =
     "Files a claim as the loaded wallet (must be a member): the requested " +
-    "amount is clamped on-chain to the tier's max payout (§2.3), the juror " +
-    "fee min_jury_size × fee_per_juror leaves the wallet's fee-mint ATA, " +
-    "and the mutual creates the accord Dispute. Evidence is a 32-byte " +
-    "manifest hash (§9). One Pending claim per member.";
+    "amount is clamped on-chain to the tier's remaining cap (§2.3 — the " +
+    "cumulative per-membership cap is the only filing limiter; claims run " +
+    "concurrently), the juror fee (min_jury_size + 1) × fee_per_juror " +
+    "leaves the wallet's fee-mint ATA, and the mutual creates the accord " +
+    "Dispute. Evidence is a 32-byte manifest hash (§9).";
 
   static examples = [
     "<%= config.bin %> hanse:file-claim --mutual 9xQe… --amount 2000000000 --evidence <hex64>",

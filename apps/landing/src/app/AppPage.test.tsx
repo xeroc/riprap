@@ -44,12 +44,6 @@ vi.mock("@riprap/hanse", async (importOriginal) => {
     fetchMaybeMutual: vi.fn(),
     fetchMaybeMemberByOwner: vi.fn(),
     fetchMaybeClaimByNonce: vi.fn(),
-    // the preflight money reads (useClaimPreflight) — rights stake + ATA
-    fetchMaybeDepositorByOwner: vi.fn(async () => ({
-      exists: true,
-      address: "D".repeat(32),
-      data: { rightsStake: 20n * 1_000_000n },
-    })),
     findAssociatedTokenAddress: vi.fn(async () => "1".repeat(32) as Address),
     tokenBalanceOrZero: vi.fn(),
   };
@@ -106,7 +100,6 @@ function memberAccount(tier: number): MaybeAccount<Member> {
     member: WALLET as Address,
     tier,
     attestation: A,
-    hasPendingClaim: false,
     capUsed: 0n,
     bump: 255,
     padding: new Uint8Array(64),

@@ -642,3 +642,70 @@ describe("deposits closed — entry-closed state from deposits_close_at", () => 
     expect(screen.queryByRole("button", { name: /Chip in/ })).toBeNull();
   });
 });
+
+describe("acceptance note — the policy line under every joinable CTA (copy doc § /2026-breakpoint-blade-pool acceptance note, 2026-09-29)", () => {
+  it("no wallet: 'Chipping in accepts the Blade Pool policy.' under the connect CTA; the link opens the policy band, never navigates", async () => {
+    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    renderPoolPage();
+    await screen.findByRole("button", { name: "Connect a wallet to chip in" });
+    // the sentence verbatim (copy doc § acceptance note) — textContent, the
+    // link splits the text node
+    expect(document.querySelector('[data-slot="policy-accept"]')?.textContent).toBe(
+      "Chipping in accepts the Blade Pool policy.",
+    );
+    const link = screen.getByRole("link", { name: "the Blade Pool policy" });
+
+    // click: the collapsed disclosure opens and the page settles on the band.
+    // Unchecked cast: jsdom defines no scrollIntoView to spy on, and the DOM
+    // lib type can't express the optional we must stub and then remove.
+    const proto = Element.prototype as { scrollIntoView?: (...args: unknown[]) => void };
+    const scrollIntoView = vi.fn();
+    proto.scrollIntoView = scrollIntoView;
+    try {
+      fireEvent.click(link);
+      expect(document.querySelector('[data-slot="policy-details"]')?.hasAttribute("open")).toBe(
+        true,
+      );
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      // same-route jump — the hash never leaves the pool route
+      expect(window.location.hash).not.toBe("#/2026-breakpoint-blade-pool");
+    } finally {
+      delete proto.scrollIntoView;
+    }
+  });
+
+  it("connected + joinable: the line renders under the chip-in button", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    joinMock.mockResolvedValue(joinCtx());
+    renderPoolPage();
+    await screen.findByRole("button", { name: "Chip in $20" });
+    expect(document.querySelector('[data-slot="policy-accept"]')?.textContent).toBe(
+      "Chipping in accepts the Blade Pool policy.",
+    );
+  });
+
+  it("covered: nothing left to accept — no line", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    joinMock.mockResolvedValue(
+      joinCtx({ alreadyMember: { tier: 0 }, canJoin: false, reason: "already-member" }),
+    );
+    renderPoolPage();
+    fireEvent.click(await screen.findByRole("button", { name: "Continue" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(await screen.findByText("Covered — Basic")).toBeTruthy();
+    expect(document.querySelector('[data-slot="policy-accept"]')).toBeNull();
+  });
+
+  it("entry closed: no line", async () => {
+    fetchMock.mockResolvedValue(
+      maybe(fakeMutual({ depositsCloseAt: BigInt(Date.UTC(2026, 0, 15) / 1000) })),
+    );
+    renderPoolPage();
+    await screen.findByText("Entry closed.");
+    expect(document.querySelector('[data-slot="policy-accept"]')).toBeNull();
+  });
+});

@@ -1,0 +1,5 @@
+---
+"@riprap/landing": minor
+---
+
+Mutuals directory: featured pools as a carousel below the hero, and a tabular /mutuals route. The hero's primary CTA is now "Browse the mutuals" (scrolls to the band); the waitlist is demoted to secondary in the hero and unchanged at the final CTA; the first-pool stamp and numbers row are retired from the hero since more pools are coming and it should stay general. Cards carry each pool's real tier prices from the meta/Breakpoint policy docs (Blade Pool final; NGMI Hairline, Chairmageddon, Coffee Apocalypse draft — TODO-confirm prices stated in the route footnote), a deadpan tagline, deterministic placeholder member/pool stats (demo figures, to be replaced by chain reads), and a rotation of the supporter discs; "Show all" routes to #/mutuals listing every pool in one table. Carousel is native scroll-snap with one-card prev/next buttons (smooth, auto under reduced motion). New route registered with title swap, router test, llms.txt entry, and copy-doc section.

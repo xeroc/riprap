@@ -26,6 +26,7 @@ import {
   getClaimDecoder,
   getMutualDecoder,
   HANSE_PROGRAM_ADDRESS,
+  MEMBER_DISCRIMINATOR,
   type Member,
   MUTUAL_DISCRIMINATOR,
   type Mutual,
@@ -101,6 +102,11 @@ export type ScannedAccount<T> = { address: Address; data: T };
 /** Claim layout: discriminator(8) · mutual(32) · … · status(1) — the two
  * memcmp offsets the scans filter server-side (generated/accounts/claim.ts). */
 const CLAIM_MUTUAL_OFFSET = 8n;
+
+/** Layout-derived (not compiler-checked): Member.mutual sits first after
+ * the 8-byte discriminator (state.rs Member). A field inserted before it
+ * silently miscounts — see AGENTS.md "Account field". */
+export const MEMBER_MUTUAL_OFFSET = 8n;
 const CLAIM_STATUS_OFFSET = 120n;
 
 /** Base64 memcmp bytes for the account discriminator at offset 0. */
@@ -184,4 +190,36 @@ export async function fetchClaimsOfMutual(
     const decoded = decodeScanResult(r, (bytes) => getClaimDecoder().decode(bytes));
     return decoded === null ? [] : [decoded];
   });
+}
+
+/**
+ * How many members one mutual has — a count-only scan: server-side memcmp
+ * on the member discriminator and the `mutual` field (offset 8), with a
+ * zero-length dataSlice so no account data crosses the wire. The count
+ * never decodes, so malformed members still count — the discriminator
+ * filter already scoped the set.
+ */
+export async function fetchMemberCount(
+  rpc: Rpc<GetProgramAccountsApi>,
+  mutual: Address,
+): Promise<number> {
+  const results = await rpc
+    .getProgramAccounts(HANSE_PROGRAM_ADDRESS, {
+      encoding: "base64",
+      filters: [
+        discriminatorFilter(MEMBER_DISCRIMINATOR),
+        {
+          memcmp: {
+            offset: MEMBER_MUTUAL_OFFSET,
+            bytes: getBase64Decoder().decode(
+              getAddressEncoder().encode(mutual),
+            ) as Base64EncodedBytes,
+            encoding: "base64",
+          },
+        },
+      ],
+      dataSlice: { offset: 0, length: 0 },
+    })
+    .send();
+  return (results as readonly ScanItem[]).length; // pubkey-only: dataSlice
 }

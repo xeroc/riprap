@@ -1,13 +1,13 @@
 /**
  * claim.ts — build-only file-claim facade: everything `hanse::file_claim`
  * needs assembled from decoded accounts (EVENT-MUTUAL §7): the Claim PDA at
- * the mutual's nonce, the depositor, the fee ATA path, and the fee derived
- * live from the subaccord. Pure — the caller owns the fetches and the two
- * cross-program PDAs (`dispute`, `accordState` via @useaccord/sdk), so this
- * module adds no new SDK dependency. Single source for the CLI and the
- * wizard (no parallel instruction assemblies).
+ * the mutual's nonce, the fee ATA path, and the fee derived live from the
+ * subaccord. Pure — the caller owns the fetches and the two cross-program
+ * PDAs (`dispute`, `accordState` via @useaccord/sdk), so this module adds
+ * no new SDK dependency. Single source for the CLI and the wizard (no
+ * parallel instruction assemblies).
  */
-import { findAssociatedTokenAddress, findDepositorPda } from "@riprap/pool";
+import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address, Instruction, TransactionSigner } from "@solana/kit";
 
 import { findClaimPda, getFileClaimInstructionAsync } from "../generated/src/generated";
@@ -71,7 +71,6 @@ export async function buildFileClaim(input: {
   const nonce = mutual.claimNonce;
 
   const [claim] = await findClaimPda({ mutual: mutual.address, nonce });
-  const [depositor] = await findDepositorPda({ pool: mutual.pool, owner: claimant.address });
   const memberFeeAta = await findAssociatedTokenAddress(mutual.feeMint, claimant.address);
   const [feeFloat] = await findFeeFloatPda({ mutual: mutual.address, feeMint: mutual.feeMint });
   const feeVault = await findAssociatedTokenAddress(mutual.feeMint, mutual.subaccord);
@@ -81,7 +80,6 @@ export async function buildFileClaim(input: {
     rentPayer: claimant,
     mutual: mutual.address,
     claim,
-    depositor,
     subaccord: mutual.subaccord,
     memberFeeAta,
     feeFloat,

@@ -1,5 +1,6 @@
-//! file_claim tests (EVENT-MUTUAL §2.3/§2.6/§7, bean riprap-ihyo): one claim
-//! per member, tier-clamped, claimant-funded fee, dispute filed by the mutual.
+//! file_claim tests (EVENT-MUTUAL §2.3/§2.6/§7, bean riprap-ihyo): tier-
+//! clamped, claimant-funded fee, dispute filed by the mutual. Concurrent
+//! claims per member share the cumulative tier cap (multi-claim amendment).
 
 mod common;
 
@@ -22,7 +23,6 @@ fn file_claim_tx(
 ) -> Result<(), String> {
     use anchor_lang::solana_program::instruction::Instruction;
     let mutual = mutual_pda(cfg.seed);
-    let pool = pool_pda(cfg.seed);
     let domain_ref = hanse::instructions::subaccord_domain_ref(cfg.seed, &cfg.policy_hash);
     let subaccord = Pubkey::find_program_address(
         &[
@@ -52,7 +52,6 @@ fn file_claim_tx(
             mutual,
             member_account: member_pda(&mutual, &member.pubkey()),
             claim: claim_pda(&mutual, nonce),
-            depositor: pool_depositor(&pool, &member.pubkey()),
             subaccord,
             member_fee_ata: ata(&member.pubkey(), &env.mint),
             fee_float: ata(&mutual, &env.mint),
@@ -88,9 +87,9 @@ fn setup_claimable(
 }
 
 /// §7 happy path: claim Pending, fee moved member → float → fee vault,
-/// counters and has_pending flipped, dispute bound to mutual + nonce.
+/// counters ticked, cap reserved, dispute bound to mutual + nonce.
 #[test]
-fn file_claim_opens_dispute_and_marks_pending() {
+fn file_claim_opens_dispute_and_reserves_cap() {
     let (mut env, cfg, member, member_ata) = setup_claimable(1, 50_000_000);
 
     file_claim_tx(&mut env, &cfg, &member, 1_500_000_000, [9u8; 32], 0).unwrap();
@@ -168,8 +167,9 @@ fn file_claim_opens_dispute_and_marks_pending() {
             .data[..],
     )
     .unwrap();
-    assert!(mem.has_pending_claim);
+    assert_eq!(mem.cap_used, 1_500_000_000, "filing reserves the cap");
 }
+
 
 #[test]
 fn claim_amount_clamps_at_tier_cap() {
@@ -190,14 +190,39 @@ fn claim_amount_clamps_at_tier_cap() {
     );
 }
 
+/// Multi-claim amendment: a second filing while the first is Pending
+/// succeeds and clamps to the REMAINING cap — each filing reserves before
+/// the next can read the remainder; a third at zero remaining reverts.
 #[test]
-fn second_pending_claim_reverts() {
+fn concurrent_claims_share_the_tier_cap() {
     let (mut env, cfg, member, _) = setup_claimable(1, 50_000_000);
-    file_claim_tx(&mut env, &cfg, &member, 100, [1u8; 32], 0).unwrap();
+    file_claim_tx(&mut env, &cfg, &member, 1_200_000_000, [1u8; 32], 0).unwrap();
+    env.svm.expire_blockhash();
+    file_claim_tx(&mut env, &cfg, &member, 5_000_000_000, [2u8; 32], 1).unwrap();
+
+    let mutual = mutual_pda(1);
+    let second: hanse::Claim = anchor_lang::AccountDeserialize::try_deserialize(
+        &mut &env.svm.get_account(&claim_pda(&mutual, 1)).unwrap().data[..],
+    )
+    .unwrap();
+    assert_eq!(
+        second.claim_amount, 800_000_000,
+        "clamped to the remaining cap, not the tier max"
+    );
+    let mem: hanse::Member = anchor_lang::AccountDeserialize::try_deserialize(
+        &mut &env
+            .svm
+            .get_account(&member_pda(&mutual, &member.pubkey()))
+            .unwrap()
+            .data[..],
+    )
+    .unwrap();
+    assert_eq!(mem.cap_used, 2_000_000_000, "tier 1 cap fully reserved");
+
     env.svm.expire_blockhash();
     assert_custom_err(
-        file_claim_tx(&mut env, &cfg, &member, 100, [2u8; 32], 1),
-        hanse::HanseError::PendingClaimExists,
+        file_claim_tx(&mut env, &cfg, &member, 100, [3u8; 32], 2),
+        hanse::HanseError::TierCapExhausted,
     );
 }
 
@@ -225,7 +250,6 @@ fn non_member_reverts() {
     let err = {
         use anchor_lang::solana_program::instruction::Instruction;
         let mutual = mutual_pda(cfg.seed);
-        let pool = pool_pda(cfg.seed);
         let domain_ref = hanse::instructions::subaccord_domain_ref(cfg.seed, &cfg.policy_hash);
         let subaccord = Pubkey::find_program_address(
             &[
@@ -256,7 +280,6 @@ fn non_member_reverts() {
                 mutual,
                 member_account: member_pda(&mutual, &real_member.pubkey()),
                 claim: claim_pda(&mutual, 0),
-                depositor: pool_depositor(&pool, &stranger.pubkey()),
                 subaccord,
                 member_fee_ata: ata(&stranger.pubkey(), &env.mint),
                 fee_float: ata(&mutual, &env.mint),
@@ -282,8 +305,11 @@ fn non_member_reverts() {
     );
 }
 
+/// Multi-claim amendment: residual weight is not cover — a depositor
+/// burned to zero rights_stake (paid out past their contribution) still
+/// files against the cap; only TierCapExhausted can stop them.
 #[test]
-fn zero_rights_stake_reverts() {
+fn burned_out_stake_does_not_block_filing() {
     let (mut env, cfg, member, _) = setup_claimable(1, 50_000_000);
     // Fabricate the burn-out state: rights_stake = 0 on the real depositor.
     let depositor = pool_depositor(&pool_pda(1), &member.pubkey());
@@ -306,10 +332,7 @@ fn zero_rights_stake_reverts() {
         )
         .unwrap();
 
-    assert_custom_err(
-        file_claim_tx(&mut env, &cfg, &member, 100, [1u8; 32], 0),
-        hanse::HanseError::NoRightsStake,
-    );
+    file_claim_tx(&mut env, &cfg, &member, 100, [1u8; 32], 0).unwrap();
 }
 
 #[test]

@@ -1,12 +1,12 @@
 // useClaimPreflight — the wizard's step 0 and the #/app entry action's gate
 // (CLAIM-WIZARD §3, copy doc § /app/file-claim "Step 0 preflight"): all
 // chain reads, no user input. Order is the spec's: Member PDA exists →
-// rights_stake > 0 → !has_pending → now < claims_close_at → fee ATA ≥
-// (min_jury_size + 1) × fee_per_juror — the on-chain filing cost (ADR-0030).
-// The first failure wins and renders its honest copy state.
+// tier cap remaining (multi-claim: filings share the cumulative cap) →
+// now < claims_close_at → fee ATA ≥ (min_jury_size + 1) × fee_per_juror —
+// the on-chain filing cost (ADR-0030). The first failure wins and renders
+// its honest copy state.
 
 import {
-  fetchMaybeDepositorByOwner,
   findAssociatedTokenAddress,
   type Member,
   type Mutual,
@@ -25,8 +25,7 @@ import { useMembership } from "../useMembership";
 /** Why filing is blocked — each kind maps to one copy-doc line set. */
 export type PreflightBlock =
   | { kind: "not-member" }
-  | { kind: "no-rights-stake" }
-  | { kind: "claim-open" }
+  | { kind: "cap-exhausted" }
   | { kind: "window-closed"; closedAt: bigint }
   | {
       kind: "fee-short";
@@ -46,6 +45,8 @@ export interface PreflightPass {
   minJurySize: number;
   feePerJuror: bigint;
   claimsCloseAt: bigint;
+  /** Tier max payout − member.capUsed, micro — the most this filing can request. */
+  capRemainingMicro: bigint;
   /** sub.evidence_operator — feeds operator discovery (CLAIM-WIZARD §8). */
   evidenceOperator: Address;
 }
@@ -84,15 +85,13 @@ export function useClaimPreflight(): ClaimPreflight {
       if (!clusterRpc || !mutualReady || account === null) {
         throw new Error("claim-preflight prerequisites disappeared mid-flight");
       }
-      const [depositor, subaccord, feeAta] = await Promise.all([
-        fetchMaybeDepositorByOwner(clusterRpc.rpc, { pool: mutualReady.pool, owner: account }),
+      const [subaccord, feeAta] = await Promise.all([
         fetchSubaccordMaybe(clusterRpc.rpc, mutualReady.subaccord),
         findAssociatedTokenAddress(mutualReady.feeMint, account),
       ]);
       const feeBalance = await tokenBalanceOrZero(clusterRpc.rpc, feeAta);
       const { value: solBalance } = await clusterRpc.rpc.getBalance(account).send();
       return {
-        rightsStake: depositor.exists ? depositor.data.rightsStake : 0n,
         minJurySize: subaccord.exists ? subaccord.data.minJurySize : null,
         feePerJuror: subaccord.exists ? subaccord.data.feePerJuror : null,
         evidenceOperator: subaccord.exists ? subaccord.data.evidenceOperator : null,
@@ -125,8 +124,14 @@ export function useClaimPreflight(): ClaimPreflight {
     return { state: "error", source: "cluster", retry: () => void money.refetch() };
   }
   const reads = money.data;
-  if (reads.rightsStake <= 0n) return { state: "blocked", block: { kind: "no-rights-stake" } };
-  if (member.hasPendingClaim) return { state: "blocked", block: { kind: "claim-open" } };
+  // Multi-claim gate: the cumulative tier cap is the only filing limiter —
+  // concurrent filings share it (cap_used reserves at filing, releases on
+  // Denied/Failed).
+  const tierIndex = Math.min(member.tier, mutualReady.tiers.length - 1);
+  const capRemainingMicro = mutualReady.tiers[tierIndex].maxPayout - member.capUsed;
+  if (capRemainingMicro <= 0n) {
+    return { state: "blocked", block: { kind: "cap-exhausted" } };
+  }
   if (Date.now() / 1000 >= Number(mutualReady.claimsCloseAt)) {
     return {
       state: "blocked",
@@ -162,6 +167,7 @@ export function useClaimPreflight(): ClaimPreflight {
       minJurySize: reads.minJurySize,
       feePerJuror: reads.feePerJuror,
       claimsCloseAt: mutualReady.claimsCloseAt,
+      capRemainingMicro,
       evidenceOperator: reads.evidenceOperator,
     },
   };

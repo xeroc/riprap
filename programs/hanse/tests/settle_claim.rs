@@ -76,7 +76,6 @@ fn file_claim_any(
     )
     .unwrap();
     let nonce = m.claim_nonce;
-    let pool = pool_pda(cfg.seed);
     let domain_ref = hanse::instructions::subaccord_domain_ref(cfg.seed, &cfg.policy_hash);
     let subaccord = Pubkey::find_program_address(
         &[
@@ -106,7 +105,6 @@ fn file_claim_any(
             mutual,
             member_account: member_pda(&mutual, &member.pubkey()),
             claim: claim_pda(&mutual, nonce),
-            depositor: pool_depositor(&pool, &member.pubkey()),
             subaccord,
             member_fee_ata: ata(&member.pubkey(), &env.mint),
             fee_float: ata(&mutual, &env.mint),
@@ -155,8 +153,6 @@ fn approve_books_obligations_and_fee_refund() {
     assert_eq!(m.fee_refunds, FEE);
     assert_eq!(m.claims_resolved, 1);
     assert_eq!(c.settled_at, cfg.claims_close_at + 1_000);
-    let mem = member_of(&env, &c.member);
-    assert!(!mem.has_pending_claim);
     // The crank moved no pool money on approve.
     assert_eq!(
         token_amount(&env.svm, &pool_treasury(&pool_pda(1), &env.mint)),
@@ -260,17 +256,6 @@ fn cranker(env: &mut Env) -> Keypair {
     let k = Keypair::new();
     env.svm.airdrop(&k.pubkey(), 1_000_000_000).unwrap();
     k
-}
-
-fn member_of(env: &Env, member: &Pubkey) -> hanse::Member {
-    anchor_lang::AccountDeserialize::try_deserialize(
-        &mut &env
-            .svm
-            .get_account(&member_pda(&mutual_pda(1), member))
-            .unwrap()
-            .data[..],
-    )
-    .unwrap()
 }
 
 fn fund_float(env: &mut Env, cfg: &hanse::instructions::InitializeMutualConfig, amount: u64) {

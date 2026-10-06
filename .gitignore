@@ -30,3 +30,4 @@ storybook-static
 
 # TypeScript incremental build state (ui predates this rule; pool stays untracked)
 tsconfig.tsbuildinfo
+apps/remotion/src/workbench.ts

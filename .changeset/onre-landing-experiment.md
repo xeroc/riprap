@@ -1,0 +1,5 @@
+---
+"@riprap/landing": patch
+---
+
+Experimental landing pass from an onre.finance competitive study, second founder pass — NOT FOR DEPLOY. Hero: canon lines only (kicker "Mutuals on Solana", H1 "DeFi rebuilt finance. Insurance is next.", member line opens the subhead); "insurer" is banned from the page and swept from every band. New why-on-chain band (transparency, cost, composability — sourced from why-on-chain.md, no stacking/nesting/reinsurance claims) replaces the retired guarantees band. Comparison table: mutual vs insurance vs nothing with the Riprap column made prominent (accent tint and frame, cascade settle on scroll arrival with 40ms stagger, row-hover tint), lifetime stated as the group's choice rather than scheduled dissolution, footnote removed. Also hides the navbar cluster select below sm (64px bar overflowed 390px viewports). Copy doc: meta/marketing/03-website-copy/landing-page.md § OnRe pass v2; overrides logged in the page-laws note and the messaging guide's experiment register.

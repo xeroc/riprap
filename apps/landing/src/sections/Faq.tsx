@@ -10,11 +10,11 @@ import { Settle } from "../components/Settle";
 const FAQS = [
   {
     q: "Is this insurance?",
-    a: "No. A pool is not a policy: no insurer, no underwriting desk, no company that outlives the pool. Members' money goes into a program; approved claims come out of it; the pool never pays more than it holds. If you need regulated insurance — licensed, with a guarantee fund behind it — buy insurance. This is a different thing with a written, narrow shape.",
+    a: "It's a mutual — the original form of insurance: members' money in, members' claims out, peers deciding. What it isn't is a policy from a company: no underwriting desk, no reserves, no company keeping the difference. The pool never pays more than it holds. If you need regulated insurance — licensed, with a guarantee fund behind it — buy insurance. This is a different thing with a written, narrow shape.",
   },
   {
     q: "Who holds the money, and can the Riprap team move it?",
-    a: "A program on Solana holds it, and no, nobody at Riprap can move a pool's funds. Money leaves only through two governed doors: spending, which an approved ruling authorizes, and liquidation, which ends the pool. No admin key over the treasury, no multisig of named people. There is no third path.",
+    a: "A program on Solana holds it, and no, nobody at Riprap can move a pool's funds. Money moves only by a payout the jurors approved or by the pool's wind-down. No admin key over the treasury, no multisig of named people.",
   },
   {
     q: "What's the most I can lose?",

@@ -1,14 +1,15 @@
-// §1 — hero: platform one-liner, waitlist. First-pool stamp: retired
-// 2026-09-15, returned 2026-09-21 (links the pool page).
-import { HexBackdrop, Logomark, SectionBand, StampBadge } from "@riprap/ui";
+// §1 — hero: platform one-liner, the browse CTA, waitlist demoted to
+// secondary. Payout-pool pass (2026-10-06, copy doc §1, messaging-guide
+// § Payout-Pool Pass): the campaign line as H1 — WHY-led, the one line
+// true of every pool, cover or bounty; the formal descriptor as kicker;
+// the member line opens the subhead; bounties ride as one clause.
+// v4 rules keep: no pool named in the hero, no instance numbers; the
+// primary CTA scrolls to the pools band (§1.2); the waitlist stays,
+// low priority. "Insurer" is off the page.
+import { Button, HexBackdrop, Logomark, SectionBand } from "@riprap/ui";
 import { Settle } from "../components/Settle";
 import { Waitlist } from "../components/Waitlist";
 
-// §1 — Settled hero (2026-09-15 line set, messaging guide): the thesis names
-// the category shift, the subhead opens with the member one-liner, then the
-// mechanism sentence. Plain-words law: no "mutual" in the hero or taglines;
-// the lineage section keeps the historical word. Left-biased editorial:
-// copy column + the mark assembling beside it, centered.
 export function Hero() {
   return (
     <div className="relative">
@@ -24,44 +25,37 @@ export function Hero() {
           <div className="flex flex-col gap-(--riprap-space-lg)">
             <Settle>
               <p className="uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
-                Real World Risk Pools on Solana
+                Pooled cover on Solana
               </p>
             </Settle>
             <Settle delay={60}>
               <h1 className="max-w-3xl tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-md)] sm:[font:var(--riprap-display-xl)] lg:[font:var(--riprap-display-mega)]">
-                Finance went P2P. <br />
-                Risk Cover can too.
+                Self-governing money.
               </h1>
             </Settle>
             <Settle delay={120}>
               <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                Your group's got you covered. Riprap is peer-to-peer cover on Solana: any group can
-                start a pool — chip in, define what's covered, drawn peers settle claims, the money
-                stays the group's.
+                Your group's got you covered. The terms are written before anyone joins — chip in
+                and you're covered up to the published cap. Claims are settled by drawn peers, and
+                the same rails pay bounties for verified acts. Whatever the pool doesn't pay stays
+                the group's.
               </p>
             </Settle>
-            <Settle delay={180} className="pt-(--riprap-space-sm)">
-              <Waitlist />
-            </Settle>
-            <Settle delay={240}>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="relative inline-flex">
-                  <span
-                    aria-hidden="true"
-                    className=" pointer-events-none absolute inset-0 rounded-[inherit] bg-(--riprap-accent)/15 blur-md motion-safe:animate-ping motion-reduce:hidden "
-                  />
-                  <a
-                    href="#/2026-breakpoint-blade-pool"
-                    aria-label="Blade Pool at Breakpoint 2026 — policy and participation"
-                    className=" relative z-10 inline-flex transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring "
-                  >
-                    <StampBadge pool="Blade Pool" event="Breakpoint" />
-                  </a>
-                </span>
-
-                <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
-                  First pool · Olympia Convention Centre, London · 15-17 November 2026
+            {/* primary: browse the pools — the waitlist rides below, secondary */}
+            <Settle delay={180} className="flex flex-col gap-5 pt-(--riprap-space-sm)">
+              <div className="flex flex-wrap items-center gap-4">
+                <Button asChild>
+                  <a href="#mutuals">Browse the pools</a>
+                </Button>
+                <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+                  First batch: Breakpoint 2026, London.
                 </p>
+              </div>
+              <div className="flex max-w-md flex-col gap-1.5">
+                <p className="text-muted-soft [font:var(--riprap-mono-label)]">
+                  Or leave an email — one message when a pool opens.
+                </p>
+                <Waitlist />
               </div>
             </Settle>
           </div>
