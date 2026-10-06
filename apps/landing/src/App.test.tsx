@@ -1,7 +1,7 @@
 import type * as Connector from "@solana/connector";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-
 import { App } from "./App";
 
 // The navbar carries the wallet controls on every surface (§0, 2026-09-29) —
@@ -20,9 +20,22 @@ vi.mock("@solana/connector", async (importOriginal) => {
 
 afterEach(cleanup);
 
+// The mutuals band reads live member counts (useMemberCount → useQuery) —
+// the platform tests mount bare, so give them a throwaway client.
+function renderApp() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>,
+  );
+}
+
 describe("landing", () => {
   it("renders the approved hero headline as the single h1", () => {
-    render(<App />);
+    renderApp();
     const h1 = screen.getByRole("heading", { level: 1 });
     expect(h1.textContent).toBe("DeFi rebuilt finance. Insurance is next.");
     expect(screen.getByText("Mutuals on Solana")).toBeTruthy();
@@ -35,11 +48,11 @@ describe("landing", () => {
   });
 
   it("mutuals band: one card per pool from the policy/terms docs, Show all routes to the directory (copy doc §1.2)", () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     const band = container.querySelector("section#mutuals");
     expect(band).not.toBeNull();
     expect(screen.getByText("The mutuals.")).toBeTruthy();
-    // the eight first-batch pools — four mutuals, four bounties
+    // the nine first-batch pools — four mutuals, five bounties
     for (const name of [
       "Chairmageddon",
       "Blade Pool",
@@ -49,12 +62,13 @@ describe("landing", () => {
       "Operation Keep Raj Warm",
       "Lily's Liquid Lifeline",
       "Toly Needs His Fuel",
+      "Mert of the Year",
     ]) {
       expect(band?.textContent).toContain(name);
     }
     // founder order: Chairmageddon leads (copy doc §1.2)
     const names = [...(band?.querySelectorAll("article h3") ?? [])].map((h) => h.textContent);
-    expect(names.slice(0, 8)).toEqual([
+    expect(names.slice(0, 9)).toEqual([
       "Chairmageddon",
       "Blade Pool",
       "NGMI Hairline",
@@ -63,6 +77,7 @@ describe("landing", () => {
       "Operation Keep Raj Warm",
       "Lily's Liquid Lifeline",
       "Toly Needs His Fuel",
+      "Mert of the Year",
     ]);
     // real tier numbers on the cards (docs §5 — Blade Pool final, rest TODO-confirm)
     expect(band?.textContent).toContain("$10–$40");
@@ -78,8 +93,8 @@ describe("landing", () => {
       dashed: a.className.includes("border-dashed"),
       stamp: a.querySelector('[data-slot="kind"]')?.textContent,
     }));
-    expect(kinds.slice(0, 8).filter((k) => k.kind === "bounty").length).toBe(4);
-    for (const k of kinds.slice(0, 8)) {
+    expect(kinds.slice(0, 9).filter((k) => k.kind === "bounty").length).toBe(5);
+    for (const k of kinds.slice(0, 9)) {
       expect(k.dashed).toBe(k.kind === "bounty");
     }
     expect(kinds[0].stamp).toBe("pool");
@@ -92,7 +107,7 @@ describe("landing", () => {
     const needed = [...(band?.querySelectorAll("dd[data-num]") ?? [])]
       .map((d) => d.textContent)
       .filter((t) => /^\d+$/.test(t ?? ""));
-    expect(needed.length).toBe(16); // 8 pools on the duplicated drift rail
+    expect(needed.length).toBe(18); // 9 pools on the duplicated drift rail
     expect(needed).toContain("100"); // Blade Pool — the 100x payout
     expect(needed).toContain("10"); // hot-drink bounties — the 10x
     expect(needed).toContain("2"); // NGMI + OnlyFriends — profit threshold
@@ -106,7 +121,7 @@ describe("landing", () => {
     const cardLinks = [...(band?.querySelectorAll("article > a.absolute") ?? [])].map((a) =>
       a.getAttribute("href"),
     );
-    expect(cardLinks.slice(0, 8)).toEqual([
+    expect(cardLinks.slice(0, 9)).toEqual([
       "#/m/chairmageddon",
       "#/m/blade-pool",
       "#/m/ngmi-hairline",
@@ -115,13 +130,14 @@ describe("landing", () => {
       "#/m/keep-raj-warm",
       "#/m/lilys-liquid-lifeline",
       "#/m/toly-needs-his-fuel",
+      "#/m/mert-of-the-year",
     ]);
     // every card wears the event lockup — Breakpoint's brand chip, black on
     // the event pink, floating above the card (founder ask, copy doc §1.2)
-    const chips = [...(band?.querySelectorAll('span[role="img"]') ?? [])].filter((c) =>
-      c.getAttribute("aria-label") === "Breakpoint 2026",
+    const chips = [...(band?.querySelectorAll('span[role="img"]') ?? [])].filter(
+      (c) => c.getAttribute("aria-label") === "Breakpoint 2026",
     );
-    expect(chips.length).toBe(16);
+    expect(chips.length).toBe(18);
     expect(chips[0].className).toContain("bg-(--bp-2026-pink)");
     expect(chips[0].className).toContain("pointer-events-none");
     expect(chips[0].querySelectorAll("img").length).toBe(2);
@@ -134,17 +150,17 @@ describe("landing", () => {
     expect(track?.className).toContain("no-scrollbar");
     expect(track?.getAttribute("data-autoplay")).toMatch(/^(on|off)$/);
     const articles = band?.querySelectorAll("article") ?? [];
-    expect(articles.length).toBe(16);
-    expect(band?.querySelectorAll('div[aria-hidden="true"] article').length).toBe(8);
+    expect(articles.length).toBe(18);
+    expect(band?.querySelectorAll('div[aria-hidden="true"] article').length).toBe(9);
   });
 
   it('never says "insurer" anywhere on the page — founder law (v2)', () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     expect(container.textContent).not.toMatch(/insurer/i);
   });
 
   it("explains the five lifecycle steps in order — guarantees folded in", () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     const steps = [
       "One more member.",
       "Money gathers.",
@@ -163,7 +179,7 @@ describe("landing", () => {
   });
 
   it("states the lineage — the primitive replaces the institution", () => {
-    render(<App />);
+    renderApp();
     expect(screen.getByText("The mutual is old. The Solana primitive is new.")).toBeTruthy();
     // OnRe pass: the two dated rows lead with sourced facts (copy doc §4)
     expect(screen.getByText(/London ship owners pooled their losses/)).toBeTruthy();
@@ -175,7 +191,7 @@ describe("landing", () => {
   });
 
   it("why-on-chain band: transparency, cost, composability (copy doc §1.5, v2)", () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     const band = container.querySelector("section#why-on-chain");
     expect(band).not.toBeNull();
     expect(screen.getByText("Better on-chain.")).toBeTruthy();
@@ -190,7 +206,7 @@ describe("landing", () => {
   });
 
   it("comparison band: mutual vs insurance vs nothing — seven rows, prominent Riprap column (copy doc §1.7, v2)", () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     const table = container.querySelector('[data-slot="compare"]');
     expect(table).not.toBeNull();
     const heads = [...(table?.querySelectorAll("thead th") ?? [])].map((th) => th.textContent);
@@ -223,20 +239,20 @@ describe("landing", () => {
   });
 
   it("renders the waitlist form exactly once per capture point (hero + final CTA)", () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     expect(container.querySelectorAll("form[data-waitlist]").length).toBe(2);
     expect(screen.getAllByPlaceholderText("you@riprap.xyz").length).toBe(2);
   });
 
   it("names the arbitration oracle honestly, never a trustless court", () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     expect(container.textContent).toContain("arbitration oracle");
     expect(container.textContent).not.toContain("trustless court");
     expect(container.textContent).not.toContain("decentralized court");
   });
 
   it("never names the peril on the page — the naming lock holds", () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     for (const heading of screen.getAllByRole("heading")) {
       expect(heading.textContent).not.toMatch(/knife|assault/i);
     }
@@ -246,7 +262,7 @@ describe("landing", () => {
   });
 
   it("answers the ten platform questions in order — FAQ discloses natively", () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     const faq = container.querySelector("section#faq");
     expect(faq).not.toBeNull();
     const questions = [...(faq?.querySelectorAll("summary h3") ?? [])].map((h) => h.textContent);
@@ -269,7 +285,7 @@ describe("landing", () => {
   });
 
   it("hero: the ring assembles — 7 stones, one slot open, one harbor-blue newest member", () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     const hero = container.querySelector("section#top");
     expect(hero).not.toBeNull();
     const stones = hero?.querySelectorAll("polygon") ?? [];
@@ -279,13 +295,13 @@ describe("landing", () => {
   });
 
   it("footer closing is the bare fact in mono", () => {
-    render(<App />);
+    renderApp();
     const closing = screen.getByText(/© 2026 Riprap · riprap\.xyz/);
     expect(closing.className).toContain("font-mono");
   });
 
   it("links only to section anchors and the live accounts — no fake endpoints", () => {
-    const { container } = render(<App />);
+    const { container } = renderApp();
     const hrefs = Array.from(container.querySelectorAll("a[href]"), (a) => a.getAttribute("href"));
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) {

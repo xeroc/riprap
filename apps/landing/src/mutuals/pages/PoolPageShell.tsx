@@ -37,6 +37,9 @@ export interface PoolPageConfig {
   example: { lines: WorkedExampleLine[]; total: WorkedExampleLine; note: string };
   /** §8 winding-up, compressed */
   endNote: string;
+  /** overrides the end-note's draft caveat — the doc's own TODO state
+   * (default: prices still TODO-confirm in the doc) */
+  caveat?: string;
 }
 
 export function PoolPageShell({ config }: { config: PoolPageConfig }) {
@@ -261,8 +264,9 @@ export function PoolPageShell({ config }: { config: PoolPageConfig }) {
                 </p>
               ))}
               <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-                {c.endNote} Prices follow the doc's current tier table and are still marked
-                TODO-confirm there — nothing on this page is live.
+                {c.endNote}{" "}
+                {c.caveat ??
+                  "Prices follow the doc's current tier table and are still marked TODO-confirm there — nothing on this page is live."}
               </p>
             </div>
           </Settle>

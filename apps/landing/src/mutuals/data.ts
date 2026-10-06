@@ -2,8 +2,8 @@
 // Two classes share the rails: risk-protection mutuals (Micro Mutual policy
 // docs) and verified-act bounties (Micro Bounty terms docs) — bounties share
 // no risk, they pay for confirmed acts. Tier prices are the docs' §5 tables
-// verbatim. CAVEAT: every pool except Blade Pool and NGMI Hairline carries
-// "[TODO: confirm prices]" — draft values, not final.
+// verbatim. CAVEAT: every pool except Blade Pool, NGMI Hairline, and Mert of
+// the Year carries "[TODO: confirm prices]" — draft values, not final.
 //
 // Each pool pins the on-chain MUTUAL pubkey (route `#/m/<pubkey>`); until a
 // pool deploys, its slug routes and `pubkey` stays unset. All pools go live
@@ -121,6 +121,19 @@ export const MUTUALS: MutualListing[] = [
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
     smallestPayout: 50,
   },
+  {
+    name: "Mert of the Year",
+    kind: "bounty",
+    slug: "mert-of-the-year",
+    // terms: Micro Bounty — Mert of the Year - Terms.md §3/§5 (§5 prices
+    // final — no TODO in the doc's table; the named person's consent §3 and
+    // the adjudication fee §7 are TODO there)
+    tagline:
+      "Hand Mert an over-the-top trophy he did not ask for, with a completely serious acceptance speech on his behalf — the bounty pays the one he declares best.",
+    tiers: [{ name: "Flat", fee: 10, cap: 1000 }],
+    // §5: the single $1000 bounty is the only success payment
+    smallestPayout: 1000,
+  },
 ];
 
 /** The pool's detail-route id — the pinned pubkey, else the slug. */
@@ -165,7 +178,8 @@ function hash(input: string): number {
  * the smallest tier always. If its smallest success payment is bigger than
  * the entry fee, the pool needs ceil(payment / fee) members to fund one
  * full payout — Blade Pool 100 (a 100x payout), Chairmageddon 4, Coffee
- * Apocalypse 3, the hot-drink bounties 10 (a 10x payout). If the smallest
+ * Apocalypse 3, the hot-drink bounties 10 (a 10x payout), Mert of the Year
+ * 100 (a 100x bounty, also the terms' §6 minimum). If the smallest
  * payment is already covered by one entry (NGMI grade I $20 <= $25,
  * OnlyFriends' first intro $15), the pool can pay out from the start and
  * the honest push number is the SECOND success — where the member turns a

@@ -10,6 +10,7 @@ import { ChairmageddonPage } from "./ChairmageddonPage";
 import { CoffeeApocalypsePage } from "./CoffeeApocalypsePage";
 import { KeepRajWarmPage } from "./KeepRajWarmPage";
 import { LilysLifelinePage } from "./LilysLifelinePage";
+import { MertOfTheYearPage } from "./MertOfTheYearPage";
 import { NgmiHairlinePage } from "./NgmiHairlinePage";
 import { OnlyFriendsPage } from "./OnlyFriendsPage";
 import { TolyFuelPage } from "./TolyFuelPage";
@@ -36,6 +37,7 @@ const PAGES: Record<string, () => React.JSX.Element> = {
   "keep-raj-warm": KeepRajWarmPage,
   "lilys-liquid-lifeline": LilysLifelinePage,
   "toly-needs-his-fuel": TolyFuelPage,
+  "mert-of-the-year": MertOfTheYearPage,
 };
 
 describe("pool detail pages (#/m/<id> placeholders)", () => {
@@ -75,10 +77,20 @@ describe("pool detail pages (#/m/<id> placeholders)", () => {
   });
 
   it("bounty pages label their bands honestly (kind, not peril)", () => {
-    const { container } = render(<KeepRajWarmPage />);
-    expect(container.textContent).toContain("What pays.");
-    expect(container.textContent).toContain("Doesn't qualify.");
-    const bountyCap = [...container.querySelectorAll("td[data-num]")].map((td) => td.textContent);
-    expect(bountyCap).toContain("$50");
+    const raj = render(<KeepRajWarmPage />);
+    expect(raj.container.textContent).toContain("What pays.");
+    expect(raj.container.textContent).toContain("Doesn't qualify.");
+    expect(
+      [...raj.container.querySelectorAll("td[data-num]")].map((td) => td.textContent),
+    ).toContain("$50");
+    cleanup();
+    // Mert of the Year: same bands, final prices (terms §5), consent + fee TODO
+    const mert = render(<MertOfTheYearPage />);
+    expect(mert.container.textContent).toContain("What pays.");
+    expect(mert.container.textContent).toContain("Doesn't qualify.");
+    expect(
+      [...mert.container.querySelectorAll("td[data-num]")].map((td) => td.textContent),
+    ).toContain("$1,000");
+    expect(mert.container.textContent).toContain("consent and the adjudication fee are still TODO");
   });
 });

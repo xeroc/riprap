@@ -28,6 +28,7 @@ import {
   supportersFor,
 } from "../mutuals/data";
 import type { MutualListing } from "../mutuals/types";
+import { useMemberCount } from "../mutuals/useMemberCount";
 
 const DRIFT_PX_PER_S = 42; // gentle — a slow walk, not a slide
 
@@ -75,13 +76,17 @@ function EventBadge() {
 
 function PoolCard({ pool }: { pool: MutualListing }) {
   const bounty = pool.kind === "bounty";
+  // the live count — undefined while loading, unset, or undeployed;
+  // stillNeeded then shows the full seat count
+  const members = useMemberCount(pool);
   return (
     // the whole card is the pool's detail link (stretched over the card);
     // the class distinction: mutuals hairline, bounties dashed
     <article
       data-kind={pool.kind}
-      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${bounty ? "border-dashed border-hairline-strong" : "border-hairline"
-        } bg-surface-card`}
+      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${
+        bounty ? "border-dashed border-hairline-strong" : "border-hairline"
+      } bg-surface-card`}
     >
       <EventBadge />
       <a
@@ -130,7 +135,7 @@ function PoolCard({ pool }: { pool: MutualListing }) {
         <div className="flex items-baseline justify-between gap-4">
           <dt className="text-muted-foreground">members needed</dt>
           <dd data-num className="text-accent">
-            {stillNeeded(pool)}
+            {stillNeeded(pool, members)}
           </dd>
         </div>
       </dl>
@@ -214,6 +219,7 @@ export function Mutuals() {
           data-autoplay={driftOn ? "on" : "off"}
           data-paused={hovered ? "true" : "false"}
           onPointerEnter={() => setHovered(true)}
+          onPointerLeave={() => setHovered(false)}
           className="no-scrollbar carousel-edge-fade flex w-full gap-4 overflow-x-auto pt-3 pb-2"
           tabIndex={-1}
         >

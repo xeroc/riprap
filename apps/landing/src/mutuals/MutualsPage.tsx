@@ -1,6 +1,7 @@
 // /mutuals — the tabular directory (copy doc § /mutuals). One row per pool
 // from meta/Breakpoint's policy/terms docs: prices are the docs' §5 tables
-// (all but Blade Pool still TODO-confirm — the footnote says so). The kind
+// (all but Blade Pool, NGMI Hairline, and Mert of the Year still
+// TODO-confirm — the footnote says so). The kind
 // renders under the pool's name, not as its own column; no status column —
 // all pools go live together when they go on-chain. Every name links to the
 // pool's detail route (#/m/<pubkey-or-slug>). Wayfinding: shared navbar +
@@ -33,7 +34,8 @@ export function MutualsPage() {
               </caption>
               <thead>
                 <tr className="border-b border-hairline text-left">
-                  <th scope="col" aria-hidden="true" className="w-[18px] p-0" />
+                  {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: empty decorative strip column — th is not focusable, biome's heuristic over-reaches */}
+                  <th aria-hidden="true" className="w-[18px] p-0" />
                   {["Pool", "Covers", "Entry", "Max payout"].map((h) => (
                     <th
                       key={h}
@@ -94,8 +96,8 @@ export function MutualsPage() {
 
             <p className="max-w-2xl leading-relaxed text-muted-soft [font:var(--riprap-body-sm)]">
               Prices are the tier tables of each pool's policy or terms document; every pool except
-              the Blade Pool is still marked TODO-confirm there. Bounties share no risk — they pay
-              for verified acts, on the same rails as the mutuals.
+              Blade Pool, NGMI Hairline, and Mert of the Year is still marked TODO-confirm there.
+              Bounties share no risk — they pay for verified acts, on the same rails as the mutuals.
             </p>
           </div>
         </SectionBand>

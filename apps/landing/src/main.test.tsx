@@ -5,6 +5,7 @@
 // FileClaimPage suites.
 
 import type * as Connector from "@solana/connector";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Router } from "./main";
@@ -44,6 +45,19 @@ vi.mock("./mutuals/MutualsPage", () => ({
 }));
 const PLATFORM_H1 = "DeFi rebuilt finance. Insurance is next."; // OnRe experiment v2 (copy doc §1)
 
+// The platform route's mutuals band reads live member counts (useQuery) —
+// give the bare Router test renders a throwaway client.
+function renderRouter() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <Router />
+    </QueryClientProvider>,
+  );
+}
+
 function goHash(hash: string) {
   window.location.hash = hash;
   // jsdom may queue its own hashchange; dispatching is deterministic either way.
@@ -58,7 +72,7 @@ afterEach(() => {
 
 describe("hash router", () => {
   it("renders the platform landing for the empty hash and for in-page anchors", () => {
-    render(<Router />);
+    renderRouter();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1);
 
     goHash("#mechanism"); // section anchor, not a route — platform stays mounted
@@ -67,7 +81,7 @@ describe("hash router", () => {
 
   it("renders the pool route on #/2026-breakpoint-blade-pool (trailing slash tolerated) and swaps the title", async () => {
     window.location.hash = "#/2026-breakpoint-blade-pool/";
-    render(<Router />);
+    renderRouter();
     expect(await screen.findByTestId("pool-route")).toBeTruthy();
     expect(screen.queryByTestId("app-route")).toBeNull();
     await waitFor(() => expect(document.title).toBe("Riprap: Blade Pool @ Breakpoint 2026"));
@@ -75,14 +89,14 @@ describe("hash router", () => {
 
   it("renders the member route on #/app and titles it", async () => {
     window.location.hash = "#/app";
-    render(<Router />);
+    renderRouter();
     expect(await screen.findByTestId("app-route")).toBeTruthy();
     await waitFor(() => expect(document.title).toBe("Riprap: Blade Pool member app"));
   });
 
   it("renders the wizard route on #/app/file-claim (trailing slash tolerated) and titles it", async () => {
     window.location.hash = "#/app/file-claim/";
-    render(<Router />);
+    renderRouter();
     expect(await screen.findByTestId("file-claim-route")).toBeTruthy();
     expect(screen.queryByTestId("app-route")).toBeNull();
     await waitFor(() => expect(document.title).toBe("Riprap: File a payout request"));
@@ -90,7 +104,7 @@ describe("hash router", () => {
 
   it("renders the mutuals directory route on #/mutuals and titles it", async () => {
     window.location.hash = "#/mutuals";
-    render(<Router />);
+    renderRouter();
     expect(await screen.findByTestId("mutuals-route")).toBeTruthy();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
     await waitFor(() => expect(document.title).toBe("Riprap: Mutuals"));
@@ -98,14 +112,14 @@ describe("hash router", () => {
 
   it("renders the Blade Pool page on its new #/m route id too (legacy route kept)", async () => {
     window.location.hash = "#/m/blade-pool";
-    render(<Router />);
+    renderRouter();
     expect(await screen.findByTestId("pool-route")).toBeTruthy();
     await waitFor(() => expect(document.title).toBe("Riprap: Blade Pool"));
   });
 
   it("renders the adjudicate board on #/app/adjudicate and titles it", async () => {
     window.location.hash = "#/app/adjudicate";
-    render(<Router />);
+    renderRouter();
     const route = await screen.findByTestId("adjudicate-route");
     expect(route.getAttribute("data-session")).toBe("board");
     await waitFor(() => expect(document.title).toBe("Riprap: Adjudicate"));
@@ -114,7 +128,7 @@ describe("hash router", () => {
   it("renders the session route on #/app/adjudicate/:dispute/:round (trailing slash tolerated)", async () => {
     const dispute = "D".repeat(32);
     window.location.hash = `#/app/adjudicate/${dispute}/1/`;
-    render(<Router />);
+    renderRouter();
     const route = await screen.findByTestId("adjudicate-route");
     expect(route.getAttribute("data-session")).toBe("round-1");
     expect(screen.queryByTestId("app-route")).toBeNull();
@@ -122,13 +136,13 @@ describe("hash router", () => {
 
   it("falls back to the board for malformed session segments", async () => {
     window.location.hash = "#/app/adjudicate/not-a-round";
-    render(<Router />);
+    renderRouter();
     const route = await screen.findByTestId("adjudicate-route");
     expect(route.getAttribute("data-session")).toBe("board");
   });
 
   it("swaps surfaces on hashchange without a reload, restoring the platform title", async () => {
-    render(<Router />);
+    renderRouter();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1);
 
     goHash("#/app");

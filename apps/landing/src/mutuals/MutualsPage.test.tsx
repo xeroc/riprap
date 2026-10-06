@@ -1,7 +1,7 @@
 import type * as Connector from "@solana/connector";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { entryRange, membersNeeded, MUTUALS, poolRoute, stillNeeded } from "./data";
+import { entryRange, MUTUALS, membersNeeded, poolRoute, stillNeeded } from "./data";
 import { MutualsPage } from "./MutualsPage";
 
 // The navbar carries the wallet controls (§0) — stub the connector hooks;
@@ -53,7 +53,7 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
       (p) => p.textContent,
     );
     expect(kinds.slice(0, 4)).toEqual(["mutual", "mutual", "mutual", "mutual"]);
-    expect(kinds.slice(4)).toEqual(["bounty", "bounty", "bounty", "bounty"]);
+    expect(kinds.slice(4)).toEqual(["bounty", "bounty", "bounty", "bounty", "bounty"]);
     expect(container.textContent).not.toContain("Status");
     expect(container.textContent).toContain("Bounties share no risk");
   });
@@ -74,6 +74,7 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     expect(container.textContent).toContain("up to $40");
     expect(container.textContent).toContain("up to $25");
     expect(container.textContent).toContain("up to $150");
+    expect(container.textContent).toContain("up to $1,000"); // Mert of the Year — final per terms §5
     const nums = [...container.querySelectorAll("td[data-num]")];
     expect(nums.length).toBe(MUTUALS.length * 2);
     for (const td of nums) expect(td.className).toContain("font-mono");
@@ -95,7 +96,7 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     expect(container.textContent).toContain("TODO-confirm");
   });
 
-  it("seats the pool needs — the founder formula's six worked examples (data.ts)", () => {
+  it("seats the pool needs — the founder formula's worked examples (data.ts)", () => {
     const seats = Object.fromEntries(MUTUALS.map((m) => [m.name, membersNeeded(m)]));
     // funding threshold: the smallest payout needs ceil(payment / fee) members
     expect(seats["Blade Pool"]).toBe(100); // 100x payout — $1,000 Basic cap / $10
@@ -104,6 +105,7 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     expect(seats["Operation Keep Raj Warm"]).toBe(10); // 10x payout — $50 / $5
     expect(seats["Lily's Liquid Lifeline"]).toBe(10);
     expect(seats["Toly Needs His Fuel"]).toBe(10);
+    expect(seats["Mert of the Year"]).toBe(100); // 100x bounty — $1000 / $10, the terms' §6 minimum
     // profit threshold: the first success is already funded by one entry,
     // the push number is the second success — where the member profits
     expect(seats["NGMI Hairline"]).toBe(2); // grade I $20 <= $25 entry

@@ -1,17 +1,19 @@
 import {
   type Address,
+  type Base64EncodedBytes,
   getAddressEncoder,
   getBase64Decoder,
   type Rpc,
   type SolanaRpcApi,
 } from "@solana/kit";
-import { describe, expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import {
   ClaimStatus,
   getClaimEncoder,
   getMemberEncoder,
   getMutualEncoder,
   HANSE_PROGRAM_ADDRESS,
+  MEMBER_DISCRIMINATOR,
   MUTUAL_DISCRIMINATOR,
   Phase,
 } from "../generated/src/generated";
@@ -23,6 +25,7 @@ import {
   fetchMaybeMemberByOwner,
   fetchMaybeMutualBySeed,
   fetchMemberByOwner,
+  fetchMemberCount,
   fetchMutualBySeed,
 } from "./fetch";
 import { findMutualPda } from "./pdas";
@@ -260,5 +263,50 @@ describe("fetchClaimsOfMutual", () => {
     const filters = scan.filters as { memcmp: { offset: bigint; bytes: string } }[];
     expect(filters[2]?.memcmp.offset).toBe(120n);
     expect(filters[2]?.memcmp.bytes).toBe(getBase64Decoder().decode(Uint8Array.of(0)));
+  });
+});
+
+describe("fetchMemberCount — count-only member scan", () => {
+  const mutual = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM" as Address;
+
+  function scanRpc(count: number): Rpc<SolanaRpcApi> {
+    return {
+      getProgramAccounts: (_program: string) => ({
+        send: async () =>
+          Array.from({ length: count }, (_, i) => ({
+            pubkey: `Pubkey${i.toString().padStart(44, "0")}`,
+            account: { data: ["", "base64"] },
+          })),
+      }),
+    } as unknown as Rpc<SolanaRpcApi>;
+  }
+
+  it("counts the scan results without decoding data", async () => {
+    expect(await fetchMemberCount(scanRpc(4), mutual)).toBe(4);
+    expect(await fetchMemberCount(scanRpc(0), mutual)).toBe(0);
+  });
+
+  it("scans with the member discriminator + mutual memcmp and a zero-length slice", async () => {
+    let seen: { filters?: unknown[]; dataSlice?: unknown } = {};
+    const rpc = {
+      getProgramAccounts: (
+        _program: string,
+        config: { filters?: unknown[]; dataSlice?: unknown },
+      ) => {
+        seen = config;
+        return { send: async () => [] };
+      },
+    } as unknown as Rpc<SolanaRpcApi>;
+    await fetchMemberCount(rpc, mutual);
+    const filters = seen.filters as { memcmp: { offset: unknown; bytes: unknown } }[];
+    expect(filters.length).toBe(2);
+    expect(filters[0].memcmp.bytes).toBe(
+      getBase64Decoder().decode(MEMBER_DISCRIMINATOR) as Base64EncodedBytes,
+    );
+    expect(filters[1].memcmp.offset).toBe(8n); // MEMBER_MUTUAL_OFFSET — layout-derived
+    expect(filters[1].memcmp.bytes).toBe(
+      getBase64Decoder().decode(getAddressEncoder().encode(mutual)) as Base64EncodedBytes,
+    );
+    expect(seen.dataSlice).toEqual({ offset: 0, length: 0 }); // count only, no data
   });
 });
