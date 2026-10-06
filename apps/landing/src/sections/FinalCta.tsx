@@ -14,7 +14,7 @@ export function FinalCta() {
             Cap your worst case.
           </h2>
           <p className="text-muted-foreground [font:var(--riprap-body-md)]">
-            One email when the first pool opens. That's the whole list.
+            One email when the first pools open. That's the whole list.
           </p>
         </div>
 

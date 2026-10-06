@@ -82,10 +82,7 @@ describe("useMutualStore — the scan hook", () => {
   afterEach(() => {
     cleanup();
     scanMock.mockReset();
-    vi.unstubAllEnvs();
-    clusterState.isLocal = false;
-    clusterState.isMainnet = true;
-    clusterState.isDevnet = false;
+    delete MUTUALS.find((m) => m.slug === "blade-pool")?.pubkey; // unpin
   });
 
   it("pending scan: loading state", () => {
@@ -95,13 +92,11 @@ describe("useMutualStore — the scan hook", () => {
   });
 
   it("ready: resolves resolvable hits, drops the rest — one scan against the cluster rpc", async () => {
-    clusterState.isLocal = true;
-    clusterState.isMainnet = false;
-    clusterState.isDevnet = true;
-    vi.stubEnv("VITE_LOCALNET_MUTUAL", BLADE);
+    const blade = MUTUALS.find((m) => m.slug === "blade-pool");
+    if (!blade) throw new Error("no blade-pool listing");
+    blade.pubkey = BLADE; // pin as if deployed — restored in afterEach
     const onChain = fakeMutual();
     scanMock.mockResolvedValue([hit(UNKNOWN), hit(BLADE, onChain)]); // unknown first
-    const blade = MUTUALS.find((m) => m.slug === "blade-pool");
 
     const { result } = renderHook(() => useMutualStore(), { wrapper });
     await waitFor(() => expect(result.current.state).toBe("ready"));

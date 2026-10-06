@@ -1,10 +1,11 @@
 // §1 — hero: platform one-liner, the browse CTA, waitlist demoted to
-// secondary. OnRe experiment pass v2 (2026-10-05, copy doc §1, founder
-// corrections): the canon destination line as H1, the canon Form line as
-// kicker, member line opens the subhead. v4: featured pools no longer named
-// in the hero — the primary CTA scrolls to the mutuals band (§1.2); the
-// waitlist stays, low priority (copy doc § waitlist for the final-CTA
-// capture point). "Insurer" is off the page. Provisional, NOT FOR DEPLOY.
+// secondary. Payout-pool pass (2026-10-06, copy doc §1, messaging-guide
+// § Payout-Pool Pass): the campaign line as H1 — WHY-led, the one line
+// true of every pool, cover or bounty; the formal descriptor as kicker;
+// the member line opens the subhead; bounties ride as one clause.
+// v4 rules keep: no pool named in the hero, no instance numbers; the
+// primary CTA scrolls to the pools band (§1.2); the waitlist stays,
+// low priority. "Insurer" is off the page.
 import { Button, HexBackdrop, Logomark, SectionBand } from "@riprap/ui";
 import { Settle } from "../components/Settle";
 import { Waitlist } from "../components/Waitlist";
@@ -24,27 +25,27 @@ export function Hero() {
           <div className="flex flex-col gap-(--riprap-space-lg)">
             <Settle>
               <p className="uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
-                Mutuals on Solana
+                Pooled cover on Solana
               </p>
             </Settle>
             <Settle delay={60}>
               <h1 className="max-w-3xl tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-md)] sm:[font:var(--riprap-display-xl)] lg:[font:var(--riprap-display-mega)]">
-                DeFi rebuilt finance. <br />
-                Insurance is next.
+                Self-governing money.
               </h1>
             </Settle>
             <Settle delay={120}>
               <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
                 Your group's got you covered. The terms are written before anyone joins — chip in
-                and you're covered up to the published cap. Claims are settled by drawn peers.
-                Whatever the pool doesn't pay stays the group's.
+                and you're covered up to the published cap. Claims are settled by drawn peers, and
+                the same rails pay bounties for verified acts. Whatever the pool doesn't pay stays
+                the group's.
               </p>
             </Settle>
             {/* primary: browse the pools — the waitlist rides below, secondary */}
             <Settle delay={180} className="flex flex-col gap-5 pt-(--riprap-space-sm)">
               <div className="flex flex-wrap items-center gap-4">
                 <Button asChild>
-                  <a href="#mutuals">Browse the mutuals</a>
+                  <a href="#mutuals">Browse the pools</a>
                 </Button>
                 <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
                   First batch: Breakpoint 2026, London.

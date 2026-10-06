@@ -68,7 +68,7 @@ export function resolveLiveMutuals(
 export type MutualStore =
   | { state: "off" } // no active cluster — nothing to scan
   | { state: "loading" }
-  | { state: "error"; error: unknown } // scan failed (e.g. RPC refused getProgramAccounts)
+  | { state: "error"; error: unknown; retry: () => void } // scan failed (e.g. RPC refused getProgramAccounts) — retry re-runs it
   | { state: "ready"; pools: LiveMutual[] };
 
 /** Every on-chain mutual on the active cluster, resolved to its listing. */
@@ -90,6 +90,7 @@ export function useMutualStore(): MutualStore {
 
   if (clusterRpc === null) return { state: "off" };
   if (query.isPending) return { state: "loading" };
-  if (query.isError) return { state: "error", error: query.error };
+  if (query.isError)
+    return { state: "error", error: query.error, retry: () => void query.refetch() };
   return { state: "ready", pools: resolveLiveMutuals(query.data, known) };
 }

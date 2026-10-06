@@ -66,7 +66,7 @@ function matchRoute(hash: string | null): { title: string | null; element: React
     case "#/app/file-claim":
       return { title: "Riprap: File a payout request", element: <FileClaimRoute /> };
     case "#/mutuals":
-      return { title: "Riprap: Mutuals", element: <MutualsRoute /> };
+      return { title: "Riprap: Pools", element: <MutualsRoute /> };
     default:
       return { title: null, element: <App /> };
   }

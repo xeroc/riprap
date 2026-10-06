@@ -55,7 +55,7 @@ describe("submitWaitlist", () => {
       fetchImpl,
     );
     assert.equal(res.ok, true);
-    assert.equal(res.message, "On the list. One email when the first pool opens.");
+    assert.equal(res.message, "On the list. One email when the first pools open.");
     assert.equal(res.reset, true);
     assert.equal(seenUrl, "https://n8n.example.com/webhook");
     assert.equal(seenInit?.method, "POST");

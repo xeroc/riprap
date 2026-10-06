@@ -45,8 +45,9 @@ describe("pool detail pages (#/m/<id> placeholders)", () => {
     for (const pool of MUTUALS) {
       const id = pool.pubkey ?? pool.slug;
       // the Blade Pool maps to the full BreakpointPage in the registry —
-      // not part of this placeholder set
-      if (id === "blade-pool") continue;
+      // not part of this placeholder set (it pins twice — devnet + mainnet
+      // slugs — so skip by prefix, not exact slug)
+      if (pool.slug.startsWith("blade-pool")) continue;
       expect(PAGES[id]).toBeTruthy();
     }
   });

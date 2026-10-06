@@ -1,8 +1,12 @@
 import type * as Connector from "@solana/connector";
+import type { Address } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
+import { MUTUALS } from "./mutuals/data";
+import type { MutualStore } from "./mutuals/store";
+import { fakeMutual } from "./pool/fixtures";
 
 // The navbar carries the wallet controls on every surface (§0, 2026-09-29) —
 // stub the connector hooks; structure tests don't need the provider stack.
@@ -18,6 +22,26 @@ vi.mock("@solana/connector", async (importOriginal) => {
   };
 });
 
+// The mutuals band renders the store's live pools (copy doc §1.2 v13) —
+// stub the hook; default is every listing live so the structure tests see
+// the full batch, and the live-only tests narrow it per-test. Blade Pool
+// pins twice (devnet + mainnet, data.ts) — one cluster resolves one, so
+// the default carries one listing per pool name.
+const { bandStore } = vi.hoisted(() => ({ bandStore: { current: null as MutualStore | null } }));
+vi.mock("./mutuals/store", () => ({ useMutualStore: () => bandStore.current }));
+
+const UNIQUE_POOLS = [...new Map(MUTUALS.map((m) => [m.name, m])).values()];
+
+beforeEach(() => {
+  bandStore.current = {
+    state: "ready",
+    pools: UNIQUE_POOLS.map((listing) => ({
+      listing,
+      address: listing.slug as Address,
+      account: fakeMutual(),
+    })),
+  };
+});
 afterEach(cleanup);
 
 // The mutuals band reads live member counts (useMemberCount → useQuery) —
@@ -37,11 +61,11 @@ describe("landing", () => {
   it("renders the approved hero headline as the single h1", () => {
     renderApp();
     const h1 = screen.getByRole("heading", { level: 1 });
-    expect(h1.textContent).toBe("DeFi rebuilt finance. Insurance is next.");
-    expect(screen.getByText("Mutuals on Solana")).toBeTruthy();
+    expect(h1.textContent).toBe("Self-governing money.");
+    expect(screen.getByText("Pooled cover on Solana")).toBeTruthy();
     // v4: the browse action is primary; the hero names no pool and carries
     // no instance numbers (copy doc §1)
-    const cta = screen.getByRole("link", { name: "Browse the mutuals" });
+    const cta = screen.getByRole("link", { name: "Browse the pools" });
     expect(cta.getAttribute("href")).toBe("#mutuals");
     expect(screen.queryByText(/\$20 in · up to \$2,000 out/)).toBeNull();
     expect(screen.queryByLabelText(/Blade Pool at Breakpoint/)).toBeNull();
@@ -51,11 +75,12 @@ describe("landing", () => {
     const { container } = renderApp();
     const band = container.querySelector("section#mutuals");
     expect(band).not.toBeNull();
-    expect(screen.getByText("The mutuals.")).toBeTruthy();
-    // the nine first-batch pools — four mutuals, five bounties
+    expect(screen.getByText("The pools.")).toBeTruthy();
+    // the nine first-batch pools — four mutuals, five bounties; Blade leads
+    // (data.ts order — Blade pins per cluster, one resolves per cluster)
     for (const name of [
-      "Chairmageddon",
       "Blade Pool",
+      "Chairmageddon",
       "NGMI Hairline",
       "Coffee Apocalypse",
       "OnlyFriends",
@@ -66,11 +91,11 @@ describe("landing", () => {
     ]) {
       expect(band?.textContent).toContain(name);
     }
-    // founder order: Chairmageddon leads (copy doc §1.2)
+    // founder order (data.ts): Blade Pool leads, then the rest
     const names = [...(band?.querySelectorAll("article h3") ?? [])].map((h) => h.textContent);
     expect(names.slice(0, 9)).toEqual([
-      "Chairmageddon",
       "Blade Pool",
+      "Chairmageddon",
       "NGMI Hairline",
       "Coffee Apocalypse",
       "OnlyFriends",
@@ -99,7 +124,8 @@ describe("landing", () => {
     }
     expect(kinds[0].stamp).toBe("pool");
     expect(kinds[4].stamp).toBe("bounty");
-    // no status anywhere — all pools go live together (founder call)
+    // no status anywhere — pools enable individually, when they exist
+    // on-chain (§1.2 v13)
     expect(band?.textContent).not.toMatch(/policy in review|terms in review|First pool|draft/i);
     // the members-needed row replaces the demo stats (founder formula,
     // data.ts membersNeeded): need, not a cap — pre-launch every pool
@@ -122,8 +148,8 @@ describe("landing", () => {
       a.getAttribute("href"),
     );
     expect(cardLinks.slice(0, 9)).toEqual([
+      `#/m/${UNIQUE_POOLS[0].pubkey}`, // Blade Pool — the pinned pubkey routes
       "#/m/chairmageddon",
-      "#/m/blade-pool",
       "#/m/ngmi-hairline",
       "#/m/coffee-apocalypse",
       "#/m/onlyfriends",
@@ -152,6 +178,37 @@ describe("landing", () => {
     const articles = band?.querySelectorAll("article") ?? [];
     expect(articles.length).toBe(18);
     expect(band?.querySelectorAll('div[aria-hidden="true"] article').length).toBe(9);
+  });
+
+  it("mutuals band: only live pools render — drafts never show (copy doc §1.2 v13)", () => {
+    const chair = MUTUALS.find((m) => m.slug === "chairmageddon");
+    const mert = MUTUALS.find((m) => m.slug === "mert-of-the-year");
+    if (!chair || !mert) throw new Error("chairmageddon/mert listings missing");
+    bandStore.current = {
+      state: "ready",
+      pools: [
+        { listing: chair, address: "C".repeat(44) as Address, account: fakeMutual() },
+        { listing: mert, address: "M".repeat(44) as Address, account: fakeMutual() },
+      ],
+    };
+    const { container } = renderApp();
+    const band = container.querySelector("section#mutuals");
+    // 2 live pools, under the 5-card threshold — no duplicated wrap rail
+    expect(band?.querySelectorAll("article").length).toBe(2);
+    expect(band?.querySelectorAll('div[aria-hidden="true"] article').length).toBe(0);
+    expect(band?.textContent).toContain("Chairmageddon");
+    expect(band?.textContent).toContain("Mert of the Year");
+    expect(band?.textContent).not.toContain("Blade Pool");
+  });
+
+  it("mutuals band: nothing live yet — the honest empty line (copy doc §1.2 v13)", () => {
+    bandStore.current = { state: "ready", pools: [] };
+    const { container } = renderApp();
+    const band = container.querySelector("section#mutuals");
+    expect(band?.textContent).toContain("No pools are live on this cluster yet.");
+    expect(band?.querySelectorAll("article").length).toBe(0);
+    // the directory CTA stays — the table route carries its own states
+    expect(screen.getByRole("link", { name: "Show all" }).getAttribute("href")).toBe("#/mutuals");
   });
 
   it('never says "insurer" anywhere on the page — founder law (v2)', () => {

@@ -32,7 +32,7 @@ export const MUTUALS: MutualListing[] = [
   {
     name: "Blade Pool",
     kind: "mutual",
-    slug: "blade-pool",
+    slug: "blade-pool-devnet",
     // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
     // mutual address is env-driven (pool/mutual.ts) — pin pubkey at deploy.
     tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",

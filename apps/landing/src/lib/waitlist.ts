@@ -20,7 +20,7 @@ export async function submitWaitlist(
       body: JSON.stringify({ email, type: "waitlist", timestamp: new Date().toISOString() }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return { ok: true, message: "On the list. One email when the first pool opens.", reset: true };
+    return { ok: true, message: "On the list. One email when the first pools open.", reset: true };
   } catch {
     return {
       ok: false,

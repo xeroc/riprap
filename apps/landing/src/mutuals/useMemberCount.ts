@@ -6,21 +6,15 @@
 // the full count. TanStack caches by [endpoint, address], so the 18 cards
 // on the duplicated drift rail share one fetch.
 import { fetchMemberCount } from "@riprap/hanse";
-import { useCluster } from "@solana/connector";
 import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 
-import { resolveMutualAddress } from "../pool/mutual";
 import { useClusterRpc } from "../shared/rpc";
 import type { MutualListing } from "./types";
 
 export function useMemberCount(pool: MutualListing): number | undefined {
-  const { isLocal, isMainnet, isDevnet } = useCluster();
   const clusterRpc = useClusterRpc();
-  const address = (pool.pubkey ??
-    (pool.slug === "blade-pool"
-      ? resolveMutualAddress({ isLocal, isMainnet, isDevnet })
-      : undefined)) as Address | undefined;
+  const address = pool?.pubkey as Address | undefined;
 
   const query = useQuery({
     queryKey: ["member-count", clusterRpc?.endpoint, address],

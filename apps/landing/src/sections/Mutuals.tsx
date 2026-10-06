@@ -8,6 +8,13 @@
 // stats (placeholder, NOT FOR DEPLOY). Bounties render dashed with a BOUNTY
 // stamp; mutuals hairline. "Show all" routes to #/mutuals.
 //
+// Live-only law (copy doc §1.2 v13): the store's scan resolves the on-chain
+// mutuals against the pubkeys pinned in data.ts — drafts never render, so
+// the rail carries exactly the pools live on the active cluster. State
+// lines shared with /mutuals: reading `Reading the pools from the chain.` ·
+// unreachable `Couldn't reach the cluster.` + `Try again` · nothing live
+// `No pools are live on this cluster yet.`
+//
 // The drift is a time-based rAF marquee over a duplicated card rail: past
 // the halfway point it wraps by exactly one set — seamlessly. It only runs
 // while the band is in view, not hovered/focused/dragged, and motion is
@@ -16,17 +23,18 @@
 import { Button, SectionBand } from "@riprap/ui";
 import { useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { cn } from "../../../../packages/ui/src/lib/utils";
 import { BpBadge } from "../components/BpBadge";
 import { Settle } from "../components/Settle";
 import {
   capRange,
   entryRange,
-  MUTUALS,
   payoutWord,
   poolRoute,
   stillNeeded,
   supportersFor,
 } from "../mutuals/data";
+import { useMutualStore } from "../mutuals/store";
 import type { MutualListing } from "../mutuals/types";
 import { useMemberCount } from "../mutuals/useMemberCount";
 
@@ -84,8 +92,9 @@ function PoolCard({ pool }: { pool: MutualListing }) {
     // the class distinction: mutuals hairline, bounties dashed
     <article
       data-kind={pool.kind}
-      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${bounty ? "border-dashed border-hairline-strong" : "border-hairline"
-        } bg-surface-card`}
+      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${
+        bounty ? "border-dashed border-hairline-strong" : "border-hairline"
+      } bg-surface-card`}
     >
       <EventBadge />
       <a
@@ -151,12 +160,18 @@ export function Mutuals() {
   const inView = useInView(trackRef); // live — drift runs only while visible
   const [hovered, setHovered] = useState(false);
 
+  // live-only (§1.2 v13): the rail carries exactly the pools the store
+  // resolved on-chain — drafts never render
+  const store = useMutualStore();
+  const pools = store.state === "ready" ? store.pools.map((p) => p.listing) : [];
+  const hasPools = pools.length > 0;
+
   // pause causes, read by the rAF loop through a ref (no re-render churn)
   const pausedRef = useRef({ hovered: false, focused: false, dragging: false });
   pausedRef.current.hovered = hovered;
 
   useEffect(() => {
-    if (reduce) return; // reduced motion: an ordinary scrollable row
+    if (reduce || !hasPools) return; // reduced motion: an ordinary scrollable row
     const track = trackRef.current;
     if (!track) return;
     let raf = 0;
@@ -174,9 +189,10 @@ export function Mutuals() {
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [reduce]);
+  }, [reduce, hasPools]);
 
   useEffect(() => {
+    if (!hasPools) return; // the track mounts only when pools are live
     const track = trackRef.current;
     if (!track) return;
     const onFocusIn = () => (pausedRef.current.focused = true);
@@ -193,19 +209,20 @@ export function Mutuals() {
       track.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointerup", onPointerUp);
     };
-  }, []);
+  }, [hasPools]);
 
-  const driftOn = !reduce && inView;
+  const driftOn = !reduce && inView && hasPools;
   return (
-    <SectionBand id="mutuals" label="mutuals" tone="ground">
+    <SectionBand id="mutuals" label="pools" tone="ground">
       <Settle className="flex flex-col gap-(--riprap-space-xl)">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="flex max-w-2xl flex-col gap-4">
             <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
-              The mutuals.
+              The pools.
             </h2>
             <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
-              One card per pool. The first batch runs at Breakpoint 2026, London.
+              One card per pool — cover when it goes wrong, bounties when it goes right. The first
+              batch runs at Breakpoint 2026, London.
             </p>
           </div>
           <Button asChild size="sm">
@@ -213,26 +230,45 @@ export function Mutuals() {
           </Button>
         </div>
 
-        <div
-          ref={trackRef}
-          data-autoplay={driftOn ? "on" : "off"}
-          data-paused={hovered ? "true" : "false"}
-          onPointerEnter={() => setHovered(true)}
-          onPointerLeave={() => setHovered(false)}
-          className="no-scrollbar carousel-edge-fade flex w-full gap-4 overflow-x-auto pt-3 pb-2"
-          tabIndex={-1}
-        >
-          {MUTUALS.map((pool) => (
-            <div key={pool.name}>
-              <PoolCard pool={pool} />
-            </div>
-          ))}
-          {MUTUALS.map((pool) => (
-            <div key={`${pool.name}-clone`} aria-hidden="true">
-              <PoolCard pool={pool} />
-            </div>
-          ))}
-        </div>
+        {store.state === "error" ? (
+          <div className="flex max-w-2xl flex-col gap-2">
+            <p className="text-ink [font:var(--riprap-body-md)]">Couldn't reach the cluster.</p>
+            <Button variant="outline" className="w-44" onClick={store.retry}>
+              Try again
+            </Button>
+          </div>
+        ) : pools.length === 0 ? (
+          <p className="max-w-2xl leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
+            {store.state === "ready"
+              ? "No pools are live on this cluster yet."
+              : "Reading the pools from the chain."}
+          </p>
+        ) : (
+          <div
+            ref={trackRef}
+            data-autoplay={driftOn ? "on" : "off"}
+            data-paused={hovered ? "true" : "false"}
+            onPointerEnter={() => setHovered(true)}
+            onPointerLeave={() => setHovered(false)}
+            className={cn(
+              "no-scrollbar flex w-full gap-4 overflow-x-auto pt-3 pb-2",
+              pools.length > 4 && "carousel-edge-fade",
+            )}
+            tabIndex={-1}
+          >
+            {pools.map((pool) => (
+              <div key={pool.name}>
+                <PoolCard pool={pool} />
+              </div>
+            ))}
+            {pools.length > 4 &&
+              pools.map((pool) => (
+                <div key={`${pool.name}-clone`} aria-hidden="true">
+                  <PoolCard pool={pool} />
+                </div>
+              ))}
+          </div>
+        )}
       </Settle>
     </SectionBand>
   );

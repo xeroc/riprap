@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Router } from "./main";
+import { MUTUALS } from "./mutuals/data";
 
 // The platform route's navbar carries the wallet controls (§0, 2026-09-29) —
 // stub the connector hooks; route-matching tests don't need the real stack.
@@ -43,7 +44,7 @@ vi.mock("./adjudicate/AdjudicatePage", () => ({
 vi.mock("./mutuals/MutualsPage", () => ({
   MutualsPage: () => <div data-testid="mutuals-route" />,
 }));
-const PLATFORM_H1 = "DeFi rebuilt finance. Insurance is next."; // OnRe experiment v2 (copy doc §1)
+const PLATFORM_H1 = "Self-governing money."; // payout-pool pass (copy doc §1)
 
 // The platform route's mutuals band reads live member counts (useQuery) —
 // give the bare Router test renders a throwaway client.
@@ -107,11 +108,14 @@ describe("hash router", () => {
     renderRouter();
     expect(await screen.findByTestId("mutuals-route")).toBeTruthy();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
-    await waitFor(() => expect(document.title).toBe("Riprap: Mutuals"));
+    await waitFor(() => expect(document.title).toBe("Riprap: Pools"));
   });
 
-  it("renders the Blade Pool page on its new #/m route id too (legacy route kept)", async () => {
-    window.location.hash = "#/m/blade-pool";
+  it("renders the Blade Pool page on its #/m pubkey route id too (legacy route kept)", async () => {
+    // Blade pins per cluster (devnet + mainnet) — the route id is the pubkey now
+    const devnet = MUTUALS.find((m) => m.slug === "blade-pool");
+    if (!devnet?.pubkey) throw new Error("blade-pool listing has no pinned pubkey");
+    window.location.hash = `#/m/${devnet.pubkey}`;
     renderRouter();
     expect(await screen.findByTestId("pool-route")).toBeTruthy();
     await waitFor(() => expect(document.title).toBe("Riprap: Blade Pool"));

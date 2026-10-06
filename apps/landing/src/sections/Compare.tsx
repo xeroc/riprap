@@ -62,7 +62,7 @@ export function Compare() {
             Mutual, insurance, or nothing.
           </h2>
           <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
-            The three ways a group can carry a risk it can't avoid. The first pool runs the first
+            The three ways a group can carry a risk it can't avoid. The first batch runs the first
             column.
           </p>
         </div>
