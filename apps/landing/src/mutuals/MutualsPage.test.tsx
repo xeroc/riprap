@@ -26,7 +26,9 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Mutuals.");
     const rows = [...container.querySelectorAll("tbody tr")];
     expect(rows.length).toBe(MUTUALS.length);
+    // the first header cell is the (aria-hidden) strip column
     expect([...container.querySelectorAll("thead th")].map((th) => th.textContent)).toEqual([
+      "",
       "Pool",
       "Covers",
       "Entry",
@@ -39,6 +41,14 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     expect(chips.length).toBe(MUTUALS.length);
     expect(container.textContent).toContain("Most popular");
     expect(container.textContent).toContain("Certified ridiculous");
+    expect(container.textContent).toContain("Certified paranoid");
+    // the chip is the rotated strip: pink background running the full row
+    // height, lockup rotated 90° and centered (founder ask, v10)
+    const strips = [...container.querySelectorAll("tbody td.relative > span")].filter((s) =>
+      (s.getAttribute("class") ?? "").includes("inset-0"),
+    );
+    expect(strips.length).toBe(MUTUALS.length);
+    expect(chips[0].className).toContain("rotate-90");
     const kinds = [...container.querySelectorAll("tbody th span:last-child")].map(
       (p) => p.textContent,
     );

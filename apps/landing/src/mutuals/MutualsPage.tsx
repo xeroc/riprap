@@ -34,6 +34,7 @@ export function MutualsPage() {
                 </caption>
                 <thead>
                   <tr className="border-b border-hairline text-left">
+                    <th scope="col" aria-hidden="true" className="w-[18px] p-0" />
                     {["Pool", "Covers", "Entry", "Max payout"].map((h) => (
                       <th
                         key={h}
@@ -48,6 +49,12 @@ export function MutualsPage() {
                 <tbody>
                   {MUTUALS.map((pool) => (
                     <tr key={pool.name} className="border-b border-hairline last:border-b-0">
+                      {/* the event lockup, rotated 90° — a pink strip running
+                          the full height of the row (founder ask) */}
+                      <td className="relative w-[18px] p-0">
+                        <span aria-hidden="true" className="absolute inset-0 bg-(--bp-2026-pink)" />
+                        <BpBadge className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 rotate-90" />
+                      </td>
                       <th scope="row" className="py-4 pr-4 text-left align-top">
                         <a
                           href={poolRoute(pool)}
@@ -56,7 +63,6 @@ export function MutualsPage() {
                           {pool.name}
                         </a>
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          <BpBadge className="h-[16px]" />
                           {pool.badge ? (
                             <span className="border border-accent px-1.5 py-0.5 uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
                               {pool.badge}

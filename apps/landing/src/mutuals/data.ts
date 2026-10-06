@@ -50,6 +50,7 @@ export const MUTUALS: MutualListing[] = [
       { name: "Standard", fee: 20, cap: 2000 },
       { name: "Premium", fee: 40, cap: 4000 },
     ],
+    badge: "Certified paranoid", // founder call 2026-10-06: the one severe pool gets the self-aware label
     href: "#/2026-breakpoint-blade-pool",
   },
   {
