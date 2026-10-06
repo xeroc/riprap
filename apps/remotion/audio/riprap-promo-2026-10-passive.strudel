@@ -9,8 +9,8 @@
 // Pasteable into https://strudel.cc as-is.
 //
 // 120 BPM grid: cpm 30 → 1 bar = 2.000s = 60 frames @30fps.
-// Family: riprap — Gb major, V spelled Dbmaj9 (MUSIC.md; the dough piano
-// map carries no Cb — enharmonic C does the refusing-to-resolve job).
+// Family: riprap — Gb major, V spelled Dbmaj9 (the dough piano map carries
+// no Cb — enharmonic C does the refusing-to-resolve job).
 // Scene map (SHOTS, frames absolute): open b1–2 (brand ink, f0–75)
 // · deal b3 (chase, f75–195) · hero b4–5 (push/hover/scan, f195–315)
 // · rows b6 (gather, f315–390) · rule b7–8 (draw, f390–465)

@@ -11,8 +11,7 @@ tracked — everything else under `videos/` is gitignored.
 apps/remotion/
   remotion.config.ts        webpack override: PostCSS (Tailwind v4) before css-loader
   postcss.config.js         @tailwindcss/postcss — must stay .js at package root
-  audio/<name>.strudel      optional Strudel scores (committed) — pasteable into strudel.cc
-  public/audio/<name>.wav   baked artifacts (gitignored; regenerate with score)
+  public/audio/<name>.wav   mounted music wavs (gitignored)
   src/
     index.ts                registerRoot + theme.css import (the entry)
     Root.tsx                one <Folder><Composition/> per video (from manifest)
@@ -38,15 +37,12 @@ apps/remotion/
 pnpm --filter @riprap/remotion new <slug>    # scaffold videos/<slug>/ + regen manifest
 pnpm --filter @riprap/remotion studio        # preview all videos (http://localhost:3000)
 pnpm --filter @riprap/remotion render <id> out/<id>.mp4
-pnpm --filter @riprap/remotion score <name> [seconds]   # bake audio/<name>.strudel → wav
 pnpm --filter @riprap/remotion sync          # regenerate src/videos.gen.ts
 pnpm --filter @riprap/remotion test          # vitest (framework contract tests)
 ```
 
 Every command (build/lint/test/studio/render) regenerates the manifest
-first, so a freshly created video dir is picked up automatically; studio
-and render also chain `score --stale` (re-bakes changed scores, needs
-network once — see MUSIC.md).
+first, so a freshly created video dir is picked up automatically.
 
 This machine has no Remotion-managed Chrome; pass the system browser:
 
@@ -122,17 +118,6 @@ Two rules regardless of source:
 - **Loudness is authored, never accidental.** Whatever the source, the
   mounted wav's peak/headroom are measured (`ffmpeg -af volumedetect`)
   and recorded; the mix script normalizes.
-
-**Optional — Strudel scoring.** Original scores can be authored as
-Strudel code in `audio/<name>.strudel` (committed) and prebaked to the
-wav artifact with `pnpm --filter @riprap/remotion score <name> [seconds]`
-(`setcpm` is parsed; pass the composition length in seconds). The house
-style lives in `MUSIC.md`. Sync is time-based by construction: score grid
-↔ composition seconds ↔ frames. Runs in Node (`node-web-audio-api`; needs
-network once per bake for sample manifests); silence-guarded.
-`@strudel/web` is AGPL-3.0 — fine for internal build tooling, and the
-wav/mp4 output is your own music; revisit before distributing this
-package's code.
 
 ## Obedience to @riprap/ui (non-negotiable)
 
