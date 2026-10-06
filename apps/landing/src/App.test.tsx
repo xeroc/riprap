@@ -109,6 +109,15 @@ describe("landing", () => {
       "#/m/lilys-liquid-lifeline",
       "#/m/toly-needs-his-fuel",
     ]);
+    // every card wears the event lockup — Breakpoint's brand chip, black on
+    // the event pink, floating above the card (founder ask, copy doc §1.2)
+    const chips = [...(band?.querySelectorAll('span[role="img"]') ?? [])].filter((c) =>
+      c.getAttribute("aria-label") === "Breakpoint 2026",
+    );
+    expect(chips.length).toBe(16);
+    expect(chips[0].className).toContain("bg-(--bp-2026-pink)");
+    expect(chips[0].className).toContain("pointer-events-none");
+    expect(chips[0].querySelectorAll("img").length).toBe(2);
     // the track autoplays (drift) and hides its scrollbar; the duplicated
     // rail keeps the wrap seamless with clones inert to AT
     const track = band?.querySelector(".no-scrollbar");

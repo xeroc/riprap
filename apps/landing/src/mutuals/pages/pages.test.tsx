@@ -60,6 +60,20 @@ describe("pool detail pages (#/m/<id> placeholders)", () => {
     expect(container.textContent).toContain("nothing on this page is live");
   });
 
+  it("ngmi-hairline shows the flat price and the graded payout schedule (policy §5)", () => {
+    const { container } = render(<NgmiHairlinePage />);
+    const text = container.textContent ?? "";
+    // flat $25 entry, $200 maximum — no draft tiers left
+    expect(text).toContain("$25");
+    expect(text).not.toContain("$5–$20");
+    // grades I–IV pay 10/30/50/100% of the $200 maximum
+    for (const pays of ["$20", "$60", "$100", "$200"]) expect(text).toContain(pays);
+    // §10 worked example recomputed on the flat price
+    expect(text).toContain("$12,500");
+    expect(text).toContain("$5,300");
+    expect(text).toContain("$7,200");
+  });
+
   it("bounty pages label their bands honestly (kind, not peril)", () => {
     const { container } = render(<KeepRajWarmPage />);
     expect(container.textContent).toContain("What pays.");

@@ -2,8 +2,8 @@
 // Two classes share the rails: risk-protection mutuals (Micro Mutual policy
 // docs) and verified-act bounties (Micro Bounty terms docs) — bounties share
 // no risk, they pay for confirmed acts. Tier prices are the docs' §5 tables
-// verbatim. CAVEAT: every pool except Blade Pool carries "[TODO: confirm
-// prices]" — draft values, not final.
+// verbatim. CAVEAT: every pool except Blade Pool and NGMI Hairline carries
+// "[TODO: confirm prices]" — draft values, not final.
 //
 // Each pool pins the on-chain MUTUAL pubkey (route `#/m/<pubkey>`); until a
 // pool deploys, its slug routes and `pubkey` stays unset. All pools go live
@@ -56,14 +56,11 @@ export const MUTUALS: MutualListing[] = [
     name: "NGMI Hairline",
     kind: "mutual",
     slug: "ngmi-hairline",
-    // policy: Micro Mutual — NGMI Hairline - Policy.md §3/§5 (prices TODO-confirm)
+    // policy: Micro Mutual — NGMI Hairline - Policy.md §3/§5 (flat $25 →
+    // $200 set 2026-10-06; grades pay $20/$60/$100/$200)
     tagline:
       "New gray hair first visible during the conference — graded from a countable few to basically Gandalf.",
-    tiers: [
-      { name: "Basic", fee: 5, cap: 50 },
-      { name: "Standard", fee: 10, cap: 100 },
-      { name: "Premium", fee: 20, cap: 200 },
-    ],
+    tiers: [{ name: "Flat", fee: 25, cap: 200 }],
     badge: "Certified ridiculous",
   },
   {

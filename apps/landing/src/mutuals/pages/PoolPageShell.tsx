@@ -21,6 +21,8 @@ export interface PoolPageConfig {
   /** §11 product promise, line per line */
   promise: string[];
   tiers: MutualTier[];
+  /** §5 severity grades — the grade → payment schedule, for graded pools */
+  grades?: { grade: string; label: string; finding: string; pays: string }[];
   /** §3 definition, verbatim quote */
   definition: string;
   /** §3 definitions/grades/conditions, line per line */
@@ -113,6 +115,53 @@ export function PoolPageShell({ config }: { config: PoolPageConfig }) {
             <blockquote className="max-w-3xl border-l-2 border-accent pl-(--riprap-space-md) leading-relaxed text-body [font:var(--riprap-body-md)]">
               {c.definition}
             </blockquote>
+            {c.grades ? (
+              <div className="max-w-3xl">
+                <table className="w-full border-collapse font-mono text-sm">
+                  <caption className="sr-only">Severity grades and payments</caption>
+                  <thead>
+                    <tr className="border-b border-hairline text-left">
+                      <th
+                        scope="col"
+                        className="pb-2 pr-4 whitespace-nowrap [font:var(--riprap-mono-label)]"
+                      >
+                        grade
+                      </th>
+                      <th scope="col" className="pb-2 pr-4 [font:var(--riprap-mono-label)]">
+                        the jury sees
+                      </th>
+                      <th
+                        scope="col"
+                        className="pb-2 text-right uppercase tracking-(--riprap-tracking-stamp) [font:var(--riprap-mono-label)]"
+                      >
+                        pays
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {c.grades.map((g) => (
+                      <tr key={g.grade} className="border-b border-hairline last:border-b-0">
+                        <th
+                          scope="row"
+                          className="py-3 pr-4 text-left align-top font-normal whitespace-nowrap text-ink"
+                        >
+                          <span data-num>{g.grade}</span> · {g.label}
+                        </th>
+                        <td className="py-3 pr-4 align-top leading-relaxed text-body [font:var(--riprap-body-sm)]">
+                          {g.finding}
+                        </td>
+                        <td
+                          data-num
+                          className="py-3 text-right align-top whitespace-nowrap text-ink"
+                        >
+                          {g.pays}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
             <ul className="flex max-w-3xl flex-col gap-3">
               {c.definitionNotes.map((note) => (
                 <li

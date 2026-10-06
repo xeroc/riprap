@@ -66,6 +66,32 @@ function CardDiscs({ pool }: { pool: MutualListing }) {
   );
 }
 
+// Breakpoint's own lockup, black on the event pink (founder ask) — half
+// the size of the event site's nav lockup, floating above the card's top
+// edge; inert to the pointer so the card stays one link.
+function EventBadge() {
+  return (
+    <span
+      role="img"
+      aria-label="Breakpoint 2026"
+      className="pointer-events-none absolute -top-3 left-4 z-10 flex h-[18px] items-center gap-[3.57px] bg-(--bp-2026-pink) px-2 text-black"
+    >
+      <img
+        src="/breakpoint-assets/nav-solana.svg"
+        alt=""
+        aria-hidden="true"
+        className="block h-[9.78px] w-[11.34px]"
+      />
+      <img
+        src="/breakpoint-assets/nav-bp26.svg"
+        alt=""
+        aria-hidden="true"
+        className="block h-[10px] w-[52.23px]"
+      />
+    </span>
+  );
+}
+
 function PoolCard({ pool }: { pool: MutualListing }) {
   const stats = demoStats(pool);
   const bounty = pool.kind === "bounty";
@@ -78,6 +104,7 @@ function PoolCard({ pool }: { pool: MutualListing }) {
         bounty ? "border-dashed border-hairline-strong" : "border-hairline"
       } bg-surface-card`}
     >
+      <EventBadge />
       <a
         href={poolRoute(pool)}
         className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring"
@@ -188,7 +215,6 @@ export function Mutuals() {
   }, []);
 
   const driftOn = !reduce && inView;
-
   return (
     <SectionBand id="mutuals" label="mutuals" tone="ground">
       <Settle className="flex flex-col gap-(--riprap-space-xl)">
@@ -212,7 +238,7 @@ export function Mutuals() {
           data-paused={hovered ? "true" : "false"}
           onPointerEnter={() => setHovered(true)}
           onPointerLeave={() => setHovered(false)}
-          className="no-scrollbar flex w-full gap-4 overflow-x-auto pb-2"
+          className="no-scrollbar flex w-full gap-4 overflow-x-auto pt-3 pb-2"
           tabIndex={-1}
         >
           {MUTUALS.map((pool) => (

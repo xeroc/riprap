@@ -41,9 +41,11 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     // Blade Pool (final): $10/$20/$40 entry, up to $4,000 out
     expect(container.textContent).toContain("$10–$40");
     expect(container.textContent).toContain("up to $4,000");
+    // NGMI Hairline (final, 2026-10-06): flat $25 entry, up to $200 out
+    const ngmiRow = [...container.querySelectorAll("tbody tr")][2]?.textContent ?? "";
+    expect(ngmiRow).toContain("$25");
+    expect(ngmiRow).toContain("up to $200");
     // drafts carry their policy/terms-draft tables (bounties included)
-    expect(container.textContent).toContain("$5–$20");
-    expect(container.textContent).toContain("up to $200");
     expect(container.textContent).toContain("up to $40");
     expect(container.textContent).toContain("up to $25");
     expect(container.textContent).toContain("up to $150");

@@ -1,6 +1,7 @@
 // #/m/ngmi-hairline — placeholder detail page (copy doc § /m routes).
 // Content extracted from meta/Breakpoint/Micro Mutual — NGMI Hairline -
-// Policy.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// Policy.md (§3/§4/§5/§7/§10/§11); no chain binding yet. Prices set
+// 2026-10-06: flat $25 entry, $200 maximum, grades pay 10/30/50/100%.
 import { PoolPageShell } from "./PoolPageShell";
 
 export function NgmiHairlinePage() {
@@ -17,19 +18,41 @@ export function NgmiHairlinePage() {
           "Receive defined protection against new gray hair during the event.",
           "If payments don't consume the pool, the remaining money comes back to the members. When the event is over, the mutual ends.",
         ],
-        tiers: [
-          { name: "Basic", fee: 5, cap: 50 },
-          { name: "Standard", fee: 10, cap: 100 },
-          { name: "Premium", fee: 20, cap: 200 },
+        tiers: [{ name: "Flat", fee: 25, cap: 200 }],
+        grades: [
+          {
+            grade: "I",
+            label: "gray hair",
+            finding:
+              "A countable number of new gray hairs (fewer than 10), findable on close inspection.",
+            pays: "$20 · 10%",
+          },
+          {
+            grade: "II",
+            label: "visible new grays",
+            finding:
+              "Visible to a bystander at conversational distance, without inspection.",
+            pays: "$60 · 30%",
+          },
+          {
+            grade: "III",
+            label: "holy shit",
+            finding:
+              "A cluster or patch of new gray hair, immediately obvious, remarked upon by others.",
+            pays: "$100 · 50%",
+          },
+          {
+            grade: "IV",
+            label: "basically Gandalf",
+            finding: "Comprehensive new graying of the covered hairline.",
+            pays: "$200 · 100%",
+          },
         ],
         definition:
           "New gray hair on the member's scalp — a hair that is gray along its visible length, that was not visible in the member's baseline Hairline Snapshot, and that is visible at the time of the payout request.",
         definitionNotes: [
           "The mutual does not investigate when the hair lost its pigment, or why. It pays on the difference between the two snapshots.",
-          "Grade I — gray hair: a countable number of new grays (fewer than 10), findable on close inspection. 10% of maximum.",
-          "Grade II — visible new grays: visible to a bystander at conversational distance, without inspection. 30%.",
-          "Grade III — holy shit: a cluster or patch of new gray hair, immediately obvious, remarked upon by others. 50%.",
-          "Grade IV — basically Gandalf: comprehensive new graying of the covered hairline. 100%.",
+          "The label is the severity. The grade is the payment — a percentage of the $200 maximum, so the dollars above are the dollars paid.",
         ],
         exclusions: [
           "Gray hair visible in the baseline Hairline Snapshot.",
@@ -51,13 +74,13 @@ export function NgmiHairlinePage() {
         example: {
           lines: [
             { value: "500", caption: "members" },
-            { value: "$10", caption: "each — Standard" },
-            { value: "$5,000", caption: "pool" },
+            { value: "$25", caption: "each — one flat membership" },
+            { value: "$12,500", caption: "pool" },
             { value: "120", caption: "approved claims" },
-            { value: "$2,650", caption: "paid (70×I, 35×II, 12×III, 3×IV)" },
+            { value: "$5,300", caption: "paid (70×I, 35×II, 12×III, 3×IV)" },
           ],
-          total: { value: "$2,350", caption: "returned to members" },
-          note: "Gray hair at a conference is common and mild, so this pool runs a 1:10 payout ratio where the Blade Pool runs 1:100 — the jury grades what it sees.",
+          total: { value: "$7,200", caption: "returned to members" },
+          note: "Gray hair at a conference is common and mild, so this pool runs a 1:8 payout ratio where the Blade Pool runs 1:100 — the jury grades what it sees, and the grade is the payment: $20/$60/$100/$200 on the $200 maximum.",
         },
         endNote:
           "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the mutual dissolves permanently.",

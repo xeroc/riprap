@@ -101,3 +101,13 @@ samp {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* --bp-2026-pink — the Breakpoint 2026 brand accent (founder ask: the
+   event chip on the mutuals cards). Value sampled from the event site's
+   computed styles: rgb(170, 103, 251) on solana.com/breakpoint — the
+   page's dominant accent on its black ground. Used only for the event's
+   own lockup chip (black wordmark on pink); it is Breakpoint's brand
+   color, not part of riprap's palette. */
+:root {
+  --bp-2026-pink: #aa67fb;
+}
