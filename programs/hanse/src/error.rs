@@ -47,10 +47,6 @@ pub enum HanseError {
     ClaimsClosed,
     #[msg("Not a member of this mutual")]
     NotMember,
-    #[msg("No rights stake: a member without stake has no cover and cannot file")]
-    NoRightsStake,
-    #[msg("A pending claim already exists for this member: one at a time")]
-    PendingClaimExists,
     #[msg("Tier cap exhausted: this member's Pending + Approved claims already reach the tier's maximum payout")]
     TierCapExhausted,
 

@@ -18,11 +18,12 @@ const FileClaimRoute = lazy(() =>
 const AdjudicateRoute = lazy(() =>
   import("./adjudicate/AdjudicatePage.tsx").then((m) => ({ default: m.AdjudicatePage })),
 );
-const BlurbRoute = lazy(() =>
-  import("./blurb/BlurbPage.tsx").then((m) => ({ default: m.BlurbPage })),
+const MutualsRoute = lazy(() =>
+  import("./mutuals/MutualsPage.tsx").then((m) => ({ default: m.MutualsPage })),
 );
 
-/** "#/app/" matches "#/app"; "" / "#" / "#/" (and in-page anchors) are platform. */
+import { POOL_PAGES, poolTitle } from "./mutuals/registry";
+
 function routeHash(hash: string): string | null {
   const trimmed = hash.replace(/\/+$/, "");
   return trimmed === "" || trimmed === "#" ? null : trimmed;
@@ -45,6 +46,11 @@ function parseAdjudicate(hash: string): { session: { dispute: string; round: num
 }
 
 function matchRoute(hash: string | null): { title: string | null; element: ReactElement } {
+  if (hash?.startsWith("#/m/")) {
+    const id = hash.slice("#/m/".length).replace(/\/+$/, "");
+    const Page = POOL_PAGES[id];
+    if (Page) return { title: poolTitle(id) ?? null, element: <Page /> };
+  }
   if (hash?.startsWith("#/app/adjudicate")) {
     const { session } = parseAdjudicate(hash);
     return {
@@ -59,8 +65,8 @@ function matchRoute(hash: string | null): { title: string | null; element: React
       return { title: "Riprap: Blade Pool member app", element: <MemberRoute /> };
     case "#/app/file-claim":
       return { title: "Riprap: File a payout request", element: <FileClaimRoute /> };
-    case "#/blurb":
-      return { title: "Riprap: blurb & brand kit", element: <BlurbRoute /> };
+    case "#/mutuals":
+      return { title: "Riprap: Pools", element: <MutualsRoute /> };
     default:
       return { title: null, element: <App /> };
   }

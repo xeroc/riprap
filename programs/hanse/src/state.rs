@@ -115,14 +115,13 @@ pub struct Member {
     /// this wallet, `expiry = 0`. Accord's stake gate reads it as the juror
     /// credential — the closed circle.
     pub attestation: Pubkey,
-    /// One Pending claim per member — the file_claim gate (§7).
-    pub has_pending_claim: bool,
     /// Tier cap consumed: Σ claim_amount over this member's Pending +
     /// Approved claims (Denied/Failed release their reservation at
-    /// settle_claim). `file_claim` clamps to `max_payout − cap_used` — the
-    /// cap is per MEMBERSHIP, not per claim (audit H-1 2026-09-24: the
-    /// has_pending gate alone only serializes filings, so a member whose
-    /// claim settled could refile at the full cap before payout burns).
+    /// settle_claim). `file_claim` clamps to `max_payout − cap_used` —
+    /// the cap is per MEMBERSHIP, not per claim (audit H-1 2026-09-24),
+    /// and since the multi-claim amendment it is the ONLY filing
+    /// limiter: concurrent claims share it (each filing reserves before
+    /// the next can read the remainder).
     pub cap_used: u64,
     pub bump: u8,
     /// Upgrade headroom: 64 reserved zero bytes (two pubkeys), always the
@@ -181,13 +180,13 @@ mod tests {
     }
 
     /// EVENT-MUTUAL §6: Member = mutual 32 + member 32 + tier 1 +
-    /// attestation 32 (§2.8 SAS membership) + has_pending_claim 1 +
-    /// cap_used 8 (cumulative tier cap, amendment 2026-09-24) + bump 1 +
-    /// padding 64.
+    /// attestation 32 (§2.8 SAS membership) + cap_used 8 (cumulative
+    /// tier cap, amendment 2026-09-24; sole filing limiter since the
+    /// multi-claim amendment dropped has_pending) + bump 1 + padding 64.
     #[test]
     fn member_space_matches_spec_layout() {
-        assert_eq!(Member::INIT_SPACE, 32 + 32 + 1 + 32 + 1 + 8 + 1 + 64);
-        assert_eq!(MEMBER_SPACE, 8 + 171);
+        assert_eq!(Member::INIT_SPACE, 32 + 32 + 1 + 32 + 8 + 1 + 64);
+        assert_eq!(MEMBER_SPACE, 8 + 170);
     }
 
     /// EVENT-MUTUAL §6: Claim = mutual 32 + member 32 + claim_amount 8 +

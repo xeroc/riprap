@@ -1,6 +1,7 @@
 /**
  * `riprap hanse:member` — read-only member dump: tier with the contribution
- * and max payout resolved from Mutual.tiers, plus the pending-claim gate.
+ * and max payout resolved from Mutual.tiers, plus cap consumed (the filing
+ * limiter — concurrent claims share the cumulative tier cap).
  */
 import { Flags } from "@oclif/core";
 import { fetchMemberByOwner, fetchMutual } from "@riprap/hanse";
@@ -14,7 +15,6 @@ export interface MemberView {
   tier: number;
   contribution: bigint;
   maxPayout: bigint;
-  hasPendingClaim: boolean;
   capUsed: bigint;
 }
 
@@ -35,18 +35,18 @@ export async function buildMemberView(
     tier: account.tier,
     contribution: tier.contribution,
     maxPayout: tier.maxPayout,
-    hasPendingClaim: account.hasPendingClaim,
     capUsed: account.capUsed,
   };
 }
 
 export default class HanseMember extends ChainCommand {
-  static summary = "Member position dump (tier + resolved cover + pending gate)";
+  static summary = "Member position dump (tier + resolved cover + cap used)";
 
   static description =
     "Reads one member position [member, mutual, --member|wallet]: the tier " +
     "index with its contribution and max payout resolved from the mutual's " +
-    "tier table, and whether a claim is pending (the file-claim gate).";
+    "tier table, and the cumulative tier cap consumed — the only filing " +
+    "limiter (multiple claims run concurrently until the cap is reached).";
 
   static examples = [
     "<%= config.bin %> hanse:member --mutual 9xQe…",
@@ -79,8 +79,7 @@ export default class HanseMember extends ChainCommand {
         `tier         : ${view.tier} (${view.tier === 0 ? "Basic" : view.tier === 1 ? "Standard" : view.tier === 2 ? "Premium" : "???"})`,
         `contribution : ${groupBigInt(view.contribution)}`,
         `max payout   : ${groupBigInt(view.maxPayout)}`,
-        `pending claim: ${view.hasPendingClaim ? "yes (file-claim gated)" : "no"}`,
-        `cap used     : ${groupBigInt(view.capUsed)} of ${groupBigInt(view.maxPayout)} (cumulative tier cap)`,
+        `cap used     : ${groupBigInt(view.capUsed)} of ${groupBigInt(view.maxPayout)} (cumulative tier cap — concurrent claims share it)`,
       ],
     });
   }

@@ -60,7 +60,6 @@ export type FileClaimInstruction<
   TAccountMutual extends string | AccountMeta<string> = string,
   TAccountMemberAccount extends string | AccountMeta<string> = string,
   TAccountClaim extends string | AccountMeta<string> = string,
-  TAccountDepositor extends string | AccountMeta<string> = string,
   TAccountSubaccord extends string | AccountMeta<string> = string,
   TAccountMemberFeeAta extends string | AccountMeta<string> = string,
   TAccountFeeFloat extends string | AccountMeta<string> = string,
@@ -94,7 +93,6 @@ export type FileClaimInstruction<
         ? WritableAccount<TAccountMemberAccount>
         : TAccountMemberAccount,
       TAccountClaim extends string ? WritableAccount<TAccountClaim> : TAccountClaim,
-      TAccountDepositor extends string ? ReadonlyAccount<TAccountDepositor> : TAccountDepositor,
       TAccountSubaccord extends string ? WritableAccount<TAccountSubaccord> : TAccountSubaccord,
       TAccountMemberFeeAta extends string
         ? WritableAccount<TAccountMemberFeeAta>
@@ -169,7 +167,6 @@ export type FileClaimAsyncInput<
   TAccountMutual extends string = string,
   TAccountMemberAccount extends string = string,
   TAccountClaim extends string = string,
-  TAccountDepositor extends string = string,
   TAccountSubaccord extends string = string,
   TAccountMemberFeeAta extends string = string,
   TAccountFeeFloat extends string = string,
@@ -190,15 +187,8 @@ export type FileClaimAsyncInput<
    */
   rentPayer: TransactionSigner<TAccountRentPayer>;
   mutual: Address<TAccountMutual>;
-  /** One Pending claim per member — the flip lives in the handler. */
   memberAccount?: Address<TAccountMemberAccount>;
   claim?: Address<TAccountClaim>;
-  /**
-   * The member's pool position. CHECK: PDA ["depositor", pool, member]
-   * under the pool program, verified in the handler; ownership by the pool
-   * program is enforced by the Account type.
-   */
-  depositor: Address<TAccountDepositor>;
   /**
    * The subaccord this mutual owns — the live source of the filing fee.
    * mut: accord's create_dispute writes fee tracking on it.
@@ -233,7 +223,6 @@ export async function getFileClaimInstructionAsync<
   TAccountMutual extends string,
   TAccountMemberAccount extends string,
   TAccountClaim extends string,
-  TAccountDepositor extends string,
   TAccountSubaccord extends string,
   TAccountMemberFeeAta extends string,
   TAccountFeeFloat extends string,
@@ -253,7 +242,6 @@ export async function getFileClaimInstructionAsync<
     TAccountMutual,
     TAccountMemberAccount,
     TAccountClaim,
-    TAccountDepositor,
     TAccountSubaccord,
     TAccountMemberFeeAta,
     TAccountFeeFloat,
@@ -275,7 +263,6 @@ export async function getFileClaimInstructionAsync<
     TAccountMutual,
     TAccountMemberAccount,
     TAccountClaim,
-    TAccountDepositor,
     TAccountSubaccord,
     TAccountMemberFeeAta,
     TAccountFeeFloat,
@@ -299,7 +286,6 @@ export async function getFileClaimInstructionAsync<
     mutual: { value: input.mutual ?? null, isWritable: true },
     memberAccount: { value: input.memberAccount ?? null, isWritable: true },
     claim: { value: input.claim ?? null, isWritable: true },
-    depositor: { value: input.depositor ?? null, isWritable: false },
     subaccord: { value: input.subaccord ?? null, isWritable: true },
     memberFeeAta: { value: input.memberFeeAta ?? null, isWritable: true },
     feeFloat: { value: input.feeFloat ?? null, isWritable: true },
@@ -387,7 +373,6 @@ export async function getFileClaimInstructionAsync<
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("memberAccount", accounts.memberAccount),
       getAccountMeta("claim", accounts.claim),
-      getAccountMeta("depositor", accounts.depositor),
       getAccountMeta("subaccord", accounts.subaccord),
       getAccountMeta("memberFeeAta", accounts.memberFeeAta),
       getAccountMeta("feeFloat", accounts.feeFloat),
@@ -409,7 +394,6 @@ export async function getFileClaimInstructionAsync<
     TAccountMutual,
     TAccountMemberAccount,
     TAccountClaim,
-    TAccountDepositor,
     TAccountSubaccord,
     TAccountMemberFeeAta,
     TAccountFeeFloat,
@@ -430,7 +414,6 @@ export type FileClaimInput<
   TAccountMutual extends string = string,
   TAccountMemberAccount extends string = string,
   TAccountClaim extends string = string,
-  TAccountDepositor extends string = string,
   TAccountSubaccord extends string = string,
   TAccountMemberFeeAta extends string = string,
   TAccountFeeFloat extends string = string,
@@ -451,15 +434,8 @@ export type FileClaimInput<
    */
   rentPayer: TransactionSigner<TAccountRentPayer>;
   mutual: Address<TAccountMutual>;
-  /** One Pending claim per member — the flip lives in the handler. */
   memberAccount: Address<TAccountMemberAccount>;
   claim: Address<TAccountClaim>;
-  /**
-   * The member's pool position. CHECK: PDA ["depositor", pool, member]
-   * under the pool program, verified in the handler; ownership by the pool
-   * program is enforced by the Account type.
-   */
-  depositor: Address<TAccountDepositor>;
   /**
    * The subaccord this mutual owns — the live source of the filing fee.
    * mut: accord's create_dispute writes fee tracking on it.
@@ -494,7 +470,6 @@ export function getFileClaimInstruction<
   TAccountMutual extends string,
   TAccountMemberAccount extends string,
   TAccountClaim extends string,
-  TAccountDepositor extends string,
   TAccountSubaccord extends string,
   TAccountMemberFeeAta extends string,
   TAccountFeeFloat extends string,
@@ -514,7 +489,6 @@ export function getFileClaimInstruction<
     TAccountMutual,
     TAccountMemberAccount,
     TAccountClaim,
-    TAccountDepositor,
     TAccountSubaccord,
     TAccountMemberFeeAta,
     TAccountFeeFloat,
@@ -535,7 +509,6 @@ export function getFileClaimInstruction<
   TAccountMutual,
   TAccountMemberAccount,
   TAccountClaim,
-  TAccountDepositor,
   TAccountSubaccord,
   TAccountMemberFeeAta,
   TAccountFeeFloat,
@@ -558,7 +531,6 @@ export function getFileClaimInstruction<
     mutual: { value: input.mutual ?? null, isWritable: true },
     memberAccount: { value: input.memberAccount ?? null, isWritable: true },
     claim: { value: input.claim ?? null, isWritable: true },
-    depositor: { value: input.depositor ?? null, isWritable: false },
     subaccord: { value: input.subaccord ?? null, isWritable: true },
     memberFeeAta: { value: input.memberFeeAta ?? null, isWritable: true },
     feeFloat: { value: input.feeFloat ?? null, isWritable: true },
@@ -608,7 +580,6 @@ export function getFileClaimInstruction<
       getAccountMeta("mutual", accounts.mutual),
       getAccountMeta("memberAccount", accounts.memberAccount),
       getAccountMeta("claim", accounts.claim),
-      getAccountMeta("depositor", accounts.depositor),
       getAccountMeta("subaccord", accounts.subaccord),
       getAccountMeta("memberFeeAta", accounts.memberFeeAta),
       getAccountMeta("feeFloat", accounts.feeFloat),
@@ -630,7 +601,6 @@ export function getFileClaimInstruction<
     TAccountMutual,
     TAccountMemberAccount,
     TAccountClaim,
-    TAccountDepositor,
     TAccountSubaccord,
     TAccountMemberFeeAta,
     TAccountFeeFloat,
@@ -659,38 +629,31 @@ export type ParsedFileClaimInstruction<
      */
     rentPayer: TAccountMetas[1];
     mutual: TAccountMetas[2];
-    /** One Pending claim per member — the flip lives in the handler. */
     memberAccount: TAccountMetas[3];
     claim: TAccountMetas[4];
-    /**
-     * The member's pool position. CHECK: PDA ["depositor", pool, member]
-     * under the pool program, verified in the handler; ownership by the pool
-     * program is enforced by the Account type.
-     */
-    depositor: TAccountMetas[5];
     /**
      * The subaccord this mutual owns — the live source of the filing fee.
      * mut: accord's create_dispute writes fee tracking on it.
      */
-    subaccord: TAccountMetas[6];
+    subaccord: TAccountMetas[5];
     /** The member's fee-mint ATA — the upfront juror fee leaves here. */
-    memberFeeAta: TAccountMetas[7];
+    memberFeeAta: TAccountMetas[6];
     /**
      * Fee float: the mutual PDA's ATA of fee_mint — the fee lands here, the
      * create_dispute CPI drains it into the subaccord fee vault.
      */
-    feeFloat: TAccountMetas[8];
-    feeMint: TAccountMetas[9];
+    feeFloat: TAccountMetas[7];
+    feeMint: TAccountMetas[8];
     /** The Dispute PDA ["dispute", mutual, nonce] — created by the CPI. */
-    dispute: TAccountMetas[10];
+    dispute: TAccountMetas[9];
     /** The subaccord's fee vault ATA — created (init_if_needed) by the CPI. */
-    feeVault: TAccountMetas[11];
+    feeVault: TAccountMetas[10];
     /** Accord's global state (pause flag). */
-    accordState: TAccountMetas[12];
-    tokenProgram: TAccountMetas[13];
-    associatedTokenProgram: TAccountMetas[14];
-    systemProgram: TAccountMetas[15];
-    accordProgram: TAccountMetas[16];
+    accordState: TAccountMetas[11];
+    tokenProgram: TAccountMetas[12];
+    associatedTokenProgram: TAccountMetas[13];
+    systemProgram: TAccountMetas[14];
+    accordProgram: TAccountMetas[15];
   };
   data: FileClaimInstructionData;
 };
@@ -703,10 +666,10 @@ export function parseFileClaimInstruction<
     InstructionWithAccounts<TAccountMetas> &
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedFileClaimInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 17) {
+  if (instruction.accounts.length < 16) {
     throw new SolanaError(SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS, {
       actualAccountMetas: instruction.accounts.length,
-      expectedAccountMetas: 17,
+      expectedAccountMetas: 16,
     });
   }
   let accountIndex = 0;
@@ -723,7 +686,6 @@ export function parseFileClaimInstruction<
       mutual: getNextAccount(),
       memberAccount: getNextAccount(),
       claim: getNextAccount(),
-      depositor: getNextAccount(),
       subaccord: getNextAccount(),
       memberFeeAta: getNextAccount(),
       feeFloat: getNextAccount(),

@@ -88,7 +88,6 @@ fn file_claim_attacked(
     )
     .unwrap();
     let nonce = attack.nonce.unwrap_or(m.claim_nonce);
-    let pool = pool_pda(cfg.seed);
     let dispute = Pubkey::find_program_address(
         &[b"dispute", mutual.as_ref(), nonce.to_le_bytes().as_ref()],
         &accord::id(),
@@ -112,7 +111,6 @@ fn file_claim_attacked(
             mutual,
             member_account,
             claim: claim_pda(&mutual, nonce),
-            depositor: pool_depositor(&pool, &signer.pubkey()),
             subaccord,
             member_fee_ata: ata(&signer.pubkey(), &env.mint),
             fee_float: ata(&mutual, &env.mint),

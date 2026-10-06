@@ -1,0 +1,64 @@
+// #/m/keep-raj-warm — placeholder detail page (copy doc § /m routes).
+// Content extracted from meta/Breakpoint/Micro Bounty — Operation Keep Raj
+// Warm - Terms.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+import { PoolPageShell } from "./PoolPageShell";
+
+export function KeepRajWarmPage() {
+  return (
+    <PoolPageShell
+      config={{
+        name: "Operation Keep Raj Warm",
+        event: "Breakpoint",
+        kind: "bounty",
+        tagline:
+          "A one-time bounty pool for members who want an excuse to talk to Raj. The pot pays only for deliveries Raj himself confirms.",
+        promise: [
+          "Join a temporary bounty pool. Pay a fixed amount.",
+          "Get paid for proof you brought Raj a hot drink he asked for.",
+          "If bounties don't consume the pot, the remaining money comes back to the members. When the event is over, the bounty ends.",
+        ],
+        tiers: [{ name: "Flat", fee: 5, cap: 50 }],
+        definition:
+          "The Request: Raj requested a hot drink, the request coming from him and preceding the delivery. The Procurement: you personally obtained the drink after the request, at your own expense. The Handover: you personally placed the drink, still hot, in Raj's hand. The Confirmation: Raj confirmed the request and the delivery.",
+        definitionNotes: [
+          "The named person is Raj Gokal; he may not hold a membership in this pool.",
+          "A request addressed to whoever would bring it — “will someone bring me a coffee” — counts. A rumor of thirst is not a request. A request made by someone else on his behalf is not a request.",
+          "Hot drink — coffee, tea, hot chocolate, or similar, served hot and intended for immediate consumption. An iced drink is not a hot drink. A drink that was hot earlier is not a hot drink.",
+          "Hands are the standard: handing the drink to staff, security, or an intermediary is not a delivery.",
+        ],
+        exclusions: [
+          "Deliveries made without a request from Raj. Guessing his preferred drink and ambushing him with it is not a bounty; it is evangelism.",
+          "Drinks that were no longer hot at handover.",
+          "Cold and iced drinks.",
+          "Deliveries to an intermediary instead of Raj's hand.",
+          "Members reimbursed by anyone for the drink. An errand is not a delivery.",
+          "Requests staged for the purpose of generating bounties — the jury may treat an orchestrated request as no request.",
+        ],
+        proof: [
+          "Event ticket in your own name",
+          "Government photo ID",
+          "Request evidence — the post or message from Raj's known account containing the request, or a witnessed statement of it",
+          "Delivery evidence — a timestamped photo or video of the handover, showing you, Raj, and the drink",
+          "Confirmation — a statement from Raj, from an account or in a form the jury can verify. Without it, the claim fails. The confirmation is the proof.",
+          "Declaration of the facts, signed with your wallet",
+        ],
+        feeNote: "Filing pre-pays an adjudication fee of 5 USDC (TODO-confirm in the terms).",
+        example: {
+          lines: [
+            { value: "400", caption: "members" },
+            { value: "$5", caption: "each" },
+            { value: "$2,000", caption: "pot" },
+            { value: "10 × $50", caption: "confirmed deliveries" },
+            { value: "$500", caption: "bounties paid" },
+          ],
+          total: { value: "$1,500", caption: "returned to members" },
+          note: "The pot pays at most 10 Qualifying Deliveries in total, in the order their claims are approved — the race is only fair if the count is visible. A member who delivered once is $45 ahead.",
+        },
+        endNote:
+          "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently.",
+      }}
+    />
+  );
+}
+
+export default KeepRajWarmPage;

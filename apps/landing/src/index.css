@@ -90,3 +90,43 @@ samp {
     transform: scale(1.6);
   }
 }
+
+/* no-scrollbar — the mutuals carousel drifts on its own; the horizontal
+   scrollbar would only double the affordance (the arrows and the drag do
+   that job). Reduced to hidden tracks in both engines; scrolling stays
+   keyboard- and pointer-operable. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* --bp-2026-pink — the Breakpoint 2026 brand accent (founder ask: the
+   event chip on the mutuals cards). Value sampled from the event site's
+   computed styles: rgb(170, 103, 251) on solana.com/breakpoint — the
+   page's dominant accent on its black ground. Used only for the event's
+   own lockup chip (black wordmark on pink); it is Breakpoint's brand
+   color, not part of riprap's palette. */
+:root {
+  --bp-2026-pink: #aa67fb;
+}
+
+/* carousel-edge-fade — the mutuals rail's soft spatial fade at the outer
+   edges (founder ask): over color, not time — cards dissolve into the page
+   ground as they enter from the right and exit to the left, 12% of the
+   track width per side. Desktop (lg and up) only: on a phone-width track
+   the fade would eat live cards. Alpha mask, so it composites over any
+   band tone; hit-testing is unaffected (masked edge cards stay clickable). */
+@media (min-width: 64rem) {
+  .carousel-edge-fade {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 12%,
+      #000 88%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+  }
+}

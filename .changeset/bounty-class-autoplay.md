@@ -1,0 +1,5 @@
+---
+"@riprap/landing": minor
+---
+
+Bounty class + autoplay carousel. Four Micro Bounty pools from the meta/Breakpoint terms docs join the directory (OnlyFriends — $15 per confirmed VIP introduction, capped at ten; and three hot-drink bounties for named people — Raj, Lily, Toly — $5 entry, $50 bounty): same rails as the mutuals, different class — bounties share no risk, they pay for verified acts. Cards distinguish the class visually (dashed border vs hairline, "bounty · terms draft" stamp, earns/pot stat labels instead of cover/pool) and the /mutuals table gains a Kind column with a footnote stating the distinction. The carousel now drifts horizontally on its own (~42px/s over a duplicated rail with a seamless wrap) and pauses on hover, focus, and drag; the horizontal scrollbar is hidden (.no-scrollbar) since the arrows and drag carry the affordance; reduced motion renders an ordinary scrollable row. Founder merchandising (experiment-only, not metrics): Chairmageddon leads with a "Most popular" badge, NGMI Hairline carries "Certified ridiculous".

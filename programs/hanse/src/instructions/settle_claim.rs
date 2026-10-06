@@ -92,10 +92,10 @@ impl<'info> SettleClaim<'info> {
                 .ok_or(HanseError::MathOverflow)?;
         }
 
+
         ctx.accounts.claim.status = status;
         ctx.accounts.claim.settled_at = now;
         ctx.accounts.mutual.claims_resolved += 1;
-        ctx.accounts.member_account.has_pending_claim = false;
 
         emit!(ClaimSettled {
             mutual: mutual_key,

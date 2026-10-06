@@ -4,9 +4,8 @@
 //   join after deposits_close_at        → 6001 DepositsClosed
 //   file_claim after claims_close_at    → 6017 ClaimsClosed
 //   settle_pool with a pending claim    → 6023 ClaimsUnresolved
-//   file_claim while a claim is pending (same member) → 6019 PendingClaimExists
-//   requested above the member's tier cap → clamped to tiers[member].max_payout
-//   (§2.3) at filing — and the pending gate releases once resolved
+//   requested above the member's tier cap → clamped to tiers[member.tier].max_payout
+//   (§2.3) at filing — concurrent filings share the remaining cap
 //   dissolve before pull_close_at       → 6027 PullWindowOpen
 // Offline (no validator) the spec skips — pnpm verify stays green.
 
@@ -49,16 +48,18 @@ import { ataOf, setTokenBalance } from "./setup/tokens.js";
 const CLAIM_AMOUNT = 95_000_000n;
 const FILING_FEE = 20_000_000n; // (3 + 1) × $5 (ADR-0030)
 
-/** Anchor error codes (HanseError order, offset 6000). */
+/** Anchor error codes (HanseError order, offset 6000 — NoRightsStake and
+ * PendingClaimExists were removed by the multi-claim amendment: everything
+ * after NotMember shifted down by two). */
 const ERR = {
   DEPOSITS_CLOSED: 6001,
   CLAIMS_CLOSED: 6017,
-  CLAIMS_UNRESOLVED: 6025,
-  PULL_WINDOW_CLOSED: 6028,
-  PULL_WINDOW_OPEN: 6029,
-  CLAIM_ALREADY_PAID: 6031,
-  UNAUTHORIZED: 6032,
-  PENDING_CLAIM_EXISTS: 6020,
+  CLAIMS_UNRESOLVED: 6023,
+  PULL_WINDOW_CLOSED: 6026,
+  PULL_WINDOW_OPEN: 6027,
+  CLAIM_ALREADY_PAID: 6029,
+  TIER_CAP_EXHAUSTED: 6019,
+  UNAUTHORIZED: 6030,
 } as const;
 
 /** Deep error text: message + cause chain (kit nests the anchor code in the
@@ -162,9 +163,6 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
           claimant: fx.members[0]!,
           rentPayer: fx.members[0]!,
           mutual: fx.mutual,
-          depositor: (
-            await findDepositorPda({ pool: fx.poolPda, owner: fx.members[0]?.address })
-          )[0],
           subaccord: fx.fx.subaccord,
           memberFeeAta: fx.memberAtas[0]!,
           feeMint: fx.mint,
@@ -321,7 +319,7 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     expect(mutualD.data.phase).toBe(Phase.Dissolved);
   }, 600_000);
 
-  it("clamps over-cap requests to the tier cap and holds one pending claim per member", async () => {
+  it("clamps over-cap requests to the tier cap and shares it across concurrent filings", async () => {
     if (!env.up) return; // offline CI lane — pnpm verify must stay green
 
     const fx = await setupMutualCohort(env, { nMembers: 4 });
@@ -336,15 +334,16 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
     expect(claimAcct.data.claimAmount).toBe(2_000_000_000n); // min(requested, cap)
     expect(claimAcct.data.feePaid).toBe(FILING_FEE);
 
-    // ── same member, claim still Pending: a second filing reverts ────────
+    // ── same member, claim still Pending: a CONCURRENT filing is allowed
+    //    (multi-claim amendment) but clamps to the remaining cap: 0 ──────
     await expectRevert(
-      fileMemberClaim(fx, { memberIdx: 0, requested: 2_500_000_000n }),
-      ERR.PENDING_CLAIM_EXISTS,
+      fileMemberClaim(fx, { memberIdx: 0, requested: 100n }),
+      ERR.TIER_CAP_EXHAUSTED,
     );
     const mutualAfterReject = await fetchMutualBySeed(env.rpc, { seed: fx.seed });
     expect(mutualAfterReject.data.claimsFiled).toBe(1); // nothing booked
 
-    // ── resolve it (Deny), then the SAME member can file again ───────────
+    // ── resolve it (Deny): the reservation releases, the full cap returns
     await driveDispute(fx, filed, [1n, 1n, 1n]);
     await env.sendIx(
       await getSettleClaimInstruction({

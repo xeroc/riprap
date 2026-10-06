@@ -4,12 +4,15 @@
 
 import { SiteNav } from "./components/SiteNav";
 import { Audience } from "./sections/Audience";
+import { Compare } from "./sections/Compare";
 import { Faq } from "./sections/Faq";
 import { FinalCta } from "./sections/FinalCta";
 import { Footer } from "./sections/Footer";
 import { Heritage } from "./sections/Heritage";
 import { Hero } from "./sections/Hero";
 import { Mechanism } from "./sections/Mechanism";
+import { Mutuals } from "./sections/Mutuals";
+import { OnChain } from "./sections/OnChain";
 import { Supporters } from "./sections/Supporters";
 
 export function App() {
@@ -18,6 +21,9 @@ export function App() {
       <SiteNav />
       <main>
         <Hero />
+        <Mutuals />
+        <OnChain />
+        <Compare />
         <Mechanism />
         <Heritage />
         <Audience />

@@ -16,6 +16,8 @@ import { describe, expect, it } from "vitest";
 const SANCTIONED_FULL_RADIUS: Record<string, true> = {
   "TweetCard.tsx": true,
   "ChatMessage.tsx": true,
+  // MemberRow renders the member's avatar disc (the one circle)
+  "MemberRow.tsx": true,
 };
 const ROOT = join(__dirname);
 
