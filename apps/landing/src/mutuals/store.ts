@@ -13,7 +13,6 @@ import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-import { resolveMutualAddress } from "../pool/mutual";
 import { useClusterRpc } from "../shared/rpc";
 import { MUTUALS } from "./data";
 import type { MutualListing } from "./types";
@@ -32,17 +31,11 @@ export interface LiveMutual {
  * the cluster flags only feed the Blade Pool's env-driven address while its
  * key is unpinned (pool/mutual.ts — the same fallback useMemberCount uses).
  */
-export function knownMutuals(
-  clusters: { isLocal: boolean; isMainnet: boolean; isDevnet: boolean },
-  listings: MutualListing[] = MUTUALS,
-): Map<Address, MutualListing> {
+export function knownMutuals(listings: MutualListing[] = MUTUALS): Map<Address, MutualListing> {
   const known = new Map<Address, MutualListing>();
   for (const listing of listings) {
-    const address = (listing.pubkey ??
-      (listing.slug === "blade-pool" ? resolveMutualAddress(clusters) : undefined)) as
-      | Address
-      | undefined;
-    if (address !== undefined) known.set(address, listing);
+    const address = listing?.pubkey;
+    if (address !== undefined) known.set(address as Address, listing);
   }
   return known;
 }
@@ -82,10 +75,7 @@ export type MutualStore =
 export function useMutualStore(): MutualStore {
   const clusterRpc = useClusterRpc();
   const { isLocal, isMainnet, isDevnet } = useCluster();
-  const known = useMemo(
-    () => knownMutuals({ isLocal, isMainnet, isDevnet }),
-    [isLocal, isMainnet, isDevnet],
-  );
+  const known = useMemo(() => knownMutuals(), [isLocal, isMainnet, isDevnet]);
 
   const query = useQuery({
     queryKey: ["mutuals", clusterRpc?.endpoint],

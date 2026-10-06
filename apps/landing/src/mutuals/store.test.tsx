@@ -15,8 +15,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { fakeMutual } from "../pool/fixtures";
 import { MUTUALS } from "./data";
-import { knownMutuals, resolveLiveMutuals, useMutualStore } from "./store";
-import type { MutualListing } from "./types";
+import { resolveLiveMutuals, useMutualStore } from "./store";
 
 // --- hoisted mock state (vi.mock factories run before the module body) -------
 
@@ -45,38 +44,6 @@ function wrapper({ children }: { children: ReactNode }) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
-
-describe("knownMutuals — the registry", () => {
-  const synthetic: MutualListing[] = [
-    {
-      name: "Pinned Pool",
-      kind: "mutual",
-      slug: "pinned-pool",
-      tagline: "t",
-      tiers: [{ name: "Flat", fee: 1, cap: 2 }],
-      smallestPayout: 2,
-      pubkey: PINNED,
-    },
-  ];
-
-  it("pins by pubkey — cluster-agnostic, the same registry serves every cluster", () => {
-    const known = knownMutuals({ isLocal: false, isMainnet: true, isDevnet: false }, synthetic);
-    expect(known.get(PINNED as Address)).toBe(synthetic[0]);
-  });
-
-  it("blade-pool falls back to the cluster env address while its key is unpinned", () => {
-    vi.stubEnv("VITE_LOCALNET_MUTUAL", BLADE);
-    const known = knownMutuals({ isLocal: true, isMainnet: false, isDevnet: false });
-    expect(known.get(BLADE as Address)?.slug).toBe("blade-pool");
-  });
-
-  it("no pin and no cluster address: nothing is registered, so nothing can resolve", () => {
-    vi.stubEnv("VITE_MAINNET_MUTUAL", "");
-    expect(knownMutuals({ isLocal: false, isMainnet: true, isDevnet: false }).size).toBe(0);
-  });
-
-  afterEach(() => vi.unstubAllEnvs());
-});
 
 describe("resolveLiveMutuals — scan hits × registry", () => {
   it("resolves an on-chain mutual to its listing, carrying the decoded account", () => {

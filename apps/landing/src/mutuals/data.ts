@@ -30,15 +30,22 @@ export const MUTUAL_EVENT = {
  * most-popular badge, mutuals then bounties, Blade Pool second. */
 export const MUTUALS: MutualListing[] = [
   {
-    name: "Chairmageddon",
+    name: "Blade Pool",
     kind: "mutual",
-    slug: "chairmageddon",
-    // policy: Micro Mutual — Chairmageddon - Policy.md §3/§5 (prices TODO-confirm)
-    tagline: "Every seat taken at the opening ceremony — and you stood the whole thing.",
-    tiers: [{ name: "Flat", fee: 10, cap: 40 }],
-    // §5: the flat $40 payout is the only success payment
-    smallestPayout: 40,
-    badge: "Most popular",
+    slug: "blade-pool",
+    // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
+    // mutual address is env-driven (pool/mutual.ts) — pin pubkey at deploy.
+    tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
+    tiers: [
+      { name: "Basic", fee: 10, cap: 1000 },
+      { name: "Standard", fee: 20, cap: 2000 },
+      { name: "Premium", fee: 40, cap: 4000 },
+    ],
+    // §5: the smallest tier's cap ($1,000 Basic) is the smallest success
+    smallestPayout: 1000,
+    badge: "Paranoid", // founder call 2026-10-06: the one severe pool gets the self-aware label
+    href: "#/2026-breakpoint-blade-pool",
+    pubkey: "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe", // devnet
   },
   {
     name: "Blade Pool",
@@ -56,6 +63,18 @@ export const MUTUALS: MutualListing[] = [
     smallestPayout: 1000,
     badge: "Paranoid", // founder call 2026-10-06: the one severe pool gets the self-aware label
     href: "#/2026-breakpoint-blade-pool",
+    pubkey: "DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF", // mainnet
+  },
+  {
+    name: "Chairmageddon",
+    kind: "mutual",
+    slug: "chairmageddon",
+    // policy: Micro Mutual — Chairmageddon - Policy.md §3/§5 (prices TODO-confirm)
+    tagline: "Every seat taken at the opening ceremony — and you stood the whole thing.",
+    tiers: [{ name: "Flat", fee: 10, cap: 40 }],
+    // §5: the flat $40 payout is the only success payment
+    smallestPayout: 40,
+    badge: "Most popular",
   },
   {
     name: "NGMI Hairline",
