@@ -1,5 +1,13 @@
 # @riprap/cranker
 
+## 0.6.0
+
+### Patch Changes
+
+- Updated dependencies [[`1c5fdb6`](https://github.com/xeroc/riprap/commit/1c5fdb6315c31ae41b45d3ae682a2421c6a5e6a5), [`c9f8d7e`](https://github.com/xeroc/riprap/commit/c9f8d7e3b8f420f77c9be20be58432d0adad7b1a)]:
+  - @riprap/hanse@0.6.0
+  - @riprap/pool@0.6.0
+
 ## 0.5.0
 
 ### Patch Changes
