@@ -16,7 +16,7 @@
 import { Button, SectionBand } from "@riprap/ui";
 import { useInView, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-
+import { BpBadge } from "../components/BpBadge";
 import { Settle } from "../components/Settle";
 import {
   capRange,
@@ -70,26 +70,7 @@ function CardDiscs({ pool }: { pool: MutualListing }) {
 // the size of the event site's nav lockup, floating above the card's top
 // edge; inert to the pointer so the card stays one link.
 function EventBadge() {
-  return (
-    <span
-      role="img"
-      aria-label="Breakpoint 2026"
-      className="pointer-events-none absolute -top-3 left-4 z-10 flex h-[18px] items-center gap-[3.57px] bg-(--bp-2026-pink) px-2 text-black"
-    >
-      <img
-        src="/breakpoint-assets/nav-solana.svg"
-        alt=""
-        aria-hidden="true"
-        className="block h-[9.78px] w-[11.34px]"
-      />
-      <img
-        src="/breakpoint-assets/nav-bp26.svg"
-        alt=""
-        aria-hidden="true"
-        className="block h-[10px] w-[52.23px]"
-      />
-    </span>
-  );
+  return <BpBadge className="pointer-events-none absolute -top-3 left-4 z-10 h-[18px]" />;
 }
 
 function PoolCard({ pool }: { pool: MutualListing }) {

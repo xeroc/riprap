@@ -6,9 +6,10 @@
 // pool's detail route (#/m/<pubkey-or-slug>). Wayfinding: shared navbar +
 // footer.
 import { SectionBand } from "@riprap/ui";
+import { BpBadge } from "../components/BpBadge";
 import { SiteNav } from "../components/SiteNav";
 import { Footer } from "../sections/Footer";
-import { capRange, entryRange, MUTUAL_EVENT, MUTUALS, poolRoute } from "./data";
+import { capRange, entryRange, MUTUALS, poolRoute } from "./data";
 
 export function MutualsPage() {
   return (
@@ -22,8 +23,7 @@ export function MutualsPage() {
                 Mutuals.
               </h1>
               <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
-                Every pool on Riprap, with its terms. All pools in the first batch run at{" "}
-                {MUTUAL_EVENT.event} — {MUTUAL_EVENT.venue}, {MUTUAL_EVENT.window}.
+                Every pool on Riprap, with its terms.
               </p>
             </div>
 
@@ -55,9 +55,17 @@ export function MutualsPage() {
                         >
                           {pool.name}
                         </a>
-                        <p className="mt-1 uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-                          {pool.kind}
-                        </p>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                          <BpBadge className="h-[16px]" />
+                          {pool.badge ? (
+                            <span className="border border-accent px-1.5 py-0.5 uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
+                              {pool.badge}
+                            </span>
+                          ) : null}
+                          <span className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
+                            {pool.kind}
+                          </span>
+                        </div>
                       </th>
                       <td className="py-4 pr-4 align-top text-body [font:var(--riprap-body-sm)]">
                         {pool.tagline}

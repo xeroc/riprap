@@ -30,8 +30,7 @@ export function NgmiHairlinePage() {
           {
             grade: "II",
             label: "visible new grays",
-            finding:
-              "Visible to a bystander at conversational distance, without inspection.",
+            finding: "Visible to a bystander at conversational distance, without inspection.",
             pays: "$60 · 30%",
           },
           {
