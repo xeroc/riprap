@@ -1,7 +1,7 @@
 // #/m/ngmi-hairline — placeholder detail page (copy doc § /m routes).
 // Content extracted from meta/Breakpoint/Micro Mutual — NGMI Hairline -
 // Policy.md (§3/§4/§5/§7/§10/§11); no chain binding yet. Prices set
-// 2026-10-06: flat $25 entry, $200 maximum, grades pay 10/30/50/100%.
+// 2026-10-07: flat $10 entry, $200 maximum, grades pay 10/30/50/100%.
 import { PoolPageShell } from "./PoolPageShell";
 
 export function NgmiHairlinePage() {
@@ -18,7 +18,7 @@ export function NgmiHairlinePage() {
           "Receive defined protection against new gray hair during the event.",
           "If payments don't consume the pool, the remaining money comes back to the members. When the event is over, the mutual ends.",
         ],
-        tiers: [{ name: "Flat", fee: 25, cap: 200 }],
+        tiers: [{ name: "Flat", fee: 10, cap: 200 }],
         grades: [
           {
             grade: "I",
@@ -51,7 +51,7 @@ export function NgmiHairlinePage() {
           "New gray hair on the member's scalp — a hair that is gray along its visible length, that was not visible in the member's baseline Hairline Snapshot, and that is visible at the time of the payout request.",
         definitionNotes: [
           "The mutual does not investigate when the hair lost its pigment, or why. It pays on the difference between the two snapshots.",
-          "The label is the severity. The grade is the payment — a percentage of the $200 maximum, so the dollars above are the dollars paid.",
+          "The label is the severity. The grade is the payment — a percentage of the $200 maximum, and every payment is at most its grade: when claims exceed the pool, all payments scale down together.",
         ],
         exclusions: [
           "Gray hair visible in the baseline Hairline Snapshot.",
@@ -69,17 +69,18 @@ export function NgmiHairlinePage() {
           "Hairline Damage Report — the new grays catalogued (count, location) and the circumstances of their discovery",
           "Declaration of the facts, signed with your wallet",
         ],
-        feeNote: "Filing pre-pays an adjudication fee of 5 USDC (TODO-confirm in the policy).",
+        feeNote:
+          "Filing pre-pays an adjudication fee of 4 USDC — denied forfeits it, approved returns it with the payment.",
         example: {
           lines: [
             { value: "500", caption: "members" },
-            { value: "$25", caption: "each — one flat membership" },
-            { value: "$12,500", caption: "pool" },
-            { value: "120", caption: "approved claims" },
-            { value: "$5,300", caption: "paid (70×I, 35×II, 12×III, 3×IV)" },
+            { value: "$10", caption: "each — one flat membership" },
+            { value: "$5,000", caption: "pool" },
+            { value: "120", caption: "approved claims (70×I, 35×II, 12×III, 3×IV)" },
+            { value: "$5,300", caption: "due — more than the pool holds" },
           ],
-          total: { value: "$7,200", caption: "returned to members" },
-          note: "Gray hair at a conference is common and mild, so this pool runs a 1:8 payout ratio where the Blade Pool runs 1:100 — the jury grades what it sees, and the grade is the payment: $20/$60/$100/$200 on the $200 maximum.",
+          total: { value: "$5,000", caption: "paid out in full — nothing returns" },
+          note: "Gray hair at a conference is common and mild, so the approved claims exceed the pool: every payment and returned fee scales by the ratio 0.87 — a Grade I member receives ≈$17, a Grade IV member ≈$173. The jury grades what it sees, and the grade is the ceiling: $20/$60/$100/$200 on the $200 maximum.",
         },
         endNote:
           "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the mutual dissolves permanently.",

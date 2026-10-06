@@ -31,14 +31,13 @@ export interface PoolPageConfig {
   exclusions: string[];
   /** §7 required proof, short labels, in order */
   proof: string[];
-  /** the §7 adjudication-fee note (TODO-confirm where the doc says so) */
+  /** the §7 adjudication-fee note (final per the docs) */
   feeNote: string;
   /** §10 worked example — receipt lines + closing figure + the honest note */
   example: { lines: WorkedExampleLine[]; total: WorkedExampleLine; note: string };
   /** §8 winding-up, compressed */
   endNote: string;
-  /** overrides the end-note's draft caveat — the doc's own TODO state
-   * (default: prices still TODO-confirm in the doc) */
+  /** overrides the end-note's default caveat (pool-specific TODO state) */
   caveat?: string;
 }
 
@@ -266,7 +265,7 @@ export function PoolPageShell({ config }: { config: PoolPageConfig }) {
               <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
                 {c.endNote}{" "}
                 {c.caveat ??
-                  "Prices follow the doc's current tier table and are still marked TODO-confirm there — nothing on this page is live."}
+                  "Prices follow the doc's tier table — final in the docs; nothing on this page is live until the pool is on-chain."}
               </p>
             </div>
           </Settle>

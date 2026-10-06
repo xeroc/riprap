@@ -104,11 +104,11 @@ describe("landing", () => {
       "Toly Needs His Fuel",
       "Mert of the Year",
     ]);
-    // real tier numbers on the cards (docs §5 — Blade Pool final, rest TODO-confirm)
+    // real tier numbers on the cards (docs §5 — all final, 2026-10-07)
     expect(band?.textContent).toContain("$10–$40");
     expect(band?.textContent).toContain("up to $4,000");
     expect(band?.textContent).toContain("up to $40");
-    expect(band?.textContent).toContain("up to $150");
+    expect(band?.textContent).toContain("up to $500");
     // founder badges (experiment merchandising, not metrics)
     expect(band?.textContent).toContain("Most popular");
     expect(band?.textContent).toContain("Ridiculous");

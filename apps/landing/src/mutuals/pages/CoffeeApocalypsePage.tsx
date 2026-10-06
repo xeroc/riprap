@@ -42,7 +42,8 @@ export function CoffeeApocalypsePage() {
           "Queue evidence — a timestamped photo or video of you in the queue at that coffee point, at or immediately before the exhaustion",
           "Declaration of the facts, signed with your wallet",
         ],
-        feeNote: "Filing pre-pays an adjudication fee of 5 USDC (TODO-confirm in the policy).",
+        feeNote:
+          "Filing pre-pays an adjudication fee of 4 USDC — denied forfeits it, approved returns it with the payment.",
         example: {
           lines: [
             { value: "1,000", caption: "members" },

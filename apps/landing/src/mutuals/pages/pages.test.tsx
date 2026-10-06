@@ -59,22 +59,22 @@ describe("pool detail pages (#/m/<id> placeholders)", () => {
     // mutuals ask "What's covered.", bounties "What pays."
     expect(container.textContent).toMatch(/What's covered\.|What pays\./);
     expect(container.textContent).toContain("The math, on the doc's example.");
-    expect(container.textContent).toContain("TODO-confirm");
+    expect(container.textContent).toContain("Prices follow the doc's tier table");
     expect(container.textContent).toContain("nothing on this page is live");
   });
 
   it("ngmi-hairline shows the flat price and the graded payout schedule (policy §5)", () => {
     const { container } = render(<NgmiHairlinePage />);
     const text = container.textContent ?? "";
-    // flat $25 entry, $200 maximum — no draft tiers left
-    expect(text).toContain("$25");
+    // flat $10 entry, $200 maximum — no draft tiers left
+    expect(text).toContain("$10");
     expect(text).not.toContain("$5–$20");
     // grades I–IV pay 10/30/50/100% of the $200 maximum
     for (const pays of ["$20", "$60", "$100", "$200"]) expect(text).toContain(pays);
-    // §10 worked example recomputed on the flat price
-    expect(text).toContain("$12,500");
+    // §10 worked example: over-subscribed pool, payments scale by the ratio
+    expect(text).toContain("$5,000");
     expect(text).toContain("$5,300");
-    expect(text).toContain("$7,200");
+    expect(text).toContain("0.87");
   });
 
   it("bounty pages label their bands honestly (kind, not peril)", () => {
@@ -85,13 +85,13 @@ describe("pool detail pages (#/m/<id> placeholders)", () => {
       [...raj.container.querySelectorAll("td[data-num]")].map((td) => td.textContent),
     ).toContain("$50");
     cleanup();
-    // Mert of the Year: same bands, final prices (terms §5), consent + fee TODO
+    // Mert of the Year: same bands, final prices (terms §5), consent TODO
     const mert = render(<MertOfTheYearPage />);
     expect(mert.container.textContent).toContain("What pays.");
     expect(mert.container.textContent).toContain("Doesn't qualify.");
     expect(
       [...mert.container.querySelectorAll("td[data-num]")].map((td) => td.textContent),
     ).toContain("$1,000");
-    expect(mert.container.textContent).toContain("consent and the adjudication fee are still TODO");
+    expect(mert.container.textContent).toContain("consent is still TODO");
   });
 });

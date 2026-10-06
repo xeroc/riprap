@@ -56,9 +56,3 @@ export const POOL_PAGES: Record<string, LazyExoticComponent<ComponentType>> = Ob
     return [id, page];
   }),
 );
-
-/** The `<title>` for a pool's detail route. */
-export function poolTitle(id: string): string | undefined {
-  const pool = MUTUALS.find((m) => (m.pubkey ?? m.slug) === id);
-  return pool ? `Riprap: ${pool.name}` : undefined;
-}

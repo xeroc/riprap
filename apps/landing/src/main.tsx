@@ -1,8 +1,11 @@
-import type { ReactElement } from "react";
-import { lazy, StrictMode, Suspense, useEffect, useState } from "react";
+import { lazy, StrictMode, Suspense, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { HashRouter, Route, Routes, useLocation, useParams } from "react-router";
 import "./index.css";
 import App from "./App.tsx";
+// The pool registry maps every `#/m/<id>` detail route (pubkey once pinned,
+// else slug) to its page component (mutuals/registry.ts).
+import { POOL_PAGES } from "./mutuals/registry.ts";
 // One provider stack for every route (ADR-0007): a wallet connected on any
 // surface stays connected on all of them. Pages stay lazy so route code
 // keeps its own chunks.
@@ -21,80 +24,40 @@ const AdjudicateRoute = lazy(() =>
 const MutualsRoute = lazy(() =>
   import("./mutuals/MutualsPage.tsx").then((m) => ({ default: m.MutualsPage })),
 );
+const BlurbRoute = lazy(() =>
+  import("./blurb/BlurbPage.tsx").then((m) => ({ default: m.BlurbPage })),
+);
 
-import { POOL_PAGES, poolTitle } from "./mutuals/registry";
-
-function routeHash(hash: string): string | null {
-  const trimmed = hash.replace(/\/+$/, "");
-  return trimmed === "" || trimmed === "#" ? null : trimmed;
+/** `#/app/adjudicate/:dispute/:round` → the session shell; a non-numeric round
+ * or anything else under the prefix (trailing slash, malformed or extra
+ * segments) is the board. */
+function AdjudicateSurface() {
+  const { dispute, round } = useParams();
+  const session =
+    dispute !== undefined && dispute !== "" && round !== undefined && /^\d+$/.test(round)
+      ? { dispute, round: Number(round) }
+      : null;
+  return <AdjudicateRoute session={session} />;
 }
 
-/** `#/app/adjudicate/<dispute>/<round>` → the session shell; anything else
- * under the prefix (bare, trailing slash, malformed segments) is the board. */
-function parseAdjudicate(hash: string): { session: { dispute: string; round: number } | null } {
-  const rest = hash
-    .slice("#/app/adjudicate".length)
-    .replace(/\/+$/, "")
-    .split("/")
-    .slice(1) // drop the leading "" from "/dispute/round"
-    .map((segment) => decodeURIComponent(segment));
-  const [dispute, round] = rest;
-  if (dispute !== undefined && dispute !== "" && round !== undefined && /^\d+$/.test(round)) {
-    return { session: { dispute, round: Number(round) } };
-  }
-  return { session: null };
+/** `#/m/<id>` — a pool's detail route: the id is the pool's MUTUAL pubkey
+ * once pinned, else its slug. Unknown ids fall back to the platform landing,
+ * same as any other unmatched path. */
+function PoolSurface() {
+  const { id } = useParams();
+  if (id === undefined) return <App />;
+  const Page = POOL_PAGES[id];
+  return Page ? <Page /> : <App />;
 }
 
-function matchRoute(hash: string | null): { title: string | null; element: ReactElement } {
-  if (hash?.startsWith("#/m/")) {
-    const id = hash.slice("#/m/".length).replace(/\/+$/, "");
-    const Page = POOL_PAGES[id];
-    if (Page) return { title: poolTitle(id) ?? null, element: <Page /> };
-  }
-  if (hash?.startsWith("#/app/adjudicate")) {
-    const { session } = parseAdjudicate(hash);
-    return {
-      title: "Riprap: Adjudicate",
-      element: <AdjudicateRoute session={session} />,
-    };
-  }
-  switch (hash) {
-    case "#/2026-breakpoint-blade-pool":
-      return { title: "Riprap: Blade Pool @ Breakpoint 2026", element: <PoolRoute /> };
-    case "#/app":
-      return { title: "Riprap: Blade Pool member app", element: <MemberRoute /> };
-    case "#/app/file-claim":
-      return { title: "Riprap: File a payout request", element: <FileClaimRoute /> };
-    case "#/mutuals":
-      return { title: "Riprap: Pools", element: <MutualsRoute /> };
-    default:
-      return { title: null, element: <App /> };
-  }
-}
-
-// Captured from index.html's static <title> on first mount, restored on the
-// platform route. Module-level (not state): the router must survive StrictMode
-// double-mounts without re-capturing a route title as "platform".
-let platformTitle: string | null = null;
-
-export function Router() {
-  const [hash, setHash] = useState(() => routeHash(window.location.hash));
+/** In-page anchors ("#mechanism" clicked anywhere) land here as "/mechanism":
+ * the browser's native anchor jump fires before the platform has settled, so
+ * scroll once immediately and again right after. */
+function PlatformSurface() {
+  const { pathname } = useLocation();
   useEffect(() => {
-    const onHashChange = () => setHash(routeHash(window.location.hash));
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-  const match = matchRoute(hash);
-  useEffect(() => {
-    platformTitle ??= document.title;
-    document.title = match.title ?? platformTitle;
-  }, [match.title]);
-  // Cross-route anchors ("#mechanism" clicked on the pool/app routes): the
-  // browser's native anchor jump fires before the lazy platform has mounted,
-  // so scroll once immediately and again when the chunk has landed.
-  useEffect(() => {
-    if (hash === null || hash.startsWith("#/")) return;
-    const id = hash.slice(1);
+    if (pathname === "/") return;
+    const id = pathname.slice(1);
     const scroll = () => document.getElementById(id)?.scrollIntoView?.();
     const raf = requestAnimationFrame(scroll);
     const timer = setTimeout(scroll, 250);
@@ -102,8 +65,30 @@ export function Router() {
       cancelAnimationFrame(raf);
       clearTimeout(timer);
     };
-  }, [hash]);
-  return <Suspense fallback={null}>{match.element}</Suspense>;
+  }, [pathname]);
+  return <App />;
+}
+
+export function Router() {
+  return (
+    <HashRouter>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/" element={<PlatformSurface />} />
+          <Route path="/2026-breakpoint-blade-pool" element={<PoolRoute />} />
+          <Route path="/mutuals" element={<MutualsRoute />} />
+          <Route path="/m/:id" element={<PoolSurface />} />
+          <Route path="/blurb" element={<BlurbRoute />} />
+          <Route path="/app" element={<MemberRoute />} />
+          <Route path="/app/file-claim" element={<FileClaimRoute />} />
+          <Route path="/app/adjudicate" element={<AdjudicateSurface />} />
+          <Route path="/app/adjudicate/:dispute/:round" element={<AdjudicateSurface />} />
+          <Route path="/app/adjudicate/*" element={<AdjudicateSurface />} />
+          <Route path="*" element={<PlatformSurface />} />
+        </Routes>
+      </Suspense>
+    </HashRouter>
+  );
 }
 
 const root = document.getElementById("root");

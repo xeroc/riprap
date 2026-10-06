@@ -119,11 +119,11 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     const { container } = render(<MutualsPage />);
     expect(container.textContent).toContain("$10–$40");
     expect(container.textContent).toContain("<$4,000");
-    expect(container.textContent).toContain("$25");
+    expect(container.textContent).toContain("$10"); // NGMI flat entry (2026-10-07)
     expect(container.textContent).toContain("<$200");
     expect(container.textContent).toContain("<$40");
     expect(container.textContent).toContain("<$25");
-    expect(container.textContent).toContain("<$150");
+    expect(container.textContent).toContain("<$500");
     expect(container.textContent).toContain("<$1,000"); // Mert of the Year — final per terms §5
     const nums = [...container.querySelectorAll("td[data-num]")];
     expect(nums.length).toBe(UNIQUE_POOLS.length * 2);
@@ -153,11 +153,11 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     expect(seats["Operation Keep Raj Warm"]).toBe(10); // 10x payout — $50 / $5
     expect(seats["Lily's Liquid Lifeline"]).toBe(10);
     expect(seats["Toly Needs His Fuel"]).toBe(10);
-    expect(seats["Mert of the Year"]).toBe(100); // 100x bounty — $1000 / $10, the terms' §6 minimum
+    expect(seats["Mert of the Year"]).toBe(100); // 100x bounty — $1000 / $10
     // profit threshold: the first success is already funded by one entry,
     // the push number is the second success — where the member profits
-    expect(seats["NGMI Hairline"]).toBe(2); // grade I $20 <= $25 entry
-    expect(seats.OnlyFriends).toBe(2); // first intro $15, profit at the second
+    expect(seats["NGMI Hairline"]).toBe(2); // grade I $20 on a $10 entry → ceil(2)
+    expect(seats.OnlyFriends).toBe(2); // first intro $50 = $50 entry, profit at the second
     // stillNeeded shrinks with the live count and floors at 0 — need, not a cap
     const blade = MUTUALS.find((m) => m.name === "Blade Pool");
     if (!blade) throw new Error("no blade listing");

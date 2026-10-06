@@ -15,7 +15,7 @@ export function MertOfTheYearPage() {
         promise: [
           "Join a temporary bounty pool. Pay a fixed amount.",
           "Hand Mert an over-the-top trophy, deliver a completely serious thirty-second acceptance speech on his behalf, post proof on X tagging @riprapxyz.",
-          "If Mert declares your trophy the best he was handed, get paid $1000. If he doesn’t — or no verdict arrives — the remaining money comes back to the members. When the event is over, the bounty ends.",
+          "If Mert declares your trophy the best he was handed, get paid up to $1000. If he doesn’t — or no verdict arrives — the remaining money comes back to the members. When the event is over, the bounty ends.",
         ],
         tiers: [{ name: "Flat", fee: 10, cap: 1000 }],
         definition:
@@ -50,7 +50,8 @@ export function MertOfTheYearPage() {
           "Verdict evidence — Mert’s declaration, from an account or in a form the jury can verify, naming the winning trophy or member. Without it, the claim fails. The verdict is the proof.",
           "Declaration of the facts, signed with your wallet",
         ],
-        feeNote: "Filing pre-pays an adjudication fee of 5 USDC (TODO-confirm in the terms).",
+        feeNote:
+          "Filing pre-pays an adjudication fee of 40 USDC — denied forfeits it, approved returns it with the payment.",
         example: {
           lines: [
             { value: "400", caption: "members" },
@@ -59,12 +60,12 @@ export function MertOfTheYearPage() {
             { value: "1 × $1000", caption: "best trophy, verdict declared" },
           ],
           total: { value: "$3,000", caption: "returned to members" },
-          note: "The pot pays exactly one Qualifying Entry — the verdict’s. There is no second place. A member who contributed $10 and won is $990 ahead; the thirteen who did not win keep their trophies — the pot cannot refund a trophy.",
+          note: "The pot pays exactly one Qualifying Entry — the verdict’s. There is no second place. A member who contributed $10 and won is up to $990 ahead; the thirteen who did not win keep their trophies — the pot cannot refund a trophy.",
         },
         endNote:
           "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently.",
         caveat:
-          "Prices follow the doc’s tier table (final there); the named person’s consent and the adjudication fee are still TODO in the terms — nothing on this page is live.",
+          "Prices follow the doc's tier table (final there); the named person's consent is still TODO in the terms — nothing on this page is live.",
       }}
     />
   );

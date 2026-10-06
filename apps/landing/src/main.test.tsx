@@ -68,7 +68,6 @@ function goHash(hash: string) {
 afterEach(() => {
   cleanup();
   window.location.hash = "";
-  document.title = "";
 });
 
 describe("hash router", () => {
@@ -80,53 +79,47 @@ describe("hash router", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1);
   });
 
-  it("renders the pool route on #/2026-breakpoint-blade-pool (trailing slash tolerated) and swaps the title", async () => {
+  it("renders the pool route on #/2026-breakpoint-blade-pool (trailing slash tolerated)", async () => {
     window.location.hash = "#/2026-breakpoint-blade-pool/";
     renderRouter();
     expect(await screen.findByTestId("pool-route")).toBeTruthy();
     expect(screen.queryByTestId("app-route")).toBeNull();
-    await waitFor(() => expect(document.title).toBe("Riprap: Blade Pool @ Breakpoint 2026"));
   });
 
-  it("renders the member route on #/app and titles it", async () => {
+  it("renders the member route on #/app", async () => {
     window.location.hash = "#/app";
     renderRouter();
     expect(await screen.findByTestId("app-route")).toBeTruthy();
-    await waitFor(() => expect(document.title).toBe("Riprap: Blade Pool member app"));
   });
 
-  it("renders the wizard route on #/app/file-claim (trailing slash tolerated) and titles it", async () => {
+  it("renders the wizard route on #/app/file-claim (trailing slash tolerated)", async () => {
     window.location.hash = "#/app/file-claim/";
     renderRouter();
     expect(await screen.findByTestId("file-claim-route")).toBeTruthy();
     expect(screen.queryByTestId("app-route")).toBeNull();
-    await waitFor(() => expect(document.title).toBe("Riprap: File a payout request"));
   });
 
-  it("renders the mutuals directory route on #/mutuals and titles it", async () => {
+  it("renders the mutuals directory route on #/mutuals", async () => {
     window.location.hash = "#/mutuals";
     renderRouter();
     expect(await screen.findByTestId("mutuals-route")).toBeTruthy();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
-    await waitFor(() => expect(document.title).toBe("Riprap: Pools"));
   });
 
   it("renders the Blade Pool page on its #/m pubkey route id too (legacy route kept)", async () => {
     // Blade pins per cluster (devnet + mainnet) — the route id is the pubkey now
-    const devnet = MUTUALS.find((m) => m.slug === "blade-pool");
-    if (!devnet?.pubkey) throw new Error("blade-pool listing has no pinned pubkey");
-    window.location.hash = `#/m/${devnet.pubkey}`;
+    const blade = MUTUALS.find((m) => m.slug === "blade-pool");
+    if (!blade?.pubkey) throw new Error("blade-pool listing has no pinned pubkey");
+    window.location.hash = `#/m/${blade.pubkey}`;
     renderRouter();
     expect(await screen.findByTestId("pool-route")).toBeTruthy();
-    await waitFor(() => expect(document.title).toBe("Riprap: Blade Pool"));
   });
 
-  it("renders the adjudicate board on #/app/adjudicate and titles it", async () => {
+  it("renders the adjudicate board on #/app/adjudicate", async () => {
     window.location.hash = "#/app/adjudicate";
     renderRouter();
     const route = await screen.findByTestId("adjudicate-route");
     expect(route.getAttribute("data-session")).toBe("board");
-    await waitFor(() => expect(document.title).toBe("Riprap: Adjudicate"));
   });
 
   it("renders the session route on #/app/adjudicate/:dispute/:round (trailing slash tolerated)", async () => {
@@ -145,7 +138,7 @@ describe("hash router", () => {
     expect(route.getAttribute("data-session")).toBe("board");
   });
 
-  it("swaps surfaces on hashchange without a reload, restoring the platform title", async () => {
+  it("swaps surfaces on hashchange without a reload", async () => {
     renderRouter();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1);
 
@@ -157,6 +150,5 @@ describe("hash router", () => {
     await waitFor(() =>
       expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1),
     );
-    await waitFor(() => expect(document.title).toBe("")); // the platform title captured at mount
   });
 });

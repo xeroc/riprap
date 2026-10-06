@@ -39,7 +39,8 @@ export function ChairmageddonPage() {
           "Standing evidence — timestamped photos of you in the ceremony space, one at or near the published start and one at or near the end, both on your feet.",
           "Declaration of the facts, signed with your wallet",
         ],
-        feeNote: "Filing pre-pays an adjudication fee of 5 USDC (TODO-confirm in the policy).",
+        feeNote:
+          "Filing pre-pays an adjudication fee of 8 USDC — denied forfeits it, approved returns it with the payment.",
         example: {
           lines: [
             { value: "1,000", caption: "members" },
