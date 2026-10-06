@@ -1,7 +1,7 @@
 import type * as Connector from "@solana/connector";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { demoStats, entryRange, MUTUALS, poolRoute } from "./data";
+import { entryRange, MUTUALS, poolRoute, seatsNeeded } from "./data";
 import { MutualsPage } from "./MutualsPage";
 
 // The navbar carries the wallet controls (§0) — stub the connector hooks;
@@ -95,9 +95,20 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     expect(container.textContent).toContain("TODO-confirm");
   });
 
-  it("demo stats are deterministic — same pool, same numbers (data.ts)", () => {
+  it("seats the pool needs — the founder formula's six worked examples (data.ts)", () => {
+    const seats = Object.fromEntries(MUTUALS.map((m) => [m.name, seatsNeeded(m)]));
+    // funding threshold: the smallest payout needs ceil(payment / fee) members
+    expect(seats["Blade Pool"]).toBe(100); // 100x payout — $1,000 Basic cap / $10
+    expect(seats.Chairmageddon).toBe(4); // $40 / $10
+    expect(seats["Coffee Apocalypse"]).toBe(3); // $25 / $10 → ceil(2.5)
+    expect(seats["Operation Keep Raj Warm"]).toBe(10); // 10x payout — $50 / $5
+    expect(seats["Lily's Liquid Lifeline"]).toBe(10);
+    expect(seats["Toly Needs His Fuel"]).toBe(10);
+    // profit threshold: the first success is already funded by one entry,
+    // the push number is the second success — where the member profits
+    expect(seats["NGMI Hairline"]).toBe(2); // grade I $20 <= $25 entry
+    expect(seats.OnlyFriends).toBe(2); // first intro $15, profit at the second
     for (const pool of MUTUALS) {
-      expect(demoStats(pool)).toEqual(demoStats(pool));
       expect(entryRange(pool)).toMatch(/^\$\d+(–\$\d+)?$/);
     }
   });

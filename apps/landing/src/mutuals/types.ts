@@ -17,6 +17,9 @@ export interface MutualListing {
   /** one-liner, deadpan — the peril (or the paid act) named plainly */
   tagline: string;
   tiers: MutualTier[];
+  /** the smallest single success payment, USD — the smallest tier cap, or
+   *  the lowest grade/first-act payment where the pool pays in steps */
+  smallestPayout: number;
   /** merchandising badge (founder-set, experiment only) — e.g. "Most popular" */
   badge?: string;
   /**

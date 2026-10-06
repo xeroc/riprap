@@ -27,72 +27,70 @@ export function MutualsPage() {
               </p>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[44rem] border-collapse">
-                <caption className="sr-only">
-                  All Riprap pools: what each covers or pays for, entry fees, maximum payouts.
-                </caption>
-                <thead>
-                  <tr className="border-b border-hairline text-left">
-                    <th scope="col" aria-hidden="true" className="w-[18px] p-0" />
-                    {["Pool", "Covers", "Entry", "Max payout"].map((h) => (
-                      <th
-                        key={h}
-                        scope="col"
-                        className="pb-3 pr-4 uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)] last:pr-0"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {MUTUALS.map((pool) => (
-                    <tr key={pool.name} className="border-b border-hairline last:border-b-0">
-                      {/* the event lockup, rotated 90° — a pink strip running
-                          the full height of the row (founder ask) */}
-                      <td className="relative w-[18px] p-0">
-                        <span aria-hidden="true" className="absolute inset-0 bg-(--bp-2026-pink)" />
-                        <BpBadge className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 rotate-90" />
-                      </td>
-                      <th scope="row" className="py-4 pr-4 text-left align-top">
-                        <a
-                          href={poolRoute(pool)}
-                          className="font-medium whitespace-nowrap text-ink underline decoration-transparent underline-offset-4 transition-colors hover:decoration-current [font:var(--riprap-body-sm)]"
-                        >
-                          {pool.name}
-                        </a>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          {pool.badge ? (
-                            <span className="border border-accent px-1.5 py-0.5 uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
-                              {pool.badge}
-                            </span>
-                          ) : null}
-                          <span className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-                            {pool.kind}
-                          </span>
-                        </div>
-                      </th>
-                      <td className="py-4 pr-4 align-top text-body [font:var(--riprap-body-sm)]">
-                        {pool.tagline}
-                      </td>
-                      <td
-                        data-num
-                        className="py-4 pr-4 align-top font-mono text-sm whitespace-nowrap text-ink"
-                      >
-                        {entryRange(pool)}
-                      </td>
-                      <td
-                        data-num
-                        className="py-4 align-top font-mono text-sm whitespace-nowrap text-ink"
-                      >
-                        {capRange(pool)}
-                      </td>
-                    </tr>
+            <table className="w-full border-collapse">
+              <caption className="sr-only">
+                All Riprap pools: what each covers or pays for, entry fees, maximum payouts.
+              </caption>
+              <thead>
+                <tr className="border-b border-hairline text-left">
+                  <th scope="col" aria-hidden="true" className="w-[18px] p-0" />
+                  {["Pool", "Covers", "Entry", "Max payout"].map((h) => (
+                    <th
+                      key={h}
+                      scope="col"
+                      className={`pb-3 pr-4 uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)] last:pr-0${h === "Covers" ? " hidden sm:table-cell" : ""}`}
+                    >
+                      {h}
+                    </th>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </tr>
+              </thead>
+              <tbody>
+                {MUTUALS.map((pool) => (
+                  <tr key={pool.name} className="border-b border-hairline last:border-b-0">
+                    {/* the event lockup, rotated 90° — a pink strip running
+                          the full height of the row (founder ask) */}
+                    <td className="relative w-5 overflow-hidden p-0">
+                      <span aria-hidden="true" className="absolute inset-0 bg-(--bp-2026-pink)" />
+                      <BpBadge className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 rotate-90" />
+                    </td>
+                    <th scope="row" className="py-4 pl-2 pr-4 text-left align-top">
+                      <a
+                        href={poolRoute(pool)}
+                        className="font-medium text-ink underline decoration-transparent underline-offset-4 transition-colors hover:decoration-current [font:var(--riprap-body-sm)]"
+                      >
+                        {pool.name}
+                      </a>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        {pool.badge ? (
+                          <span className="border border-accent px-1.5 py-0.5 uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
+                            {pool.badge}
+                          </span>
+                        ) : null}
+                        <span className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
+                          {pool.kind}
+                        </span>
+                      </div>
+                    </th>
+                    <td className="hidden py-4 pr-4 align-top text-body sm:table-cell [font:var(--riprap-body-sm)]">
+                      {pool.tagline}
+                    </td>
+                    <td
+                      data-num
+                      className="py-4 pr-4 align-top font-mono text-sm whitespace-nowrap text-ink"
+                    >
+                      {entryRange(pool)}
+                    </td>
+                    <td
+                      data-num
+                      className="py-4 align-top font-mono text-sm whitespace-nowrap text-ink"
+                    >
+                      {capRange(pool)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
             <p className="max-w-2xl leading-relaxed text-muted-soft [font:var(--riprap-body-sm)]">
               Prices are the tier tables of each pool's policy or terms document; every pool except

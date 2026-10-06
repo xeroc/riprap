@@ -20,11 +20,12 @@ import { BpBadge } from "../components/BpBadge";
 import { Settle } from "../components/Settle";
 import {
   capRange,
-  demoStats,
   entryRange,
   MUTUALS,
   payoutWord,
   poolRoute,
+  seatsNeeded,
+  spotsOpen,
   supportersFor,
 } from "../mutuals/data";
 import type { MutualListing } from "../mutuals/types";
@@ -74,16 +75,14 @@ function EventBadge() {
 }
 
 function PoolCard({ pool }: { pool: MutualListing }) {
-  const stats = demoStats(pool);
   const bounty = pool.kind === "bounty";
   return (
     // the whole card is the pool's detail link (stretched over the card);
     // the class distinction: mutuals hairline, bounties dashed
     <article
       data-kind={pool.kind}
-      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${
-        bounty ? "border-dashed border-hairline-strong" : "border-hairline"
-      } bg-surface-card`}
+      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${bounty ? "border-dashed border-hairline-strong" : "border-hairline"
+        } bg-surface-card`}
     >
       <EventBadge />
       <a
@@ -124,17 +123,15 @@ function PoolCard({ pool }: { pool: MutualListing }) {
             {capRange(pool)}
           </dd>
         </div>
-        {/* demo stats — placeholder numbers, see data.ts demoStats */}
+        {/* seats (founder formula, data.ts seatsNeeded): how many members
+            the pool needs before the smallest payout makes sense. The open
+            count subtracts the live member count — a chain read against
+            the pool's pinned pubkey; pre-launch every pool sits at 0, so
+            the card shows the full seat count. */}
         <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-muted-foreground">members</dt>
-          <dd data-num className="text-ink">
-            {stats.members}
-          </dd>
-        </div>
-        <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-muted-foreground">{bounty ? "pot" : "pool"}</dt>
-          <dd data-num className="text-ink">
-            ${stats.pool.toLocaleString("en-US")}
+          <dt className="text-muted-foreground">spots open</dt>
+          <dd data-num className="text-accent">
+            {spotsOpen(pool)} / {seatsNeeded(pool)}
           </dd>
         </div>
       </dl>

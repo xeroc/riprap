@@ -36,6 +36,8 @@ export const MUTUALS: MutualListing[] = [
     // policy: Micro Mutual — Chairmageddon - Policy.md §3/§5 (prices TODO-confirm)
     tagline: "Every seat taken at the opening ceremony — and you stood the whole thing.",
     tiers: [{ name: "Flat", fee: 10, cap: 40 }],
+    // §5: the flat $40 payout is the only success payment
+    smallestPayout: 40,
     badge: "Most popular",
   },
   {
@@ -50,6 +52,8 @@ export const MUTUALS: MutualListing[] = [
       { name: "Standard", fee: 20, cap: 2000 },
       { name: "Premium", fee: 40, cap: 4000 },
     ],
+    // §5: the smallest tier's cap ($1,000 Basic) is the smallest success
+    smallestPayout: 1000,
     badge: "Certified paranoid", // founder call 2026-10-06: the one severe pool gets the self-aware label
     href: "#/2026-breakpoint-blade-pool",
   },
@@ -62,6 +66,8 @@ export const MUTUALS: MutualListing[] = [
     tagline:
       "New gray hair first visible during the conference — graded from a countable few to basically Gandalf.",
     tiers: [{ name: "Flat", fee: 25, cap: 200 }],
+    // §5: grade I pays 10% of the $200 maximum = $20 — the smallest success
+    smallestPayout: 20,
     badge: "Certified ridiculous",
   },
   {
@@ -72,6 +78,7 @@ export const MUTUALS: MutualListing[] = [
     tagline:
       "The coffee point runs out while you're standing in the queue. You leave with nothing.",
     tiers: [{ name: "Flat", fee: 10, cap: 25 }],
+    smallestPayout: 25,
   },
   {
     name: "OnlyFriends",
@@ -81,6 +88,8 @@ export const MUTUALS: MutualListing[] = [
     tagline:
       "Confirmed introductions of a member to a listed VIP — paid per introduction, capped at ten.",
     tiers: [{ name: "Flat", fee: 25, cap: 150 }],
+    // §5: one confirmed introduction pays $15 — the smallest success
+    smallestPayout: 15,
   },
   {
     name: "Operation Keep Raj Warm",
@@ -90,6 +99,7 @@ export const MUTUALS: MutualListing[] = [
     tagline:
       "Bring Raj a hot drink he asked for — hand to hand, still hot, confirmed by Raj himself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
+    smallestPayout: 50,
   },
   {
     name: "Lily's Liquid Lifeline",
@@ -99,6 +109,7 @@ export const MUTUALS: MutualListing[] = [
     tagline:
       "Bring Lily a hot drink she asked for — hand to hand, still hot, confirmed by Lily herself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
+    smallestPayout: 50,
   },
   {
     name: "Toly Needs His Fuel",
@@ -108,6 +119,7 @@ export const MUTUALS: MutualListing[] = [
     tagline:
       "Bring Toly a hot drink he asked for — hand to hand, still hot, confirmed by Toly himself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
+    smallestPayout: 50,
   },
 ];
 
@@ -149,15 +161,28 @@ function hash(input: string): number {
 }
 
 /**
- * DEMO STATS — placeholder numbers (experiment, NOT FOR DEPLOY): members is
- * derived from the pool name, the pot from members × the middle tier fee.
- * Replace with chain reads (pool total, member count) when live.
+ * Seats the pool needs before it makes sense (founder formula, 2026-10-06):
+ * the smallest tier always. If its smallest success payment is bigger than
+ * the entry fee, the pool needs ceil(payment / fee) members to fund one
+ * full payout — Blade Pool 100 (a 100x payout), Chairmageddon 4, Coffee
+ * Apocalypse 3, the hot-drink bounties 10 (a 10x payout). If the smallest
+ * payment is already covered by one entry (NGMI grade I $20 <= $25,
+ * OnlyFriends' first intro $15), the pool can pay out from the start and
+ * the honest push number is the SECOND success — where the member turns a
+ * profit — so 2.
  */
-export function demoStats(m: MutualListing): { members: number; pool: number } {
-  const members = 120 + (hash(m.name) % 820);
-  const fees = m.tiers.map((t) => t.fee).sort((a, b) => a - b);
-  const mid = fees[Math.floor(fees.length / 2)];
-  return { members, pool: members * mid };
+export function seatsNeeded(m: MutualListing): number {
+  const fee = Math.min(...m.tiers.map((t) => t.fee));
+  return m.smallestPayout > fee ? Math.ceil(m.smallestPayout / fee) : 2;
+}
+
+/**
+ * Spots still open — seatsNeeded minus the live member count. The count is
+ * a chain read (members of the pool's mutual, via its pinned pubkey);
+ * pre-launch every pool sits at 0, so the card shows the full seat count.
+ */
+export function spotsOpen(m: MutualListing, members = 0): number {
+  return Math.max(0, seatsNeeded(m) - members);
 }
 
 /** The card's supporter discs — a deterministic rotation of the mention list. */
