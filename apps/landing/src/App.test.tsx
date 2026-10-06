@@ -86,15 +86,16 @@ describe("landing", () => {
     expect(kinds[4].stamp).toBe("bounty");
     // no status anywhere — all pools go live together (founder call)
     expect(band?.textContent).not.toMatch(/policy in review|terms in review|First pool|draft/i);
-    // the seats row replaces the demo stats (founder formula, data.ts):
-    // open / needed, pre-launch every pool shows its full seat count
-    const spots = [...(band?.querySelectorAll("dd[data-num]") ?? [])]
+    // the members-needed row replaces the demo stats (founder formula,
+    // data.ts membersNeeded): need, not a cap — pre-launch every pool
+    // shows its full count
+    const needed = [...(band?.querySelectorAll("dd[data-num]") ?? [])]
       .map((d) => d.textContent)
-      .filter((t) => /\d+ \/ \d+/.test(t ?? ""));
-    expect(spots.length).toBe(8);
-    expect(spots).toContain("100 / 100"); // Blade Pool — the 100x payout
-    expect(spots).toContain("10 / 10"); // hot-drink bounties — the 10x
-    expect(spots).toContain("2 / 2"); // NGMI + OnlyFriends — profit threshold
+      .filter((t) => /^\d+$/.test(t ?? ""));
+    expect(needed.length).toBe(16); // 8 pools on the duplicated drift rail
+    expect(needed).toContain("100"); // Blade Pool — the 100x payout
+    expect(needed).toContain("10"); // hot-drink bounties — the 10x
+    expect(needed).toContain("2"); // NGMI + OnlyFriends — profit threshold
     // the directory CTA; no arrows — the drift and drag carry the carousel
     const showAll = screen.getByRole("link", { name: "Show all" });
     expect(showAll.getAttribute("href")).toBe("#/mutuals");

@@ -1,7 +1,7 @@
 import type * as Connector from "@solana/connector";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { entryRange, MUTUALS, poolRoute, seatsNeeded } from "./data";
+import { entryRange, membersNeeded, MUTUALS, poolRoute, stillNeeded } from "./data";
 import { MutualsPage } from "./MutualsPage";
 
 // The navbar carries the wallet controls (§0) — stub the connector hooks;
@@ -96,7 +96,7 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
   });
 
   it("seats the pool needs — the founder formula's six worked examples (data.ts)", () => {
-    const seats = Object.fromEntries(MUTUALS.map((m) => [m.name, seatsNeeded(m)]));
+    const seats = Object.fromEntries(MUTUALS.map((m) => [m.name, membersNeeded(m)]));
     // funding threshold: the smallest payout needs ceil(payment / fee) members
     expect(seats["Blade Pool"]).toBe(100); // 100x payout — $1,000 Basic cap / $10
     expect(seats.Chairmageddon).toBe(4); // $40 / $10
@@ -108,6 +108,10 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     // the push number is the second success — where the member profits
     expect(seats["NGMI Hairline"]).toBe(2); // grade I $20 <= $25 entry
     expect(seats.OnlyFriends).toBe(2); // first intro $15, profit at the second
+    // stillNeeded shrinks with the live count and floors at 0 — need, not a cap
+    const blade = MUTUALS.find((m) => m.name === "Blade Pool")!;
+    expect(stillNeeded(blade, 6)).toBe(94); // the founder's own example
+    expect(stillNeeded(blade, 400)).toBe(0);
     for (const pool of MUTUALS) {
       expect(entryRange(pool)).toMatch(/^\$\d+(–\$\d+)?$/);
     }
