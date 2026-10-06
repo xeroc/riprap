@@ -1,5 +1,0 @@
----
-"@riprap/landing": minor
----
-
-Pool registry and #/m/<pubkey> detail routes. Every pool now carries its route id in the data dictionary — the on-chain MUTUAL pubkey once pinned, else its slug — and resolves at #/m/<id> through a registry that links each id to its page component. The Blade Pool's full on-chain page serves both the new #/m/blade-pool and the legacy #/2026-breakpoint-blade-pool route; the other seven pools get placeholder detail pages (one .tsx each under src/mutuals/pages/, shared PoolPageShell) with their offer, definition, exclusions, claims proof, worked math, and end extracted from the policy/terms markdown — thin smoke tests only. Carousel: the arrow buttons are gone (the drift and drag carry it), every card is now one stretched link to its pool's detail route (cursor: pointer across the whole card; supporter discs keep their own links above), and the status stamp is removed everywhere — cards and table — since all pools go live together on-chain. The /mutuals table drops the Status and Kind columns; the kind renders under each pool's name and every name links to its detail page.

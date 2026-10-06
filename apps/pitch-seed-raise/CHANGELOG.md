@@ -1,5 +1,12 @@
 # @riprap/pitch-seed-raise
 
+## 0.6.0
+
+### Patch Changes
+
+- Updated dependencies [[`61606e8`](https://github.com/xeroc/riprap/commit/61606e8e6d3cdfc2d43497787b5208c884df98aa)]:
+  - @riprap/ui@0.6.0
+
 ## 0.5.0
 
 ### Patch Changes

@@ -1,5 +1,19 @@
 # @riprap/remotion
 
+## 0.6.0
+
+### Minor Changes
+
+- [#7](https://github.com/xeroc/riprap/pull/7) [`2675dd2`](https://github.com/xeroc/riprap/commit/2675dd22d214ee63cadc8d7e2f08835f98e45b80) Thanks [@xeroc](https://github.com/xeroc)! - Add the shared brand beats to the video framework: `BrandOpen` (ink crosshair, ring assembly, wordmark letterpress, kicker typewriter, 1s lockup hold) and `BrandClose` (animated lockup + closing line + riprap.xyz, 1s hold) in `src/shell/brand.tsx`, with duration/hold constants under test. Every new scaffold (`pnpm new <slug>`) now opens and closes on them; the open headline and closing line are per-video props. Default closing line is "Mutuals as an open protocol." (founder directive 2026-10-05).
+
+### Patch Changes
+
+- [#7](https://github.com/xeroc/riprap/pull/7) [`c4dbada`](https://github.com/xeroc/riprap/commit/c4dbada512a3c9aa75d351684f503ee772f5b3a7) Thanks [@xeroc](https://github.com/xeroc)! - Breakpoint 2026 intro video: background music is the found track "Meditation" by Arulo (Mixkit License, free commercial, no attribution required — source and license recorded in the video dir's AUDIO-SOURCE.md), mounted as a gitignored wav under `public/audio/`, plus the Breakpoint lockup assets under `public/breakpoint-assets/` (the same nav SVG pair the landing's event chip uses). The video itself renders from the local `videos/breakpoint-intro/` dir per the framework's gitignore convention.
+
+- [#7](https://github.com/xeroc/riprap/pull/7) [`5ab73f3`](https://github.com/xeroc/riprap/commit/5ab73f37600870b93294dcf5517b9d463cd29f95) Thanks [@xeroc](https://github.com/xeroc)! - Open the audio path in the video framework: music is any wav under `public/audio/` mounted via `defineVideo` — Strudel scoring is now an optional authoring path (README § Audio rewritten, MUSIC.md reframed as optional house style) with licensing and loudness made part of done. AGENTS.md repo map updated to match.
+- Updated dependencies [[`61606e8`](https://github.com/xeroc/riprap/commit/61606e8e6d3cdfc2d43497787b5208c884df98aa)]:
+  - @riprap/ui@0.6.0
+
 ## 0.5.0
 
 ### Minor Changes

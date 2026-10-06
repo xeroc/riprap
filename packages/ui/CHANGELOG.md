@@ -1,5 +1,11 @@
 # @riprap/ui
 
+## 0.6.0
+
+### Minor Changes
+
+- [#7](https://github.com/xeroc/riprap/pull/7) [`61606e8`](https://github.com/xeroc/riprap/commit/61606e8e6d3cdfc2d43497787b5208c884df98aa) Thanks [@xeroc](https://github.com/xeroc)! - Add `PoolCard` and `MemberRow` chrome components — the platform-register pool card (risk stamp + group display name, numberless by the category law) and the hairline member row (mono handle, avatar disc), first used by the riprap-promo-2026-10 video and available to the landing's future instances surface.
+
 ## 0.5.0
 
 No changes in this release.

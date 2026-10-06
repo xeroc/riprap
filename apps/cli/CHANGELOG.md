@@ -1,5 +1,20 @@
 # @riprap/cli
 
+## 0.6.0
+
+### Minor Changes
+
+- [#7](https://github.com/xeroc/riprap/pull/7) [`c9f8d7e`](https://github.com/xeroc/riprap/commit/c9f8d7e3b8f420f77c9be20be58432d0adad7b1a) Thanks [@xeroc](https://github.com/xeroc)! - Concurrent claims per membership: `file_claim` no longer serializes filings
+  (`has_pending` gate removed) and no longer requires `rights_stake > 0` — the
+  cumulative per-membership tier cap (`cap_used`, `TierCapExhausted`) is the only
+  filing limiter, so chunked claiming works for the full cap instead of locking
+  out after contribution-worth of payouts. `Member` drops `has_pending_claim`,
+  `file_claim` drops the depositor account, and the error set drops
+  `PendingClaimExists`/`NoRightsStake` (codes after `NotMember` shift down two).
+  The CLI `hanse:member` dump shows cap used; the wizard's preflight gates on
+  cap remaining and the amount step clamps to it (EVENT-MUTUAL amendment
+  2026-10-05, ADR-0008).
+
 ## 0.5.0
 
 No changes in this release.
