@@ -161,7 +161,7 @@ function hash(input: string): number {
 }
 
 /**
- * Seats the pool needs before it makes sense (founder formula, 2026-10-06):
+ * Members the pool needs before it makes sense (founder formula, 2026-10-06):
  * the smallest tier always. If its smallest success payment is bigger than
  * the entry fee, the pool needs ceil(payment / fee) members to fund one
  * full payout — Blade Pool 100 (a 100x payout), Chairmageddon 4, Coffee
@@ -171,18 +171,20 @@ function hash(input: string): number {
  * the honest push number is the SECOND success — where the member turns a
  * profit — so 2.
  */
-export function seatsNeeded(m: MutualListing): number {
+export function membersNeeded(m: MutualListing): number {
   const fee = Math.min(...m.tiers.map((t) => t.fee));
   return m.smallestPayout > fee ? Math.ceil(m.smallestPayout / fee) : 2;
 }
 
 /**
- * Spots still open — seatsNeeded minus the live member count. The count is
- * a chain read (members of the pool's mutual, via its pinned pubkey);
- * pre-launch every pool sits at 0, so the card shows the full seat count.
+ * Members still needed until the pool makes sense — membersNeeded minus the
+ * live member count (a chain read against the pool's pinned pubkey).
+ * Pre-launch every pool sits at 0, so the card shows the full count; the
+ * number shrinks as members join and reaches 0 when the pool makes sense.
+ * Not a cap: nothing limits how many join.
  */
-export function spotsOpen(m: MutualListing, members = 0): number {
-  return Math.max(0, seatsNeeded(m) - members);
+export function stillNeeded(m: MutualListing, members = 0): number {
+  return Math.max(0, membersNeeded(m) - members);
 }
 
 /** The card's supporter discs — a deterministic rotation of the mention list. */

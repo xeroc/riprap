@@ -24,8 +24,7 @@ import {
   MUTUALS,
   payoutWord,
   poolRoute,
-  seatsNeeded,
-  spotsOpen,
+  stillNeeded,
   supportersFor,
 } from "../mutuals/data";
 import type { MutualListing } from "../mutuals/types";
@@ -123,15 +122,15 @@ function PoolCard({ pool }: { pool: MutualListing }) {
             {capRange(pool)}
           </dd>
         </div>
-        {/* seats (founder formula, data.ts seatsNeeded): how many members
-            the pool needs before the smallest payout makes sense. The open
-            count subtracts the live member count — a chain read against
-            the pool's pinned pubkey; pre-launch every pool sits at 0, so
-            the card shows the full seat count. */}
+        {/* members needed (founder formula, data.ts membersNeeded): how
+            many more members until the pool makes sense — need, not a cap.
+            Shrinks with the live member count (a chain read against the
+            pool's pinned pubkey); pre-launch every pool sits at 0, so the
+            card shows the full count. */}
         <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-muted-foreground">spots open</dt>
+          <dt className="text-muted-foreground">members needed</dt>
           <dd data-num className="text-accent">
-            {spotsOpen(pool)} / {seatsNeeded(pool)}
+            {stillNeeded(pool)}
           </dd>
         </div>
       </dl>
