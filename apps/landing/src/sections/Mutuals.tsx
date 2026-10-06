@@ -237,8 +237,7 @@ export function Mutuals() {
           data-autoplay={driftOn ? "on" : "off"}
           data-paused={hovered ? "true" : "false"}
           onPointerEnter={() => setHovered(true)}
-          onPointerLeave={() => setHovered(false)}
-          className="no-scrollbar flex w-full gap-4 overflow-x-auto pt-3 pb-2"
+          className="no-scrollbar carousel-edge-fade flex w-full gap-4 overflow-x-auto pt-3 pb-2"
           tabIndex={-1}
         >
           {MUTUALS.map((pool) => (

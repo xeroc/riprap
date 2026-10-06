@@ -121,6 +121,9 @@ describe("landing", () => {
     // the track autoplays (drift) and hides its scrollbar; the duplicated
     // rail keeps the wrap seamless with clones inert to AT
     const track = band?.querySelector(".no-scrollbar");
+    // the rail's soft spatial fade at the outer edges — desktop only
+    // (lg media query in index.css; founder ask, copy doc §1.2 v8)
+    expect(track?.className).toContain("carousel-edge-fade");
     expect(track?.className).toContain("no-scrollbar");
     expect(track?.getAttribute("data-autoplay")).toMatch(/^(on|off)$/);
     const articles = band?.querySelectorAll("article") ?? [];

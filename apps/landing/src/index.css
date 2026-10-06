@@ -111,3 +111,22 @@ samp {
 :root {
   --bp-2026-pink: #aa67fb;
 }
+
+/* carousel-edge-fade — the mutuals rail's soft spatial fade at the outer
+   edges (founder ask): over color, not time — cards dissolve into the page
+   ground as they enter from the right and exit to the left, 12% of the
+   track width per side. Desktop (lg and up) only: on a phone-width track
+   the fade would eat live cards. Alpha mask, so it composites over any
+   band tone; hit-testing is unaffected (masked edge cards stay clickable). */
+@media (min-width: 64rem) {
+  .carousel-edge-fade {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 12%,
+      #000 88%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+  }
+}
