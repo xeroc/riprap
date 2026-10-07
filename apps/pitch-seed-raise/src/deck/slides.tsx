@@ -226,27 +226,27 @@ const FIELD_ROWS: {
   chain: string;
   cells: { v: string; sub?: string }[];
 }[] = [
-    {
-      name: "Nexus Mutual",
-      chain: "ethereum · arbitrum · kyc",
-      cells: [
-        { v: "$5.7M", sub: "cover fees '25" },
-        { v: "$2.7M", sub: "ever · no VC" },
-        { v: "$1B+", sub: "purchased '25" },
-      ],
-    },
-    {
-      name: "OpenCover",
-      chain: "base · ethereum · off-chain co",
-      cells: [
-        { v: "—", sub: "undisclosed" },
-        { v: "$4.6M", sub: "seed '22–23" },
-        { v: "$141.6M", sub: "protected '25" },
-      ],
-    },
-  ];
+  {
+    name: "Nexus Mutual",
+    chain: "ethereum · arbitrum · kyc",
+    cells: [
+      { v: "$5.7M", sub: "cover fees '25" },
+      { v: "$2.7M", sub: "ever · no VC" },
+      { v: "$1B+", sub: "purchased '25" },
+    ],
+  },
+  {
+    name: "OpenCover",
+    chain: "base · ethereum · off-chain co",
+    cells: [
+      { v: "—", sub: "undisclosed" },
+      { v: "$4.6M", sub: "seed '22–23" },
+      { v: "$141.6M", sub: "protected '25" },
+    ],
+  },
+];
 
-const IncumbantsProblemSlide: FC = () => {
+export const IncumbantsProblemSlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the competition" headline="there's basically no competitor.">
@@ -534,7 +534,7 @@ const EVIDENCE_ROWS = [
   },
 ];
 
-const MarketSlide: FC = () => {
+export const MarketSlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame
@@ -593,56 +593,56 @@ const PILOT_POOLS: {
   entry: string;
   payout: string;
 }[] = [
-    {
-      name: "Blade Pool",
-      kind: "mutual",
-      pays: "bodily injury caused by another person with a knife or blade, during the conference",
-      entry: "$10–$40",
-      payout: "up to $4,000",
-    },
-    {
-      name: "Chairmageddon",
-      kind: "mutual",
-      pays: "every seat taken at the opening ceremony — and you stood the whole thing",
-      entry: "$10",
-      payout: "$40",
-    },
-    {
-      name: "NGMI Hairline",
-      kind: "mutual",
-      pays: "new gray hair first visible during the conference — graded from a few to Gandalf",
-      entry: "$10",
-      payout: "up to $200",
-    },
-    {
-      name: "Coffee Apocalypse",
-      kind: "mutual",
-      pays: "the coffee point runs out while you're standing in the queue",
-      entry: "$10",
-      payout: "$25",
-    },
-    {
-      name: "OnlyFriends",
-      kind: "bounty",
-      pays: "confirmed introductions to listed VIPs — paid per introduction, capped at ten",
-      entry: "$50",
-      payout: "up to $500",
-    },
-    {
-      name: "Hot-drink Runs",
-      kind: "bounty",
-      pays: "bring Raj, Lily, or Toly the hot drink they asked for — hand to hand, still hot",
-      entry: "$5",
-      payout: "$50",
-    },
-    {
-      name: "Mert of the Year",
-      kind: "bounty",
-      pays: "an over-the-top trophy he did not ask for — pays the one he declares best",
-      entry: "$10",
-      payout: "$1,000",
-    },
-  ];
+  {
+    name: "Blade Pool",
+    kind: "mutual",
+    pays: "bodily injury caused by another person with a knife or blade, during the conference",
+    entry: "$10–$40",
+    payout: "up to $4,000",
+  },
+  {
+    name: "Chairmageddon",
+    kind: "mutual",
+    pays: "every seat taken at the opening ceremony — and you stood the whole thing",
+    entry: "$10",
+    payout: "$40",
+  },
+  {
+    name: "NGMI Hairline",
+    kind: "mutual",
+    pays: "new gray hair first visible during the conference — graded from a few to Gandalf",
+    entry: "$10",
+    payout: "up to $200",
+  },
+  {
+    name: "Coffee Apocalypse",
+    kind: "mutual",
+    pays: "the coffee point runs out while you're standing in the queue",
+    entry: "$10",
+    payout: "$25",
+  },
+  {
+    name: "OnlyFriends",
+    kind: "bounty",
+    pays: "confirmed introductions to listed VIPs — paid per introduction, capped at ten",
+    entry: "$50",
+    payout: "up to $500",
+  },
+  {
+    name: "Hot-drink Runs",
+    kind: "bounty",
+    pays: "bring Raj, Lily, or Toly the hot drink they asked for — hand to hand, still hot",
+    entry: "$5",
+    payout: "$50",
+  },
+  {
+    name: "Mert of the Year",
+    kind: "bounty",
+    pays: "an over-the-top trophy he did not ask for — pays the one he declares best",
+    entry: "$10",
+    payout: "$1,000",
+  },
+];
 
 const LaunchSlide: FC = () => {
   const frame = useSlideFrame();
@@ -772,7 +772,7 @@ const UNLOCK_STEPS = [
   "growth — convert pilot traction into organizer-initiated pools",
 ];
 
-const AskSlide: FC = () => {
+export const AskSlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the ask" headline={<>raising $700k pre-seed at $7M</>}>
@@ -1003,7 +1003,7 @@ const HARD_QUESTIONS: { index: string; q: string; a: string }[] = [
   },
 ];
 
-const AppendixQASlide: FC = () => {
+export const AppendixQASlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the problems" headline="The hard questions that need solving.">
