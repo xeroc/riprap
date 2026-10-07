@@ -32,8 +32,8 @@ export const MUTUALS: MutualListing[] = [
     name: "Blade Pool",
     kind: "mutual",
     slug: "blade-pool-devnet",
+    claimFlow: "blade-pool",
     // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
-    // mutual address is env-driven (pool/mutual.ts) — pin pubkey at deploy.
     tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
     tiers: [
       { name: "Basic", fee: 10, cap: 1000 },
@@ -50,6 +50,7 @@ export const MUTUALS: MutualListing[] = [
     name: "Blade Pool",
     kind: "mutual",
     slug: "blade-pool",
+    claimFlow: "blade-pool",
     // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
     // mutual address is env-driven (pool/mutual.ts) — pin pubkey at deploy.
     tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
@@ -74,6 +75,7 @@ export const MUTUALS: MutualListing[] = [
     // §5: the flat $40 payout is the only success payment
     smallestPayout: 40,
     badge: "Most popular",
+    pubkey: "5Yo1BKU8Vy9mRRwXqrjJhtw4CFmfkZiZoW7VSTj5huEq", // mainnet
   },
   {
     name: "NGMI Hairline",
@@ -163,6 +165,12 @@ export function poolRouteId(m: MutualListing): string {
 /** The pool's detail route, `#/m/<pubkey-or-slug>`. */
 export function poolRoute(m: MutualListing): string {
   return `#/m/${poolRouteId(m)}`;
+}
+
+/** The listing a route id (`pubkey ?? slug`) points at — poolRouteId's
+ * inverse; the wizard route `#/app/file-claim/<id>` resolves through this. */
+export function poolByRouteId(id: string): MutualListing | undefined {
+  return MUTUALS.find((m) => poolRouteId(m) === id);
 }
 
 /** `$10` or `$10–$40` — the entry-fee span across tiers (docs §5). */
