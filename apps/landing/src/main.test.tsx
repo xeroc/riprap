@@ -31,13 +31,22 @@ vi.mock("./app/AppPage", () => ({
   AppPage: () => <div data-testid="app-route" />,
 }));
 vi.mock("./app/file-claim/FileClaimPage", () => ({
-  FileClaimPage: () => <div data-testid="file-claim-route" />,
+  FileClaimPage: ({ pool }: { pool?: string }) => (
+    <div data-testid="file-claim-route" data-pool={pool ?? "none"} />
+  ),
 }));
 vi.mock("./adjudicate/AdjudicatePage", () => ({
-  AdjudicatePage: ({ session = null }: { session?: { round: number } | null }) => (
+  AdjudicatePage: ({
+    session = null,
+    pool,
+  }: {
+    session?: { round: number } | null;
+    pool?: string;
+  }) => (
     <div
       data-testid="adjudicate-route"
       data-session={session ? `round-${session.round}` : "board"}
+      data-pool={pool ?? "none"}
     />
   ),
 }));
@@ -92,11 +101,31 @@ describe("hash router", () => {
     expect(await screen.findByTestId("app-route")).toBeTruthy();
   });
 
-  it("renders the wizard route on #/app/file-claim (trailing slash tolerated)", async () => {
-    window.location.hash = "#/app/file-claim/";
+  it("the bare #/app/file-claim hash is not a route — the platform landing answers", async () => {
+    window.location.hash = "#/app/file-claim";
     renderRouter();
-    expect(await screen.findByTestId("file-claim-route")).toBeTruthy();
-    expect(screen.queryByTestId("app-route")).toBeNull();
+    expect((await screen.findByRole("heading", { level: 1 })).textContent).toBe(PLATFORM_H1);
+  });
+
+  it("renders the wizard on its pool-scoped route #/app/file-claim/:pool", async () => {
+    window.location.hash = "#/app/file-claim/blade-pool";
+    renderRouter();
+    const route = await screen.findByTestId("file-claim-route");
+    expect(route.getAttribute("data-pool")).toBe("blade-pool");
+  });
+
+  it("renders the adjudicate board on #/app/adjudicate and its pool-scoped route", async () => {
+    window.location.hash = "#/app/adjudicate";
+    renderRouter();
+    const board = await screen.findByTestId("adjudicate-route");
+    expect(board.getAttribute("data-session")).toBe("board");
+    expect(board.getAttribute("data-pool")).toBe("none");
+    goHash("#/app/adjudicate/blade-pool");
+    await waitFor(() => {
+      const scoped = screen.getByTestId("adjudicate-route");
+      expect(scoped.getAttribute("data-session")).toBe("board");
+      expect(scoped.getAttribute("data-pool")).toBe("blade-pool");
+    });
   });
 
   it("renders the mutuals directory route on #/mutuals", async () => {

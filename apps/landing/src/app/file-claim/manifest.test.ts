@@ -119,7 +119,7 @@ describe("riprap-claim/v1 — the five canonical policy §7 paths", () => {
   it("rejects an incomplete set (policy §7: not adjudicated)", () => {
     expect(() =>
       serializeClaimManifest(exampleInput({ entries: exampleInput().entries.slice(0, 4) })),
-    ).toThrow(/five canonical/);
+    ).toThrow(/canonical policy §7 paths/);
   });
 
   it("rejects an unknown path (ADR-0031: untracked path is a daemon 400)", () => {
@@ -131,14 +131,14 @@ describe("riprap-claim/v1 — the five canonical policy §7 paths", () => {
     } as unknown as ClaimManifestInput["entries"][number];
     expect(() =>
       serializeClaimManifest(exampleInput({ entries: [...entries.slice(0, 4), forged] })),
-    ).toThrow(/five canonical/);
+    ).toThrow(/canonical policy §7 paths/);
   });
 
   it("rejects reordered entries — policy order is the canonical order", () => {
     const entries = exampleInput().entries;
     const swapped = [entries[1], entries[0], entries[2], entries[3], entries[4]];
     expect(() => serializeClaimManifest(exampleInput({ entries: swapped }))).toThrow(
-      /five canonical/,
+      /canonical policy §7 paths/,
     );
   });
 

@@ -12,9 +12,9 @@ import { fetchDispute, fetchSubaccordMaybe } from "@useaccord/sdk";
 import { useState } from "react";
 import type { ClusterRpc } from "../../shared/rpc";
 import { intakeDocument, sha256Hex } from "./documents";
-import { DOC_SLOTS } from "./draft";
 import { operatorPubFromKey, postManifest, putDocument } from "./evidence";
 import { recordDelivery } from "./evidenceRecord";
+import type { DocSlot } from "./flow";
 import { resolveEvidenceOperator } from "./useEvidenceOperator";
 
 type RecoveryState =
@@ -32,12 +32,15 @@ export function Recovery({
   subaccord,
   dispute,
   nonce,
+  slots,
 }: {
   clusterRpc: ClusterRpc;
   mutual: Address;
   subaccord: Address;
   dispute: Address;
   nonce: bigint;
+  /** The pool's policy §7 slots (its ClaimFlow pack) — the re-attach rows. */
+  slots: readonly DocSlot[];
 }) {
   const [state, setState] = useState<RecoveryState>({ phase: "idle" });
   const [files, setFiles] = useState(new Map<string, Uint8Array>());
@@ -83,7 +86,7 @@ export function Recovery({
       }
 
       const rows: Record<string, string> = {};
-      for (const slot of DOC_SLOTS) {
+      for (const slot of slots) {
         const bytes = files.get(slot.path);
         if (bytes === undefined) {
           rows[slot.path] = "failed";
@@ -112,7 +115,7 @@ export function Recovery({
         rows[slot.path] = "delivered";
         setState((current) => ({ ...current, rows: { ...rows } }));
       }
-      if (DOC_SLOTS.every((slot) => rows[slot.path] === "delivered")) {
+      if (slots.every((slot) => rows[slot.path] === "delivered")) {
         recordDelivery(mutual, nonce);
         setState({ phase: "done" });
       }
@@ -125,7 +128,7 @@ export function Recovery({
   };
 
   const attach = async (path: string, file: File) => {
-    const slot = DOC_SLOTS.find((s) => s.path === path);
+    const slot = slots.find((s) => s.path === path);
     if (slot === undefined) return;
     const result = await intakeDocument(slot, file);
     setFiles((current) => new Map(current).set(path, result.bytes));
@@ -164,7 +167,7 @@ export function Recovery({
             Manifest verified against the claim — re-attach the five documents.
           </p>
           <ul className="flex flex-col">
-            {DOC_SLOTS.map((slot) => (
+            {slots.map((slot) => (
               <li
                 key={slot.path}
                 className="flex items-center justify-between gap-4 border-b border-hairline py-2 first:border-t"
@@ -189,7 +192,7 @@ export function Recovery({
             ))}
           </ul>
           <div>
-            <Button disabled={files.size < DOC_SLOTS.length} onClick={() => void redeliver()}>
+            <Button disabled={files.size < slots.length} onClick={() => void redeliver()}>
               Redeliver evidence
             </Button>
           </div>
@@ -198,7 +201,7 @@ export function Recovery({
       {state.phase === "delivering" ? (
         <>
           <ul className="flex flex-col">
-            {DOC_SLOTS.map((slot) => (
+            {slots.map((slot) => (
               <li
                 key={slot.path}
                 className="flex items-baseline justify-between gap-4 border-b border-hairline py-2 first:border-t"

@@ -37,7 +37,6 @@ export function ChairmageddonPage() {
           "Government photo ID",
           "Capacity evidence — that the seats ran out (an announcement, a staff statement, photos of the full space). A shared fact: members may rely on the same evidence.",
           "Standing evidence — timestamped photos of you in the ceremony space, one at or near the published start and one at or near the end, both on your feet.",
-          "Declaration of the facts, signed with your wallet",
         ],
         feeNote:
           "Filing pre-pays an adjudication fee of 8 USDC — denied forfeits it, approved returns it with the payment.",

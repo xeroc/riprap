@@ -28,16 +28,25 @@ const BlurbRoute = lazy(() =>
   import("./blurb/BlurbPage.tsx").then((m) => ({ default: m.BlurbPage })),
 );
 
-/** `#/app/adjudicate/:dispute/:round` → the session shell; a non-numeric round
- * or anything else under the prefix (trailing slash, malformed or extra
- * segments) is the board. */
+/** `#/app/file-claim/:pool` — the payout wizard for one pool: the id is the
+ * pool's route id (`pubkey ?? slug`). Unknown ids land on the app surface
+ * (the joined-pools table). */
+function FileClaimSurface() {
+  const { pool } = useParams();
+  return <FileClaimRoute pool={pool} />;
+}
+
+/** `#/app/adjudicate[/:pool]` and `#/app/adjudicate/:dispute/:round` — the
+ * duty board for one pool (bare = the static-map pool, the pool page's
+ * juror CTA) or the session shell; a non-numeric round or anything else
+ * under the prefix is the board. */
 function AdjudicateSurface() {
-  const { dispute, round } = useParams();
+  const { pool, dispute, round } = useParams();
   const session =
     dispute !== undefined && dispute !== "" && round !== undefined && /^\d+$/.test(round)
       ? { dispute, round: Number(round) }
       : null;
-  return <AdjudicateRoute session={session} />;
+  return <AdjudicateRoute session={session} pool={pool} />;
 }
 
 /** `#/m/<id>` — a pool's detail route: the id is the pool's MUTUAL pubkey
@@ -80,8 +89,9 @@ export function Router() {
           <Route path="/m/:id" element={<PoolSurface />} />
           <Route path="/blurb" element={<BlurbRoute />} />
           <Route path="/app" element={<MemberRoute />} />
-          <Route path="/app/file-claim" element={<FileClaimRoute />} />
+          <Route path="/app/file-claim/:pool" element={<FileClaimSurface />} />
           <Route path="/app/adjudicate" element={<AdjudicateSurface />} />
+          <Route path="/app/adjudicate/:pool" element={<AdjudicateSurface />} />
           <Route path="/app/adjudicate/:dispute/:round" element={<AdjudicateSurface />} />
           <Route path="/app/adjudicate/*" element={<AdjudicateSurface />} />
           <Route path="*" element={<PlatformSurface />} />

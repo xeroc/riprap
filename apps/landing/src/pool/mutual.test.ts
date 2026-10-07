@@ -2,9 +2,16 @@
 // provenance: policy §5 ($10/$1k · $20/$2k · $40/$4k) and the e2e fixture
 // scale (6-dp USDC, $10 = 10_000_000n — tests/src/setup/fixtures.ts).
 import { afterEach, describe, expect, it, vi } from "vitest";
-
+import { MUTUALS, poolByRouteId } from "../mutuals/data";
 import { fakeMutual } from "./fixtures";
-import { depositsOpenAt, formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "./mutual";
+import {
+  depositsOpenAt,
+  formatUtc,
+  microToUsd,
+  poolTiers,
+  resolveMutualAddress,
+  resolvePoolAddress,
+} from "./mutual";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -26,6 +33,14 @@ describe("poolTiers — names by §5 index, prices from the chain", () => {
       { name: "Standard", fee: 20, cap: 2000 },
       { name: "Premium", fee: 40, cap: 4000 },
     ]);
+  });
+
+  it("takes the listing's tier names for pool-scoped surfaces — the §5 table is the directory's", () => {
+    expect(poolTiers(fakeMutual({ tiers: [fakeMutual().tiers[0]] }), ["Flat"])).toEqual([
+      { name: "Flat", fee: 10, cap: 1000 },
+    ]);
+    // no names → honest generic fallback, never a wrong policy name
+    expect(poolTiers(fakeMutual(), [])[0]?.name).toBe("Tier 1");
   });
 });
 
@@ -70,5 +85,60 @@ describe("resolveMutualAddress — the one static pool constant", () => {
     expect(
       resolveMutualAddress({ isLocal: false, isMainnet: false, isDevnet: false }),
     ).toBeUndefined();
+  });
+});
+
+describe("resolvePoolAddress — a directory pool's on-chain address", () => {
+  const bladeMainnet = MUTUALS.find((m) => m.slug === "blade-pool");
+  const bladeDevnet = MUTUALS.find((m) => m.slug === "blade-pool-devnet");
+  const mainnet = { isLocal: false, isMainnet: true, isDevnet: false };
+  const devnet = { isLocal: false, isMainnet: false, isDevnet: true };
+  const localnet = { isLocal: true, isMainnet: false, isDevnet: false };
+
+  it("the pinned pubkey serves the listing when the env override is unset", () => {
+    vi.stubEnv("VITE_MAINNET_MUTUAL", "");
+    vi.stubEnv("VITE_DEVNET_MUTUAL", "");
+    expect(bladeMainnet && resolvePoolAddress(bladeMainnet, mainnet)).toBe(
+      "DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF",
+    );
+    expect(bladeDevnet && resolvePoolAddress(bladeDevnet, devnet)).toBe(
+      "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe",
+    );
+  });
+
+  it("the env override beats the pin — dev points it anywhere without a rebuild", () => {
+    vi.stubEnv("VITE_MAINNET_MUTUAL", "Mutual1111111111111111111111111111111111111111");
+    expect(bladeMainnet && resolvePoolAddress(bladeMainnet, mainnet)).toBe(
+      "Mutual1111111111111111111111111111111111111111",
+    );
+  });
+
+  it("localnet reads env only — a surfnet address can never be a pin", () => {
+    vi.stubEnv("VITE_LOCALNET_MUTUAL", "MutualXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    expect(bladeMainnet && resolvePoolAddress(bladeMainnet, localnet)).toBe(
+      "MutualXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    );
+    vi.stubEnv("VITE_LOCALNET_MUTUAL", "");
+    expect(bladeMainnet && resolvePoolAddress(bladeMainnet, localnet)).toBeUndefined();
+  });
+
+  it("a listing with no pin and no env is honestly unresolved", () => {
+    vi.stubEnv("VITE_DEVNET_MUTUAL", "");
+    const chairmageddon = MUTUALS.find((m) => m.slug === "chairmageddon");
+    expect(chairmageddon && resolvePoolAddress(chairmageddon, devnet)).toBeUndefined();
+  });
+});
+
+describe("poolByRouteId — the wizard route id's inverse lookup", () => {
+  it("resolves by pinned pubkey and by unpinned slug; unknown ids are undefined", () => {
+    // a pinned listing's route id is its pubkey — the slug stops resolving
+    // once the pin lands (same law as the #/m/ detail route)
+    expect(poolByRouteId("DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF")?.slug).toBe("blade-pool");
+    expect(poolByRouteId("BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe")?.slug).toBe(
+      "blade-pool-devnet",
+    );
+    expect(poolByRouteId("chairmageddon")?.slug).toBe("chairmageddon");
+    expect(poolByRouteId("blade-pool")).toBeUndefined();
+    expect(poolByRouteId("no-such-pool")).toBeUndefined();
   });
 });

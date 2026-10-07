@@ -1,15 +1,18 @@
-// #/app/file-claim — the payout-request wizard (CLAIM-WIZARD v1, copy doc §
-// /app/file-claim): wallet gate → step 0 preflight (chain gates only) →
-// incident → amount → evidence → manifest → review → sign → publish →
-// filed. The sign step builds ONE hanse::file_claim tx via
-// @riprap/hanse's buildFileClaim and sends it through the shared
-// sendInstruction seam; a nonce race (another member filed first) refetches
-// the nonce, rebuilds, and re-signs exactly once — NEVER re-sent after
-// success. Publish delivers the encrypted manifest (POST) + documents
-// (per-file PUT, independent retry, 409 = hard stop) per ADR-0031. The
-// draft (localStorage, fields + hashes only) clears once the claim is filed.
-// Every string is copy-doc verbatim; numbers come from chain reads; mono
-// numerals throughout.
+// #/app/file-claim[/:pool] — the payout-request wizard (CLAIM-WIZARD v1,
+// copy doc § /app/file-claim): wallet gate → step 0 preflight (chain gates
+// only) → incident → amount → evidence → manifest → review → sign →
+// publish → filed. The pool is the route id (`#/app/file-claim/<pool>`),
+// else the static-map pool (legacy deep links + the env-bound surfnet) —
+// its ClaimFlow pack drives every pool-specific string and slot, its
+// listing the tier names, its resolved address every chain read. The sign
+// step builds ONE hanse::file_claim tx via @riprap/hanse's buildFileClaim
+// and sends it through the shared sendInstruction seam; a nonce race
+// (another member filed first) refetches the nonce, rebuilds, and re-signs
+// exactly once — NEVER re-sent after success. Publish delivers the
+// encrypted manifest (POST) + documents (per-file PUT, independent retry,
+// 409 = hard stop) per ADR-0031. The draft (localStorage, fields + hashes
+// only) clears once the claim is filed. Every string is pack/copy-doc
+// verbatim; numbers come from chain reads; mono numerals throughout.
 
 import { buildFileClaim, fetchMaybeMutual } from "@riprap/hanse";
 import { Button, HexBackdrop, SectionBand, TextLink, usd } from "@riprap/ui";
@@ -17,26 +20,29 @@ import { useCluster, useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
 import { findAccordStatePda, findDisputePda } from "@useaccord/sdk";
 import { useEffect, useRef, useState } from "react";
+import { Navigate } from "react-router";
 import { toast } from "sonner";
-
 import { Settle } from "../../components/Settle";
 import { SiteNav } from "../../components/SiteNav";
-import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../../pool/mutual";
+import { poolByRouteId } from "../../mutuals/data";
+import type { MutualListing } from "../../mutuals/types";
+import {
+  formatUtc,
+  microToUsd,
+  poolTiers,
+  resolvePoolAddress,
+  TIER_NAMES,
+} from "../../pool/mutual";
 import { useClusterRpc, useHanseEnv } from "../../shared/rpc";
 import { describeError, sendInstruction } from "../../shared/transaction";
 import { ClusterSwitch, ConnectWalletButton } from "../controls";
 import { intakeDocument } from "./documents";
-import {
-  type ClaimDraft,
-  clearDraft,
-  type DocSlot,
-  emptyDraft,
-  loadDraft,
-  saveDraft,
-} from "./draft";
+import { type ClaimDraft, clearDraft, emptyDraft, loadDraft, saveDraft } from "./draft";
 import { operatorPubFromKey, postManifest, putDocument } from "./evidence";
 import { recordDelivery } from "./evidenceRecord";
-import { buildClaimManifest, CLAIM_DOCUMENT_PATHS } from "./manifest";
+import type { ClaimFlow, DocSlot } from "./flow";
+import { claimFlowFor } from "./flows/index";
+import { buildClaimManifest } from "./manifest";
 import {
   type DocRowStatus,
   EmergencyBanner,
@@ -56,9 +62,6 @@ import { useEvidenceOperator } from "./useEvidenceOperator";
 
 /** Steps this page owns — 0 gate, 1–5 collect, 6 sign, 7 publish, 8 filed. */
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-
-/** The five canonical paths, policy §7 order — the manifest module's list. */
-const DOC_PATHS = CLAIM_DOCUMENT_PATHS;
 
 /** What the sign step hands to publish + filed. */
 interface FiledResult {
@@ -242,14 +245,25 @@ function BlockedState({ block }: { block: PreflightBlock }) {
   }
 }
 
-/** The wizard machine: gate → collect → one signature → delivery → filed. */
-function Wizard({ wallet }: { wallet: Address }) {
-  const { isLocal, isMainnet, isDevnet } = useCluster();
-  const mutualAddress = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
+/** The wizard machine: gate → collect → one signature → delivery → filed,
+ *  for ONE pool — `pool` is its route id (`pubkey ?? slug`, the row's
+ *  deep link); unknown ids and flow-less pools fall back to the app
+ *  surface (the joined-pools table). */
+function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
+  const clusters = useCluster();
+  const listing: MutualListing | undefined = pool !== undefined ? poolByRouteId(pool) : undefined;
+  const flow: ClaimFlow | null = claimFlowFor(listing);
+  const invalidPool = listing === undefined || flow === null;
+  // undefined ⇒ the static map — harmless when invalid: we navigate away at
+  // render, before any step shows.
+  const mutualAddress = invalidPool ? undefined : resolvePoolAddress(listing, clusters);
+  const tierNames = listing !== undefined ? listing.tiers.map((t) => t.name) : TIER_NAMES;
+  const docPaths = flow !== null ? flow.documentSlots.map((s) => s.path) : [];
+
   const clusterRpc = useClusterRpc();
   const hanseEnv = useHanseEnv();
 
-  const preflight = useClaimPreflight();
+  const preflight = useClaimPreflight(mutualAddress);
   const pass: PreflightPass | null = preflight.state === "pass" ? preflight.pass : null;
   // Operator discovery resolves once per session, whatever step renders it
   // (CLAIM-WIZARD §8) — hoisted so the hook order never moves.
@@ -278,10 +292,9 @@ function Wizard({ wallet }: { wallet: Address }) {
     if (mutualAddress !== undefined) saveDraft(mutualAddress, draft);
   }, [mutualAddress, draft]);
 
+  const tiers = pass === null ? null : poolTiers(pass.mutual, tierNames);
   const tier =
-    pass === null
-      ? null
-      : poolTiers(pass.mutual)[Math.min(pass.member.tier, poolTiers(pass.mutual).length - 1)];
+    pass === null || tiers === null ? null : tiers[Math.min(pass.member.tier, tiers.length - 1)];
   /** The REMAINING cap (chain truth): tier max − cap_used — concurrent
    * filings share the cumulative cap (multi-claim amendment). */
   const capUsdc = pass === null ? 0 : Number(pass.capRemainingMicro) / 1_000_000;
@@ -325,28 +338,31 @@ function Wizard({ wallet }: { wallet: Address }) {
    * feeds preview, hash, signature, POST, and download — never a second
    * serialization of the same claim. */
   const buildManifest = async (): Promise<ManifestBuffer> => {
-    if (pass === null || tier === null || mutualAddress === undefined) {
+    if (pass === null || tier === null || mutualAddress === undefined || flow === null) {
       throw new Error("manifest prerequisites disappeared mid-flight");
     }
     const amountMicro = BigInt(Math.round(Number.parseFloat(draft.amountUsdc) * 1_000_000));
     const incidentAt = new Date(draft.incidentAt);
-    const built = await buildClaimManifest({
-      subaccord: pass.mutual.subaccord,
-      filer: mutualAddress, // §5: the filer is the mutual PDA
-      mutual: mutualAddress,
-      member: wallet,
-      filedAt: isoSeconds(new Date()),
-      title: `Payout request — knife assault, ${isoDate(incidentAt)}`,
-      claimContext: {
-        incidentAt: isoSeconds(incidentAt),
-        incidentPlace: draft.incidentPlace,
-        requestedAmountUsdc: amountMicro,
-        tier: tier.name,
-        contributionUsdc: pass.mutual.tiers[pass.member.tier].contribution,
+    const built = await buildClaimManifest(
+      {
+        subaccord: pass.mutual.subaccord,
+        filer: mutualAddress, // §5: the filer is the mutual PDA
+        mutual: mutualAddress,
+        member: wallet,
+        filedAt: isoSeconds(new Date()),
+        title: flow.manifestTitle(isoDate(incidentAt)),
+        claimContext: {
+          incidentAt: isoSeconds(incidentAt),
+          incidentPlace: draft.incidentPlace,
+          requestedAmountUsdc: amountMicro,
+          tier: tier.name,
+          contributionUsdc: pass.mutual.tiers[pass.member.tier].contribution,
+        },
+        // every slot attached — step 3 gates Continue on the complete set
+        entries: docPaths.map((path) => ({ path, sha256: draft.docs[path]?.sha256 ?? "" })),
       },
-      // all five attached — step 3 gates Continue on the complete set
-      entries: DOC_PATHS.map((path) => ({ path, sha256: draft.docs[path]?.sha256 ?? "" })),
-    });
+      docPaths, // the pool's policy §7 canonical paths (ADR-0031 daemon set)
+    );
     return { yaml: built.yaml, sha256: built.sha256Hex };
   };
 
@@ -444,7 +460,7 @@ function Wizard({ wallet }: { wallet: Address }) {
     if (pass === null || mutualAddress === undefined) return;
     if (operator.state !== "ready") {
       setOperatorDown(true);
-      setDocRows(Object.fromEntries(DOC_PATHS.map((path) => [path, "failed" as const])));
+      setDocRows(Object.fromEntries(docPaths.map((path) => [path, "failed" as const])));
       return;
     }
     const endpoint = operator.operator.url;
@@ -465,7 +481,7 @@ function Wizard({ wallet }: { wallet: Address }) {
       // failure leaves delivery retryable from the app surface
       setOperatorDown(true);
       toast.error(error instanceof Error ? error.message : "Couldn't reach the operator.");
-      setDocRows(Object.fromEntries(DOC_PATHS.map((path) => [path, "failed" as const])));
+      setDocRows(Object.fromEntries(docPaths.map((path) => [path, "failed" as const])));
       return;
     }
     if (posted === "conflict") {
@@ -476,7 +492,7 @@ function Wizard({ wallet }: { wallet: Address }) {
     }
 
     let delivered = 0;
-    for (const path of DOC_PATHS) {
+    for (const path of docPaths) {
       const bytes = fileBytes.current.get(path);
       if (bytes === undefined) {
         setDocRows((current) => ({ ...current, [path]: "failed" }));
@@ -505,7 +521,7 @@ function Wizard({ wallet }: { wallet: Address }) {
         setOperatorDown(true);
       }
     }
-    if (delivered === DOC_PATHS.length) {
+    if (delivered === docPaths.length) {
       setStep(8);
       if (mutualAddress !== undefined) {
         clearDraft(mutualAddress);
@@ -517,18 +533,24 @@ function Wizard({ wallet }: { wallet: Address }) {
   const incidentIso =
     draft.incidentAt === "" ? "{{PARAM}}" : new Date(draft.incidentAt).toISOString();
 
-  const publishRows = DOC_PATHS.map((path) => ({ path, status: docRows[path] ?? "pending" }));
-  const deliveredCount = DOC_PATHS.filter((path) => docRows[path] === "delivered").length;
+  const publishRows = docPaths.map((path) => ({ path, status: docRows[path] ?? "pending" }));
+  const deliveredCount = docPaths.filter((path) => docRows[path] === "delivered").length;
+
+  if (invalidPool) return <Navigate to="/app" replace />;
 
   return (
     <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" data-slot="wizard">
-      <EmergencyBanner />
+      <EmergencyBanner spec={flow.emergency ?? null} />
       {pass === null || tier === null ? (
         // Step 0 — and the honest re-gate if the chain state moved under an
         // open wizard: the flow never collects past an invalid gate.
         <PreflightGate onPass={() => setStep(1)} />
       ) : step === 1 ? (
         <StepIncident
+          checks={flow.screenChecks}
+          wherePlaceholder={flow.wherePlaceholder}
+          narrativePlaceholder={flow.narrativePlaceholder}
+          exclusionsLine={flow.exclusionsLine}
           draft={draft}
           onChange={patch}
           onBack={() => setStep(0)}
@@ -544,6 +566,10 @@ function Wizard({ wallet }: { wallet: Address }) {
         />
       ) : step === 3 ? (
         <StepEvidence
+          slots={flow.documentSlots}
+          intro={flow.evidenceIntro}
+          attachAllNote={flow.attachAllNote}
+          samePersonStatement={flow.samePersonStatement}
           draft={draft}
           intakes={intakes}
           onAttach={attach}
@@ -590,6 +616,7 @@ function Wizard({ wallet }: { wallet: Address }) {
           claim={filed.claim}
           dispute={filed.dispute}
           delivered={deliveredCount}
+          total={flow.documentSlots.length}
           feeUsd={usd(microToUsd(pass.feeMicro))}
           onDownload={() => downloadManifest(manifest.yaml)}
         />
@@ -600,7 +627,7 @@ function Wizard({ wallet }: { wallet: Address }) {
   );
 }
 
-export function FileClaimPage() {
+export function FileClaimPage({ pool }: { pool?: string }) {
   const { isConnected, account } = useWallet();
   const connected = isConnected && account !== null;
 
@@ -615,7 +642,11 @@ export function FileClaimPage() {
             tone="ground"
             className="relative z-10 bg-transparent pt-(--riprap-space-section)"
           >
-            {connected && account !== null ? <Wizard wallet={account} /> : <WizardGate />}
+            {connected && account !== null ? (
+              <Wizard wallet={account} pool={pool} />
+            ) : (
+              <WizardGate />
+            )}
           </SectionBand>
         </div>
       </main>

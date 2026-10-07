@@ -8,6 +8,7 @@ import type { Address } from "@solana/kit";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sha256Hex } from "./documents";
+import { BLADE_POOL_FLOW } from "./flows/blade-pool";
 import { Recovery } from "./Recovery";
 
 vi.mock("./useEvidenceOperator", async () => {
@@ -73,6 +74,7 @@ function renderRecovery() {
       subaccord={SUBACCORD}
       dispute={DISPUTE}
       nonce={0n}
+      slots={BLADE_POOL_FLOW.documentSlots}
     />,
   );
 }

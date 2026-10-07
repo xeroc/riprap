@@ -18,6 +18,7 @@ import type { Address, MaybeAccount } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ed25519PublicKeyFromSeed } from "@useaccord/sdk/evidence";
+import { MemoryRouter, Route, Routes, useParams } from "react-router";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMutual } from "../../pool/fixtures";
@@ -152,6 +153,8 @@ function memberAccount(over: Partial<Member> = {}): MaybeAccount<Member> {
   } as unknown as MaybeAccount<Member>;
 }
 
+const BLADE_MAINNET = "DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF";
+
 const testConfig = getDefaultConfig({ appName: "riprap-test", network: "localnet" });
 
 function renderWizard(mutualAddress = MUTUAL_ADDR) {
@@ -162,7 +165,7 @@ function renderWizard(mutualAddress = MUTUAL_ADDR) {
   return render(
     <QueryClientProvider client={queryClient}>
       <AppProvider connectorConfig={testConfig}>
-        <FileClaimPage />
+        <FileClaimPage pool={BLADE_MAINNET} />
       </AppProvider>
     </QueryClientProvider>,
   );
@@ -750,4 +753,53 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
   // Recovery re-entry (manifest re-upload → sha256 == dispute.evidence_hashes[0]
   // → re-PUT 201-no-op) lives with its surface: Recovery.test.tsx (the
   // panel) and AppPage.test (the claims-row entry) — riprap-wwvc.
+});
+/** Reads the route param and passes it down — main.tsx's FileClaimSurface. */
+function PoolRouteStub() {
+  const { pool } = useParams();
+  return <FileClaimPage pool={pool} />;
+}
+
+describe("#/app/file-claim/:pool — the pool-scoped wizard", () => {
+  it("a pinned route id opens the blade flow against the env address", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    // the blade-pool listing's route id is its pinned pubkey; on localnet
+    // resolvePoolAddress reads the same stubbed env address, so the reads
+    // answer and the blade flow pack drives step 1 (its screen checks).
+    vi.stubEnv("VITE_LOCALNET_MUTUAL", MUTUAL_ADDR);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AppProvider connectorConfig={testConfig}>
+          <FileClaimPage pool="DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF" />
+        </AppProvider>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText(/Step 1 of 5 — Incident/i)).toBeTruthy();
+    expect(screen.getByLabelText("Another person used a knife or blade against me")).toBeTruthy();
+  });
+
+  it("an unknown pool id falls back to the app surface", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AppProvider connectorConfig={testConfig}>
+          <MemoryRouter initialEntries={["/app/file-claim/no-such-pool"]}>
+            <Routes>
+              <Route path="/app" element={<div data-testid="app-fallback" />} />
+              <Route path="/app/file-claim/:pool" element={<PoolRouteStub />} />
+            </Routes>
+          </MemoryRouter>
+        </AppProvider>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByTestId("app-fallback")).toBeTruthy();
+  });
 });

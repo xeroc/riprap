@@ -1,22 +1,31 @@
 // #/app — the member wallet surface, reads-only v1 (milestone riprap-9ehc,
-// bean riprap-c1r1): wallet gate → the connected wallet's Member PDA + claims
-// against the static per-cluster mutual map (src/pool/mutual.ts). No writes.
-// Copy source: meta/marketing/03-website-copy/landing-page.md § "/app — the
-// member wallet surface" — rendered verbatim; unknown values render
-// {{PARAM}} mono placeholders, never static numbers.
-import { ClaimStatus } from "@riprap/hanse";
+// bean riprap-c1r1): the app hero band (backdrop on — the Riprap App's
+// identity: manage the mutuals this wallet participates in), then the
+// joined-pools table in its own band (no backdrop): one membership read per
+// LIVE pool (the mutuals store scan — no static map) → one row per pool
+// this wallet entered, tabular like /mutuals. Per row: the pool's own
+// payout-request wizard (#/app/file-claim/<pool>) and jury-duty board
+// (#/app/adjudicate/<pool>), both buttons. No writes. Copy source:
+// meta/marketing/03-website-copy/landing-page.md § "/app — the member
+// wallet surface" and § /mutuals (table structure, shared state lines) —
+// rendered verbatim where doc'd; unknown values render {{PARAM}} mono
+// placeholders, never static numbers.
+import { ClaimStatus, fetchMaybeMemberByOwner, type Member } from "@riprap/hanse";
 import { BadgeStamp, Button, HexBackdrop, SectionBand, TextLink, usd } from "@riprap/ui";
-import { useCluster, useWallet } from "@solana/connector";
+import { useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
-import { JuryDutyPanel } from "../adjudicate/AdjudicatePage";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
-import { formatUtc, microToUsd, poolTiers, resolveMutualAddress } from "../pool/mutual";
-import { useMutual } from "../pool/useMutual";
+import { poolRouteId } from "../mutuals/data";
+import { PoolBadgeRail } from "../mutuals/PoolBadgeRail";
+import { type LiveMutual, useMutualStore } from "../mutuals/store";
+import { formatUtc, microToUsd, poolTiers } from "../pool/mutual";
+import { useClusterRpc } from "../shared/rpc";
 import { ClusterSwitch, ConnectWalletButton } from "./controls";
+import { claimFlowFor } from "./file-claim/flows/index";
 import { useClaimPreflight } from "./file-claim/useClaimPreflight";
 import { type ClaimsQuery, useClaims } from "./useClaims";
-import { useMembership } from "./useMembership";
 
 /** The connect gate (copy doc § /app wallet gate): the entrance copy + the
  * shared connect button carrying the picker. */
@@ -47,18 +56,19 @@ function statusLabel(status: ClaimStatus): string {
 }
 
 /** The claims list (copy doc § /app claims): hairline rows, every field mono
- * and straight off the chain — `#nonce · amount · STATUS · filed date`. */
-function ClaimsBlock({ claims }: { claims: ClaimsQuery }) {
-  const label = (
+ * and straight off the chain — `#nonce · amount · STATUS · filed date`. The
+ * label names what the rows belong to (the pool, in the claims band). */
+function ClaimsBlock({ claims, label = "Claims" }: { claims: ClaimsQuery; label?: string }) {
+  const heading = (
     <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-      Claims
+      {label}
     </p>
   );
 
   if (claims.state === "loading") {
     return (
       <div data-slot="claims" className="flex max-w-[36rem] flex-col gap-2">
-        {label}
+        {heading}
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
           Reading your claims from the chain.
         </p>
@@ -68,7 +78,7 @@ function ClaimsBlock({ claims }: { claims: ClaimsQuery }) {
   if (claims.state === "error") {
     return (
       <div data-slot="claims" className="flex max-w-[36rem] flex-col gap-2">
-        {label}
+        {heading}
         <p className="text-ink [font:var(--riprap-body-md)]">Couldn't read your claims.</p>
         <Button variant="outline" className="w-44" onClick={claims.retry}>
           Try again
@@ -80,7 +90,7 @@ function ClaimsBlock({ claims }: { claims: ClaimsQuery }) {
 
   return (
     <div data-slot="claims" className="flex max-w-[36rem] flex-col gap-2">
-      {label}
+      {heading}
       {claims.claims.length === 0 ? (
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
           No claims filed from this wallet.
@@ -107,119 +117,275 @@ function ClaimsBlock({ claims }: { claims: ClaimsQuery }) {
   );
 }
 
-/** Connected surface: membership + claims reads against the static map. */
-function MemberSurface({ wallet }: { wallet: Address }) {
-  const { isLocal, isMainnet, isDevnet } = useCluster();
-  const mutualAddress = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
-  const mutualQuery = useMutual();
-  const membership = useMembership();
-  const member = membership.state === "ready" ? membership.member : null;
-  // The payout-request entry action's gate (copy doc § /app, CLAIM-WIZARD
-  // §2): rendered only while preflight passes — live reads, never constants.
-  // Runs before the early returns (rules of hooks).
-  const preflight = useClaimPreflight();
-  const claims = useClaims(
-    mutualQuery.state === "ready" && member !== null && mutualAddress !== undefined
-      ? { mutual: mutualAddress, claimant: wallet, claimNonce: mutualQuery.mutual.claimNonce }
-      : null,
+/** One joined pool's table row: the shared badge rail, the pool's name (→
+ * its detail route) under its Covered stamp, its tagline, and the two row
+ * actions — the payout wizard and the jury board, both buttons scoped to
+ * THIS pool. File renders only while preflight passes (copy doc § /app,
+ * CLAIM-WIZARD §2); the wizard's step 0 carries the honest block states
+ * either way. */
+function JoinedPoolRow({ pool, member }: { pool: LiveMutual; member: Member }) {
+  const preflight = useClaimPreflight(pool.address);
+  const flow = claimFlowFor(pool.listing);
+
+  // covered — the Member PDA's tier wins (copy doc § /app member); names by
+  // the listing's §5 table, prices from the chain.
+  const tiers = poolTiers(
+    pool.account,
+    pool.listing.tiers.map((t) => t.name),
   );
-
-  if (mutualQuery.state === "not-found") {
-    return (
-      <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
-        <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The Blade Pool isn't deployed on this network. Switch networks to find it.
-        </p>
-        <ClusterSwitch />
-      </div>
-    );
-  }
-  if (mutualQuery.state === "loading") {
-    return (
-      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-        Reading the pool from the chain.
-      </p>
-    );
-  }
-  if (mutualQuery.state === "error") {
-    return (
-      <div className="flex max-w-3xl flex-col gap-2">
-        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't reach the cluster.</p>
-        <Button variant="outline" className="w-44" onClick={mutualQuery.retry}>
-          Try again
-        </Button>
-      </div>
-    );
-  }
-
-  // mutual ready — the membership read runs only with a resolved address.
-  if (membership.state === "off" || membership.state === "loading") {
-    return (
-      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-        Reading your membership from the chain.
-      </p>
-    );
-  }
-  if (membership.state === "error") {
-    return (
-      <div className="flex max-w-3xl flex-col gap-2">
-        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't read your membership.</p>
-        <Button variant="outline" className="w-44" onClick={membership.retry}>
-          Try again
-        </Button>
-      </div>
-    );
-  }
-  if (member === null) {
-    return (
-      <div className="flex max-w-3xl flex-col gap-2" data-slot="not-a-member">
-        <h1 className="text-ink [font:var(--riprap-body-md)]">This wallet isn't in the pool.</h1>
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          Membership opens on <TextLink href="#/2026-breakpoint-blade-pool">the pool page</TextLink>
-          .
-        </p>
-      </div>
-    );
-  }
-
-  // covered — the Member PDA's tier wins (copy doc § /app member).
-  const tiers = poolTiers(mutualQuery.mutual);
   const tier = tiers[Math.min(member.tier, tiers.length - 1)];
+  const routeId = poolRouteId(pool.listing);
 
   return (
-    <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" data-slot="covered">
-      <Settle>
-        <h1>
+    <tr data-slot="pool-row" className="border-b border-hairline last:border-b-0">
+      <td className="relative h-24 p-0 pr-18">
+        <PoolBadgeRail pool={pool.listing} />
+      </td>
+      <th scope="row" className="py-4 pr-4 text-left align-top">
+        <a
+          href={`#/m/${routeId}`}
+          className="font-medium text-ink underline decoration-transparent underline-offset-4 transition-colors hover:decoration-current [font:var(--riprap-body-sm)]"
+        >
+          {pool.listing.name}
+        </a>
+        <div className="mt-2">
           <BadgeStamp data-num>Covered — {tier.name}</BadgeStamp>
+        </div>
+      </th>
+      <td className="hidden py-4 pr-4 text-body align-top sm:table-cell [font:var(--riprap-body-sm)]">
+        {pool.listing.tagline}
+      </td>
+      <td className="py-4 align-top">
+        <div className="flex flex-col items-start gap-2">
+          {preflight.state === "pass" && flow !== null ? (
+            <Button asChild size="sm" data-participate>
+              <a href={`#/app/file-claim/${routeId}`}>File a payout request</a>
+            </Button>
+          ) : null}
+          <Button asChild size="sm" variant="outline">
+            <a href={`#/app/adjudicate/${routeId}`}>Jury duty</a>
+          </Button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+/** One joined pool's claims, for the claims band: this wallet's filed
+ *  payout requests against that pool — hairline rows under the pool's
+ *  name, every field straight off the chain. */
+function PoolClaims({ pool, wallet }: { pool: LiveMutual; wallet: Address }) {
+  const claims = useClaims({
+    mutual: pool.address,
+    claimant: wallet,
+    claimNonce: pool.account.claimNonce,
+  });
+  return <ClaimsBlock claims={claims} label={pool.listing.name} />;
+}
+
+/** Connected surface: scan every live pool on the cluster, read this
+ * wallet's membership against each, and render the joined pools — the
+ * table band (one row per entered pool, its filing and jury-duty actions)
+ * and the claims band (this wallet's filed payout requests, pool by
+ * pool). Shared scan states render in their own band. */
+function MemberSurface({ wallet }: { wallet: Address }) {
+  const store = useMutualStore();
+  const clusterRpc = useClusterRpc();
+  const pools = store.state === "ready" ? store.pools : [];
+  const queryClient = useQueryClient();
+
+  // The joined scan: one membership read per live pool. Keys mirror
+  // useMembership's exactly, so anything else reading a membership by
+  // [endpoint, address, wallet] shares this cache.
+  const memberships = useQueries({
+    queries: pools.map((pool) => ({
+      queryKey: ["member", clusterRpc?.endpoint, pool.address, wallet],
+      queryFn: () => {
+        if (!clusterRpc) throw new Error("membership prerequisites disappeared mid-flight");
+        return fetchMaybeMemberByOwner(clusterRpc.rpc, {
+          mutual: pool.address,
+          member: wallet,
+        }).then((maybe) => (maybe.exists ? maybe.data : null));
+      },
+      enabled: clusterRpc !== null,
+      retry: 1,
+    })),
+  });
+
+  if (store.state === "off")
+    return (
+      <AppStateBand>
+        <NotLive />
+      </AppStateBand>
+    );
+  if (store.state === "error")
+    return (
+      <AppStateBand>
+        <ClusterError retry={store.retry} />
+      </AppStateBand>
+    );
+  if (store.state === "loading") {
+    return (
+      <AppStateBand>
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          Reading the pools from the chain.
+        </p>
+      </AppStateBand>
+    );
+  }
+  if (pools.length === 0) {
+    return (
+      <AppStateBand>
+        <p className="max-w-2xl leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
+          No pools are live on this cluster yet.
+        </p>
+      </AppStateBand>
+    );
+  }
+
+  if (memberships.some((q) => q.isPending)) {
+    return (
+      <AppStateBand>
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          Reading your membership from the chain.
+        </p>
+      </AppStateBand>
+    );
+  }
+  const errored = memberships.find((q) => q.isError);
+  if (errored !== undefined) {
+    return (
+      <AppStateBand>
+        <div className="flex max-w-3xl flex-col gap-2">
+          <p className="text-ink [font:var(--riprap-body-md)]">Couldn't read your membership.</p>
+          <Button
+            variant="outline"
+            className="w-44"
+            onClick={() => {
+              // retry re-runs the membership reads (refetch is idempotent)
+              for (const pool of pools) {
+                void queryClient.refetchQueries({
+                  queryKey: ["member", clusterRpc?.endpoint, pool.address, wallet],
+                });
+              }
+            }}
+          >
+            Try again
+          </Button>
+        </div>
+      </AppStateBand>
+    );
+  }
+
+  const joined = pools.flatMap((pool, i) => {
+    const member = memberships[i].data ?? null;
+    return member !== null ? [{ pool, member }] : [];
+  });
+
+  if (joined.length === 0) {
+    return (
+      <AppStateBand>
+        <div className="flex max-w-2xl flex-col gap-2" data-slot="not-a-member">
+          <p className="text-ink [font:var(--riprap-body-md)]">This wallet isn't in any pool.</p>
+          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+            Membership opens on <TextLink href="#/mutuals">the pools</TextLink>.
+          </p>
+        </div>
+      </AppStateBand>
+    );
+  }
+
+  return (
+    <>
+      <SectionBand id="app-pools" label="your pools" tone="ground">
+        <table className="w-full border-collapse">
+          <caption className="sr-only">
+            The pools this wallet joined: each pool's cover and its filing and jury-duty actions.
+          </caption>
+          <thead>
+            <tr className="border-b border-hairline text-left">
+              {/* biome-ignore lint/a11y/noAriaHiddenOnFocusable: empty decorative strip column — th is not focusable, biome's heuristic over-reaches */}
+              <th aria-hidden="true" className="w-[18px] p-0" />
+              {["Pool", "Covers"].map((h) => (
+                <th
+                  key={h}
+                  scope="col"
+                  className={`pb-3 pr-4 uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)] last:pr-0${h === "Covers" ? " hidden sm:table-cell" : ""}`}
+                >
+                  {h}
+                </th>
+              ))}
+              <th scope="col" className="sr-only">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {joined.map(({ pool, member }) => (
+              <JoinedPoolRow key={pool.address} pool={pool} member={member} />
+            ))}
+          </tbody>
+        </table>
+      </SectionBand>
+      <SectionBand id="app-claims" label="claims" tone="ground">
+        <div className="flex w-full flex-col gap-(--riprap-space-xl)" data-slot="claims-list">
+          {joined.map(({ pool }) => (
+            <PoolClaims key={pool.address} pool={pool} wallet={wallet} />
+          ))}
+        </div>
+      </SectionBand>
+    </>
+  );
+}
+
+/** The shared-state band the member surface's non-table states render in. */
+function AppStateBand({ children }: { children: React.ReactNode }) {
+  return (
+    <SectionBand id="app-pools" tone="ground">
+      {children}
+    </SectionBand>
+  );
+}
+
+/** Not-live state (copy doc § /app, verbatim with the pool page). */
+function NotLive() {
+  return (
+    <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
+      <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
+      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+        The Blade Pool isn't deployed on this network. Switch networks to find it.
+      </p>
+      <ClusterSwitch />
+    </div>
+  );
+}
+
+/** Cluster-unreachable state (copy doc § /app, verbatim with the pool page). */
+function ClusterError({ retry }: { retry: () => void }) {
+  return (
+    <div className="flex max-w-3xl flex-col gap-2">
+      <p className="text-ink [font:var(--riprap-body-md)]">Couldn't reach the cluster.</p>
+      <Button variant="outline" className="w-44" onClick={retry}>
+        Try again
+      </Button>
+    </div>
+  );
+}
+
+/** The connected hero: what this surface is — the app for the mutuals this
+ *  wallet participates in. Mirrors /mutuals' display intro band. */
+function AppHero() {
+  return (
+    <div className="flex max-w-2xl flex-col gap-4">
+      <Settle>
+        <h1 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
+          The app.
         </h1>
       </Settle>
       <Settle delay={60}>
-        <p data-num className="font-mono text-base text-ink">
-          {usd(tier.fee)} entry · up to {usd(tier.cap)} maximum payout
+        <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
+          Every mutual this wallet joined — file a payout request or sit on a jury, pool by pool.
         </p>
-      </Settle>
-      {preflight.state === "pass" && (
-        <Settle delay={120}>
-          <Button asChild size="lg" data-participate>
-            <a href="#/app/file-claim">File a payout request</a>
-          </Button>
-        </Settle>
-      )}
-      <Settle delay={180}>
-        <ClaimsBlock claims={claims} />
-      </Settle>
-      <Settle delay={240}>
-        {/* jury-duty entry panel (copy doc § /app/adjudicate): mechanic line
-         * + one entry state — the #jurors anchor for the covered overlay. */}
-        {mutualAddress !== undefined && (
-          <JuryDutyPanel
-            subaccord={mutualQuery.mutual.subaccord}
-            mutual={mutualAddress}
-            claimNonce={mutualQuery.mutual.claimNonce}
-            wallet={wallet}
-          />
-        )}
       </Settle>
     </div>
   );
@@ -233,6 +399,8 @@ export function AppPage() {
     <>
       <SiteNav inApp />
       <main>
+        {/* the hero — the app's identity band, backdrop included; the gate
+            rides here until a wallet connects */}
         <div className="relative">
           <HexBackdrop className="pointer-events-none absolute inset-0 z-0 size-full" />
           <SectionBand
@@ -240,9 +408,11 @@ export function AppPage() {
             tone="ground"
             className="relative z-10 bg-transparent pt-(--riprap-space-section)"
           >
-            {connected && account !== null ? <MemberSurface wallet={account} /> : <WalletGate />}
+            {connected && account !== null ? <AppHero /> : <WalletGate />}
           </SectionBand>
         </div>
+        {/* the member surface — table band + claims band, no backdrop */}
+        {connected && account !== null ? <MemberSurface wallet={account} /> : null}
       </main>
     </>
   );

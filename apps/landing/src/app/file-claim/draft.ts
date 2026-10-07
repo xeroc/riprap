@@ -3,17 +3,8 @@
 // hashes ONLY, keyed by mutual. File bytes never persist in the browser —
 // documents re-attach and re-hash each session (delivery is idempotent).
 // The manifest download, not this draft, is the durable artifact.
-
-/** Canonical evidence slots — policy §7 order, exact manifest paths. */
-export const DOC_SLOTS = [
-  { path: "01-ticket.pdf", label: "your event ticket" },
-  { path: "02-id-document.jpg", label: "government photo ID" },
-  { path: "03-police-report.pdf", label: "the police report" },
-  { path: "04-medical-report.pdf", label: "the treating practitioner's report" },
-  { path: "05-statutory-declaration.pdf", label: "your statutory declaration" },
-] as const;
-
-export type DocSlot = (typeof DOC_SLOTS)[number];
+// Pool-agnostic: the screen keys and document slots come from the pool's
+// ClaimFlow pack (flow.ts) — the draft stores whatever the flow asks.
 
 /** One hashed document from a previous session — hash + original filename. */
 export interface DraftDoc {
@@ -29,8 +20,8 @@ export interface ClaimDraft {
   incidentAt: string;
   incidentPlace: string;
   narrative: string;
-  /** The four §3/§4 self-screen checkboxes. */
-  screen: { blade: boolean; window: boolean; area: boolean; injury: boolean };
+  /** The §3/§4 self-screen checkboxes, by the flow pack's keys. */
+  screen: Record<string, boolean>;
   /** Whole-dollar string (step 2), free input. */
   amountUsdc: string;
   /** By canonical path — a hash survives reload; the bytes never do. */
@@ -44,7 +35,7 @@ export function emptyDraft(): ClaimDraft {
     incidentAt: "",
     incidentPlace: "",
     narrative: "",
-    screen: { blade: false, window: false, area: false, injury: false },
+    screen: {},
     amountUsdc: "",
     docs: {},
     samePerson: false,

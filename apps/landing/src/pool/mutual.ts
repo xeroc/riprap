@@ -8,6 +8,8 @@
 import type { Mutual } from "@riprap/hanse";
 import type { Address } from "@solana/kit";
 
+import type { MutualListing } from "../mutuals/types";
+
 /**
  * Resolve the mutual address for the active cluster. localnet reads
  * VITE_LOCALNET_MUTUAL lazily (inside the function) so dev and tests can
@@ -34,6 +36,28 @@ export function resolveMutualAddress(clusters: {
 }
 
 /**
+ * Resolve a directory pool's on-chain address: the per-cluster env override
+ * wins (dev + surfnet point it anywhere without a rebuild), else the
+ * listing's pinned pubkey. localnet reads env only — a surfnet address can
+ * never be a pin. Undefined ⇒ the pool is not live on this cluster.
+ */
+export function resolvePoolAddress(
+  m: MutualListing,
+  clusters: { isLocal: boolean; isMainnet: boolean; isDevnet: boolean },
+): Address | undefined {
+  if (clusters.isLocal) {
+    const local = import.meta.env.VITE_LOCALNET_MUTUAL as string | undefined;
+    return local ? (local as Address) : undefined;
+  }
+  const env = (
+    clusters.isMainnet ? import.meta.env.VITE_MAINNET_MUTUAL : import.meta.env.VITE_DEVNET_MUTUAL
+  ) as string | undefined;
+  // "" (stubbed unset) is not an address — same honesty as resolveMutualAddress
+  const address = env !== undefined && env !== "" ? env : m.pubkey;
+  return address !== undefined ? (address as Address) : undefined;
+}
+
+/**
  * Tier names are page copy (policy §5 order, copy doc "Basic · Standard ·
  * Premium"); prices and caps always come from the chain, by index.
  */
@@ -51,10 +75,12 @@ export function microToUsd(raw: bigint): number {
   return Number(raw) / 1_000_000;
 }
 
-/** mutual.tiers → renderable tiers (names by §5 index, prices from chain). */
-export function poolTiers(mutual: Mutual): PoolTier[] {
+/** mutual.tiers → renderable tiers (prices from chain; names by index — the
+ * listing's §5 tier names for pool-scoped surfaces, TIER_NAMES default for
+ * the static-map pool page). */
+export function poolTiers(mutual: Mutual, names: readonly string[] = TIER_NAMES): PoolTier[] {
   return mutual.tiers.map((t, i) => ({
-    name: TIER_NAMES[i] ?? `Tier ${i + 1}`,
+    name: names[i] ?? `Tier ${i + 1}`,
     fee: microToUsd(t.contribution),
     cap: microToUsd(t.maxPayout),
   }));

@@ -5,6 +5,7 @@
 
 import { fetchMaybeMemberByOwner, type Member } from "@riprap/hanse";
 import { useCluster, useWallet } from "@solana/connector";
+import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 
 import { resolveMutualAddress } from "../pool/mutual";
@@ -16,10 +17,12 @@ export type MembershipQuery =
   | { state: "error"; retry: () => void }
   | { state: "ready"; member: Member | null };
 
-export function useMembership(): MembershipQuery {
+export function useMembership(mutual?: Address): MembershipQuery {
+  // undefined ⇒ the static-map pool; pool-scoped surfaces pass the
+  // listing-resolved address.
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const clusterRpc = useClusterRpc();
-  const address = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
+  const address = mutual ?? resolveMutualAddress({ isLocal, isMainnet, isDevnet });
   const { account } = useWallet();
 
   const enabled = clusterRpc !== null && address !== undefined && account !== null;

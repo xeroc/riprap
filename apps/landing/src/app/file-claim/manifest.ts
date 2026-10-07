@@ -21,7 +21,10 @@ export type ClaimDocumentPath = (typeof CLAIM_DOCUMENT_PATHS)[number];
 /** One evidence entry: a canonical path + the client sha256 of the exact
  * uploaded bytes (hex, lower-case). */
 export interface ClaimManifestEntry {
-  path: ClaimDocumentPath;
+  /** riprap-claim/v1 manifest path — a pool's canonical policy §7 path
+   *  (runtime-validated against the caller's canonical list; the Blade
+   *  Pool's literal union would freeze the protocol to one pool). */
+  path: string;
   sha256: string;
 }
 
@@ -92,15 +95,20 @@ function iso(field: string, value: string): string {
 }
 
 /** Serialize to the exact §5 layout. Pure and deterministic: same input,
- * same bytes — the on-chain hash must reproduce months later (recovery). */
-export function serializeClaimManifest(input: ClaimManifestInput): string {
+ * same bytes — the on-chain hash must reproduce months later (recovery).
+ * `canonicalPaths` is the pool's policy §7 proof list (the flow pack's
+ * slot paths); the Blade Pool's CLAIM_DOCUMENT_PATHS is the default so the
+ * adjudication-side parsers and recovery keep their single-source list. */
+export function serializeClaimManifest(
+  input: ClaimManifestInput,
+  canonicalPaths: readonly string[] = CLAIM_DOCUMENT_PATHS,
+): string {
   const { claimContext: ctx } = input;
 
   const paths = input.entries.map((e) => e.path);
-  const canonical = CLAIM_DOCUMENT_PATHS as readonly string[];
-  if (paths.length !== canonical.length || paths.some((p, i) => p !== canonical[i])) {
+  if (paths.length !== canonicalPaths.length || paths.some((p, i) => p !== canonicalPaths[i])) {
     throw new TypeError(
-      "manifest: entries must be exactly the five canonical policy §7 paths, in order",
+      "manifest: entries must be exactly the canonical policy §7 paths, in order",
     );
   }
   for (const e of input.entries) {
@@ -143,7 +151,10 @@ export async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string>
 
 /** Build the manifest: one serialization yields both the buffer and its
  * on-chain hash — never re-serialize (CLAIM-WIZARD §5). */
-export async function buildClaimManifest(input: ClaimManifestInput): Promise<BuiltClaimManifest> {
-  const yaml = serializeClaimManifest(input);
+export async function buildClaimManifest(
+  input: ClaimManifestInput,
+  canonicalPaths?: readonly string[],
+): Promise<BuiltClaimManifest> {
+  const yaml = serializeClaimManifest(input, canonicalPaths);
   return { yaml, sha256Hex: await sha256Hex(new TextEncoder().encode(yaml)) };
 }
