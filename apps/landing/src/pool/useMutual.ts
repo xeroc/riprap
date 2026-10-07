@@ -17,12 +17,16 @@ export type MutualQuery =
   | { state: "not-found" }
   | { state: "ready"; mutual: Mutual; depositsOpen: boolean };
 
-export function useMutual(mutual?: Address): MutualQuery {
+export function useMutual(mutual?: Address | null): MutualQuery {
   // undefined ⇒ the static-map pool (the Blade Pool page + adjudicate
-  // surface); pool-scoped surfaces pass the listing-resolved address.
+  // surface); pool-scoped surfaces pass the listing-resolved address, or
+  // null when the pool resolves nowhere (drafts) — never the static map.
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const clusterRpc = useClusterRpc();
-  const address = mutual ?? resolveMutualAddress({ isLocal, isMainnet, isDevnet });
+  const address =
+    mutual === null
+      ? undefined
+      : (mutual ?? resolveMutualAddress({ isLocal, isMainnet, isDevnet }));
 
   const query = useQuery({
     queryKey: ["mutual", clusterRpc?.endpoint, address],

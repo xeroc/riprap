@@ -1,23 +1,18 @@
-// /2026-breakpoint-blade-pool — the pool page hero, ludic-lite register (2026-09-05,
-// landing-page.md §2026-breakpoint-blade-pool): one maximal headline, then a straight
-// face. Numbers always real — since the on-chain wiring they render from
-// mutual.tiers (policy §5 reference); while the chain can't answer they render
-// {{PARAM}} mono placeholders, never static fallbacks (landing-page.md §
-// "On-chain states + juror modal"). The comedy lives in the odds table and the
-// tier labels, never in the math. "Mutual" stays off the page per the
-// messaging-guide demotion.
+// The Blade Pool's offer hero (#/2026-breakpoint-blade-pool, copy doc §
+// hero verbatim): one maximal headline, then a straight face, the
+// three-stop tier slider, and the one-tx chip-in. Numbers always real —
+// they render from mutual.tiers; while the chain can't answer they render
+// {{PARAM}} mono placeholders, never static fallbacks. The comedy lives in
+// the odds table and the tier labels, never in the math. "Mutual" stays
+// off the page per the messaging-guide demotion.
 //
-// The chip-in is the one-transaction join (milestone riprap-9ehc HANDOFF §4):
-// idle → building (buildJoinInstructions) → wallet-signing (sign) → confirming
-// (broadcast) → covered. Any throw → one-line toast (describeError) → idle with
-// the join context refetched. An existing member renders the Covered stamp — a
-// state, never an error toast.
-
-import { buildJoinInstructions } from "@riprap/hanse";
+// Founder call 2026-10-07: heroes are per-pool components — this file is
+// the Blade Pool's; the draft pools carry their own under
+// mutuals/pages/*Hero.tsx. The join machine is shared (usePoolJoin); the
+// copy and layout are not.
 import {
   BadgeStamp,
   Button,
-  ClusterSelect,
   CoveredOverlay,
   HexBackdrop,
   SectionBand,
@@ -25,189 +20,78 @@ import {
   StampBadge,
   TextLink,
   usd,
-  WalletDialog,
 } from "@riprap/ui";
-import {
-  useCluster,
-  useConnectWallet,
-  useDisconnectWallet,
-  useWallet,
-  useWalletConnectors,
-  type WalletConnectorId,
-} from "@solana/connector";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useWallet } from "@solana/connector";
+import { useState } from "react";
 
+import { Prose } from "../../components/Prose";
 import { Settle } from "../../components/Settle";
+import { MUTUAL_EVENT, poolBySlug, poolRouteId } from "../../mutuals/data";
+import { ConnectWalletCta, HeroClusterSwitch } from "../../mutuals/pages/heroChrome";
+import { defaultTierIndex, joinPrecheck, usePoolJoin } from "../../mutuals/pages/usePoolJoin";
+import type { MutualListing } from "../../mutuals/types";
 import { SUPPORTERS, SupporterDiscs } from "../../sections/Supporters";
-import { useHanseEnv } from "../../shared/rpc";
-import { describeError, sendInstruction, TransactionSendError } from "../../shared/transaction";
-import { microToUsd, poolTiers, resolveMutualAddress } from "../mutual";
-import { useJoinContext } from "../useJoinContext";
-import { useMinStake } from "../useMinStake";
-import { useMutual } from "../useMutual";
-import { usePoolTotal } from "../usePoolTotal";
 import { JoinPrecheck } from "./JoinPrecheck";
 import { PolicyAcceptNote } from "./PolicyAcceptNote";
 import { ShareRow } from "./ShareRow";
 
-// Policy §5 default: Standard is the middle tier (index 1 of exactly three).
-const DEFAULT_TIER = 1;
-
-// Kit data law: unknown values render as mono {{PARAM}} placeholders.
+const BLADE = poolBySlug("blade-pool");
 const PARAM = "{{PARAM}}";
 
-// The hero state machine (copy doc § on-chain states; HANDOFF §4).
-type Phase = "idle" | "building" | "wallet-signing" | "confirming" | "covered";
+/** The Blade Pool's share message (the 2026-09-24 rewrite; copy doc §
+ * Covered overlay reconciliation pending — bean riprap-k9jl). Unread tier:
+ * the figures fragments drop out — numbers are never faked. */
+export function bladeShareText(fee: string | null, cap: string | null): string {
+  const forFee = fee === null ? "" : ` for ${fee}`;
+  const worst = cap === null ? "" : `\nWorst case: up to ${cap} out.`;
+  return `I just bought the weirdest hedge at Breakpoint${forFee} 😳.
 
-// Copy doc: "Failure: one-line toast read from the program logs; unmapped
-// fallback `The transaction didn't go through. Try again.`" — Error-likes go
-// through describeError; anything unmappable gets the fallback, never an
-// invented reason.
-function joinFailureMessage(err: unknown): string {
-  if (err instanceof TransactionSendError || err instanceof Error) return describeError(err);
-  return "The transaction didn't go through. Try again.";
+Get stabbed with friends. 🤯${worst}
+Best case: every cent back.
+Friends decide over the payouts.
+
+I'm in. @riprapxyz`;
 }
 
-/** The inline cluster switch for the not-live empty state (copy doc § on-chain states). */
-function ClusterSwitch() {
-  const { clusters, cluster, setCluster } = useCluster();
-  return (
-    <ClusterSelect
-      className="w-44"
-      clusters={clusters.map((c) => ({ value: c.id, label: c.label }))}
-      value={cluster?.id}
-      onValueChange={(value) => void setCluster(value as (typeof clusters)[number]["id"])}
-    />
-  );
-}
+const ODDS: readonly (readonly [string, string])[] = [
+  ["You going to Breakpoint in London", "you betcha"],
+  ["Accidental eye contact on the Tube", "dead sure"],
+  ["You get stabbed at Breakpoint", "barely a blip"],
+  ["You send this page to your friends", "dead cert"],
+];
 
-/** `Connect a wallet to chip in` — opens the kit's props-driven wallet picker
- *  wired to the ConnectorKit hooks (the kit itself stays Solana-free). */
-function ConnectWalletCta() {
-  const [open, setOpen] = useState(false);
-  const connectors = useWalletConnectors();
-  const { connect } = useConnectWallet();
-  const { disconnect } = useDisconnectWallet();
-  const { isConnected, account } = useWallet();
+// copy doc § Covered overlay: the shared URL is the printed pool path —
+// the public/ stub keeps it working
+const SHARE_URL = "https://riprap.xyz/#/2026-breakpoint-blade-pool";
+const POLICY_HREF = "#/2026-breakpoint-blade-pool";
 
-  return (
-    <>
-      <Button size="lg" data-participate onClick={() => setOpen(true)}>
-        Connect a wallet to chip in
-      </Button>
-      <PolicyAcceptNote />
-      <WalletDialog
-        open={open}
-        onOpenChange={setOpen}
-        connectors={connectors.map((c) => ({ id: c.id, name: c.name }))}
-        onConnect={(id) => {
-          setOpen(false);
-          void connect(id as WalletConnectorId);
-        }}
-        connected={isConnected}
-        address={account ?? undefined}
-        onDisconnect={() => void disconnect()}
-      />
-    </>
-  );
-}
+const PHASE_LABELS: Record<"building" | "wallet-signing" | "confirming", string> = {
+  building: "Building…",
+  "wallet-signing": "Check your wallet…",
+  confirming: "Confirming…",
+};
 
-export function PoolHero() {
-  const [tierIndex, setTierIndex] = useState(DEFAULT_TIER);
-  const [phase, setPhase] = useState<Phase>("idle");
-  // Covered overlay (copy doc § Covered overlay): fires on the first covered
-  // read of a browser session per wallet — a fresh join confirmation or a
-  // connecting member's first read; once per session (sessionStorage gate),
-  // then Escape/Continue dismisses to the inline covered state.
-  const [coveredOverlay, setCoveredOverlay] = useState(false);
-  const hanseEnv = useHanseEnv();
-  const queryClient = useQueryClient();
-  const joinQuery = useJoinContext();
-  const mutualQuery = useMutual();
-  const { account, isConnected } = useWallet();
-  const { isLocal, isMainnet, isDevnet } = useCluster();
-  const mutualAddress = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
-
-  const tiers = mutualQuery.state === "ready" ? poolTiers(mutualQuery.mutual) : null;
-  const context = joinQuery.state === "ready" ? joinQuery.context : null;
-  const minStake = useMinStake(context?.mutual.data.subaccord ?? null);
-  const { displayAmount: poolTotal, amount: poolAmount } = usePoolTotal(
-    context?.mutual.data.pool ?? null,
-  );
-  // alreadyMember is a STATE (copy doc § Covered): the Member PDA's tier wins;
-  // between confirmation and the context refetch, the tier just joined shows.
-  const memberTier = context?.alreadyMember ?? (phase === "covered" ? { tier: tierIndex } : null);
-  const covered = memberTier !== null;
-  const shownIndex = covered ? Math.min(memberTier.tier, tiers?.length ?? 1) : tierIndex;
+export function BladeHero({ listing = BLADE }: { listing?: MutualListing }) {
+  const { isConnected } = useWallet();
+  const [tierIndex, setTierIndex] = useState(defaultTierIndex(listing.tiers.length));
+  const join = usePoolJoin(listing);
+  const { mutualQuery, context, covered, memberTier, phase, poolAmount, poolTotal, minStake } =
+    join;
+  const tiers = join.tiers;
+  const shownIndex = covered
+    ? Math.min(memberTier?.tier ?? tierIndex, tiers?.length ?? 1)
+    : tierIndex;
   const tier = tiers === null ? null : (tiers[Math.min(shownIndex, tiers.length - 1)] ?? null);
-  // Hero subline numbers track the default (Standard) tier — {{PARAM}} until
-  // the chain answers.
-  const std = tiers === null ? null : tiers[Math.min(DEFAULT_TIER, tiers.length - 1)];
-  const subFee = std ? usd(std.fee) : PARAM;
-  const subCap = std ? usd(std.cap) : PARAM;
-
-  // Per-tier affordability is the page's call (join.ts): the context carries
-  // both balances; the disabled reason tracks the SELECTED tier.
   const precheck =
-    isConnected && context !== null && tiers !== null && tier !== null
-      ? {
-          needsUsdc:
-            context.depositBalance <
-            (context.mutual.data.tiers[Math.min(shownIndex, context.mutual.data.tiers.length - 1)]
-              ?.contribution ?? 0n),
-          balanceUsd: microToUsd(context.depositBalance),
-          tierName: tier.name,
-          feeUsd: tier.fee,
-          insufficientSol: context.reason === "insufficient-sol",
-        }
+    isConnected && context !== null && tier !== null
+      ? joinPrecheck(context, shownIndex, tier)
       : null;
   const blocked = precheck !== null && (precheck.needsUsdc || precheck.insufficientSol);
-
-  async function onChipIn() {
-    if (phase !== "idle" || !hanseEnv || mutualAddress === undefined || tiers === null) return;
-    setPhase("building");
-    try {
-      const instructions = await buildJoinInstructions(hanseEnv.rpc, {
-        mutual: mutualAddress,
-        tier: tierIndex,
-        member: hanseEnv.signer,
-      });
-      setPhase("wallet-signing");
-      await sendInstruction(
-        hanseEnv.rpc,
-        hanseEnv.rpcSubscriptions,
-        hanseEnv.signer,
-        instructions,
-        () => setPhase("confirming"),
-      );
-      setPhase("covered");
-      // the overlay's "pool holds" figure must include this deposit —
-      // invalidate before the covered effect opens the moment.
-      void queryClient.invalidateQueries({ queryKey: ["pool-total"] });
-    } catch (err) {
-      toast.error(joinFailureMessage(err));
-      setPhase("idle");
-      joinQuery.refetch();
-    }
-  }
-
-  // The overlay trigger (copy doc § Covered overlay): join confirmation and
-  // the connecting-member read both land here — covered flips true.
-  useEffect(() => {
-    if (!covered || !isConnected || account === null) return;
-    const key = `riprap:covered:${account}`;
-    if (sessionStorage.getItem(key) !== null) return;
-    sessionStorage.setItem(key, "1");
-    setCoveredOverlay(true);
-  }, [covered, isConnected, account]);
-
-  const phaseLabel: Record<Exclude<Phase, "idle" | "covered">, string> = {
-    building: "Building…",
-    "wallet-signing": "Check your wallet…",
-    confirming: "Confirming…",
-  };
+  // Hero subline numbers track the default (Standard) tier
+  const std =
+    tiers === null ? null : tiers[Math.min(defaultTierIndex(tiers.length), tiers.length - 1)];
+  const subFee = std ? usd(std.fee) : PARAM;
+  const subCap = std ? usd(std.cap) : PARAM;
 
   return (
     <div className="relative">
@@ -226,9 +110,9 @@ export function PoolHero() {
           <div className="flex flex-col gap-(--riprap-space-lg)">
             <Settle>
               <div className="flex flex-wrap items-center gap-3">
-                <StampBadge pool="Blade Pool" event="Breakpoint" />
+                <StampBadge pool={listing.name} event={MUTUAL_EVENT.event.split(" ")[0]} />
                 <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
-                  Olympia Convention Centre, London · 15-17 November 2026
+                  {MUTUAL_EVENT.venue} · {MUTUAL_EVENT.window}
                 </p>
               </div>
             </Settle>
@@ -242,19 +126,9 @@ export function PoolHero() {
             {covered ? null : (
               <Settle delay={120}>
                 <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                  <span data-num className="font-mono">
-                    {subFee}
-                  </span>{" "}
-                  buys you into the weirdest hedge at Breakpoint: up to{" "}
-                  <span data-num className="font-mono">
-                    {subCap}
-                  </span>{" "}
-                  out in the worst case, every cent back if nothing does, then the pool dissolves.
-                  This is not insurance. It's{" "}
-                  <span data-num className="font-mono">
-                    {subFee}
-                  </span>{" "}
-                  and emotional support with a payout cap.
+                  <Prose
+                    text={`${subFee} buys you into the weirdest hedge at Breakpoint: up to ${subCap} out in the worst case, every cent back if nothing does, then the pool dissolves. This is not insurance. It's ${subFee} and emotional support with a payout cap.`}
+                  />
                 </p>
               </Settle>
             )}
@@ -284,9 +158,9 @@ export function PoolHero() {
                       </p>
                       <Slider
                         disabled
-                        value={[DEFAULT_TIER]}
+                        value={[defaultTierIndex(listing.tiers.length)]}
                         min={0}
-                        max={2}
+                        max={listing.tiers.length - 1}
                         step={1}
                         aria-label="Coverage tier"
                         className="max-w-[36rem]"
@@ -295,8 +169,8 @@ export function PoolHero() {
                         className="flex max-w-[36rem] justify-between"
                         data-slot="tier-placeholders"
                       >
-                        {[0, 1, 2].map((i) => (
-                          <span key={i} data-num className="font-mono text-sm text-muted-soft">
+                        {listing.tiers.map((t) => (
+                          <span key={t.name} data-num className="font-mono text-sm text-muted-soft">
                             {PARAM}
                           </span>
                         ))}
@@ -320,9 +194,10 @@ export function PoolHero() {
                         Not live on this cluster
                       </p>
                       <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                        The Blade Pool isn't deployed on this network. Switch networks to find it.
+                        The {listing.name} isn't deployed on this network. Switch networks to find
+                        it.
                       </p>
-                      <ClusterSwitch />
+                      <HeroClusterSwitch />
                     </>
                   )}
                 </div>
@@ -342,7 +217,9 @@ export function PoolHero() {
                         max={(tiers ?? []).length - 1}
                         step={1}
                         aria-label="Coverage tier"
-                        onValueChange={(v) => setTierIndex(v[0] ?? DEFAULT_TIER)}
+                        onValueChange={(v) =>
+                          setTierIndex(v[0] ?? defaultTierIndex(tiers?.length ?? 1))
+                        }
                         className="max-w-[36rem]"
                       />
                       <div className="flex max-w-[36rem] justify-between">
@@ -363,17 +240,6 @@ export function PoolHero() {
                   <p data-num className="font-mono text-base text-ink">
                     {tier.name} · {usd(tier.fee)} entry · up to {usd(tier.cap)} maximum payout
                   </p>
-
-                  {/* deposits window — deposits_close_at, chain truth; while
-                  the window is open */}
-                  {/*
-                  {mutualQuery.depositsOpen ? (
-                    <p data-num className="font-mono text-xs text-muted-foreground">
-                      entry closes {formatUtc(mutualQuery.mutual.depositsCloseAt)}
-                    </p>
-                  ) : null}
-                  */}
-
                   {covered ? (
                     <div className="flex max-w-[36rem] flex-col gap-3" data-slot="covered">
                       <BadgeStamp data-num>Covered — {tier.name}</BadgeStamp>
@@ -389,17 +255,19 @@ export function PoolHero() {
                           size="lg"
                           data-participate
                           disabled={phase !== "idle" || blocked}
-                          onClick={() => void onChipIn()}
+                          onClick={() => void join.onChipIn(shownIndex)}
                         >
                           {phase === "idle" || phase === "covered"
                             ? `Chip in ${usd(tier.fee)}`
-                            : phaseLabel[phase]}
+                            : PHASE_LABELS[phase]}
                         </Button>
-                        <PolicyAcceptNote />
-                        {precheck !== null && <JoinPrecheck isDevnet={isDevnet} {...precheck} />}
+                        <PolicyAcceptNote poolName={listing.name} href={POLICY_HREF} />
+                        {precheck !== null && <JoinPrecheck isDevnet={false} {...precheck} />}
                       </div>
                     ) : (
-                      <ConnectWalletCta />
+                      <ConnectWalletCta
+                        note={<PolicyAcceptNote poolName={listing.name} href={POLICY_HREF} />}
+                      />
                     )
                   ) : (
                     <div className="flex max-w-[36rem] flex-col gap-2" data-slot="entry-closed">
@@ -420,8 +288,8 @@ export function PoolHero() {
             {/* Covered overlay — copy doc § Covered overlay: the join moment;
             copy renders verbatim, figures chain-formatted, total last. */}
             <CoveredOverlay
-              open={coveredOverlay}
-              onDismiss={() => setCoveredOverlay(false)}
+              open={join.coveredOverlay}
+              onDismiss={join.dismissCovered}
               stamp={`Covered — ${tier !== null ? tier.name : PARAM}`}
               headline="Welcome, friend!"
               figures={[
@@ -459,18 +327,20 @@ export function PoolHero() {
                   </>
                 ),
                 action: "Become a juror",
-                href: "#/app/adjudicate",
+                href: `#/app/adjudicate/${poolRouteId(listing)}`,
               }}
               share={
                 <ShareRow
                   fee={tier !== null ? usd(tier.fee) : null}
                   cap={tier !== null ? usd(tier.cap) : null}
+                  buildText={bladeShareText}
+                  url={SHARE_URL}
                 />
               }
             />
           </div>
           {/* the odds — mock actuarial table; jokes here, real numbers
-              elsewhere. A hairline-separated right rail since 2026-09-24. */}
+              elsewhere. A hairline-separated right rail since 2024-09-24. */}
           <aside className="lg:w-96 lg:border-l lg:border-hairline lg:pl-(--riprap-space-xl)">
             <Settle delay={150}>
               <div data-slot="odds">
@@ -479,14 +349,7 @@ export function PoolHero() {
                     The odds
                   </caption>
                   <tbody>
-                    {(
-                      [
-                        ["You going to Breakpoint in London", "you betcha"],
-                        ["Accidental eye contact on the Tube", "dead sure"],
-                        ["You get stabbed at Breakpoint", "barely a blip"],
-                        ["You send this page to your friends", "dead cert"],
-                      ] as const
-                    ).map(([event, odds]) => (
+                    {ODDS.map(([event, odds]) => (
                       <tr key={event} className="border-t border-hairline">
                         <th className="py-3 pr-4 text-left align-top font-normal leading-snug text-body [font:var(--riprap-body-sm)]">
                           {event}

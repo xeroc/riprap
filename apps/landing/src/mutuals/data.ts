@@ -173,6 +173,14 @@ export function poolByRouteId(id: string): MutualListing | undefined {
   return MUTUALS.find((m) => poolRouteId(m) === id);
 }
 
+/** A pool's listing by slug — for static, developer-owned references (page
+ * configs); an unknown slug is a programming error, so it throws. */
+export function poolBySlug(slug: string): MutualListing {
+  const listing = MUTUALS.find((m) => m.slug === slug);
+  if (listing === undefined) throw new Error(`no listing for slug ${slug}`);
+  return listing;
+}
+
 /** `$10` or `$10–$40` — the entry-fee span across tiers (docs §5). */
 export function entryRange(m: MutualListing): string {
   const fees = m.tiers.map((t) => t.fee);

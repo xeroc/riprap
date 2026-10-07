@@ -1,11 +1,15 @@
-// #/m/coffee-apocalypse — placeholder detail page (copy doc § /m routes).
-// Content extracted from meta/Breakpoint/Micro Mutual — Coffee Apocalypse -
-// Policy.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// #/m/coffee-apocalypse — the pool page: coffeeapocalypse hero (offer + join), then the doc
+// bands. Content extracted from meta/Breakpoint/Micro Mutual — Coffee
+// Apocalypse - Policy.md (§3/§4/§5/§7/§10/§11); hero copy authored
+// 2026-10-07 (copy-doc pass pending).
+import { CoffeeApocalypseHero } from "./CoffeeApocalypseHero";
+
 import { PoolPageShell } from "./PoolPageShell";
 
 export function CoffeeApocalypsePage() {
   return (
     <PoolPageShell
+      hero={<CoffeeApocalypseHero />}
       config={{
         name: "Coffee Apocalypse",
         event: "Breakpoint",

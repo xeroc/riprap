@@ -1,12 +1,16 @@
-// #/m/ngmi-hairline — placeholder detail page (copy doc § /m routes).
-// Content extracted from meta/Breakpoint/Micro Mutual — NGMI Hairline -
-// Policy.md (§3/§4/§5/§7/§10/§11); no chain binding yet. Prices set
-// 2026-10-07: flat $10 entry, $200 maximum, grades pay 10/30/50/100%.
+// #/m/ngmi-hairline — the pool page: ngmihairline hero (offer + join), then the doc
+// bands. Content extracted from meta/Breakpoint/Micro Mutual — NGMI Hairline
+// - Policy.md (§3/§4/§5/§7/§10/§11); prices set 2026-10-07 (flat $10 entry,
+// $200 maximum, grades pay 10/30/50/100%); hero copy authored 2026-10-07
+// (copy-doc pass pending).
+import { NgmiHairlineHero } from "./NgmiHairlineHero";
+
 import { PoolPageShell } from "./PoolPageShell";
 
 export function NgmiHairlinePage() {
   return (
     <PoolPageShell
+      hero={<NgmiHairlineHero />}
       config={{
         name: "NGMI Hairline",
         event: "Breakpoint",

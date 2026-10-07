@@ -60,7 +60,7 @@ describe("depositsOpenAt — the deposits window gate (§2.7)", () => {
   });
 });
 
-describe("resolveMutualAddress — the one static pool constant", () => {
+describe("resolveMutualAddress — the localnet dev lane only", () => {
   it("localnet resolves VITE_LOCALNET_MUTUAL when set", () => {
     vi.stubEnv("VITE_LOCALNET_MUTUAL", "MutualXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     expect(resolveMutualAddress({ isLocal: true, isMainnet: false, isDevnet: false })).toBe(
@@ -68,11 +68,10 @@ describe("resolveMutualAddress — the one static pool constant", () => {
     );
   });
 
-  it("localnet without the env var, and clusters without a deployment, stay honest", () => {
-    // a developer's real .env may carry deployments — the honest-state cases
-    // must assert the resolver, not the local machine
-    vi.stubEnv("VITE_DEVNET_MUTUAL", "");
-    vi.stubEnv("VITE_MAINNET_MUTUAL", "");
+  it("localnet without the env var, and every other cluster, resolve nothing", () => {
+    // 2026-10-07: the VITE_DEVNET/MAINNET_MUTUAL overrides are gone —
+    // devnet and mainnet resolve through pins, route ids, and the scan
+    vi.stubEnv("VITE_LOCALNET_MUTUAL", "");
     expect(
       resolveMutualAddress({ isLocal: true, isMainnet: false, isDevnet: false }),
     ).toBeUndefined();
@@ -82,34 +81,27 @@ describe("resolveMutualAddress — the one static pool constant", () => {
     expect(
       resolveMutualAddress({ isLocal: false, isMainnet: false, isDevnet: true }),
     ).toBeUndefined();
-    expect(
-      resolveMutualAddress({ isLocal: false, isMainnet: false, isDevnet: false }),
-    ).toBeUndefined();
   });
 });
 
-describe("resolvePoolAddress — a directory pool's on-chain address", () => {
+describe("resolvePoolAddress — pins only, tried on any cluster", () => {
   const bladeMainnet = MUTUALS.find((m) => m.slug === "blade-pool");
   const bladeDevnet = MUTUALS.find((m) => m.slug === "blade-pool-devnet");
   const mainnet = { isLocal: false, isMainnet: true, isDevnet: false };
   const devnet = { isLocal: false, isMainnet: false, isDevnet: true };
   const localnet = { isLocal: true, isMainnet: false, isDevnet: false };
 
-  it("the pinned pubkey serves the listing when the env override is unset", () => {
-    vi.stubEnv("VITE_MAINNET_MUTUAL", "");
-    vi.stubEnv("VITE_DEVNET_MUTUAL", "");
+  it("the listing's pinned pubkey is the address — no env override exists anymore", () => {
     expect(bladeMainnet && resolvePoolAddress(bladeMainnet, mainnet)).toBe(
       "DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF",
     );
     expect(bladeDevnet && resolvePoolAddress(bladeDevnet, devnet)).toBe(
       "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe",
     );
-  });
-
-  it("the env override beats the pin — dev points it anywhere without a rebuild", () => {
-    vi.stubEnv("VITE_MAINNET_MUTUAL", "Mutual1111111111111111111111111111111111111111");
-    expect(bladeMainnet && resolvePoolAddress(bladeMainnet, mainnet)).toBe(
-      "Mutual1111111111111111111111111111111111111111",
+    // a pin tried on the "wrong" cluster still resolves to itself — the
+    // read simply won't find the account and the pool renders not-live
+    expect(bladeDevnet && resolvePoolAddress(bladeDevnet, mainnet)).toBe(
+      "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe",
     );
   });
 
@@ -122,10 +114,16 @@ describe("resolvePoolAddress — a directory pool's on-chain address", () => {
     expect(bladeMainnet && resolvePoolAddress(bladeMainnet, localnet)).toBeUndefined();
   });
 
-  it("a listing with no pin and no env is honestly unresolved", () => {
-    vi.stubEnv("VITE_DEVNET_MUTUAL", "");
+  it("a listing with no pin is honestly unresolved", () => {
+    const ngmi = MUTUALS.find((m) => m.slug === "ngmi-hairline");
+    expect(ngmi && resolvePoolAddress(ngmi, devnet)).toBeUndefined();
+  });
+
+  it("a pinned listing serves its pubkey", () => {
     const chairmageddon = MUTUALS.find((m) => m.slug === "chairmageddon");
-    expect(chairmageddon && resolvePoolAddress(chairmageddon, devnet)).toBeUndefined();
+    expect(chairmageddon && resolvePoolAddress(chairmageddon, devnet)).toBe(
+      "5Yo1BKU8Vy9mRRwXqrjJhtw4CFmfkZiZoW7VSTj5huEq",
+    );
   });
 });
 
@@ -137,7 +135,10 @@ describe("poolByRouteId — the wizard route id's inverse lookup", () => {
     expect(poolByRouteId("BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe")?.slug).toBe(
       "blade-pool-devnet",
     );
-    expect(poolByRouteId("chairmageddon")?.slug).toBe("chairmageddon");
+    expect(poolByRouteId("5Yo1BKU8Vy9mRRwXqrjJhtw4CFmfkZiZoW7VSTj5huEq")?.slug).toBe(
+      "chairmageddon",
+    );
+    expect(poolByRouteId("ngmi-hairline")?.slug).toBe("ngmi-hairline");
     expect(poolByRouteId("blade-pool")).toBeUndefined();
     expect(poolByRouteId("no-such-pool")).toBeUndefined();
   });

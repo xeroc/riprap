@@ -1,11 +1,15 @@
-// #/m/toly-needs-his-fuel — placeholder detail page (copy doc § /m routes).
-// Content extracted from meta/Breakpoint/Micro Bounty — Operation Keep Toly
-// Warm - Terms.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// #/m/toly-needs-his-fuel — the pool page: tolyfuel hero (offer + join), then the
+// doc bands. Content extracted from meta/Breakpoint/Micro Bounty — Operation
+// Keep Toly Warm - Terms.md (§3/§4/§5/§7/§10/§11); hero copy authored
+// 2026-10-07 (copy-doc pass pending).
+
 import { PoolPageShell } from "./PoolPageShell";
+import { TolyFuelHero } from "./TolyFuelHero";
 
 export function TolyFuelPage() {
   return (
     <PoolPageShell
+      hero={<TolyFuelHero />}
       config={{
         name: "Operation Keep Toly Warm",
         event: "Breakpoint",

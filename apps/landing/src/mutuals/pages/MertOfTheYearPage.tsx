@@ -1,11 +1,15 @@
-// #/m/mert-of-the-year — placeholder detail page (copy doc § /m routes).
-// Content extracted from meta/Breakpoint/Micro Bounty — Mert of the Year -
-// Terms.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// #/m/mert-of-the-year — the pool page: mertoftheyear hero (offer + join), then the doc
+// bands. Content extracted from meta/Breakpoint/Micro Bounty — Mert of the
+// Year - Terms.md (§3/§4/§5/§7/§10/§11); hero copy authored 2026-10-07
+// (copy-doc pass pending).
+import { MertOfTheYearHero } from "./MertOfTheYearHero";
+
 import { PoolPageShell } from "./PoolPageShell";
 
 export function MertOfTheYearPage() {
   return (
     <PoolPageShell
+      hero={<MertOfTheYearHero />}
       config={{
         name: "Mert of the Year",
         event: "Breakpoint",

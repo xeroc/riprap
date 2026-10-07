@@ -18,12 +18,12 @@ function revealPolicy(event: MouseEvent<HTMLAnchorElement>) {
   band?.scrollIntoView?.();
 }
 
-export function PolicyAcceptNote() {
+export function PolicyAcceptNote({ poolName, href }: { poolName: string; href: string }) {
   return (
     <p className="text-muted-foreground [font:var(--riprap-body-sm)]" data-slot="policy-accept">
       Chipping in accepts{" "}
-      <TextLink href="#/2026-breakpoint-blade-pool" onClick={revealPolicy}>
-        the Blade Pool policy
+      <TextLink href={href} onClick={revealPolicy}>
+        the {poolName} policy
       </TextLink>
       .
     </p>

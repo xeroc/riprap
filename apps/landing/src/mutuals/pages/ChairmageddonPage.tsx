@@ -1,11 +1,15 @@
-// #/m/chairmageddon — placeholder detail page (copy doc § /m routes).
-// Content extracted from meta/Breakpoint/Micro Mutual — Chairmageddon -
-// Policy.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// #/m/chairmageddon — the pool page: chairmageddon hero (offer + join), then the doc
+// bands. Content extracted from meta/Breakpoint/Micro Mutual — Chairmageddon
+// - Policy.md (§3/§4/§5/§7/§10/§11); hero copy authored 2026-10-07 (copy-doc
+// pass pending).
+import { ChairmageddonHero } from "./ChairmageddonHero";
+
 import { PoolPageShell } from "./PoolPageShell";
 
 export function ChairmageddonPage() {
   return (
     <PoolPageShell
+      hero={<ChairmageddonHero />}
       config={{
         name: "Chairmageddon",
         event: "Breakpoint",
@@ -57,5 +61,3 @@ export function ChairmageddonPage() {
     />
   );
 }
-
-export default ChairmageddonPage;

@@ -1,11 +1,15 @@
-// #/m/keep-raj-warm — placeholder detail page (copy doc § /m routes).
-// Content extracted from meta/Breakpoint/Micro Bounty — Operation Keep Raj
-// Warm - Terms.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// #/m/keep-raj-warm — the pool page: keeprajwarm hero (offer + join), then the doc
+// bands. Content extracted from meta/Breakpoint/Micro Bounty — Operation
+// Keep Raj Warm - Terms.md (§3/§4/§5/§7/§10/§11); hero copy authored
+// 2026-10-07 (copy-doc pass pending).
+import { KeepRajWarmHero } from "./KeepRajWarmHero";
+
 import { PoolPageShell } from "./PoolPageShell";
 
 export function KeepRajWarmPage() {
   return (
     <PoolPageShell
+      hero={<KeepRajWarmHero />}
       config={{
         name: "Operation Keep Raj Warm",
         event: "Breakpoint",

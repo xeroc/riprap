@@ -51,12 +51,14 @@ function AdjudicateSurface() {
 
 /** `#/m/<id>` — a pool's detail route: the id is the pool's MUTUAL pubkey
  * once pinned, else its slug. Unknown ids fall back to the platform landing,
- * same as any other unmatched path. */
+ * same as any other unmatched path. The route id rides down to the page:
+ * pool pages that resolve by on-chain address (the Blade Pool's,
+ * per-cluster pins) take the id they were opened at. */
 function PoolSurface() {
   const { id } = useParams();
   if (id === undefined) return <App />;
   const Page = POOL_PAGES[id];
-  return Page ? <Page /> : <App />;
+  return Page ? <Page id={id} /> : <App />;
 }
 
 /** In-page anchors ("#mechanism" clicked anywhere) land here as "/mechanism":

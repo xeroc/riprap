@@ -1,16 +1,15 @@
 // The shared skeleton for a pool's detail page (`#/m/<pubkey-or-slug>`).
-// Placeholder depth by founder call (2026-10-05): the bands mirror the Blade
-// Pool page's rhythm (offer hero → what's covered → not covered → claims →
-// math → the end) but the content is static, extracted from the pool's
-// policy/terms markdown — no chain reads, no join flow. When a pool goes
-// live, its page grows the on-chain binding the Blade Pool page has.
-import { SectionBand, StampBadge, type WorkedExampleLine, WorkedExampleReceipt } from "@riprap/ui";
+// The hero (the offer + the join flow, passed by the page) rides above the
+// doc bands: what's covered → not covered → claims → the math → the end,
+// content extracted from the pool's policy/terms markdown. The §5 tier
+// table stays under the hero as the doc-priced reference while the chain
+// can't answer; every number on it is the doc's, final.
+import { SectionBand, type WorkedExampleLine, WorkedExampleReceipt } from "@riprap/ui";
+import type { ReactNode } from "react";
 import { Settle } from "../../components/Settle";
 import { SiteNav } from "../../components/SiteNav";
 import { Footer } from "../../sections/Footer";
-import { MUTUAL_EVENT } from "../data";
 import type { MutualTier, PoolKind } from "../types";
-
 export interface PoolPageConfig {
   name: string;
   /** the StampBadge event tag, e.g. "Breakpoint" */
@@ -41,7 +40,7 @@ export interface PoolPageConfig {
   caveat?: string;
 }
 
-export function PoolPageShell({ config }: { config: PoolPageConfig }) {
+export function PoolPageShell({ config, hero }: { config: PoolPageConfig; hero: ReactNode }) {
   const c = config;
   const bounty = c.kind === "bounty";
   const fees = c.tiers.map((t) => `$${t.fee}`);
@@ -51,60 +50,45 @@ export function PoolPageShell({ config }: { config: PoolPageConfig }) {
     <>
       <SiteNav />
       <main>
-        {/* the offer — stamp, name, one-liner, tier table, window */}
-        <SectionBand id="top" tone="ground">
-          <Settle className="flex flex-col gap-(--riprap-space-lg)">
-            <div className="flex flex-wrap items-center gap-3">
-              <StampBadge pool={c.name} event={c.event} />
-              <p className="text-muted-soft [font:var(--riprap-mono-label)]">
-                {MUTUAL_EVENT.venue} · {MUTUAL_EVENT.window}
-              </p>
-            </div>
-            <h1 className="max-w-3xl tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-md)] sm:[font:var(--riprap-display-xl)]">
-              {c.name}.
-            </h1>
-            <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-              {c.tagline}
-            </p>
-            <div className="max-w-md">
-              <table className="w-full border-collapse font-mono text-sm">
-                <caption className="sr-only">Entry fees and maximum payouts by tier</caption>
-                <thead>
-                  <tr className="border-b border-hairline text-left">
-                    <th scope="col" className="pb-2 pr-4 [font:var(--riprap-mono-label)]">
-                      tier
+        {hero}
+
+        {/* the §5 tier table — the doc-priced offer reference under the hero */}
+        <SectionBand id="tiers" label="the offer" tone="ground">
+          <Settle className="flex max-w-md flex-col gap-(--riprap-space-lg)">
+            <table className="w-full border-collapse font-mono text-sm">
+              <caption className="sr-only">Entry fees and maximum payouts by tier</caption>
+              <thead>
+                <tr className="border-b border-hairline text-left">
+                  <th scope="col" className="pb-2 pr-4 [font:var(--riprap-mono-label)]">
+                    tier
+                  </th>
+                  <th scope="col" className="pb-2 pr-4 text-right [font:var(--riprap-mono-label)]">
+                    entry
+                  </th>
+                  <th
+                    scope="col"
+                    className="pb-2 text-right uppercase tracking-(--riprap-tracking-stamp) [font:var(--riprap-mono-label)]"
+                  >
+                    {bounty ? "bounty" : "max payout"}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {c.tiers.map((t, i) => (
+                  <tr key={t.name} className="border-b border-hairline last:border-b-0">
+                    <th scope="row" className="py-2 pr-4 text-left font-normal text-body">
+                      {t.name}
                     </th>
-                    <th
-                      scope="col"
-                      className="pb-2 pr-4 text-right [font:var(--riprap-mono-label)]"
-                    >
-                      entry
-                    </th>
-                    <th
-                      scope="col"
-                      className="pb-2 text-right uppercase tracking-(--riprap-tracking-stamp) [font:var(--riprap-mono-label)]"
-                    >
-                      {bounty ? "bounty" : "max payout"}
-                    </th>
+                    <td data-num className="py-2 pr-4 text-right text-ink">
+                      {fees[i]}
+                    </td>
+                    <td data-num className="py-2 text-right text-ink">
+                      {caps[i]}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {c.tiers.map((t, i) => (
-                    <tr key={t.name} className="border-b border-hairline last:border-b-0">
-                      <th scope="row" className="py-2 pr-4 text-left font-normal text-body">
-                        {t.name}
-                      </th>
-                      <td data-num className="py-2 pr-4 text-right text-ink">
-                        {fees[i]}
-                      </td>
-                      <td data-num className="py-2 text-right text-ink">
-                        {caps[i]}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </Settle>
         </SectionBand>
 

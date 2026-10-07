@@ -149,7 +149,7 @@ describe("landing", () => {
     );
     expect(cardLinks.slice(0, 9)).toEqual([
       `#/m/${UNIQUE_POOLS[0].pubkey}`, // Blade Pool — the pinned pubkey routes
-      "#/m/chairmageddon",
+      `#/m/${UNIQUE_POOLS[1].pubkey}`, // Chairmageddon — pinned since the devnet launch
       "#/m/ngmi-hairline",
       "#/m/coffee-apocalypse",
       "#/m/onlyfriends",

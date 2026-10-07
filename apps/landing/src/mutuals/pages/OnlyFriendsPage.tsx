@@ -1,11 +1,15 @@
-// #/m/onlyfriends — placeholder detail page (copy doc § /m routes).
+// #/m/onlyfriends — the pool page: onlyfriends hero (offer + join), then the doc bands.
 // Content extracted from meta/Breakpoint/Micro Bounty — OnlyFriends -
-// Terms.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// Terms.md (§3/§4/§5/§7/§10/§11); hero copy authored 2026-10-07 (copy-doc
+// pass pending).
+import { OnlyFriendsHero } from "./OnlyFriendsHero";
+
 import { PoolPageShell } from "./PoolPageShell";
 
 export function OnlyFriendsPage() {
   return (
     <PoolPageShell
+      hero={<OnlyFriendsHero />}
       config={{
         name: "OnlyFriends",
         event: "Breakpoint",

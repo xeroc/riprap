@@ -1,11 +1,15 @@
-// #/m/lilys-liquid-lifeline — placeholder detail page (copy doc § /m routes).
-// Content extracted from meta/Breakpoint/Micro Bounty — Operation Keep Lily
-// Warm - Terms.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// #/m/lilys-liquid-lifeline — the pool page: lilyslifeline hero (offer + join), then the
+// doc bands. Content extracted from meta/Breakpoint/Micro Bounty — Operation
+// Keep Lily Warm - Terms.md (§3/§4/§5/§7/§10/§11); hero copy authored
+// 2026-10-07 (copy-doc pass pending).
+import { LilysLifelineHero } from "./LilysLifelineHero";
+
 import { PoolPageShell } from "./PoolPageShell";
 
 export function LilysLifelinePage() {
   return (
     <PoolPageShell
+      hero={<LilysLifelineHero />}
       config={{
         name: "Operation Keep Lily Warm",
         event: "Breakpoint",
