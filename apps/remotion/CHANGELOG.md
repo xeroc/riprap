@@ -1,5 +1,17 @@
 # @riprap/remotion
 
+## 0.7.0
+
+### Patch Changes
+
+- [#9](https://github.com/xeroc/riprap/pull/9) [`c603c8f`](https://github.com/xeroc/riprap/commit/c603c8f8ca7ead128c76cc3e78519c3ea029d1db) Thanks [@xeroc](https://github.com/xeroc)! - Removed the remotion package's test lane by founder directive: deleted `src/cli/sync.test.ts` + `src/framework/music.test.ts` + `vitest.config.ts`, dropped the `test` script from `package.json`, and added `apps/remotion/AGENTS.md` codifying the rule — never build tests for the videos; verification is stills, pixel probes, render-back beat checks, and independent review. Root `AGENTS.md` Parts table now carries the Videos row with the no-test-lane note.
+  
+  `vitest` + `jsdom` stay in `package.json` for now (orphaned by this change): the lockfile is mid-flight with the cranker `@useaccord/sdk@0.5.1` pin — sweep both deps in the same lockfile-updating change when that lands.
+
+- [#9](https://github.com/xeroc/riprap/pull/9) [`fa037c8`](https://github.com/xeroc/riprap/commit/fa037c8d079cacca0f96472abe58a4db0bd2f540) Thanks [@xeroc](https://github.com/xeroc)! - Removed the Strudel-scoring guidance from the README and deleted MUSIC.md — audio authoring is no longer steered toward Strudel. The score CLI, the committed audio/*.strudel files, and the studio/render stale-rebake chain are unchanged and keep working; music remains any wav under public/audio/ mounted via defineVideo.
+- Updated dependencies []:
+  - @riprap/ui@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes

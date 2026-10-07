@@ -1,5 +1,13 @@
 # @riprap/tests
 
+## 0.7.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @riprap/hanse@0.7.0
+  - @riprap/pool@0.7.0
+
 ## 0.6.0
 
 ### Patch Changes

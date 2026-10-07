@@ -1,5 +1,13 @@
 # @riprap/pitch-seed-raise
 
+## 0.7.0
+
+### Patch Changes
+
+- [#9](https://github.com/xeroc/riprap/pull/9) [`070cdf9`](https://github.com/xeroc/riprap/commit/070cdf95777efca3019fff6f09dee5799dbba4bf) Thanks [@xeroc](https://github.com/xeroc)! - Re-stage four deck slides (2026-10-07): the title headline becomes "Insurance, Finally Programmable"; the vision slide is statement-led ("Trust Math, Not Paperwork") with the tradinsure/web3 comparison table demoted to receipts; the product slide carries "Mutuals First, Markets Next" plus a positioning statement over the unchanged lifecycle illustrations; the pilot slide now presents the Breakpoint aid-and-bounty batch — seven pools narrowed from the landing mutuals directory, prices §5 verbatim — under "Pivoted, Piloting, Learning Fast".
+- Updated dependencies []:
+  - @riprap/ui@0.7.0
+
 ## 0.6.0
 
 ### Patch Changes
