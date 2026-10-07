@@ -3,9 +3,9 @@
 // hero and the fineprint share one fetch. The states are exhaustive on
 // purpose — the copy doc's "renders nothing it wasn't told" law leaves no
 // room for a fallback tier state.
-
 import { fetchMaybeMutual, type Mutual } from "@riprap/hanse";
 import { useCluster } from "@solana/connector";
+import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 
 import { useClusterRpc } from "../shared/rpc";
@@ -17,10 +17,16 @@ export type MutualQuery =
   | { state: "not-found" }
   | { state: "ready"; mutual: Mutual; depositsOpen: boolean };
 
-export function useMutual(): MutualQuery {
+export function useMutual(mutual?: Address | null): MutualQuery {
+  // undefined ⇒ the static-map pool (the Blade Pool page + adjudicate
+  // surface); pool-scoped surfaces pass the listing-resolved address, or
+  // null when the pool resolves nowhere (drafts) — never the static map.
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const clusterRpc = useClusterRpc();
-  const address = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
+  const address =
+    mutual === null
+      ? undefined
+      : (mutual ?? resolveMutualAddress({ isLocal, isMainnet, isDevnet }));
 
   const query = useQuery({
     queryKey: ["mutual", clusterRpc?.endpoint, address],

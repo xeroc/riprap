@@ -1,11 +1,15 @@
-// #/m/chairmageddon — placeholder detail page (copy doc § /m routes).
-// Content extracted from meta/Breakpoint/Micro Mutual — Chairmageddon -
-// Policy.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// #/m/chairmageddon — the pool page: chairmageddon hero (offer + join), then the doc
+// bands. Content extracted from meta/Breakpoint/Micro Mutual — Chairmageddon
+// - Policy.md (§3/§4/§5/§7/§10/§11); hero copy authored 2026-10-07 (copy-doc
+// pass pending).
+import { ChairmageddonHero } from "./ChairmageddonHero";
+
 import { PoolPageShell } from "./PoolPageShell";
 
 export function ChairmageddonPage() {
   return (
     <PoolPageShell
+      hero={<ChairmageddonHero />}
       config={{
         name: "Chairmageddon",
         event: "Breakpoint",
@@ -37,9 +41,9 @@ export function ChairmageddonPage() {
           "Government photo ID",
           "Capacity evidence — that the seats ran out (an announcement, a staff statement, photos of the full space). A shared fact: members may rely on the same evidence.",
           "Standing evidence — timestamped photos of you in the ceremony space, one at or near the published start and one at or near the end, both on your feet.",
-          "Declaration of the facts, signed with your wallet",
         ],
-        feeNote: "Filing pre-pays an adjudication fee of 5 USDC (TODO-confirm in the policy).",
+        feeNote:
+          "Filing pre-pays an adjudication fee of 8 USDC — denied forfeits it, approved returns it with the payment.",
         example: {
           lines: [
             { value: "1,000", caption: "members" },
@@ -57,5 +61,3 @@ export function ChairmageddonPage() {
     />
   );
 }
-
-export default ChairmageddonPage;

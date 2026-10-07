@@ -18,9 +18,9 @@ import { useSlideFrame } from "./useSlideFrame";
 /**
  * The seed-raise deck — 11 slides + appendix, copy from meta/PITCH.md (the
  * law for every string and number below; citations ride along in mono — the
- * 2026-09-17 headline re-stage and the 2026-09-18 vision/problem re-stages
- * below are not yet mirrored there). The destination leads: the vision right
- * after the title — why the world is ripe for internet insurance (smart
+ * 2026-09-17 headline re-stage, the 2026-09-18 vision/problem re-stages,
+ * and the 2026-10-07 title/vision/product/pilot re-stage below are not yet
+ * mirrored there). The destination leads: the vision right
  * well-understood business logic on 24/7/365 rails; the tradinsure/web3
  * comparison table) — then the walk back down to today — the problem → the
  * product → the now → the pilot (events are the door, Breakpoint first) → the business
@@ -52,7 +52,7 @@ const TitleSlide: FC = () => {
       <div data-rise className="flex flex-col items-center gap-6">
         <Wordmark size={84} className="tracking-(--riprap-tracking-mega)" />
         <div className="text-ink [font:var(--riprap-display-md)]">
-          Real-World Risk Protection on Solana.
+          Insurance, Finally Programmable
         </div>
         <div
           className="mt-6 uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]"
@@ -67,18 +67,18 @@ const TitleSlide: FC = () => {
 
 /* 02 — the vision (why internet insurance, why now) ------------------------ */
 
-/** The ripeness argument (re-staged 2026-09-18; not yet mirrored in
- * meta/PITCH.md): call a smart contract what it is — business logic on
- * 24/7/365 rails. Defi trading already proved the pattern for
- * well-understood business logic; insurance is the same shape of business.
- * The comparison table lands it: both worlds do the two core jobs, only one
- * has the rail properties. The five-machine destination strip this slide
- * carried before the re-stage lives on in the appendix below. */
+/** The ripeness argument (re-staged 2026-10-07; not yet mirrored in
+ * meta/PITCH.md): the statement is the slide — trust math, not paperwork.
+ * Claims judged on-chain, reserves earning in DeFi, insurance that scales
+ * like software. The tradinsure/web3 comparison table stays as the
+ * receipts, demoted below the statement — smaller marks, muted labels,
+ * tighter rows. The five-machine destination strip this slide carried
+ * before the 2026-09-18 re-stage lives on in the appendix below. */
 const COMPARE_COLS = ["traditional insurance", "web3 insurance"] as const;
 
 /** One cell mark — a check or a cross, mono, nothing else in the cell. */
 const Mark: FC<{ yes: boolean }> = ({ yes }) => (
-  <span data-num className={`${yes ? "text-accent" : "text-muted-soft"} text-4xl`}>
+  <span data-num className={`${yes ? "text-accent" : "text-muted-soft"} text-2xl`}>
     {yes ? "✓" : "✗"}
   </span>
 );
@@ -110,37 +110,43 @@ const COMPARE_ROWS: { id: string; label: ReactNode; trad: boolean; web3: boolean
 const VisionSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the vision" headline="DeFi rebuilt finance. Insurance is next.">
-      <div className="flex w-full flex-col gap-8">
-        {/* the comparison table — same business, different rails */}
-        <div className="flex w-full flex-col">
-          <div className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_30ch_30ch] items-baseline pb-6">
-            <span />
-            {COMPARE_COLS.map((col) => (
-              <span
-                key={col}
-                className="text-center uppercase text-muted [letter-spacing:var(--riprap-tracking-stamp)]"
-              >
-                {col}
-              </span>
-            ))}
-          </div>
-          {COMPARE_ROWS.map((r, i) => (
-            <div
-              key={r.id}
-              className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_30ch_30ch] items-center border-t border-hairline py-2"
-              style={rise(frame, 4 + i * 8)}
+    <SlideFrame kicker="the vision" headline="Trust Math, Not Paperwork">
+      {/* the statement — the heart of the slide */}
+      <div
+        className="max-w-[58ch] text-ink [font:var(--riprap-display-sm)]"
+        style={rise(frame, 12)}
+      >
+        When claims are judged on-chain and reserves earn in DeFi, insurance becomes faster, fairer,
+        and able to scale like software.
+      </div>
+      {/* the comparison table — same business, different rails; receipts, not the argument */}
+      <div className="flex w-full flex-col">
+        <div className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_22ch_22ch] items-baseline pb-4">
+          <span />
+          {COMPARE_COLS.map((col) => (
+            <span
+              key={col}
+              className="text-center uppercase text-muted [letter-spacing:var(--riprap-tracking-stamp)]"
             >
-              <span className="text-ink [font:var(--riprap-title-sm)]">{r.label}</span>
-              <span className="text-center">
-                <Mark yes={r.trad} />
-              </span>
-              <span className="text-center">
-                <Mark yes={r.web3} />
-              </span>
-            </div>
+              {col}
+            </span>
           ))}
         </div>
+        {COMPARE_ROWS.map((r, i) => (
+          <div
+            key={r.id}
+            className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_22ch_22ch] items-center border-t border-hairline py-1.5"
+            style={rise(frame, 28 + i * 6)}
+          >
+            <span className="text-muted [font:var(--riprap-body-sm)]">{r.label}</span>
+            <span className="text-center">
+              <Mark yes={r.trad} />
+            </span>
+            <span className="text-center">
+              <Mark yes={r.web3} />
+            </span>
+          </div>
+        ))}
       </div>
     </SlideFrame>
   );
@@ -240,7 +246,7 @@ const FIELD_ROWS: {
   },
 ];
 
-const IncumbantsProblemSlide: FC = () => {
+export const IncumbantsProblemSlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the competition" headline="there's basically no competitor.">
@@ -354,7 +360,12 @@ const PRODUCT_STEPS = [
 const ProductSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the product" headline="on-chain rails for insurance contracts">
+    <SlideFrame kicker="the product" headline="Mutuals First, Markets Next">
+      {/* the positioning statement — mutuals are the trusted foundation */}
+      <div className="max-w-[68ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 8)}>
+        People pool risk and share the upside transparently. The foundation for a global, composable
+        market of insurance and risk capital.
+      </div>
       <div className="flex w-full flex-col gap-8">
         <div style={rise(frame, 16)}>
           <ol data-slot="lifecycle-strip" className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -398,7 +409,7 @@ const NOW_STEPS = [
       <>
         Premiums and claims must settle in something people actually want to hold, like USDC.
         There's now a much bigger institutional distribution layer than there was 12 months ago.
-        Meanwhile regulatory clarity has been established in the US (GENIUS Act) and the EU (MiCA).
+        Meanwhile regulatory clarity has been established in the US and the EU.
       </>
     ),
     ours: false,
@@ -442,7 +453,11 @@ const NOW_STEPS = [
 const NowSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the now" headline="all the pieces are falling together now">
+    <SlideFrame kicker="why now" headline="Three pieces clicked">
+      <div className="max-w-[68ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 8)}>
+        Insurance needed stable money, recurring premiums, and trustless claims, and all three are
+        now real on Solana.
+      </div>
       <div className="flex w-full flex-col gap-8">
         <div style={rise(frame, 16)}>
           <ol data-slot="expansion-strip" className="grid grid-cols-2 gap-4 md:grid-cols-3">
@@ -519,7 +534,7 @@ const EVIDENCE_ROWS = [
   },
 ];
 
-const MarketSlide: FC = () => {
+export const MarketSlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame
@@ -563,117 +578,116 @@ const MarketSlide: FC = () => {
   );
 };
 
-/* 07 — the pilot ------------------------------------------------------------- */
+/* 06 — the pilot (re-staged 2026-10-07: aid + bounties at Breakpoint) ------ */
 
-/** Why events, why Breakpoint first (PITCH.md §5/§8 + the 2026-09-15
- * additions: the Solana family's loyalty, sponsored covers). None of these
- * is market size — the market is slide 05's. */
-const LAUNCH_REASONS = [
+/** The pilot batch, narrowed from the landing's mutuals directory
+ * (apps/landing/src/mutuals/data.ts — every number is that file's §5 policy
+ * / terms tables verbatim; the three hot-drink bounties share one mechanic
+ * and ride one row, Blade Pool's devnet/mainnet listings are one pool).
+ * Two classes on the same mechanics: mutuals where members cover each
+ * other, bounties that pay for confirmed acts. */
+const PILOT_POOLS: {
+  name: string;
+  kind: "mutual" | "bounty";
+  pays: string;
+  entry: string;
+  payout: string;
+}[] = [
   {
-    head: "the cleanest legal surface",
-    body: "crypto-native members covering each other, one bounded window.",
+    name: "Blade Pool",
+    kind: "mutual",
+    pays: "bodily injury caused by another person with a knife or blade, during the conference",
+    entry: "$10–$40",
+    payout: "up to $4,000",
   },
   {
-    head: "the solana family is loyal",
-    body: "breakpoint puts the whole ecosystem in one hall. the family adopts its own and talks about what ships.",
+    name: "Chairmageddon",
+    kind: "mutual",
+    pays: "every seat taken at the opening ceremony — and you stood the whole thing",
+    entry: "$10",
+    payout: "$40",
   },
   {
-    head: "cover sponsorships (e.g. regional superteams)",
-    body: "companies or regional teams buy covers for their members.",
+    name: "NGMI Hairline",
+    kind: "mutual",
+    pays: "new gray hair first visible during the conference — graded from a few to Gandalf",
+    entry: "$10",
+    payout: "up to $200",
   },
-];
-
-/** The pilot's terms — policy §5 (tiers) and §10 (worked example). One mono
- * size, aligned grid columns; numerals never float in body text (the old
- * mixed-size floating math was retired 2026-09-15). */
-const PILOT_TIERS = [
-  { name: "basic", entry: "$10", cap: "$1,000" },
-  { name: "standard", entry: "$20", cap: "$2,000" },
-  { name: "premium", entry: "$40", cap: "$4,000" },
+  {
+    name: "Coffee Apocalypse",
+    kind: "mutual",
+    pays: "the coffee point runs out while you're standing in the queue",
+    entry: "$10",
+    payout: "$25",
+  },
+  {
+    name: "OnlyFriends",
+    kind: "bounty",
+    pays: "confirmed introductions to listed VIPs — paid per introduction, capped at ten",
+    entry: "$50",
+    payout: "up to $500",
+  },
+  {
+    name: "Hot-drink Runs",
+    kind: "bounty",
+    pays: "bring Raj, Lily, or Toly the hot drink they asked for — hand to hand, still hot",
+    entry: "$5",
+    payout: "$50",
+  },
+  {
+    name: "Mert of the Year",
+    kind: "bounty",
+    pays: "an over-the-top trophy he did not ask for — pays the one he declares best",
+    entry: "$10",
+    payout: "$1,000",
+  },
 ];
 
 const LaunchSlide: FC = () => {
   const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the pilot" headline="a knife-assault mutual aid for breakpoint">
-      <div
-        className="max-w-[100ch] text-body [font:var(--riprap-title-md)]"
-        style={rise(frame, 12)}
-      >
-        <span className="text-accent [font:var(--riprap-mono-number)] mr-6">
-          Blade Pool @ Breakpoint 2026
-        </span>
-        run in front of the entire Solana ecosystem.
+    <SlideFrame kicker="the pilot" headline="Pivoted, Piloting, Learning Fast">
+      {/* the statement — the pivot in one breath */}
+      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 12)}>
+        We extended slow risk pools for fast crowdfunded bounties on the same mechanics, so every
+        pilot, silly or serious, turns into a lesson that sharpens the engine before real-world
+        insurance.
       </div>
-      <div className="deck-narrow:flex-col deck-narrow:gap-8 flex w-full items-start gap-10">
-        <div className="flex flex-1 flex-col gap-5 list list-disc" style={rise(frame, 30)}>
-          <ol className="list-disc ml-6 flex flex-col gap-3 text-2xl">
-            {LAUNCH_REASONS.map((r) => (
-              <li>{r.head}</li>
-            ))}
-          </ol>
+      {/* the batch — two classes, one engine; numbers are §5 verbatim */}
+      <div className="flex w-full flex-col gap-1" data-num>
+        <div className="grid grid-cols-[minmax(0,18ch)_9ch_minmax(0,1fr)_9ch_13ch] items-baseline gap-x-6 pb-2">
+          {["pool", "class", "pays for", "entry", "payout"].map((h) => (
+            <span
+              key={h}
+              className={`uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]${h === "entry" || h === "payout" ? " text-right" : ""}`}
+            >
+              {h}
+            </span>
+          ))}
         </div>
+        {PILOT_POOLS.map((p, i) => (
+          <div
+            key={p.name}
+            className="grid grid-cols-[minmax(0,18ch)_9ch_minmax(0,1fr)_9ch_13ch] items-baseline gap-x-6 border-t border-hairline py-2"
+            style={rise(frame, 28 + i * 8)}
+          >
+            <span className="text-ink [font:var(--riprap-title-sm)]">{p.name}</span>
+            <span className="uppercase text-muted [font:var(--riprap-mono-label)]">{p.kind}</span>
+            <span className="text-muted [font:var(--riprap-body-sm)]">{p.pays}</span>
+            <span className="text-right text-accent [font:var(--riprap-mono-number)]">
+              {p.entry}
+            </span>
+            <span className="text-right text-accent [font:var(--riprap-mono-number)]">
+              {p.payout}
+            </span>
+          </div>
+        ))}
         <div
-          className="deck-narrow:w-full flex w-[46ch] flex-col gap-3 border border-hairline bg-(--riprap-surface-card) p-7"
-          style={rise(frame, 48)}
-          data-num
+          className="pt-3 text-muted-soft [font:var(--riprap-mono-label)]"
+          style={rise(frame, 92)}
         >
-          <div className="text-muted [font:var(--riprap-mono-label)]">
-            Olympia, London · 15–17 November 2026 · 8,000+ attendees
-          </div>
-          <div className="flex flex-col gap-1.5 border-t border-hairline pt-4">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-x-8 gap-y-1.5">
-              <span className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
-                tiers
-              </span>
-              <span className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
-                entry
-              </span>
-              <span className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
-                payout cap
-              </span>
-              {PILOT_TIERS.flatMap((t) => [
-                <span key={t.name} className="text-body [font:var(--riprap-body-sm)]">
-                  {t.name}
-                </span>,
-                <span
-                  key={`${t.name}-entry`}
-                  className="text-right text-accent [font:var(--riprap-mono-number)]"
-                >
-                  {t.entry}
-                </span>,
-                <span
-                  key={`${t.name}-cap`}
-                  className="text-right text-accent [font:var(--riprap-mono-number)]"
-                >
-                  {t.cap}
-                </span>,
-              ])}
-            </div>
-          </div>
-          {/*
-          <div className="flex flex-col gap-1.5 border-t border-hairline pt-4">
-            <div className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
-              worked example — standard tier
-            </div>
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-8 gap-y-1.5">
-              {PILOT_MATH.map((m) => [
-                <span key={m.label} className="text-body [font:var(--riprap-body-sm)]">
-                  {m.label}
-                </span>,
-                <span
-                  key={`${m.label}-value`}
-                  className="text-right text-accent [font:var(--riprap-mono-number)]"
-                >
-                  {m.v}
-                </span>,
-              ])}
-            </div>
-            <div className="pt-1 text-muted [font:var(--riprap-body-sm)]">
-              quiet event: every cent returns, then the pool dissolves
-            </div>
-          </div>
- */}
+          Breakpoint 2026 · Olympia, London · 15–17 November 2026 · policy & terms §5
         </div>
       </div>
     </SlideFrame>
@@ -712,6 +726,9 @@ const BusinessSlide: FC = () => {
         </>
       }
     >
+      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 12)}>
+        We earn like an insurer, through a share of surplus and fees for running pools.
+      </div>
       <div className="flex w-full flex-col gap-8">
         <div className="flex flex-col gap-4" data-num>
           {BUSINESS_LADDER.map((r, i) => (
@@ -755,7 +772,7 @@ const UNLOCK_STEPS = [
   "growth — convert pilot traction into organizer-initiated pools",
 ];
 
-const AskSlide: FC = () => {
+export const AskSlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the ask" headline={<>raising $700k pre-seed at $7M</>}>
@@ -950,7 +967,7 @@ const CloseSlide: FC = () => {
         ))}
       </div>
       <div className="text-ink [font:var(--riprap-display-lg)]" style={rise(frame, 104)}>
-        Pool risk peer-to-peer.
+        peer-to-peer purpose pools.
       </div>
     </div>
   );
@@ -986,7 +1003,7 @@ const HARD_QUESTIONS: { index: string; q: string; a: string }[] = [
   },
 ];
 
-const AppendixQASlide: FC = () => {
+export const AppendixQASlide: FC = () => {
   const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the problems" headline="The hard questions that need solving.">
@@ -1132,7 +1149,7 @@ export const SLIDES: SlideDef[] = [
     id: "title",
     label: "riprap",
     notes:
-      "10s. Riprap — real-world risk protection on Solana. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Pre-Seed raise, 2026.",
+      "10s. Riprap — insurance, finally programmable. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Pre-Seed raise, 2026.",
     component: TitleSlide,
   },
   {
@@ -1164,13 +1181,6 @@ export const SLIDES: SlideDef[] = [
     component: NowSlide,
   },
   {
-    id: "launch",
-    label: "the pilot",
-    notes:
-      "35s. Events are the door — five reasons, none of them market size: the cleanest legal surface (discretionary mutual, crypto-native members, bounded window — no counsel spend at pilot scale); funds locked up briefly (a pool lives for the event window, then pays approved claims, returns the rest, dissolves — numbers published either way); the Solana family is loyal (Breakpoint concentrates the ecosystem in one hall — the space adopts its own and talks about what ships, so the pilot's first audience is the space itself); the organizer is a B2B2C channel — one sale brings the attendee list; covers can be sponsored — companies or regional superteams buying for their members. The pilot itself: Blade Pool at Breakpoint, Olympia London, 15–17 Nov 2026, 8,000+ attendees (solana.com/breakpoint); tiers $10/$20/$40 capped at $1k/$2k/$4k (policy §5); worked example (policy §10): 1,000 × $20 → $20,000 pooled; 4 approved claims × $2,000 → $8,000 paid; $12,000 returned → $12 back each; quiet event: every cent returns. Then the 2027 circuit — the PMF signal and the primary milestone: organizer-initiated pools, an organizer who shows up without us.",
-    component: LaunchSlide,
-  },
-  {
     id: "business",
     label: "the business",
     notes:
@@ -1178,12 +1188,19 @@ export const SLIDES: SlideDef[] = [
     component: BusinessSlide,
   },
   {
-    id: "ask",
-    label: "the ask",
+    id: "launch",
+    label: "the pilot",
     notes:
-      "30s. $700k on a post-money SAFE plus a bounded token warrant; range $600–800k; opening cap $7M post — 10%; 18 months; primary milestone organizer-initiated pools. The narrative: capital → de-risk → prove → unlock — security, product, proof, legal, growth. If asked what $100k gets an angel to: from an audited working product and an operational pilot to a repeatable network of organizer-initiated pools. Angel-ladder construction stays private.",
-    component: AskSlide,
+      "35s. The pilot, re-staged 2026-10-07: aid and bounties at Breakpoint. The pivot in one breath — we swapped slow risk pools for fast crowdfunded bounties on the same mechanics, so every pilot, silly or serious, turns into a lesson that sharpens the engine before real-world insurance. Two classes on one engine: mutuals where members cover each other — Blade Pool the serious anchor (capped payouts, bounded lifetime, one venue), Chairmageddon, NGMI Hairline and Coffee Apocalypse the silly-but-adjudicable ones — and bounties that pay for confirmed acts — OnlyFriends' per-introduction caps, the hot-drink runs for Raj/Lily/Toly (one mechanic, three pools), Mert of the Year. Numbers are the §5 policy/terms tables verbatim; the landing's mutuals directory carries the live batch. Venue unchanged: Olympia London, 15–17 Nov 2026, 8,000+ attendees.",
+    component: LaunchSlide,
   },
+  // {
+  //   id: "ask",
+  //   label: "the ask",
+  //   notes:
+  //     "30s. $700k on a post-money SAFE plus a bounded token warrant; range $600–800k; opening cap $7M post — 10%; 18 months; primary milestone organizer-initiated pools. The narrative: capital → de-risk → prove → unlock — security, product, proof, legal, growth. If asked what $100k gets an angel to: from an audited working product and an operational pilot to a repeatable network of organizer-initiated pools. Angel-ladder construction stays private.",
+  //   component: AskSlide,
+  // },
   {
     id: "team",
     label: "the team",
@@ -1198,13 +1215,13 @@ export const SLIDES: SlideDef[] = [
       "10s. The surfaces — riprap.xyz, useaccord.xyz (the arbitration layer), the repo, the build log. Hold on the tagline: pool risk peer-to-peer. Conversations after.",
     component: CloseSlide,
   },
-  {
-    id: "appendix-qa",
-    label: "appendix — the hard questions",
-    notes:
-      "15s. The appendix opens with the four questions every IC asks, one card each — problem on top, our answer on the plate. Legal: the mutual is deliberately limited in scope and time to stay outside UK insurance regulation; scope widens step by step as we progress. Adjudication: the company risk, owned — parameters are case by case and defined for the pilot; the metric set publishes from Blade Pool onward. Blade Pool: the cheapest place to find adjudication failures — payouts capped $1k–4k, stakes $10–40, one venue, a bounded lifetime. Team: started solo, became a real business — none of it without mtnDAO, and on-chain insurance has been on our minds for half a decade.",
-    component: AppendixQASlide,
-  },
+  // {
+  //   id: "appendix-qa",
+  //   label: "appendix — the hard questions",
+  //   notes:
+  //     "15s. The appendix opens with the four questions every IC asks, one card each — problem on top, our answer on the plate. Legal: the mutual is deliberately limited in scope and time to stay outside UK insurance regulation; scope widens step by step as we progress. Adjudication: the company risk, owned — parameters are case by case and defined for the pilot; the metric set publishes from Blade Pool onward. Blade Pool: the cheapest place to find adjudication failures — payouts capped $1k–4k, stakes $10–40, one venue, a bounded lifetime. Team: started solo, became a real business — none of it without mtnDAO, and on-chain insurance has been on our minds for half a decade.",
+  //   component: AppendixQASlide,
+  // },
   // {
   //   id: "appendix",
   //   label: "appendix — the destination",
@@ -1212,18 +1229,18 @@ export const SLIDES: SlideDef[] = [
   //     "Reference, not presented — the stack the vision slide carried before the 2026-09-18 re-stage. The five machines on-chain cover needs, one per plate: 01 money gathers — programmatic custody: the pool is a program, not a company, it holds USDC and nothing else; 02 peers decide — adjudication: staked members of the same pool, drawn at random, sealed votes, appeals that double the jury — Accord, honestly an arbitration oracle; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. Custody, adjudication, recurrence, reserve capital, reinsurance — everything an insurer needs, none of it a company. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built.",
   //   component: AppendixSlide,
   // },
-  {
-    id: "market",
-    label: "the market",
-    notes:
-      "35s. The story first, then the numbers: millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics — a $20, 3-day, single-peril cover is sub-economic by construction when ~26¢ of every US P&C premium dollar is spent before a claim is paid (Verisk/APCIA '25). We are building the infrastructure that lets those groups create their own risk pools. Then read the evidence, do not editorialize: $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); ~26¢ per premium dollar (Verisk '25); $1.61T mutual premiums — the same behavior, formalized (ICMIF '24). If asked: $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama); market scan — Nexus Mutual $5.7M cover fees '25, $2.7M raised ever, $1B+ purchased; OpenCover $4.6M seed '22–23, $141.6M protected '25. Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
-    component: MarketSlide,
-  },
-  {
-    id: "Competitors",
-    label: "Competitors",
-    notes:
-      "30s. Gesture once, don't read it: the 2020–22 graveyard, one named failure per project — Neptune Mutual (upfront lump sum; token-vote claims), Cover Protocol (exploited itself), Solace (shared idle pool), OpenCover (web3 portfolio cover), Unslashed (no float income), InsurAce (twenty thin chains), Bridge Mutual (farmed, not mutual), Risk Harbor (wLUNA collateral). Same lesson at company scale: the rails were never the whole machine — custody without adjudication, one pool, or permissioning is just a slower bank. If asked, the mutual-history backing: pooled protection is the oldest fix — the formal version is $1.61T and winning (ICMIF '24); the informal version dies of opacity, disputes, and scale, which is why the friendly societies became licensed mutuals — formalization fixed trust at the price of the charter. The solvency and jurisdiction pains stay in Q&A — the vision table carries those ✗. Land: the behavior is universal, the on-ramp does not exist. Segue: the product — the rails that remove each ✗, next slide.",
-    component: IncumbantsProblemSlide,
-  },
+  // {
+  //   id: "market",
+  //   label: "the market",
+  //   notes:
+  //     "35s. The story first, then the numbers: millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics — a $20, 3-day, single-peril cover is sub-economic by construction when ~26¢ of every US P&C premium dollar is spent before a claim is paid (Verisk/APCIA '25). We are building the infrastructure that lets those groups create their own risk pools. Then read the evidence, do not editorialize: $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); ~26¢ per premium dollar (Verisk '25); $1.61T mutual premiums — the same behavior, formalized (ICMIF '24). If asked: $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama); market scan — Nexus Mutual $5.7M cover fees '25, $2.7M raised ever, $1B+ purchased; OpenCover $4.6M seed '22–23, $141.6M protected '25. Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
+  //   component: MarketSlide,
+  // },
+  // {
+  //   id: "Competitors",
+  //   label: "Competitors",
+  //   notes:
+  //     "30s. Gesture once, don't read it: the 2020–22 graveyard, one named failure per project — Neptune Mutual (upfront lump sum; token-vote claims), Cover Protocol (exploited itself), Solace (shared idle pool), OpenCover (web3 portfolio cover), Unslashed (no float income), InsurAce (twenty thin chains), Bridge Mutual (farmed, not mutual), Risk Harbor (wLUNA collateral). Same lesson at company scale: the rails were never the whole machine — custody without adjudication, one pool, or permissioning is just a slower bank. If asked, the mutual-history backing: pooled protection is the oldest fix — the formal version is $1.61T and winning (ICMIF '24); the informal version dies of opacity, disputes, and scale, which is why the friendly societies became licensed mutuals — formalization fixed trust at the price of the charter. The solvency and jurisdiction pains stay in Q&A — the vision table carries those ✗. Land: the behavior is universal, the on-ramp does not exist. Segue: the product — the rails that remove each ✗, next slide.",
+  //   component: IncumbantsProblemSlide,
+  // },
 ];

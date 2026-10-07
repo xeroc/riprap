@@ -7,6 +7,7 @@
 
 import { getJoinContext, type JoinContext } from "@riprap/hanse";
 import { useCluster, useWallet } from "@solana/connector";
+import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 
 import { useClusterRpc } from "../shared/rpc";
@@ -18,10 +19,18 @@ export type JoinContextQuery =
   | { state: "error" }
   | { state: "ready"; context: JoinContext };
 
-export function useJoinContext(): JoinContextQuery & { refetch: () => void } {
+export function useJoinContext(
+  mutual?: Address | null,
+): JoinContextQuery & { refetch: () => void } {
+  // undefined ⇒ the static-map pool (legacy callers); pool-scoped surfaces
+  // pass the listing-resolved address, or null when the pool resolves
+  // nowhere (drafts) — never the static map.
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const clusterRpc = useClusterRpc();
-  const address = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
+  const address =
+    mutual === null
+      ? undefined
+      : (mutual ?? resolveMutualAddress({ isLocal, isMainnet, isDevnet }));
   const { account } = useWallet();
 
   const enabled = clusterRpc !== null && address !== undefined && account !== null;

@@ -1,11 +1,15 @@
-// #/m/coffee-apocalypse — placeholder detail page (copy doc § /m routes).
-// Content extracted from meta/Breakpoint/Micro Mutual — Coffee Apocalypse -
-// Policy.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// #/m/coffee-apocalypse — the pool page: coffeeapocalypse hero (offer + join), then the doc
+// bands. Content extracted from meta/Breakpoint/Micro Mutual — Coffee
+// Apocalypse - Policy.md (§3/§4/§5/§7/§10/§11); hero copy authored
+// 2026-10-07 (copy-doc pass pending).
+import { CoffeeApocalypseHero } from "./CoffeeApocalypseHero";
+
 import { PoolPageShell } from "./PoolPageShell";
 
 export function CoffeeApocalypsePage() {
   return (
     <PoolPageShell
+      hero={<CoffeeApocalypseHero />}
       config={{
         name: "Coffee Apocalypse",
         event: "Breakpoint",
@@ -42,7 +46,8 @@ export function CoffeeApocalypsePage() {
           "Queue evidence — a timestamped photo or video of you in the queue at that coffee point, at or immediately before the exhaustion",
           "Declaration of the facts, signed with your wallet",
         ],
-        feeNote: "Filing pre-pays an adjudication fee of 5 USDC (TODO-confirm in the policy).",
+        feeNote:
+          "Filing pre-pays an adjudication fee of 4 USDC — denied forfeits it, approved returns it with the payment.",
         example: {
           lines: [
             { value: "1,000", caption: "members" },

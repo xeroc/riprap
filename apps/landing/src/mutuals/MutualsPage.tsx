@@ -10,10 +10,10 @@
 // spacing — BP26, founder badge, kind. Every name links to the pool's
 // detail route (#/m/<pubkey-or-slug>). Wayfinding: shared navbar + footer.
 import { Button, SectionBand } from "@riprap/ui";
-import { BpBadge } from "../components/BpBadge";
 import { SiteNav } from "../components/SiteNav";
 import { Footer } from "../sections/Footer";
 import { capSymbol, entryRange, poolRoute } from "./data";
+import { PoolBadgeRail } from "./PoolBadgeRail";
 import { useMutualStore } from "./store";
 
 export function MutualsPage() {
@@ -72,32 +72,8 @@ export function MutualsPage() {
                   <tbody>
                     {pools.map(({ listing: pool }) => (
                       <tr key={pool.name} className="border-b border-hairline last:border-b-0">
-                        {/* the badge rail (copy doc § /mutuals v12): full-height
-                            strips rotated 90°, side by side, zero spacing — BP26
-                            on the event pink, the founder badge when present, then
-                            the kind strip. */}
                         <td className="relative h-24 p-0 pr-18">
-                          <div className="absolute inset-y-0 left-0 flex">
-                            <div className="relative w-5 overflow-hidden">
-                              <span
-                                aria-hidden="true"
-                                className="absolute inset-0 bg-(--bp-2026-pink)"
-                              />
-                              <BpBadge className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 rotate-90" />
-                            </div>
-                            <div className="relative w-5 overflow-hidden border-x border-hairline bg-card">
-                              <span className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 rotate-90 px-2 uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-                                {pool.kind}
-                              </span>
-                            </div>
-                            {pool.badge ? (
-                              <div className="relative w-5 overflow-hidden bg-accent">
-                                <span className="absolute top-1/2 left-1/2 w-max -translate-x-1/2 -translate-y-1/2 rotate-90 px-2 py-0.5 text-ink uppercase tracking-(--riprap-tracking-stamp) [font:var(--riprap-mono-label)]">
-                                  {pool.badge}
-                                </span>
-                              </div>
-                            ) : null}
-                          </div>
+                          <PoolBadgeRail pool={pool} />
                         </td>
                         <th scope="row" className="py-4 pr-4 text-left">
                           <a

@@ -1,11 +1,15 @@
-// #/m/lilys-liquid-lifeline — placeholder detail page (copy doc § /m routes).
-// Content extracted from meta/Breakpoint/Micro Bounty — Operation Keep Lily
-// Warm - Terms.md (§3/§4/§5/§7/§10/§11); no chain binding yet.
+// #/m/lilys-liquid-lifeline — the pool page: lilyslifeline hero (offer + join), then the
+// doc bands. Content extracted from meta/Breakpoint/Micro Bounty — Operation
+// Keep Lily Warm - Terms.md (§3/§4/§5/§7/§10/§11); hero copy authored
+// 2026-10-07 (copy-doc pass pending).
+import { LilysLifelineHero } from "./LilysLifelineHero";
+
 import { PoolPageShell } from "./PoolPageShell";
 
 export function LilysLifelinePage() {
   return (
     <PoolPageShell
+      hero={<LilysLifelineHero />}
       config={{
         name: "Operation Keep Lily Warm",
         event: "Breakpoint",
@@ -42,7 +46,8 @@ export function LilysLifelinePage() {
           "Confirmation — a statement from Lily, from an account or in a form the jury can verify. Without it, the claim fails. The confirmation is the proof.",
           "Declaration of the facts, signed with your wallet",
         ],
-        feeNote: "Filing pre-pays an adjudication fee of 5 USDC (TODO-confirm in the terms).",
+        feeNote:
+          "Filing pre-pays an adjudication fee of 8 USDC — denied forfeits it, approved returns it with the payment.",
         example: {
           lines: [
             { value: "400", caption: "members" },
@@ -52,7 +57,7 @@ export function LilysLifelinePage() {
             { value: "$500", caption: "bounties paid" },
           ],
           total: { value: "$1,500", caption: "returned to members" },
-          note: "The pot pays at most 10 Qualifying Deliveries in total, in the order their claims are approved — the race is only fair if the count is visible. A member who delivered once is $45 ahead.",
+          note: "The pot pays at most 10 Qualifying Deliveries in total, in the order their claims are approved — the race is only fair if the count is visible. A member who delivered once is up to $45 ahead.",
         },
         endNote:
           "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently.",

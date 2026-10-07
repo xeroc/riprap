@@ -34,4 +34,12 @@ export interface MutualListing {
   slug: string;
   /** instance surface when one exists */
   href?: string;
+  /**
+   * The id of this pool's filing pack (app/file-claim/flows) — the wizard
+   * this pool's "File a payout request" action opens. Omitted while a pool
+   * has no wizard (drafts, bounties); the flows registry resolves the id and
+   * its index test pins every listed id to a registered pack.
+   */
+  claimFlow?: string;
+  /** route id until the pubkey is pinned — e.g. "blade-pool" */
 }

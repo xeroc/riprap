@@ -36,8 +36,13 @@ const MertOfTheYear = lazy(() =>
   import("./pages/MertOfTheYearPage").then((m) => ({ default: m.MertOfTheYearPage })),
 );
 
+/** A pool page receives the route id it was opened at (`pubkey ?? slug`) —
+ *  pages that resolve their pool by on-chain address (the Blade Pool's,
+ *  per-cluster pins) use it; the draft pages know their pool by slug. */
+export type PoolPage = LazyExoticComponent<ComponentType<{ id?: string }>>;
+
 /** route id (`pubkey ?? slug`) → the pool's detail page. */
-export const POOL_PAGES: Record<string, LazyExoticComponent<ComponentType>> = Object.fromEntries(
+export const POOL_PAGES: Record<string, PoolPage> = Object.fromEntries(
   MUTUALS.map((m) => {
     const id = m.pubkey ?? m.slug;
     const page = {
@@ -56,9 +61,3 @@ export const POOL_PAGES: Record<string, LazyExoticComponent<ComponentType>> = Ob
     return [id, page];
   }),
 );
-
-/** The `<title>` for a pool's detail route. */
-export function poolTitle(id: string): string | undefined {
-  const pool = MUTUALS.find((m) => (m.pubkey ?? m.slug) === id);
-  return pool ? `Riprap: ${pool.name}` : undefined;
-}

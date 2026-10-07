@@ -3,8 +3,7 @@
 // per-document cap (10 MiB — ADR-0031 config), sha256 of the EXACT upload
 // bytes via WebCrypto, and HEIC converted client-side BEFORE hashing (the
 // hash covers the converted JPEG). File bytes stay in memory only.
-
-import type { DocSlot } from "./draft";
+import type { DocSlot } from "./flow";
 
 /** Daemon per-document cap (ADR-0031 config: 10 MiB/doc). */
 export const MAX_DOC_BYTES = 10 * 1024 * 1024;

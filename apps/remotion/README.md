@@ -11,8 +11,7 @@ tracked — everything else under `videos/` is gitignored.
 apps/remotion/
   remotion.config.ts        webpack override: PostCSS (Tailwind v4) before css-loader
   postcss.config.js         @tailwindcss/postcss — must stay .js at package root
-  audio/<name>.strudel      optional Strudel scores (committed) — pasteable into strudel.cc
-  public/audio/<name>.wav   baked artifacts (gitignored; regenerate with score)
+  public/audio/<name>.wav   mounted music wavs (gitignored)
   src/
     index.ts                registerRoot + theme.css import (the entry)
     Root.tsx                one <Folder><Composition/> per video (from manifest)
@@ -38,15 +37,12 @@ apps/remotion/
 pnpm --filter @riprap/remotion new <slug>    # scaffold videos/<slug>/ + regen manifest
 pnpm --filter @riprap/remotion studio        # preview all videos (http://localhost:3000)
 pnpm --filter @riprap/remotion render <id> out/<id>.mp4
-pnpm --filter @riprap/remotion score <name> [seconds]   # bake audio/<name>.strudel → wav
 pnpm --filter @riprap/remotion sync          # regenerate src/videos.gen.ts
 pnpm --filter @riprap/remotion test          # vitest (framework contract tests)
 ```
 
 Every command (build/lint/test/studio/render) regenerates the manifest
-first, so a freshly created video dir is picked up automatically; studio
-and render also chain `score --stale` (re-bakes changed scores, needs
-network once — see MUSIC.md).
+first, so a freshly created video dir is picked up automatically.
 
 This machine has no Remotion-managed Chrome; pass the system browser:
 
@@ -69,25 +65,22 @@ import { defineVideo } from "../../src/framework/video";
 import { Stage } from "../../src/shell/stage";
 
 export const video = defineVideo({
-  id: "my-video",            // letters/numbers/hyphens only (Remotion rule)
-  component: MyVideo,        // scenes are <Sequence>s inside, wrapped in <Stage>
+  id: "my-video", // letters/numbers/hyphens only (Remotion rule)
+  component: MyVideo, // scenes are <Sequence>s inside, wrapped in <Stage>
   fps: 30,
   width: 1920,
   height: 1080,
   durationInFrames: 30 * 20, // 20s
-  music: {                   // optional — mounted + faded by the framework
+  music: {
+    // optional — mounted + faded by the framework
     src: staticFile("audio/my-score.wav"),
     volume: 0.25,
-    fadeOut: 1.5,            // seconds; default 1.5 — hits 0 at the end
+    fadeOut: 1.5, // seconds; default 1.5 — hits 0 at the end
   },
 });
 
 function MyVideo() {
-  return (
-    <Stage>
-      {/* <Sequence> per scene */}
-    </Stage>
-  );
+  return <Stage>{/* <Sequence> per scene */}</Stage>;
 }
 ```
 
@@ -109,10 +102,7 @@ Music is any wav under `public/audio/` (gitignored build assets, like
 `out/`). Declare it as `music` in `defineVideo` — the framework mounts it
 (Root wraps the component, see `src/framework/music.tsx`) and applies the
 fades via a `volume` callback, so no video ever renders `<Html5Audio>`
-itself and Studio draws the volume curve. Videos with SFX bake them into
-the mounted wav with a small mix script in the video dir (see
-`videos/riprap-promo-2026-10/scripts/mix.mjs` for the pattern: SHOTS-
-relative pins, per-file peak-lag compensation, dual full/sfx-only bakes).
+itself and Studio draws the volume curve..
 
 Two rules regardless of source:
 
@@ -122,17 +112,6 @@ Two rules regardless of source:
 - **Loudness is authored, never accidental.** Whatever the source, the
   mounted wav's peak/headroom are measured (`ffmpeg -af volumedetect`)
   and recorded; the mix script normalizes.
-
-**Optional — Strudel scoring.** Original scores can be authored as
-Strudel code in `audio/<name>.strudel` (committed) and prebaked to the
-wav artifact with `pnpm --filter @riprap/remotion score <name> [seconds]`
-(`setcpm` is parsed; pass the composition length in seconds). The house
-style lives in `MUSIC.md`. Sync is time-based by construction: score grid
-↔ composition seconds ↔ frames. Runs in Node (`node-web-audio-api`; needs
-network once per bake for sample manifests); silence-guarded.
-`@strudel/web` is AGPL-3.0 — fine for internal build tooling, and the
-wav/mp4 output is your own music; revisit before distributing this
-package's code.
 
 ## Obedience to @riprap/ui (non-negotiable)
 
@@ -201,11 +180,9 @@ Renders must be reproducible frame-by-frame:
 
 ## Tests
 
-`pnpm --filter @riprap/remotion test` — vitest + jsdom:
-
-- `src/cli/sync.test.ts` — manifest scanning/rendering contract,
-  including the Tailwind safelist collector.
-- `src/framework/music.test.ts` — volume curve legs + defineVideo
-  music validation.
-
-Both are framework contract tests; individual videos do not carry tests.
+None — by founder directive (2026-10-07, see `AGENTS.md` in this dir):
+never build tests for the videos. The former framework contract tests
+(`src/cli/sync.test.ts`, `src/framework/music.test.ts`) were deleted with
+the directive and the `test` script removed from `package.json`.
+Video verification is visual + measurement: per-shot stills, pixel
+probes, render-back beat verification, independent final review.

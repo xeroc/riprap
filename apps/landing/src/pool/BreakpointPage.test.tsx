@@ -22,6 +22,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { poolBySlug } from "../mutuals/data";
 import { SUPPORTERS } from "../sections/Supporters";
 import { sendInstruction, TransactionSendError } from "../shared/transaction";
 import { BreakpointPage } from "./BreakpointPage";
@@ -397,7 +398,7 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
       "get drawn to read the evidence, get paid when coherent. Unstake anytime.",
     );
     expect(dialog.querySelector('[data-slot="covered-juror"] a')?.getAttribute("href")).toBe(
-      "#/app/adjudicate",
+      "#/app/adjudicate/DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF",
     );
     // the share field (copy doc § Covered overlay, 2026-09-24): the note with
     // the supporter twist, composer intents carrying the member's figures
@@ -418,9 +419,10 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
     await waitFor(() => expect(screen.queryByRole("slider")).toBeNull());
     expect(screen.getByRole("link", { name: "the app" }).getAttribute("href")).toBe("#/app");
 
-    // the facade built against the static address + chosen tier + wallet signer
+    // the facade built against the listing's pin (pins-only resolution,
+    // 2026-10-07) + chosen tier + wallet signer
     expect(buildMock).toHaveBeenCalledWith(expect.anything(), {
-      mutual: MUTUAL_ADDR,
+      mutual: poolBySlug("blade-pool").pubkey,
       tier: 1,
       member: signerStub as unknown as TransactionSigner,
     });
@@ -616,10 +618,14 @@ describe("mutual absent on the cluster — switch-cluster empty state", () => {
     expect(container.textContent).toContain("up to {{PARAM}}");
   });
 
-  it("clusters without a configured deployment skip the fetch entirely", () => {
+  it("a pin that doesn't exist on the cluster renders the honest not-live state", async () => {
+    // pins-only resolution (2026-10-07): the pin is always tried — absence
+    // is chain truth (not found), not an unset env var
+    fetchMock.mockResolvedValue(NOT_FOUND);
     renderPoolPage("");
-    expect(screen.getByText("Not live on this cluster")).toBeTruthy();
-    expect(fetchMock).not.toHaveBeenCalled();
+    // absence is chain truth now — the read settles, then the empty state
+    expect(await screen.findByText("Not live on this cluster")).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalled();
   });
 });
 

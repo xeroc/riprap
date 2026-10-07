@@ -8,10 +8,15 @@
 import type { Mutual } from "@riprap/hanse";
 import type { Address } from "@solana/kit";
 
+import type { MutualListing } from "../mutuals/types";
+
 /**
- * Resolve the mutual address for the active cluster. localnet reads
- * VITE_LOCALNET_MUTUAL lazily (inside the function) so dev and tests can
- * point at a Surfpool surfnet without a rebuild.
+ * The static-map pool's address — the Surfpool/localnet dev lane ONLY
+ * (2026-10-07: the VITE_DEVNET/MAINNET_MUTUAL overrides are gone; devnet
+ * and mainnet resolve through pinned pubkeys, route ids, and the store's
+ * chain scan). localnet reads VITE_LOCALNET_MUTUAL lazily (inside the
+ * function) so dev and tests can point at a Surfpool surfnet without a
+ * rebuild; every other cluster resolves nothing.
  */
 export function resolveMutualAddress(clusters: {
   isLocal: boolean;
@@ -22,15 +27,25 @@ export function resolveMutualAddress(clusters: {
     const local = import.meta.env.VITE_LOCALNET_MUTUAL as string | undefined;
     return local ? (local as Address) : undefined;
   }
-  if (clusters.isMainnet) {
-    const mainnet = import.meta.env.VITE_MAINNET_MUTUAL as string | undefined;
-    return mainnet ? (mainnet as Address) : undefined;
-  }
-  if (clusters.isDevnet) {
-    const devnet = import.meta.env.VITE_DEVNET_MUTUAL as string | undefined;
-    return devnet ? (devnet as Address) : undefined;
-  }
   return undefined;
+}
+
+/**
+ * Resolve a directory pool's on-chain address: the listing's pinned pubkey,
+ * tried wherever the active cluster is — a pin that doesn't exist on the
+ * cluster simply won't be found and the pool renders not-live (honest
+ * chain truth). localnet reads VITE_LOCALNET_MUTUAL only — a surfnet
+ * address can never be a pin. Undefined ⇒ no address to try.
+ */
+export function resolvePoolAddress(
+  m: MutualListing,
+  clusters: { isLocal: boolean; isMainnet: boolean; isDevnet: boolean },
+): Address | undefined {
+  if (clusters.isLocal) {
+    const local = import.meta.env.VITE_LOCALNET_MUTUAL as string | undefined;
+    return local ? (local as Address) : undefined;
+  }
+  return m.pubkey !== undefined ? (m.pubkey as Address) : undefined;
 }
 
 /**
@@ -51,10 +66,12 @@ export function microToUsd(raw: bigint): number {
   return Number(raw) / 1_000_000;
 }
 
-/** mutual.tiers → renderable tiers (names by §5 index, prices from chain). */
-export function poolTiers(mutual: Mutual): PoolTier[] {
+/** mutual.tiers → renderable tiers (prices from chain; names by index — the
+ * listing's §5 tier names for pool-scoped surfaces, TIER_NAMES default for
+ * the static-map pool page). */
+export function poolTiers(mutual: Mutual, names: readonly string[] = TIER_NAMES): PoolTier[] {
   return mutual.tiers.map((t, i) => ({
-    name: TIER_NAMES[i] ?? `Tier ${i + 1}`,
+    name: names[i] ?? `Tier ${i + 1}`,
     fee: microToUsd(t.contribution),
     cap: microToUsd(t.maxPayout),
   }));

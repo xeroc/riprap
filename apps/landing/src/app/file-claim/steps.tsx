@@ -16,13 +16,16 @@ import {
   TextLink,
   usd,
 } from "@riprap/ui";
+import { Prose } from "../../components/Prose";
 import { Settle } from "../../components/Settle";
 import { microToUsd } from "../../pool/mutual";
-import type { ClaimDraft, DocSlot } from "./draft";
-import { DOC_SLOTS } from "./draft";
+import type { ClaimDraft } from "./draft";
+import type { DocSlot, EmergencySpec, ScreenCheck } from "./flow";
 
-/** The emergency banner — leads every step (copy doc § /app/file-claim). */
-export function EmergencyBanner() {
+/** The emergency banner — leads every step (copy doc § /app/file-claim);
+ *  pools without an urgent peril render nothing. */
+export function EmergencyBanner({ spec }: { spec: EmergencySpec | null }) {
+  if (spec === null) return null;
   return (
     <div
       data-slot="emergency-banner"
@@ -32,16 +35,8 @@ export function EmergencyBanner() {
         First
       </p>
       <p className="leading-relaxed text-body [font:var(--riprap-body-sm)]">
-        Get care and police first. In an emergency call{" "}
-        <span data-num className="font-mono">
-          999
-        </span>{" "}
-        (UK) or{" "}
-        <span data-num className="font-mono">
-          112
-        </span>{" "}
-        (EU). Report the assault as soon as you safely can — the police report is one of{" "}
-        <TextLink href="#/2026-breakpoint-blade-pool">the five required proofs</TextLink>.
+        <Prose text={spec.lead} /> <TextLink href={spec.linkHref}>{spec.linkText}</TextLink>
+        <Prose text={spec.tail} />
       </p>
     </div>
   );
@@ -99,26 +94,30 @@ export function StepNav({
 }
 
 // --- step 1: INCIDENT -------------------------------------------------------
-
-const SCREEN_FIELDS = [
-  { key: "blade", label: "Another person used a knife or blade against me" },
-  { key: "window", label: "It happened during the coverage window" },
-  { key: "area", label: "It happened inside the covered area" },
-  { key: "injury", label: "It caused bodily injury" },
-] as const;
+// The screen checks, placeholders, and exclusions line are the pool's policy
+// §3/§4 copy — passed in from its ClaimFlow pack.
 
 export function StepIncident({
+  checks,
+  wherePlaceholder,
+  narrativePlaceholder,
+  exclusionsLine,
   draft,
   onChange,
   onBack,
   onContinue,
 }: {
+  /** The flow pack's §3 self-screen, in order. */
+  checks: readonly ScreenCheck[];
+  wherePlaceholder: string;
+  narrativePlaceholder: string;
+  exclusionsLine: string;
   draft: ClaimDraft;
   onChange: (patch: Partial<ClaimDraft>) => void;
   onBack: () => void;
   onContinue: () => void;
 }) {
-  const screenComplete = SCREEN_FIELDS.every((f) => draft.screen[f.key]);
+  const screenComplete = checks.every((f) => draft.screen[f.key]);
   const fieldsComplete =
     draft.incidentAt !== "" && draft.incidentPlace !== "" && draft.narrative !== "";
   return (
@@ -137,7 +136,7 @@ export function StepIncident({
           <Label htmlFor="incident-where">Where</Label>
           <Input
             id="incident-where"
-            placeholder="in or around the venue and the designated event area"
+            placeholder={wherePlaceholder}
             value={draft.incidentPlace}
             onChange={(e) => onChange({ incidentPlace: e.target.value })}
           />
@@ -147,7 +146,7 @@ export function StepIncident({
           <Textarea
             id="incident-what"
             rows={5}
-            placeholder="free text — it feeds the statutory declaration"
+            placeholder={narrativePlaceholder}
             value={draft.narrative}
             onChange={(e) => onChange({ narrative: e.target.value })}
           />
@@ -157,7 +156,7 @@ export function StepIncident({
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
           Check what applies — a screen, not a verdict; the jury rules on the evidence.
         </p>
-        {SCREEN_FIELDS.map((field) => (
+        {checks.map((field) => (
           <label
             key={field.key}
             htmlFor={`screen-${field.key}`}
@@ -174,8 +173,7 @@ export function StepIncident({
           </label>
         ))}
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-          Not covered: injuries you caused yourself, accidents, ordinary knife handling, consensual
-          activities, incidents outside the window or area, distress without qualifying injury.
+          {exclusionsLine}
         </p>
       </div>
       <StepNav
@@ -253,6 +251,10 @@ export interface SlotIntake {
 }
 
 export function StepEvidence({
+  slots,
+  intro,
+  attachAllNote,
+  samePersonStatement,
   draft,
   intakes,
   onAttach,
@@ -260,6 +262,11 @@ export function StepEvidence({
   onBack,
   onContinue,
 }: {
+  /** The flow pack's policy §7 proof slots, in order. */
+  slots: readonly DocSlot[];
+  intro: string;
+  attachAllNote: string;
+  samePersonStatement: string;
   draft: ClaimDraft;
   intakes: Record<string, SlotIntake>;
   onAttach: (slot: DocSlot, file: File) => Promise<void>;
@@ -267,14 +274,12 @@ export function StepEvidence({
   onBack: () => void;
   onContinue: () => void;
 }) {
-  const allAttached = DOC_SLOTS.every((slot) => intakes[slot.path] !== undefined);
+  const allAttached = slots.every((slot) => intakes[slot.path] !== undefined);
   return (
     <StepFrame n={3} name="Evidence">
-      <p className="max-w-xl leading-relaxed text-body [font:var(--riprap-body-sm)]">
-        Five documents, in this order. All five are required — an incomplete set is not adjudicated.
-      </p>
+      <p className="max-w-xl leading-relaxed text-body [font:var(--riprap-body-sm)]">{intro}</p>
       <ul className="flex max-w-3xl flex-col">
-        {DOC_SLOTS.map((slot) => {
+        {slots.map((slot) => {
           const intake = intakes[slot.path];
           return (
             <li
@@ -330,15 +335,10 @@ export function StepEvidence({
             checked={draft.samePerson}
             onChange={(e) => onAttest(e.target.checked)}
           />
-          <span>
-            The ticket, the ID, and the declaration must all be yours — the person named on this
-            membership.
-          </span>
+          <span>{samePersonStatement}</span>
         </label>
         {!allAttached || !draft.samePerson ? (
-          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-            Attach all five to continue.
-          </p>
+          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">{attachAllNote}</p>
         ) : null}
       </div>
       <StepNav complete={allAttached && draft.samePerson} onBack={onBack} onContinue={onContinue} />
@@ -579,14 +579,17 @@ export function StepFiled({
   claim,
   dispute,
   delivered,
+  total,
   feeUsd,
   onDownload,
 }: {
   nonce: bigint;
   claim: string;
   dispute: string;
-  /** How many of the five documents are stored. */
+  /** How many of the pool's documents are stored. */
   delivered: number;
+  /** The flow pack's slot count — the "of N" denominator. */
+  total: number;
   feeUsd: string;
   onDownload: () => void;
 }) {
@@ -603,7 +606,9 @@ export function StepFiled({
           Dispute <AddressChipInline value={dispute} />
         </p>
         <p data-num className="font-mono text-sm text-ink">
-          {delivered === 5 ? "Evidence: delivered" : `Evidence: incomplete — ${delivered} of 5`}
+          {delivered === total
+            ? "Evidence: delivered"
+            : `Evidence: incomplete — ${delivered} of ${total}`}
         </p>
       </div>
       <p data-num className="max-w-3xl font-mono text-xs leading-relaxed text-stone">

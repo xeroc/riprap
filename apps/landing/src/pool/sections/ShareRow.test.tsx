@@ -1,29 +1,40 @@
 // ShareRow — the covered overlay's share field (copy doc § Covered overlay,
 // 2026-09-24): the note verbatim, the prefilled message keyed to the member's
 // tier (no invented numbers), one-click composer intents, copy-link toast.
+// The message is pool-supplied (the hero config's buildText); these tests pin
+// the Blade Pool's builder verbatim.
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ShareRow, shareText } from "./ShareRow";
+import { bladeShareText } from "./PoolHero";
+import { ShareRow } from "./ShareRow";
 
-const { toast } = vi.hoisted(() => ({ toast: vi.fn() }));
+const { toast } = vi.hoisted(() => ({
+  toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }),
+}));
 vi.mock("sonner", () => ({ toast }));
+
+const BLADE_URL = "https://riprap.xyz/#/2026-breakpoint-blade-pool";
+
+function renderRow(fee: string | null = "$20", cap: string | null = "$2,000") {
+  return render(<ShareRow fee={fee} cap={cap} buildText={bladeShareText} url={BLADE_URL} />);
+}
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
 
-describe("shareText — the prefilled message (2026-09-24 rewrite)", () => {
+describe("bladeShareText — the prefilled message (2026-09-24 rewrite)", () => {
   it("carries @riprapxyz and the figures; figures come from the props", () => {
-    const text = shareText("$20", "$2,000");
+    const text = bladeShareText("$20", "$2,000");
     expect(text).toContain("for $20 😳");
     expect(text).toContain("Worst case: up to $2,000 out.");
     expect(text).toContain("@riprapxyz");
   });
 
   it("unread tier drops the figures fragments — numbers are never faked", () => {
-    const text = shareText(null, null);
+    const text = bladeShareText(null, null);
     expect(text).not.toContain("$");
     expect(text).not.toContain("null");
     expect(text).toContain("Get stabbed with friends.");
@@ -33,7 +44,7 @@ describe("shareText — the prefilled message (2026-09-24 rewrite)", () => {
 
 describe("ShareRow", () => {
   it("renders the SHARE label and the note verbatim (supporter twist)", () => {
-    render(<ShareRow fee="$20" cap="$2,000" />);
+    renderRow();
     expect(screen.getByText("Share")).toBeTruthy();
     expect(
       screen.getByText(
@@ -43,8 +54,8 @@ describe("ShareRow", () => {
   });
 
   it("X / Farcaster / Telegram open composers with the message prefilled, new tab", () => {
-    render(<ShareRow fee="$20" cap="$2,000" />);
-    const text = shareText("$20", "$2,000");
+    renderRow();
+    const text = bladeShareText("$20", "$2,000");
     // X/Farcaster carry the message only (mention-first, 2026-09-24 rewrite —
     // doc reconciliation pending, bean riprap-k9jl); Telegram is link-first.
     const x = screen.getByRole("link", { name: "Share on X" });
@@ -58,19 +69,19 @@ describe("ShareRow", () => {
       `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`,
     );
     expect(screen.getByRole("link", { name: "Share on Telegram" }).getAttribute("href")).toBe(
-      `https://t.me/share/url?url=${encodeURIComponent("https://riprap.xyz/#/2026-breakpoint-blade-pool")}&text=${encodeURIComponent(text)}`,
+      `https://t.me/share/url?url=${encodeURIComponent(BLADE_URL)}&text=${encodeURIComponent(text)}`,
     );
   });
 
-  it("copy link writes the pool URL and toasts", async () => {
+  it("copy link writes the pool's URL and toasts", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
-    render(<ShareRow fee="$20" cap="$2,000" />);
+    renderRow();
 
     fireEvent.click(screen.getByRole("button", { name: "Copy link" }));
     await vi.waitFor(() => {
-      expect(writeText).toHaveBeenCalledWith("https://riprap.xyz/#/2026-breakpoint-blade-pool");
-      expect(toast).toHaveBeenCalledWith("Link copied.");
+      expect(writeText).toHaveBeenCalledWith(BLADE_URL);
+      expect(toast.success).toHaveBeenCalledWith("Link copied.");
     });
   });
 });

@@ -10,36 +10,18 @@ import { Button, XLogo } from "@riprap/ui";
 import { Link2 } from "lucide-react";
 import { toast } from "sonner";
 
-// Copy doc § Covered overlay: the shared URL is the printed pool path — the
-// public/ stub keeps it working.
-const POOL_URL = "https://riprap.xyz/#/2026-breakpoint-blade-pool";
-const HANDLE = "@riprapxyz";
-
-/** The prefilled message (the 2026-09-24 rewrite; copy doc § Covered overlay
- * reconciliation pending — bean riprap-k9jl). Unread tier: the figures
- * fragments drop out — numbers are never faked (copy doc § Covered overlay). */
-export function shareText(fee: string | null, cap: string | null): string {
-  const forFee = fee === null ? "" : ` for ${fee}`;
-  const worst = cap === null ? "" : `\nWorst case: up to ${cap} out.`;
-  return `I just bought the weirdest hedge at Breakpoint${forFee} 😳.
-
-Get stabbed with friends. 🤯${worst}
-Best case: every cent back.
-Friends decide over the payouts.
-
-I'm in. ${HANDLE}`;
-}
+// Copy doc § Covered overlay: the shared URL is the pool's own page — the
+// hero passes it per pool.
 
 /** Composer intents — the platform prefills the message; the member posts. */
-function intentHref(kind: "x" | "farcaster" | "telegram", text: string): string {
-  const full = `${text}`;
+function intentHref(kind: "x" | "farcaster" | "telegram", text: string, url: string): string {
   switch (kind) {
     case "x":
-      return `https://twitter.com/intent/tweet?text=${encodeURIComponent(full)}`;
+      return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     case "farcaster":
-      return `https://warpcast.com/~/compose?text=${encodeURIComponent(full)}`;
+      return `https://warpcast.com/~/compose?text=${encodeURIComponent(text)}`;
     case "telegram":
-      return `https://t.me/share/url?url=${encodeURIComponent(POOL_URL)}&text=${encodeURIComponent(text)}`;
+      return `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
   }
 }
 
@@ -74,13 +56,12 @@ function TelegramGlyph({ className }: { className?: string }) {
     </svg>
   );
 }
-
-async function copyLink() {
+async function copyLink(url: string) {
   try {
-    await navigator.clipboard.writeText(POOL_URL);
-    toast("Link copied.");
+    await navigator.clipboard.writeText(url);
+    toast.success("Link copied.");
   } catch {
-    toast(`Couldn't copy — the link is ${POOL_URL}`);
+    toast.error("Couldn't copy — copy it from the address bar.");
   }
 }
 
@@ -103,8 +84,21 @@ function ShareButton({
   );
 }
 
-export function ShareRow({ fee, cap }: { fee: string | null; cap: string | null }) {
-  const text = shareText(fee, cap);
+export function ShareRow({
+  fee,
+  cap,
+  buildText,
+  url,
+}: {
+  /** the member's tier figures, formatted; null while the chain hasn't answered */
+  fee: string | null;
+  cap: string | null;
+  /** the pool's prefilled message — figures drop out while unread, never faked */
+  buildText: (fee: string | null, cap: string | null) => string;
+  /** the pool's page URL — the link that's shared and copied */
+  url: string;
+}) {
+  const text = buildText(fee, cap);
   return (
     <div
       data-slot="share-row"
@@ -118,19 +112,19 @@ export function ShareRow({ fee, cap }: { fee: string | null; cap: string | null 
         to their post.
       </p>
       <div className="flex items-center gap-2">
-        <ShareButton href={intentHref("x", text)} label="Share on X">
+        <ShareButton href={intentHref("x", text, url)} label="Share on X">
           <XLogo className="size-4" />
         </ShareButton>
-        <ShareButton href={intentHref("farcaster", text)} label="Share on Farcaster">
+        <ShareButton href={intentHref("farcaster", text, url)} label="Share on Farcaster">
           <FarcasterGlyph className="size-4" />
         </ShareButton>
-        <ShareButton href={intentHref("telegram", text)} label="Share on Telegram">
+        <ShareButton href={intentHref("telegram", text, url)} label="Share on Telegram">
           <TelegramGlyph className="size-4" />
         </ShareButton>
         <Button
           variant="outline"
           size="icon"
-          onClick={() => void copyLink()}
+          onClick={() => void copyLink(url)}
           aria-label="Copy link"
           title="Copy link"
         >

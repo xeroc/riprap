@@ -21,12 +21,13 @@ import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 import { findRoundPda } from "@useaccord/sdk";
 import { useEffect, useState } from "react";
-
+import { Navigate } from "react-router";
 import { ClusterSwitch, ConnectWalletButton } from "../app/controls";
 import { useMembership } from "../app/useMembership";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
-import { formatUtc, microToUsd, resolveMutualAddress } from "../pool/mutual";
+import { poolByRouteId } from "../mutuals/data";
+import { formatUtc, microToUsd, resolveMutualAddress, resolvePoolAddress } from "../pool/mutual";
 import { useMinStake, useMinStakeMicro } from "../pool/useMinStake";
 import { useMutual } from "../pool/useMutual";
 import { currentDecryptDelivery, localDeliveryKeyStore } from "./delivery";
@@ -271,12 +272,27 @@ function SessionShell({
 }
 
 /** Connected board: shared mutual/membership states (copy doc frame, verbatim
- * with /app), then the serve panel + seat cards or the session shell. */
-function Board({ wallet, session }: { wallet: Address; session: SessionRoute | null }) {
-  const { isLocal, isMainnet, isDevnet } = useCluster();
-  const mutualAddress = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
-  const mutualQuery = useMutual();
-  const membership = useMembership();
+ * with /app), then the serve panel + seat cards or the session shell. `pool`
+ * is the row's route id (`#/app/adjudicate/<pool>` from the member surface);
+ * undefined = the static-map pool (the pool page's juror CTA). */
+function Board({
+  wallet,
+  session,
+  pool,
+}: {
+  wallet: Address;
+  session: SessionRoute | null;
+  pool?: string;
+}) {
+  const clusters = useCluster();
+  // the pool this board serves; an unknown id falls back to the member
+  // surface (the joined-pools table) — the honest no-copy state
+  const listing = pool !== undefined ? poolByRouteId(pool) : undefined;
+  const invalidPool = pool !== undefined && listing === undefined;
+  const mutualAddress =
+    listing !== undefined ? resolvePoolAddress(listing, clusters) : resolveMutualAddress(clusters);
+  const mutualQuery = useMutual(mutualAddress);
+  const membership = useMembership(mutualAddress);
   const member = membership.state === "ready" ? membership.member : null;
 
   // Rules of hooks: every read runs before the early returns.
@@ -291,6 +307,8 @@ function Board({ wallet, session }: { wallet: Address; session: SessionRoute | n
       ? { mutual: mutualAddress, claimNonce: mutualQuery.mutual.claimNonce, wallet }
       : null,
   );
+
+  if (invalidPool) return <Navigate to="/app" replace />;
 
   if (mutualQuery.state === "not-found") {
     return (
@@ -503,7 +521,13 @@ function JuryGate() {
   );
 }
 
-export function AdjudicatePage({ session = null }: { session?: SessionRoute | null }) {
+export function AdjudicatePage({
+  session = null,
+  pool,
+}: {
+  session?: SessionRoute | null;
+  pool?: string;
+}) {
   const { isConnected, account } = useWallet();
   const connected = isConnected && account !== null;
 
@@ -519,7 +543,7 @@ export function AdjudicatePage({ session = null }: { session?: SessionRoute | nu
             className="relative z-10 bg-transparent pt-(--riprap-space-section)"
           >
             {connected && account !== null ? (
-              <Board wallet={account} session={session} />
+              <Board wallet={account} session={session} pool={pool} />
             ) : (
               <JuryGate />
             )}

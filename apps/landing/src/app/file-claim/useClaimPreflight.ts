@@ -59,14 +59,15 @@ export type ClaimPreflight =
   | { state: "blocked"; block: PreflightBlock }
   | { state: "pass"; pass: PreflightPass };
 
-export function useClaimPreflight(): ClaimPreflight {
+export function useClaimPreflight(mutual?: Address): ClaimPreflight {
+  // undefined ⇒ the static-map pool (the legacy /app entry gate); the
+  // wizard passes the listing-resolved address of the pool it files against.
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const clusterRpc = useClusterRpc();
-  const mutualAddress = resolveMutualAddress({ isLocal, isMainnet, isDevnet });
+  const mutualAddress = mutual ?? resolveMutualAddress({ isLocal, isMainnet, isDevnet });
   const { account } = useWallet();
-  const mutualQuery = useMutual();
-  const membership = useMembership();
-
+  const mutualQuery = useMutual(mutual);
+  const membership = useMembership(mutual);
   const mutualReady = mutualQuery.state === "ready" ? mutualQuery.mutual : null;
   const member = membership.state === "ready" ? membership.member : null;
 

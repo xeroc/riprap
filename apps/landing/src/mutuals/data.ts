@@ -2,8 +2,7 @@
 // Two classes share the rails: risk-protection mutuals (Micro Mutual policy
 // docs) and verified-act bounties (Micro Bounty terms docs) — bounties share
 // no risk, they pay for confirmed acts. Tier prices are the docs' §5 tables
-// verbatim. CAVEAT: every pool except Blade Pool, NGMI Hairline, and Mert of
-// the Year carries "[TODO: confirm prices]" — draft values, not final.
+// verbatim (all final, 2026-10-07).
 //
 // Each pool pins the on-chain MUTUAL pubkey (route `#/m/<pubkey>`); until a
 // pool deploys, its slug routes and `pubkey` stays unset. All pools go live
@@ -33,8 +32,8 @@ export const MUTUALS: MutualListing[] = [
     name: "Blade Pool",
     kind: "mutual",
     slug: "blade-pool-devnet",
+    claimFlow: "blade-pool",
     // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
-    // mutual address is env-driven (pool/mutual.ts) — pin pubkey at deploy.
     tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
     tiers: [
       { name: "Basic", fee: 10, cap: 1000 },
@@ -51,6 +50,7 @@ export const MUTUALS: MutualListing[] = [
     name: "Blade Pool",
     kind: "mutual",
     slug: "blade-pool",
+    claimFlow: "blade-pool",
     // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
     // mutual address is env-driven (pool/mutual.ts) — pin pubkey at deploy.
     tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
@@ -69,22 +69,24 @@ export const MUTUALS: MutualListing[] = [
     name: "Chairmageddon",
     kind: "mutual",
     slug: "chairmageddon",
-    // policy: Micro Mutual — Chairmageddon - Policy.md §3/§5 (prices TODO-confirm)
+    // policy: Micro Mutual — Chairmageddon - Policy.md §3/§5 (prices set 2026-10-07)
     tagline: "Every seat taken at the opening ceremony — and you stood the whole thing.",
     tiers: [{ name: "Flat", fee: 10, cap: 40 }],
     // §5: the flat $40 payout is the only success payment
     smallestPayout: 40,
     badge: "Most popular",
+    pubkey: "5Yo1BKU8Vy9mRRwXqrjJhtw4CFmfkZiZoW7VSTj5huEq", // mainnet
   },
   {
     name: "NGMI Hairline",
     kind: "mutual",
     slug: "ngmi-hairline",
-    // policy: Micro Mutual — NGMI Hairline - Policy.md §3/§5 (flat $25 →
-    // $200 set 2026-10-06; grades pay $20/$60/$100/$200)
+    // policy: Micro Mutual — NGMI Hairline - Policy.md §3/§5 (entry cut to
+    // $10 on 2026-10-07 — grade I must outpay the entry; grades pay
+    // $20/$60/$100/$200 on the $200 maximum)
     tagline:
       "New gray hair first visible during the conference — graded from a countable few to basically Gandalf.",
-    tiers: [{ name: "Flat", fee: 25, cap: 200 }],
+    tiers: [{ name: "Flat", fee: 10, cap: 200 }],
     // §5: grade I pays 10% of the $200 maximum = $20 — the smallest success
     smallestPayout: 20,
     badge: "Ridiculous",
@@ -93,7 +95,7 @@ export const MUTUALS: MutualListing[] = [
     name: "Coffee Apocalypse",
     kind: "mutual",
     slug: "coffee-apocalypse",
-    // policy: Micro Mutual — Coffee Apocalypse - Policy.md §3/§5 (prices TODO-confirm)
+    // policy: Micro Mutual — Coffee Apocalypse - Policy.md §3/§5 (prices set 2026-10-07)
     tagline:
       "The coffee point runs out while you're standing in the queue. You leave with nothing.",
     tiers: [{ name: "Flat", fee: 10, cap: 25 }],
@@ -103,18 +105,19 @@ export const MUTUALS: MutualListing[] = [
     name: "OnlyFriends",
     kind: "bounty",
     slug: "onlyfriends",
-    // terms: Micro Bounty — OnlyFriends - Terms.md §3/§5 (prices TODO-confirm)
+    // terms: Micro Bounty — OnlyFriends - Terms.md §3/§5 (prices set 2026-10-07:
+    // $50 entry, up to $50 per introduction, VIP = sponsor founder/C-suite)
     tagline:
       "Confirmed introductions of a member to a listed VIP — paid per introduction, capped at ten.",
-    tiers: [{ name: "Flat", fee: 25, cap: 150 }],
-    // §5: one confirmed introduction pays $15 — the smallest success
-    smallestPayout: 15,
+    tiers: [{ name: "Flat", fee: 50, cap: 500 }],
+    // §5: one confirmed introduction pays up to $50 — the smallest success
+    smallestPayout: 50,
   },
   {
     name: "Operation Keep Raj Warm",
     kind: "bounty",
     slug: "keep-raj-warm",
-    // terms: Micro Bounty — Operation Keep Raj Warm - Terms.md §3/§5 (TODO-confirm)
+    // terms: Micro Bounty — Operation Keep Raj Warm - Terms.md §3/§5 (prices set 2026-10-07)
     tagline:
       "Bring Raj a hot drink he asked for — hand to hand, still hot, confirmed by Raj himself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
@@ -124,7 +127,7 @@ export const MUTUALS: MutualListing[] = [
     name: "Lily's Liquid Lifeline",
     kind: "bounty",
     slug: "lilys-liquid-lifeline",
-    // terms: Micro Bounty — Lily's Liquid Lifeline - Terms.md §3/§5 (TODO-confirm)
+    // terms: Micro Bounty — Lily's Liquid Lifeline - Terms.md §3/§5 (prices set 2026-10-07)
     tagline:
       "Bring Lily a hot drink she asked for — hand to hand, still hot, confirmed by Lily herself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
@@ -134,7 +137,7 @@ export const MUTUALS: MutualListing[] = [
     name: "Toly Needs His Fuel",
     kind: "bounty",
     slug: "toly-needs-his-fuel",
-    // terms: Micro Bounty — Toly Needs His Fuel - Terms.md §3/§5 (TODO-confirm)
+    // terms: Micro Bounty — Toly Needs His Fuel - Terms.md §3/§5 (prices set 2026-10-07)
     tagline:
       "Bring Toly a hot drink he asked for — hand to hand, still hot, confirmed by Toly himself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
@@ -145,8 +148,7 @@ export const MUTUALS: MutualListing[] = [
     kind: "bounty",
     slug: "mert-of-the-year",
     // terms: Micro Bounty — Mert of the Year - Terms.md §3/§5 (§5 prices
-    // final — no TODO in the doc's table; the named person's consent §3 and
-    // the adjudication fee §7 are TODO there)
+    // final; the named person's consent §3 is still TODO in the doc)
     tagline:
       "Hand Mert an over-the-top trophy he did not ask for, with a completely serious acceptance speech on his behalf — the bounty pays the one he declares best.",
     tiers: [{ name: "Flat", fee: 10, cap: 1000 }],
@@ -163,6 +165,20 @@ export function poolRouteId(m: MutualListing): string {
 /** The pool's detail route, `#/m/<pubkey-or-slug>`. */
 export function poolRoute(m: MutualListing): string {
   return `#/m/${poolRouteId(m)}`;
+}
+
+/** The listing a route id (`pubkey ?? slug`) points at — poolRouteId's
+ * inverse; the wizard route `#/app/file-claim/<id>` resolves through this. */
+export function poolByRouteId(id: string): MutualListing | undefined {
+  return MUTUALS.find((m) => poolRouteId(m) === id);
+}
+
+/** A pool's listing by slug — for static, developer-owned references (page
+ * configs); an unknown slug is a programming error, so it throws. */
+export function poolBySlug(slug: string): MutualListing {
+  const listing = MUTUALS.find((m) => m.slug === slug);
+  if (listing === undefined) throw new Error(`no listing for slug ${slug}`);
+  return listing;
 }
 
 /** `$10` or `$10–$40` — the entry-fee span across tiers (docs §5). */
@@ -201,12 +217,12 @@ function hash(input: string): number {
  * the smallest tier always. If its smallest success payment is bigger than
  * the entry fee, the pool needs ceil(payment / fee) members to fund one
  * full payout — Blade Pool 100 (a 100x payout), Chairmageddon 4, Coffee
- * Apocalypse 3, the hot-drink bounties 10 (a 10x payout), Mert of the Year
- * 100 (a 100x bounty, also the terms' §6 minimum). If the smallest
- * payment is already covered by one entry (NGMI grade I $20 <= $25,
- * OnlyFriends' first intro $15), the pool can pay out from the start and
- * the honest push number is the SECOND success — where the member turns a
- * profit — so 2.
+ * Apocalypse 3, NGMI 2 (grade I $20 on a $10 entry), the hot-drink
+ * bounties 10 (a 10x payout), Mert of the Year 100 (a 100x bounty). If
+ * the smallest payment is already covered by one entry (OnlyFriends'
+ * first intro $50 = the $50 entry), the pool can pay out from the start
+ * and the honest push number is the SECOND success — where the member
+ * turns a profit — so 2.
  */
 export function membersNeeded(m: MutualListing): number {
   const fee = Math.min(...m.tiers.map((t) => t.fee));

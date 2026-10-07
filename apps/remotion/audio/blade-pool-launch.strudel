@@ -6,7 +6,7 @@
 //
 // 120 BPM grid: cpm 30 → 1 bar = 2.000s = 60 frames @30fps.
 // Family: riprap — Gb major; see blade-pool-intro-30s.strudel (the canonical
-// implementation) and MUSIC.md for the house style.
+// implementation).
 // Scene map: fear b1–2 (hammered quotes, shadow @3.0) · hook 4–7s (the
 // what-if, almost nothing) · live 7–10s (cut tick @7.0, stamp slam @7.75,
 // bloom @8.5, button @9.0 — the video's 1.5s fade-out carries the tail).
