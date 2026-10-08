@@ -62,7 +62,7 @@ vi.mock("@useaccord/sdk", () => ({ fetchSubaccordMaybe: vi.fn() }));
 // The anchored-terms band fetches from the evidence daemon — keep page tests
 // off the network; the band's own suite covers its states.
 vi.mock("../usePolicyDoc", () => ({
-  usePolicyDoc: vi.fn(() => ({ state: "idle", refetch: () => { } })),
+  usePolicyDoc: vi.fn(() => ({ state: "idle", refetch: () => {} })),
 }));
 
 const fetchMock = vi.mocked(fetchMaybeMutual);
@@ -570,7 +570,7 @@ describe("covered — an existing member is a state, never an error toast", () =
 
 describe("loading — {{PARAM}} placeholders, no static numbers (copy doc § on-chain states)", () => {
   it("reads 'Reading the pool from the chain.' and disables the picker", async () => {
-    fetchMock.mockReturnValue(new Promise<Maybe>(() => { }));
+    fetchMock.mockReturnValue(new Promise<Maybe>(() => {}));
     const { container } = renderPoolPage();
     expect(await screen.findByText("Reading the pool from the chain.")).toBeTruthy();
     const placeholders = [
@@ -649,7 +649,6 @@ describe("deposits closed — entry-closed state from deposits_close_at", () => 
   });
 });
 
-
 it("connected + joinable: the line renders under the chip-in button", async () => {
   walletState.isConnected = true;
   walletState.account = WALLET;
@@ -683,5 +682,4 @@ it("entry closed: no line", async () => {
   renderPoolPage();
   await screen.findByText("Entry closed.");
   expect(document.querySelector('[data-slot="policy-accept"]')).toBeNull();
-});
 });
