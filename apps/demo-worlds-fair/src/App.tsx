@@ -50,9 +50,8 @@ function useCanvasBox(): { scale: number; w: number; h: number } {
 /**
  * App — the deck shell. One HexBackdrop runs behind the entire deck (never
  * unmounts, so the engineering-paper lattice is continuous across slides);
- * each slide mounts fresh with its own frame clock so the kit mechanisms
- * replay on every visit. Keyboard: ← → / space / Home / End; N toggles the
- * presenter notes.
+ * each slide mounts fresh on every visit. Keyboard: ← → / space / Home /
+ * End; N toggles the presenter notes.
  */
 export function App() {
   const [index, setIndex] = useState(0);

@@ -2,8 +2,7 @@ import type { FC, ReactNode } from "react";
 
 /**
  * SlideFrame — the shared slide layout: kicker (mono stamp, harbor-blue),
- * headline, content. Children stagger in via [data-rise]; the whole slide
- * settles on the brand curve. One idea per slide, big type, no walls of text.
+ * headline, content. One idea per slide, big type, no walls of text.
  * Headlines are statements; the kicker names the slide (2026-09-17 swap).
  */
 export const SlideFrame: FC<{
@@ -12,7 +11,7 @@ export const SlideFrame: FC<{
   children?: ReactNode;
 }> = ({ kicker, headline, children }) => (
   <div className={`flex h-full w-full flex-col justify-center gap-10 px-[7cqw]`}>
-    <div data-rise className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5">
       {kicker ? (
         <div className="uppercase text-accent [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
           {kicker}
@@ -22,10 +21,6 @@ export const SlideFrame: FC<{
         {headline}
       </h2>
     </div>
-    {children ? (
-      <div data-rise className="flex flex-col gap-8">
-        {children}
-      </div>
-    ) : null}
+    {children ? <div className="flex flex-col gap-8">{children}</div> : null}
   </div>
 );

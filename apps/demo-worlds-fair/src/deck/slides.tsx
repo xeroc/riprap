@@ -3,6 +3,7 @@ import {
   ExpansionTile,
   Gather,
   Join,
+  LogoLockup,
   Logomark,
   ProblemSolutionCard,
   Renew,
@@ -13,10 +14,10 @@ import {
 import type { FC, ReactNode } from "react";
 
 import { SlideFrame } from "./shell";
-import { useSlideFrame } from "./useSlideFrame";
 
 /**
- * The seed-raise deck — 11 slides + appendix, copy from meta/PITCH.md (the
+ * The seed-raise deck (demo-worlds-fair variant: pitched at Colosseum's
+ * World's Fair hackathon — title slide restaged 2026-10-08) — 11 slides + appendix, copy from meta/PITCH.md (the
  * law for every string and number below; citations ride along in mono — the
  * 2026-09-17 headline re-stage, the 2026-09-18 vision/problem re-stages,
  * and the 2026-10-07 title/vision/product/pilot re-stage below are not yet
@@ -35,30 +36,32 @@ import { useSlideFrame } from "./useSlideFrame";
  * 2026-09-15) on Riprap tokens.
  */
 
-/** Rise style for frame-gated reveals: clamped progress in the
- * [start, start + dur] frame window, opacity + settle translate. */
-const rise = (frame: number, start: number, dur = 18) => {
-  const p = Math.min(1, Math.max(0, (frame - start) / dur));
-  return { opacity: p, transform: `translateY(${(1 - p) * 10}px)` };
-};
-
 /* 01 — title ---------------------------------------------------------------- */
 
 const TitleSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-12 deck-narrow:p-6">
-      <Logomark size={160} state="assemble" />
-      <div data-rise className="flex flex-col items-center gap-6">
+      <Logomark size={160} />
+      <div className="flex flex-col items-center gap-6">
         <Wordmark size={84} className="tracking-(--riprap-tracking-mega)" />
         <div className="text-ink [font:var(--riprap-display-md)]">
           Insurance, Finally Programmable
         </div>
-        <div
-          className="mt-6 uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]"
-          style={rise(frame, 48)}
-        >
-          pre-seed raise · 2026
+        {/* re-staged 2026-10-08: this deck pitches Colosseum's World's Fair
+         * hackathon, not the pre-seed raise — Colosseum mark prominent but
+         * ≤30% of the riprap logomark (48px vs 160px), no date. The mark is
+         * the public/colosseum.svg lockup painted through a CSS mask so it
+         * takes the ink token (the file's fill is currentColor, which an
+         * <img> would render black on the ground). */}
+        <div className="mt-6 flex flex-col items-center gap-4">
+          <span
+            role="img"
+            aria-label="Colosseum"
+            className="block aspect-[191/32] h-12 bg-ink [mask:url(/colosseum.svg)_center/contain_no-repeat]"
+          />
+          <span className="uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
+            world&rsquo;s fair hackathon
+          </span>
         </div>
       </div>
     </div>
@@ -108,16 +111,12 @@ const COMPARE_ROWS: { id: string; label: ReactNode; trad: boolean; web3: boolean
 ];
 
 const VisionSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the vision" headline="Trust Math, Not Paperwork">
+    <SlideFrame kicker="the vision" headline="Trust Math &amp; Code over Paperwork">
       {/* the statement — the heart of the slide */}
-      <div
-        className="max-w-[58ch] text-ink [font:var(--riprap-display-sm)]"
-        style={rise(frame, 12)}
-      >
-        When claims are judged on-chain and reserves earn in DeFi, insurance becomes faster, fairer,
-        and able to scale like software.
+      <div className="max-w-[58ch] text-ink [font:var(--riprap-display-sm)]">
+        When claims are judged on-chain and reserves earn in DeFi, insurance becomes faster,
+        transparent, and able to scale like software.
       </div>
       {/* the comparison table — same business, different rails; receipts, not the argument */}
       <div className="flex w-full flex-col">
@@ -132,13 +131,12 @@ const VisionSlide: FC = () => {
             </span>
           ))}
         </div>
-        {COMPARE_ROWS.map((r, i) => (
+        {COMPARE_ROWS.map((r) => (
           <div
             key={r.id}
             className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_22ch_22ch] items-center border-t border-hairline py-1.5"
-            style={rise(frame, 28 + i * 6)}
           >
-            <span className="text-muted [font:var(--riprap-body-sm)]">{r.label}</span>
+            <span className="text-muted [font:var(--riprap-body-md)]">{r.label}</span>
             <span className="text-center">
               <Mark yes={r.trad} />
             </span>
@@ -156,10 +154,12 @@ const VisionSlide: FC = () => {
 
 /** The monolith re-staged (2026-09-18 off
  * meta/marketing/07-brand-assets/why-on-chain.md; not yet mirrored in
- * meta/PITCH.md): one number carried very large — ~26¢ of every premium
- * dollar spent before a claim is paid — its meaning set beside it, source
- * riding along in mono. The solvency and jurisdiction rows were retired in
- * the same re-stage; the vision table still carries those ✗. */
+ * meta/PITCH.md): re-staged again 2026-10-08 — two numbers side by side,
+ * ~26¢ of every premium dollar spent before a claim is paid and the
+ * 11.6–18% interest investors earn on risk capital, each explained below
+ * itself, source riding along in mono. The solvency and jurisdiction rows
+ * were retired in the 2026-09-18 re-stage; the vision table still carries
+ * those ✗. */
 
 /** The 2020–22 autopsy: one chip per named failure, the error in three
  * words or fewer. Each maps to a structural fix in Hanse (one risk per
@@ -185,30 +185,29 @@ const MISTAKES: { name: string; error: string }[] = [
 ];
 
 const ProblemSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the problem" headline="Insurance is a slow, expensive monolith.">
-      <div className="flex w-full flex-col gap-12">
-        {/* the number, very big; what it means beside it */}
-        <div className="deck-narrow:flex-col deck-narrow:items-start deck-narrow:gap-6 flex items-center gap-12">
-          <span
-            data-num
-            className="deck-narrow:text-[5.5rem] text-accent font-mono text-[12rem] leading-none font-semibold tracking-(--riprap-tracking-display)"
-            style={rise(frame, 8)}
-          >
-            ~26¢
+      {/* re-staged 2026-10-08: two numbers, side by side — the overhead and
+       * the cost of capital — each explained below itself. The 30–60 day
+       * and microinsurance bullets retired in the same re-stage. */}
+      <div className="deck-narrow:flex-col deck-narrow:gap-8 flex w-full items-start gap-16">
+        <div className="flex flex-1 flex-col gap-4" data-num>
+          <span className="deck-narrow:text-[4.5rem] text-accent font-mono text-[7rem] leading-none font-semibold tracking-(--riprap-tracking-display)">
+            ~26&cent;
           </span>
-          <span className="flex max-w-[42ch] flex-col gap-3" style={rise(frame, 24)}>
-            <span className="text-ink [font:var(--riprap-display-sm)]">
-              of every premium dollar is spent before a claim is paid.
-            </span>
-            <ol className="list-disc ml-6">
-              <li>and it still takes 30 to 60 days on average</li>
-              <li>microinsurances often infeasible</li>
-            </ol>
-            <span className="text-muted-soft [font:var(--riprap-mono-label)]">
-              Verisk/APCIA '25
-            </span>
+          <span className="text-ink w-md [font:var(--riprap-display-sm)]">
+            of every premium dollar is spent before a claim is paid.
+          </span>
+          <span className="text-muted-soft [font:var(--riprap-mono-label)]">
+            Verisk/APCIA &rsquo;25
+          </span>
+        </div>
+        <div className="flex flex-1 flex-col gap-4" data-num>
+          <span className="deck-narrow:text-[4.5rem] text-accent font-mono text-[7rem] leading-none font-semibold tracking-(--riprap-tracking-display)">
+            11&ndash;18%
+          </span>
+          <span className="text-ink w-md [font:var(--riprap-display-sm)]">
+            interest investors earn on risk capital.
           </span>
         </div>
       </div>
@@ -247,24 +246,19 @@ const FIELD_ROWS: {
 ];
 
 export const IncumbantsProblemSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the competition" headline="there's basically no competitor.">
       <div className="flex w-full flex-col gap-12">
-        <div
-          className="deck-narrow:grid-cols-3 deck-narrow:gap-x-3 grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] gap-x-12 text-sm tracking-[0.2em] text-text-secondary"
-          style={rise(frame, 16)}
-        >
+        <div className="deck-narrow:grid-cols-3 deck-narrow:gap-x-3 grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] gap-x-12 text-sm tracking-[0.2em] text-text-secondary">
           <div className="deck-narrow:col-span-3" />
           <div className="deck-narrow:tracking-normal text-right">FEES &rsquo;25</div>
           <div className="deck-narrow:tracking-normal text-right">RAISED</div>
           <div className="deck-narrow:tracking-normal text-right">COVER</div>
         </div>
-        {FIELD_ROWS.map((r, i) => (
+        {FIELD_ROWS.map((r) => (
           <div
             key={r.name}
             className="deck-narrow:grid-cols-3 deck-narrow:gap-x-3 grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] items-baseline gap-x-12 border-t border-white/10 pt-5"
-            style={rise(frame, 28 + i * 22)}
           >
             <div className="deck-narrow:col-span-3 flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
@@ -290,18 +284,14 @@ export const IncumbantsProblemSlide: FC = () => {
 
         {/* the graveyard — one chip per named failure */}
         <div className="flex w-full flex-col gap-3">
-          <div
-            className="uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]"
-            style={rise(frame, 48)}
-          >
+          <div className="uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
             why every on-chain attempt so far failed
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {MISTAKES.map((m, i) => (
+            {MISTAKES.map((m) => (
               <span
                 key={`${m.name}-${m.error}`}
                 className="flex items-baseline gap-2 border border-hairline px-3 py-1"
-                style={rise(frame, 56 + i * 4)}
               >
                 <span data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
                   ✗
@@ -358,29 +348,22 @@ const PRODUCT_STEPS = [
 ] as const;
 
 const ProductSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the product" headline="Mutuals First, Markets Next">
       {/* the positioning statement — mutuals are the trusted foundation */}
-      <div className="max-w-[68ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 8)}>
+      <div className="max-w-[68ch] text-ink [font:var(--riprap-title-md)]">
         People pool risk and share the upside transparently. The foundation for a global, composable
         market of insurance and risk capital.
       </div>
       <div className="flex w-full flex-col gap-8">
-        <div style={rise(frame, 16)}>
-          <ol data-slot="lifecycle-strip" className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {PRODUCT_STEPS.map((tile) => (
-              <ExpansionTile key={tile.id} {...tile} />
-            ))}
-          </ol>
-        </div>
+        <ol data-slot="lifecycle-strip" className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {PRODUCT_STEPS.map((tile) => (
+            <ExpansionTile key={tile.id} {...tile} />
+          ))}
+        </ol>
         <div className="deck-narrow:grid deck-narrow:grid-cols-2 deck-narrow:items-start deck-narrow:gap-4 deck-narrow:md:grid-cols-4 flex items-start gap-6">
-          {PRODUCT_STEPS.map((l, i) => (
-            <div
-              key={l.step}
-              className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
-              style={rise(frame, 40 + i * 14)}
-            >
+          {PRODUCT_STEPS.map((l) => (
+            <div key={l.step} className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4">
               <div className="text-muted [font:var(--riprap-body-sm)]">{l.body}</div>
             </div>
           ))}
@@ -451,28 +434,21 @@ const NOW_STEPS = [
 ] as const;
 
 const NowSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame kicker="why now" headline="Three pieces clicked">
-      <div className="max-w-[68ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 8)}>
+      <div className="max-w-[68ch] text-ink [font:var(--riprap-title-md)]">
         Insurance needed stable money, recurring premiums, and trustless claims, and all three are
         now real on Solana.
       </div>
       <div className="flex w-full flex-col gap-8">
-        <div style={rise(frame, 16)}>
-          <ol data-slot="expansion-strip" className="grid grid-cols-2 gap-4 md:grid-cols-3">
-            {NOW_STEPS.map((tile) => (
-              <ExpansionTile key={tile.id} {...tile} />
-            ))}
-          </ol>
-        </div>
+        <ol data-slot="expansion-strip" className="grid grid-cols-2 gap-4 md:grid-cols-3">
+          {NOW_STEPS.map((tile) => (
+            <ExpansionTile key={tile.id} {...tile} />
+          ))}
+        </ol>
         <div className="deck-narrow:grid deck-narrow:grid-cols-2 deck-narrow:items-start deck-narrow:gap-4 deck-narrow:md:grid-cols-3 flex w-full items-start gap-6">
-          {NOW_STEPS.map((n, i) => (
-            <div
-              key={n.step}
-              className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
-              style={rise(frame, 40 + i * 14)}
-            >
+          {NOW_STEPS.map((n) => (
+            <div key={n.step} className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4">
               <div className="deck-narrow:flex-wrap flex items-baseline justify-between gap-3">
                 <span className="text-ink [font:var(--riprap-title-sm)]">{n.head}</span>
                 {n.ours && (
@@ -535,36 +511,30 @@ const EVIDENCE_ROWS = [
 ];
 
 export const MarketSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame
       kicker="the market"
       headline="Millions of communities don't fit conventional insurances"
     >
-      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 12)}>
+      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]">
         We are building the infrastructure that lets those groups create their own risk pools.
       </div>
       <div className="deck-narrow:grid deck-narrow:grid-cols-2 deck-narrow:items-start deck-narrow:gap-4 flex w-full items-start gap-6">
-        {SKIPPED_COMMUNITIES.map((c, i) => (
-          <div
-            key={c.head}
-            className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
-            style={rise(frame, 36 + i * 10)}
-          >
+        {SKIPPED_COMMUNITIES.map((c) => (
+          <div key={c.head} className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4">
             <div className="text-ink [font:var(--riprap-title-sm)]">{c.head}</div>
             <div className="text-muted [font:var(--riprap-body-sm)]">{c.body}</div>
           </div>
         ))}
       </div>
       <div className="flex w-full flex-col gap-4" data-num>
-        <div className="flex items-baseline" style={rise(frame, 84)}>
+        <div className="flex items-baseline">
           <span className="text-sm tracking-[0.2em] text-text-secondary">EVIDENCE</span>
         </div>
-        {EVIDENCE_ROWS.map((r, i) => (
+        {EVIDENCE_ROWS.map((r) => (
           <div
             key={r.label}
             className="deck-narrow:flex-wrap deck-narrow:gap-x-6 flex items-baseline gap-8 border-t border-hairline pt-3"
-            style={rise(frame, 92 + i * 12)}
           >
             <span className="deck-narrow:w-[14ch] w-[24ch] text-right text-accent [font:var(--riprap-mono-number)]">
               {r.v}
@@ -645,11 +615,10 @@ const PILOT_POOLS: {
 ];
 
 const LaunchSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the pilot" headline="Pivoted, Piloting, Learning Fast">
       {/* the statement — the pivot in one breath */}
-      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 12)}>
+      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]">
         We extended slow risk pools for fast crowdfunded bounties on the same mechanics, so every
         pilot, silly or serious, turns into a lesson that sharpens the engine before real-world
         insurance.
@@ -666,11 +635,10 @@ const LaunchSlide: FC = () => {
             </span>
           ))}
         </div>
-        {PILOT_POOLS.map((p, i) => (
+        {PILOT_POOLS.map((p) => (
           <div
             key={p.name}
             className="grid grid-cols-[minmax(0,18ch)_9ch_minmax(0,1fr)_9ch_13ch] items-baseline gap-x-6 border-t border-hairline py-2"
-            style={rise(frame, 28 + i * 8)}
           >
             <span className="text-ink [font:var(--riprap-title-sm)]">{p.name}</span>
             <span className="uppercase text-muted [font:var(--riprap-mono-label)]">{p.kind}</span>
@@ -683,10 +651,7 @@ const LaunchSlide: FC = () => {
             </span>
           </div>
         ))}
-        <div
-          className="pt-3 text-muted-soft [font:var(--riprap-mono-label)]"
-          style={rise(frame, 92)}
-        >
+        <div className="pt-3 text-muted-soft [font:var(--riprap-mono-label)]">
           Breakpoint 2026 · Olympia, London · 15–17 November 2026 · policy & terms §5
         </div>
       </div>
@@ -697,7 +662,7 @@ const LaunchSlide: FC = () => {
 /* 08 — the business ---------------------------------------------------------- */
 
 const BUSINESS_LADDER = [
-  { v: "0%", label: "protocol take on pool #1, the pilot exists to confirm the market" },
+  { v: "0%", label: "protocol take on pilots, they exist to confirm the market" },
   {
     v: "% of surplus",
     label:
@@ -714,7 +679,6 @@ const BUSINESS_LADDER = [
 ];
 
 const BusinessSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame
       kicker="the business"
@@ -726,16 +690,15 @@ const BusinessSlide: FC = () => {
         </>
       }
     >
-      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 12)}>
+      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]">
         We earn like an insurer, through a share of surplus and fees for running pools.
       </div>
       <div className="flex w-full flex-col gap-8">
         <div className="flex flex-col gap-4" data-num>
-          {BUSINESS_LADDER.map((r, i) => (
+          {BUSINESS_LADDER.map((r) => (
             <div
               key={r.v}
               className="deck-narrow:flex-col deck-narrow:items-start deck-narrow:gap-1 flex items-baseline gap-8 border-t border-hairline pt-4"
-              style={rise(frame, 24 + i * 16)}
             >
               <span className="deck-narrow:w-auto deck-narrow:text-left w-[18ch] text-right text-accent [font:var(--riprap-mono-number)]">
                 {r.v}
@@ -744,10 +707,7 @@ const BusinessSlide: FC = () => {
             </div>
           ))}
         </div>
-        <div
-          className="flex flex-col gap-2 text-muted [font:var(--riprap-body-sm)]"
-          style={rise(frame, 100)}
-        >
+        <div className="flex flex-col gap-2 text-muted [font:var(--riprap-body-sm)]">
           <div>USDC end to end. No product token required.</div>
         </div>
       </div>
@@ -773,7 +733,6 @@ const UNLOCK_STEPS = [
 ];
 
 export const AskSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the ask" headline={<>raising $700k pre-seed at $7M</>}>
       <div
@@ -781,14 +740,14 @@ export const AskSlide: FC = () => {
         data-num
       >
         <div className="flex flex-1 flex-col gap-6">
-          {ASK_TERMS.map((t, i) => (
-            <div key={t.v} className="flex flex-col gap-1" style={rise(frame, 20 + i * 14)}>
+          {ASK_TERMS.map((t) => (
+            <div key={t.v} className="flex flex-col gap-1">
               <span className="text-accent [font:var(--riprap-mono-number-lg)]">{t.v}</span>
               <span className="text-muted [font:var(--riprap-mono-label)]">{t.sub}</span>
             </div>
           ))}
         </div>
-        <div className="flex flex-1 flex-col gap-3" style={rise(frame, 60)}>
+        <div className="flex flex-1 flex-col gap-3">
           <div className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
             capital → de-risk → prove → unlock organizer-initiated pools
           </div>
@@ -843,8 +802,8 @@ const PERSONAS: { img: string; alt: string; caption: string; rows: string[] }[] 
   },
 ];
 
-/** The achievement wall — ambience, not a reading list. Two copies make the
- * marquee seamless; the audience catches fragments, that's the point. */
+/** The achievement wall — ambience, not a reading list; the audience catches
+ * fragments, that's the point. */
 const KUDOS = [
   "Accord — on-chain arbitration · live",
   "2× Gold · Colosseum Frontier 2026",
@@ -871,7 +830,6 @@ const KUDOS = [
 ];
 
 const TeamSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <div className="relative h-full w-full">
       <div className="deck-narrow:pr-[7cqw] flex h-full flex-col justify-center gap-10 pl-[7cqw] pr-[30cqw]">
@@ -884,8 +842,8 @@ const TeamSlide: FC = () => {
           </h2>
         </div>
         <div className="deck-narrow:flex-col deck-narrow:gap-10 flex items-start gap-20">
-          {PERSONAS.map((p, pi) => (
-            <figure key={p.img} className="flex flex-col gap-4" style={rise(frame, 24 + pi * 40)}>
+          {PERSONAS.map((p) => (
+            <figure key={p.img} className="flex flex-col gap-4">
               <img
                 src={p.img}
                 alt={p.alt}
@@ -895,12 +853,8 @@ const TeamSlide: FC = () => {
                 {p.caption}
               </figcaption>
               <div className="flex flex-col gap-2.5 pt-1">
-                {p.rows.map((r, i) => (
-                  <div
-                    key={r}
-                    className="text-body [font:var(--riprap-body-sm)]"
-                    style={rise(frame, 56 + pi * 40 + i * 8)}
-                  >
+                {p.rows.map((r) => (
+                  <div key={r} className="text-body [font:var(--riprap-body-sm)]">
                     <span className="text-accent">▶</span> {r}
                   </div>
                 ))}
@@ -915,7 +869,6 @@ const TeamSlide: FC = () => {
           maskImage: "linear-gradient(to bottom, transparent, black 18%, black 82%, transparent)",
           WebkitMaskImage:
             "linear-gradient(to bottom, transparent, black 18%, black 82%, transparent)",
-          ...rise(frame, 56),
         }}
       >
         <div className="kudos-track flex w-full flex-col">
@@ -944,30 +897,22 @@ const LINKS = [
 ];
 
 const CloseSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-12 px-[7cqw] text-center">
-      <div className="flex flex-col items-center gap-5" style={rise(frame, 0)}>
-        <Wordmark size={64} />
-        <div
-          className="h-px w-56 bg-accent"
-          style={{ opacity: Math.min(1, Math.max(0, (frame - 20) / 24)) }}
-        />
+      <div className="flex flex-col items-center gap-5">
+        <LogoLockup size={64} />
+        <div className="h-px w-56 bg-accent" />
       </div>
-      <div data-rise className="flex flex-wrap justify-center gap-12">
-        {LINKS.map((l, i) => (
-          <span
-            key={l.url}
-            className="flex flex-col items-center gap-1"
-            style={rise(frame, 40 + i * 16)}
-          >
+      <div className="flex flex-wrap justify-center gap-12">
+        {LINKS.map((l) => (
+          <span key={l.url} className="flex flex-col items-center gap-1">
             <span className="text-ink [font:var(--riprap-mono-number)]">{l.url}</span>
             <span className="text-muted [font:var(--riprap-mono-label)]">{l.note}</span>
           </span>
         ))}
       </div>
-      <div className="text-ink [font:var(--riprap-display-lg)]" style={rise(frame, 104)}>
-        peer-to-peer purpose pools.
+      <div className="text-ink [font:var(--riprap-display-lg)]">
+        Insurance, Finally Programmable.
       </div>
     </div>
   );
@@ -1004,12 +949,11 @@ const HARD_QUESTIONS: { index: string; q: string; a: string }[] = [
 ];
 
 export const AppendixQASlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the problems" headline="The hard questions that need solving.">
       <div className="deck-narrow:grid-cols-1 grid w-full grid-cols-2 gap-6">
-        {HARD_QUESTIONS.map((c, i) => (
-          <div key={c.index} style={rise(frame, 8 + i * 10)}>
+        {HARD_QUESTIONS.map((c) => (
+          <div key={c.index}>
             <ProblemSolutionCard index={c.index} question={c.q} answer={c.a} />
           </div>
         ))}
@@ -1149,14 +1093,14 @@ export const SLIDES: SlideDef[] = [
     id: "title",
     label: "riprap",
     notes:
-      "10s. Riprap — insurance, finally programmable. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Pre-Seed raise, 2026.",
+      "10s. Riprap — insurance, finally programmable. Pitched for Colosseum's World's Fair hackathon. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet.",
     component: TitleSlide,
   },
   {
     id: "problem",
     label: "the problem",
     notes:
-      "30s. The frame: traditional insurance is a slow, expensive monolith. One number, very big: ~26¢ of every US premium dollar is spent before a claim is paid (Verisk/APCIA '25) — the fixed-cost back office; at that floor microinsurance is often infeasible.",
+      "30s. The frame: traditional insurance is a slow, expensive monolith. Two numbers, side by side: ~26¢ of every US premium dollar is spent before a claim is paid (Verisk/APCIA '25) — the fixed-cost back office — while investors earn 11.6–18% interest on risk capital. At that cost floor, microinsurance is often infeasible.",
     component: ProblemSlide,
   },
   {
@@ -1205,7 +1149,7 @@ export const SLIDES: SlideDef[] = [
     id: "team",
     label: "the team",
     notes:
-      "20s. Who builds this — the human and the AI teammate. Left: Dr.-Ing. Fabian Schuh — full-time crypto since 2014, first person hired and paid directly by a blockchain, built the BitShares escrow and worker-proposal treasury, Solana Security #2. Right: Corinna — BD, social, analytics, on shift 24/7. The scrolling wall is ambience — twenty years of shipping, on-chain since 2014. Gesture once, don't read it.",
+      "20s. Who builds this — the human and the AI teammate. Left: Dr.-Ing. Fabian Schuh — full-time crypto since 2014, first person hired and paid directly by a blockchain, built the BitShares escrow and worker-proposal treasury, Solana Security #2. Right: Corinna — BD, social, analytics, on shift 24/7. The wall is ambience — twenty years of shipping, on-chain since 2014. Gesture once, don't read it.",
     component: TeamSlide,
   },
   {

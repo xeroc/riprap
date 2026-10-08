@@ -2,9 +2,9 @@
  * @riprap/pitch-seed-raise — deck styles.
  *
  * Tokens, fonts, theme: @riprap/ui. This file owns the Tailwind wiring and
- * the deck's own motion — every entrance on the settle curve (DESIGN.md:
- * settle, not slide; no bounce), paced for presentation rather than hover:
- * 360ms slide entrances, 280ms content rises, 40ms staggers.
+ * the deck's slide transitions (360ms in / 200ms out on the settle curve,
+ * DESIGN.md: settle, not slide; no bounce). Per-slide content motions were
+ * removed 2026-10-08 — slides render their settled state immediately.
  */
 
 @import "tailwindcss";
@@ -52,42 +52,6 @@ body {
 
 .slide {
   animation: slide-in 360ms var(--riprap-settle-easing, cubic-bezier(0.215, 0.61, 0.355, 1)) both;
-}
-
-/* staggered content: each direct child of [data-rise] settles in turn */
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-}
-
-[data-rise] > * {
-  animation: rise-in 280ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
-}
-
-[data-rise] > *:nth-child(1) {
-  animation-delay: 80ms;
-}
-
-[data-rise] > *:nth-child(2) {
-  animation-delay: 120ms;
-}
-
-[data-rise] > *:nth-child(3) {
-  animation-delay: 160ms;
-}
-
-[data-rise] > *:nth-child(4) {
-  animation-delay: 200ms;
-}
-
-[data-rise] > *:nth-child(5) {
-  animation-delay: 240ms;
-}
-
-[data-rise] > *:nth-child(6) {
-  animation-delay: 280ms;
 }
 
 /* the leaving slide fades out under the entering one */
