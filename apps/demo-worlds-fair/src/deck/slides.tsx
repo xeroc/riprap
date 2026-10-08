@@ -225,25 +225,25 @@ const FIELD_ROWS: {
   chain: string;
   cells: { v: string; sub?: string }[];
 }[] = [
-  {
-    name: "Nexus Mutual",
-    chain: "ethereum · arbitrum · kyc",
-    cells: [
-      { v: "$5.7M", sub: "cover fees '25" },
-      { v: "$2.7M", sub: "ever · no VC" },
-      { v: "$1B+", sub: "purchased '25" },
-    ],
-  },
-  {
-    name: "OpenCover",
-    chain: "base · ethereum · off-chain co",
-    cells: [
-      { v: "—", sub: "undisclosed" },
-      { v: "$4.6M", sub: "seed '22–23" },
-      { v: "$141.6M", sub: "protected '25" },
-    ],
-  },
-];
+    {
+      name: "Nexus Mutual",
+      chain: "ethereum · arbitrum · kyc",
+      cells: [
+        { v: "$5.7M", sub: "cover fees '25" },
+        { v: "$2.7M", sub: "ever · no VC" },
+        { v: "$1B+", sub: "purchased '25" },
+      ],
+    },
+    {
+      name: "OpenCover",
+      chain: "base · ethereum · off-chain co",
+      cells: [
+        { v: "—", sub: "undisclosed" },
+        { v: "$4.6M", sub: "seed '22–23" },
+        { v: "$141.6M", sub: "protected '25" },
+      ],
+    },
+  ];
 
 export const IncumbantsProblemSlide: FC = () => {
   return (
@@ -563,56 +563,56 @@ const PILOT_POOLS: {
   entry: string;
   payout: string;
 }[] = [
-  {
-    name: "Blade Pool",
-    kind: "mutual",
-    pays: "bodily injury caused by another person with a knife or blade, during the conference",
-    entry: "$10–$40",
-    payout: "up to $4,000",
-  },
-  {
-    name: "Chairmageddon",
-    kind: "mutual",
-    pays: "every seat taken at the opening ceremony — and you stood the whole thing",
-    entry: "$10",
-    payout: "$40",
-  },
-  {
-    name: "NGMI Hairline",
-    kind: "mutual",
-    pays: "new gray hair first visible during the conference — graded from a few to Gandalf",
-    entry: "$10",
-    payout: "up to $200",
-  },
-  {
-    name: "Coffee Apocalypse",
-    kind: "mutual",
-    pays: "the coffee point runs out while you're standing in the queue",
-    entry: "$10",
-    payout: "$25",
-  },
-  {
-    name: "OnlyFriends",
-    kind: "bounty",
-    pays: "confirmed introductions to listed VIPs — paid per introduction, capped at ten",
-    entry: "$50",
-    payout: "up to $500",
-  },
-  {
-    name: "Hot-drink Runs",
-    kind: "bounty",
-    pays: "bring Raj, Lily, or Toly the hot drink they asked for — hand to hand, still hot",
-    entry: "$5",
-    payout: "$50",
-  },
-  {
-    name: "Mert of the Year",
-    kind: "bounty",
-    pays: "an over-the-top trophy he did not ask for — pays the one he declares best",
-    entry: "$10",
-    payout: "$1,000",
-  },
-];
+    {
+      name: "Blade Pool",
+      kind: "mutual",
+      pays: "bodily injury caused by another person with a knife or blade, during the conference",
+      entry: "$10–$40",
+      payout: "up to $4,000",
+    },
+    {
+      name: "Chairmageddon",
+      kind: "mutual",
+      pays: "every seat taken at the opening ceremony — and you stood the whole thing",
+      entry: "$10",
+      payout: "$40",
+    },
+    {
+      name: "NGMI Hairline",
+      kind: "mutual",
+      pays: "new gray hair first visible during the conference — graded from a few to Gandalf",
+      entry: "$10",
+      payout: "up to $200",
+    },
+    {
+      name: "Coffee Apocalypse",
+      kind: "mutual",
+      pays: "the coffee point runs out while you're standing in the queue",
+      entry: "$10",
+      payout: "$25",
+    },
+    {
+      name: "OnlyFriends",
+      kind: "bounty",
+      pays: "confirmed introductions to listed VIPs — paid per introduction, capped at ten",
+      entry: "$50",
+      payout: "up to $500",
+    },
+    {
+      name: "Hot-drink Runs",
+      kind: "bounty",
+      pays: "bring Raj, Lily, or Toly the hot drink they asked for — hand to hand, still hot",
+      entry: "$5",
+      payout: "$50",
+    },
+    {
+      name: "Mert of the Year",
+      kind: "bounty",
+      pays: "an over-the-top trophy he did not ask for — pays the one he declares best",
+      entry: "$10",
+      payout: "$1,000",
+    },
+  ];
 
 const LaunchSlide: FC = () => {
   return (
@@ -772,11 +772,18 @@ export const AskSlide: FC = () => {
 /* 10 — the team (layout copied from the accord deck's builder slide) --------- */
 
 const FABIAN_ROWS = [
-  "Dr.-Ing., engineering",
-  "full-time crypto since 2014",
-  "first hire paid by a blockchain, ever",
-  "BitShares escrow & treasury — built",
-  "fabian@chainsquad.com · x.com/@xeroc",
+  "fluent in code",
+  "server whisperer",
+  "breaks things",
+  "sometimes fixes things",
+  "wannabe funny",
+];
+const STEFAN_ROWS = [
+  "chaos, quantified",
+  "risk, priced",
+  "assumptions, audited",
+  "optimism, stress-tested",
+  "tail risk, handled",
 ];
 
 const CORINNA_ROWS = [
@@ -787,20 +794,35 @@ const CORINNA_ROWS = [
   "on shift 24/7",
 ];
 
-const PERSONAS: { img: string; alt: string; caption: string; rows: string[] }[] = [
-  {
-    img: "fabian.webp",
-    alt: "Dr.-Ing. Fabian Schuh",
-    caption: "Dr.-Ing. Fabian Schuh · founder",
-    rows: FABIAN_ROWS,
-  },
-  {
-    img: "corinna.webp",
-    alt: "Corinna — ai agent",
-    caption: "Corinna · ai agent",
-    rows: CORINNA_ROWS,
-  },
-];
+/** imgAlign tunes the square's object-cover anchor (stefan's portrait is
+ * 896×1195 — bottom-anchored, the top of the frame is dropped). */
+const PERSONAS: {
+  img: string;
+  alt: string;
+  caption: string;
+  rows: string[];
+  imgAlign?: "bottom";
+}[] = [
+    {
+      img: "fabian.webp",
+      alt: "Dr.-Ing. Fabian Schuh",
+      caption: "Dr.-Ing. Fabian Schuh · engineering PhD",
+      rows: FABIAN_ROWS,
+    },
+    {
+      img: "stefan.webp",
+      alt: "Dr. Stefan Schießl",
+      caption: "Dr. Stefan Schießl · applied math PhD",
+      rows: STEFAN_ROWS,
+      imgAlign: "bottom",
+    },
+    {
+      img: "corinna.webp",
+      alt: "Corinna — ai agent",
+      caption: "Corinna · ai agent 🤖",
+      rows: CORINNA_ROWS,
+    },
+  ];
 
 /** The achievement wall — ambience, not a reading list; the audience catches
  * fragments, that's the point. */
@@ -841,13 +863,16 @@ const TeamSlide: FC = () => {
             decades of shipping in the team
           </h2>
         </div>
-        <div className="deck-narrow:flex-col deck-narrow:gap-10 flex items-start gap-20">
+        {/* three personas, equal-width square photos — stefan's portrait
+         * (896×1195) is square-cropped in CSS, anchored to the bottom of
+         * the frame; the jpg original stays in public/ */}
+        <div className="deck-narrow:flex-col deck-narrow:gap-10 flex items-start gap-12">
           {PERSONAS.map((p) => (
-            <figure key={p.img} className="flex flex-col gap-4">
+            <figure key={p.img} className="flex min-w-0 flex-1 flex-col gap-4">
               <img
                 src={p.img}
                 alt={p.alt}
-                className="deck-narrow:h-64 h-[28cqh] w-auto border border-hairline object-cover"
+                className={`aspect-square deck-narrow:w-64 h-auto w-full border border-hairline object-cover${p.imgAlign === "bottom" ? " object-bottom" : ""}`}
               />
               <figcaption className="text-muted [font:var(--riprap-mono-label)]">
                 {p.caption}
@@ -1149,7 +1174,7 @@ export const SLIDES: SlideDef[] = [
     id: "team",
     label: "the team",
     notes:
-      "20s. Who builds this — the human and the AI teammate. Left: Dr.-Ing. Fabian Schuh — full-time crypto since 2014, first person hired and paid directly by a blockchain, built the BitShares escrow and worker-proposal treasury, Solana Security #2. Right: Corinna — BD, social, analytics, on shift 24/7. The wall is ambience — twenty years of shipping, on-chain since 2014. Gesture once, don't read it.",
+      "20s. Who builds this — the humans and the AI teammate. Left: Dr.-Ing. Fabian Schuh — full-time crypto since 2014, first person hired and paid directly by a blockchain, built the BitShares escrow and worker-proposal treasury, Solana Security #2. Middle: Dr. Stefan Schießl — applied math PhD; chaos quantified, risk priced, assumptions audited, optimism stress-tested, tail risk handled. Right: Corinna — BD, social, analytics, on shift 24/7. The wall is ambience — twenty years of shipping, on-chain since 2014. Gesture once, don't read it.",
     component: TeamSlide,
   },
   {
