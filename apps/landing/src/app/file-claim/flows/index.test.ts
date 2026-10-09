@@ -18,8 +18,11 @@ describe("claimFlowFor (the data.ts → pack connection)", () => {
   });
 
   it("both Blade Pool listings (devnet + mainnet pins) resolve to the blade pack", () => {
-    for (const slug of ["blade-pool-devnet", "blade-pool"]) {
-      const listing = MUTUALS.find((m) => m.slug === slug);
+    for (const pin of [
+      "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe",
+      "DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF",
+    ]) {
+      const listing = MUTUALS.find((m) => m.pubkey === pin);
       expect(claimFlowFor(listing)).toBe(BLADE_POOL_FLOW);
     }
   });

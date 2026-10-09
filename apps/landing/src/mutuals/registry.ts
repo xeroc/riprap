@@ -47,7 +47,6 @@ export const POOL_PAGES: Record<string, PoolPage> = Object.fromEntries(
     const id = m.pubkey ?? m.slug;
     const page = {
       "blade-pool": PoolRoute,
-      "blade-pool-devnet": PoolRoute, // the devnet pin of the same pool (data.ts)
       chairmageddon: Chairmageddon,
       "ngmi-hairline": NgmiHairline,
       "coffee-apocalypse": CoffeeApocalypse,
