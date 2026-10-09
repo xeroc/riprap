@@ -15,6 +15,7 @@ export function NgmiHairlinePage() {
         name: "NGMI Hairline",
         event: "Breakpoint",
         kind: "mutual",
+        slug: "ngmi-hairline",
         tagline:
           "A one-time mutual pool protecting members against new gray hair acquired during the conference. The severity grade is the payout.",
         promise: [

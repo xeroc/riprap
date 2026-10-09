@@ -50,9 +50,8 @@ function useCanvasBox(): { scale: number; w: number; h: number } {
 /**
  * App — the deck shell. One HexBackdrop runs behind the entire deck (never
  * unmounts, so the engineering-paper lattice is continuous across slides);
- * each slide mounts fresh with its own frame clock so the kit mechanisms
- * replay on every visit. Keyboard: ← → / space / Home / End; N toggles the
- * presenter notes.
+ * each slide mounts fresh on every visit. Keyboard: ← → / space / Home /
+ * End; N toggles the presenter notes.
  */
 export function App() {
   const [index, setIndex] = useState(0);
@@ -168,7 +167,7 @@ export function App() {
       {/* presenter chrome: slide counter + notes (N) — mono stamps, hairline */}
       <div className="absolute bottom-6 left-[7cqw] z-30 flex items-center gap-4 text-muted-soft [font:var(--riprap-mono-label)]">
         <span data-num>
-          {String(index + 1).padStart(2, "0")} / {String(SLIDES.length - 3).padStart(2, "0")}
+          {String(index + 1).padStart(2, "0")} / {String(SLIDES.length - 0).padStart(2, "0")}
         </span>
         <span className="uppercase [letter-spacing:var(--riprap-tracking-stamp)]">
           {slide.label}

@@ -29,6 +29,7 @@ import { Settle } from "../components/Settle";
 import {
   capRange,
   entryRange,
+  fundingProgress,
   payoutWord,
   poolRoute,
   stillNeeded,
@@ -92,9 +93,8 @@ function PoolCard({ pool }: { pool: MutualListing }) {
     // the class distinction: mutuals hairline, bounties dashed
     <article
       data-kind={pool.kind}
-      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${
-        bounty ? "border-dashed border-hairline-strong" : "border-hairline"
-      } bg-surface-card`}
+      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${bounty ? "border-dashed border-hairline-strong" : "border-hairline"
+        } bg-surface-card`}
     >
       <EventBadge />
       <a
@@ -135,22 +135,58 @@ function PoolCard({ pool }: { pool: MutualListing }) {
             {capRange(pool)}
           </dd>
         </div>
-        {/* members needed (founder formula, data.ts membersNeeded): how
-            many more members until the pool makes sense — need, not a cap.
-            Shrinks with the live member count (a chain read against the
-            pool's pinned pubkey); pre-launch every pool sits at 0, so the
-            card shows the full count. */}
-        <div className="flex items-baseline justify-between gap-4">
-          <dt className="text-muted-foreground">members needed</dt>
-          <dd data-num className="text-accent">
-            {stillNeeded(pool, members)}
-          </dd>
-        </div>
       </dl>
+      {/* the funding meter under the members-needed row: red far from
+          funding the smallest tier payout, green close (founder ask) */}
+      <NeedMeter pool={pool} members={members} />
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
         <CardDiscs pool={pool} />
       </div>
     </article>
+  );
+}
+
+/** The meter's solid fill color for a funding progress — red far, green
+ * close: the semantic error/success tokens mixed in oklab. One solid
+ * color per state, never a gradient fill (DESIGN.md); the hexes stay in
+ * tokens.css. Clamps to [0,1]. */
+export function needMeterColor(progress: number): string {
+  const pct = Math.round(Math.min(1, Math.max(0, progress)) * 100);
+  return `color-mix(in oklab, var(--riprap-success) ${pct}%, var(--riprap-error))`;
+}
+
+/** The card's funding meter (founder ask 2026-10-09): how close the pool's
+ * members sit to the members-needed threshold — funding the smallest tier
+ * payout. The fill reads red far / green close and settles as members
+ * join; the track carries the same state at 25% so the color reads even
+ * at zero fill (pre-launch). */
+function NeedMeter({ pool, members }: { pool: MutualListing; members: number | undefined }) {
+  const progress = fundingProgress(pool, members ?? 0);
+  const color = needMeterColor(progress);
+  if (progress >= 1) return;
+  return (
+    // decorative by design: the accessible datum is the members-needed
+    // number in the dl above; the bar is its visual echo, so it hides from
+    // AT (a native <meter> can't carry the tinted track + fill layers)
+    <div
+      data-slot="need-meter"
+      aria-hidden="true"
+      className="h-1 w-full"
+      style={{ backgroundColor: `color-mix(in oklab, ${color} 25%, transparent)` }}
+    >
+      {/* settle via the token's own shorthand — duration-(--riprap-settle)
+          classes feed a shorthand into transition-duration and compute 0s;
+          the inline var also inherits tokens.css' reduced-motion 1ms map */}
+      <div
+        data-slot="need-meter-fill"
+        className="h-full"
+        style={{
+          width: `${Math.round(progress * 100)}%`,
+          backgroundColor: color,
+          transition: "width var(--riprap-settle-fast), background-color var(--riprap-settle-fast)",
+        }}
+      />
+    </div>
   );
 }
 

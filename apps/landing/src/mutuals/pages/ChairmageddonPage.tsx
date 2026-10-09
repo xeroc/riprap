@@ -14,6 +14,7 @@ export function ChairmageddonPage() {
         name: "Chairmageddon",
         event: "Breakpoint",
         kind: "mutual",
+        slug: "chairmageddon",
         tagline:
           "You bet the organisers did not put enough seats in. If the opening ceremony fills up and you stand the entire time, you may request a discretionary payment.",
         promise: [

@@ -3,6 +3,7 @@ import {
   ExpansionTile,
   Gather,
   Join,
+  LogoLockup,
   Logomark,
   ProblemSolutionCard,
   Renew,
@@ -13,14 +14,14 @@ import {
 import type { FC, ReactNode } from "react";
 
 import { SlideFrame } from "./shell";
-import { useSlideFrame } from "./useSlideFrame";
 
 /**
- * The seed-raise deck — 11 slides + appendix, copy from meta/PITCH.md (the
+ * The seed-raise deck (demo-worlds-fair variant: pitched at Colosseum's
+ * World's Fair hackathon — title slide restaged 2026-10-08) — 11 slides + appendix, copy from meta/PITCH.md (the
  * law for every string and number below; citations ride along in mono — the
- * 2026-09-17 headline re-stage and the 2026-09-18 vision/problem re-stages
- * below are not yet mirrored there). The destination leads: the vision right
- * after the title — why the world is ripe for internet insurance (smart
+ * 2026-09-17 headline re-stage, the 2026-09-18 vision/problem re-stages,
+ * and the 2026-10-07 title/vision/product/pilot re-stage below are not yet
+ * mirrored there). The destination leads: the vision right
  * well-understood business logic on 24/7/365 rails; the tradinsure/web3
  * comparison table) — then the walk back down to today — the problem → the
  * product → the now → the pilot (events are the door, Breakpoint first) → the business
@@ -35,30 +36,32 @@ import { useSlideFrame } from "./useSlideFrame";
  * 2026-09-15) on Riprap tokens.
  */
 
-/** Rise style for frame-gated reveals: clamped progress in the
- * [start, start + dur] frame window, opacity + settle translate. */
-const rise = (frame: number, start: number, dur = 18) => {
-  const p = Math.min(1, Math.max(0, (frame - start) / dur));
-  return { opacity: p, transform: `translateY(${(1 - p) * 10}px)` };
-};
-
 /* 01 — title ---------------------------------------------------------------- */
 
 const TitleSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-12 deck-narrow:p-6">
-      <Logomark size={160} state="assemble" />
-      <div data-rise className="flex flex-col items-center gap-6">
+      <Logomark size={160} />
+      <div className="flex flex-col items-center gap-6">
         <Wordmark size={84} className="tracking-(--riprap-tracking-mega)" />
         <div className="text-ink [font:var(--riprap-display-md)]">
-          Real-World Risk Protection on Solana.
+          Insurance, Finally Programmable
         </div>
-        <div
-          className="mt-6 uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]"
-          style={rise(frame, 48)}
-        >
-          pre-seed raise · 2026
+        {/* re-staged 2026-10-08: this deck pitches Colosseum's World's Fair
+         * hackathon, not the pre-seed raise — Colosseum mark prominent but
+         * ≤30% of the riprap logomark (48px vs 160px), no date. The mark is
+         * the public/colosseum.svg lockup painted through a CSS mask so it
+         * takes the ink token (the file's fill is currentColor, which an
+         * <img> would render black on the ground). */}
+        <div className="mt-6 flex flex-col items-center gap-4">
+          <span
+            role="img"
+            aria-label="Colosseum"
+            className="block aspect-[191/32] h-12 bg-ink [mask:url(/colosseum.svg)_center/contain_no-repeat]"
+          />
+          <span className="uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
+            world&rsquo;s fair hackathon
+          </span>
         </div>
       </div>
     </div>
@@ -67,18 +70,18 @@ const TitleSlide: FC = () => {
 
 /* 02 — the vision (why internet insurance, why now) ------------------------ */
 
-/** The ripeness argument (re-staged 2026-09-18; not yet mirrored in
- * meta/PITCH.md): call a smart contract what it is — business logic on
- * 24/7/365 rails. Defi trading already proved the pattern for
- * well-understood business logic; insurance is the same shape of business.
- * The comparison table lands it: both worlds do the two core jobs, only one
- * has the rail properties. The five-machine destination strip this slide
- * carried before the re-stage lives on in the appendix below. */
+/** The ripeness argument (re-staged 2026-10-07; not yet mirrored in
+ * meta/PITCH.md): the statement is the slide — trust math, not paperwork.
+ * Claims judged on-chain, reserves earning in DeFi, insurance that scales
+ * like software. The tradinsure/web3 comparison table stays as the
+ * receipts, demoted below the statement — smaller marks, muted labels,
+ * tighter rows. The five-machine destination strip this slide carried
+ * before the 2026-09-18 re-stage lives on in the appendix below. */
 const COMPARE_COLS = ["traditional insurance", "web3 insurance"] as const;
 
 /** One cell mark — a check or a cross, mono, nothing else in the cell. */
 const Mark: FC<{ yes: boolean }> = ({ yes }) => (
-  <span data-num className={`${yes ? "text-accent" : "text-muted-soft"} text-4xl`}>
+  <span data-num className={`${yes ? "text-accent" : "text-muted-soft"} text-2xl`}>
     {yes ? "✓" : "✗"}
   </span>
 );
@@ -108,39 +111,40 @@ const COMPARE_ROWS: { id: string; label: ReactNode; trad: boolean; web3: boolean
 ];
 
 const VisionSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the vision" headline="DeFi rebuilt finance. Insurance is next.">
-      <div className="flex w-full flex-col gap-8">
-        {/* the comparison table — same business, different rails */}
-        <div className="flex w-full flex-col">
-          <div className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_30ch_30ch] items-baseline pb-6">
-            <span />
-            {COMPARE_COLS.map((col) => (
-              <span
-                key={col}
-                className="text-center uppercase text-muted [letter-spacing:var(--riprap-tracking-stamp)]"
-              >
-                {col}
-              </span>
-            ))}
-          </div>
-          {COMPARE_ROWS.map((r, i) => (
-            <div
-              key={r.id}
-              className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_30ch_30ch] items-center border-t border-hairline py-2"
-              style={rise(frame, 4 + i * 8)}
+    <SlideFrame kicker="the vision" headline="Trust Math &amp; Code over Paperwork">
+      {/* the statement — the heart of the slide */}
+      <div className="max-w-[58ch] text-ink [font:var(--riprap-display-sm)]">
+        When claims are judged on-chain and reserves earn in DeFi, insurance becomes faster,
+        transparent, and able to scale like software.
+      </div>
+      {/* the comparison table — same business, different rails; receipts, not the argument */}
+      <div className="flex w-full flex-col">
+        <div className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_22ch_22ch] items-baseline pb-4">
+          <span />
+          {COMPARE_COLS.map((col) => (
+            <span
+              key={col}
+              className="text-center uppercase text-muted [letter-spacing:var(--riprap-tracking-stamp)]"
             >
-              <span className="text-ink [font:var(--riprap-title-sm)]">{r.label}</span>
-              <span className="text-center">
-                <Mark yes={r.trad} />
-              </span>
-              <span className="text-center">
-                <Mark yes={r.web3} />
-              </span>
-            </div>
+              {col}
+            </span>
           ))}
         </div>
+        {COMPARE_ROWS.map((r) => (
+          <div
+            key={r.id}
+            className="deck-narrow:grid-cols-[minmax(0,1fr)_3rem_3rem] grid grid-cols-[minmax(0,1fr)_22ch_22ch] items-center border-t border-hairline py-1.5"
+          >
+            <span className="text-muted [font:var(--riprap-body-md)]">{r.label}</span>
+            <span className="text-center">
+              <Mark yes={r.trad} />
+            </span>
+            <span className="text-center">
+              <Mark yes={r.web3} />
+            </span>
+          </div>
+        ))}
       </div>
     </SlideFrame>
   );
@@ -150,10 +154,12 @@ const VisionSlide: FC = () => {
 
 /** The monolith re-staged (2026-09-18 off
  * meta/marketing/07-brand-assets/why-on-chain.md; not yet mirrored in
- * meta/PITCH.md): one number carried very large — ~26¢ of every premium
- * dollar spent before a claim is paid — its meaning set beside it, source
- * riding along in mono. The solvency and jurisdiction rows were retired in
- * the same re-stage; the vision table still carries those ✗. */
+ * meta/PITCH.md): re-staged again 2026-10-08 — two numbers side by side,
+ * ~26¢ of every premium dollar spent before a claim is paid and the
+ * 11.6–18% interest investors earn on risk capital, each explained below
+ * itself, source riding along in mono. The solvency and jurisdiction rows
+ * were retired in the 2026-09-18 re-stage; the vision table still carries
+ * those ✗. */
 
 /** The 2020–22 autopsy: one chip per named failure, the error in three
  * words or fewer. Each maps to a structural fix in Hanse (one risk per
@@ -179,30 +185,29 @@ const MISTAKES: { name: string; error: string }[] = [
 ];
 
 const ProblemSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame kicker="the problem" headline="Insurance is a slow, expensive monolith.">
-      <div className="flex w-full flex-col gap-12">
-        {/* the number, very big; what it means beside it */}
-        <div className="deck-narrow:flex-col deck-narrow:items-start deck-narrow:gap-6 flex items-center gap-12">
-          <span
-            data-num
-            className="deck-narrow:text-[5.5rem] text-accent font-mono text-[12rem] leading-none font-semibold tracking-(--riprap-tracking-display)"
-            style={rise(frame, 8)}
-          >
-            ~26¢
+      {/* re-staged 2026-10-08: two numbers, side by side — the overhead and
+       * the cost of capital — each explained below itself. The 30–60 day
+       * and microinsurance bullets retired in the same re-stage. */}
+      <div className="deck-narrow:flex-col deck-narrow:gap-8 flex w-full items-start gap-16">
+        <div className="flex flex-1 flex-col gap-4" data-num>
+          <span className="deck-narrow:text-[4.5rem] text-accent font-mono text-[7rem] leading-none font-semibold tracking-(--riprap-tracking-display)">
+            ~26&cent;
           </span>
-          <span className="flex max-w-[42ch] flex-col gap-3" style={rise(frame, 24)}>
-            <span className="text-ink [font:var(--riprap-display-sm)]">
-              of every premium dollar is spent before a claim is paid.
-            </span>
-            <ol className="list-disc ml-6">
-              <li>and it still takes 30 to 60 days on average</li>
-              <li>microinsurances often infeasible</li>
-            </ol>
-            <span className="text-muted-soft [font:var(--riprap-mono-label)]">
-              Verisk/APCIA '25
-            </span>
+          <span className="text-ink w-md [font:var(--riprap-display-sm)]">
+            of every premium dollar is spent before a claim is paid.
+          </span>
+          <span className="text-muted-soft [font:var(--riprap-mono-label)]">
+            Verisk/APCIA &rsquo;25
+          </span>
+        </div>
+        <div className="flex flex-1 flex-col gap-4" data-num>
+          <span className="deck-narrow:text-[4.5rem] text-accent font-mono text-[7rem] leading-none font-semibold tracking-(--riprap-tracking-display)">
+            11&ndash;18%
+          </span>
+          <span className="text-ink w-md [font:var(--riprap-display-sm)]">
+            interest investors earn on risk capital.
           </span>
         </div>
       </div>
@@ -240,25 +245,20 @@ const FIELD_ROWS: {
   },
 ];
 
-const IncumbantsProblemSlide: FC = () => {
-  const frame = useSlideFrame();
+export const IncumbantsProblemSlide: FC = () => {
   return (
     <SlideFrame kicker="the competition" headline="there's basically no competitor.">
       <div className="flex w-full flex-col gap-12">
-        <div
-          className="deck-narrow:grid-cols-3 deck-narrow:gap-x-3 grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] gap-x-12 text-sm tracking-[0.2em] text-text-secondary"
-          style={rise(frame, 16)}
-        >
+        <div className="deck-narrow:grid-cols-3 deck-narrow:gap-x-3 grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] gap-x-12 text-sm tracking-[0.2em] text-text-secondary">
           <div className="deck-narrow:col-span-3" />
           <div className="deck-narrow:tracking-normal text-right">FEES &rsquo;25</div>
           <div className="deck-narrow:tracking-normal text-right">RAISED</div>
           <div className="deck-narrow:tracking-normal text-right">COVER</div>
         </div>
-        {FIELD_ROWS.map((r, i) => (
+        {FIELD_ROWS.map((r) => (
           <div
             key={r.name}
             className="deck-narrow:grid-cols-3 deck-narrow:gap-x-3 grid grid-cols-[minmax(0,1.6fr)_repeat(3,minmax(0,1fr))] items-baseline gap-x-12 border-t border-white/10 pt-5"
-            style={rise(frame, 28 + i * 22)}
           >
             <div className="deck-narrow:col-span-3 flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
@@ -284,18 +284,14 @@ const IncumbantsProblemSlide: FC = () => {
 
         {/* the graveyard — one chip per named failure */}
         <div className="flex w-full flex-col gap-3">
-          <div
-            className="uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]"
-            style={rise(frame, 48)}
-          >
+          <div className="uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
             why every on-chain attempt so far failed
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {MISTAKES.map((m, i) => (
+            {MISTAKES.map((m) => (
               <span
                 key={`${m.name}-${m.error}`}
                 className="flex items-baseline gap-2 border border-hairline px-3 py-1"
-                style={rise(frame, 56 + i * 4)}
               >
                 <span data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
                   ✗
@@ -352,24 +348,22 @@ const PRODUCT_STEPS = [
 ] as const;
 
 const ProductSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the product" headline="on-chain rails for insurance contracts">
+    <SlideFrame kicker="the product" headline="Mutuals First, Markets Next">
+      {/* the positioning statement — mutuals are the trusted foundation */}
+      <div className="max-w-[68ch] text-ink [font:var(--riprap-title-md)]">
+        People pool risk and share the upside transparently. The foundation for a global, composable
+        market of insurance and risk capital.
+      </div>
       <div className="flex w-full flex-col gap-8">
-        <div style={rise(frame, 16)}>
-          <ol data-slot="lifecycle-strip" className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {PRODUCT_STEPS.map((tile) => (
-              <ExpansionTile key={tile.id} {...tile} />
-            ))}
-          </ol>
-        </div>
+        <ol data-slot="lifecycle-strip" className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {PRODUCT_STEPS.map((tile) => (
+            <ExpansionTile key={tile.id} {...tile} />
+          ))}
+        </ol>
         <div className="deck-narrow:grid deck-narrow:grid-cols-2 deck-narrow:items-start deck-narrow:gap-4 deck-narrow:md:grid-cols-4 flex items-start gap-6">
-          {PRODUCT_STEPS.map((l, i) => (
-            <div
-              key={l.step}
-              className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
-              style={rise(frame, 40 + i * 14)}
-            >
+          {PRODUCT_STEPS.map((l) => (
+            <div key={l.step} className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4">
               <div className="text-muted [font:var(--riprap-body-sm)]">{l.body}</div>
             </div>
           ))}
@@ -398,7 +392,7 @@ const NOW_STEPS = [
       <>
         Premiums and claims must settle in something people actually want to hold, like USDC.
         There's now a much bigger institutional distribution layer than there was 12 months ago.
-        Meanwhile regulatory clarity has been established in the US (GENIUS Act) and the EU (MiCA).
+        Meanwhile regulatory clarity has been established in the US and the EU.
       </>
     ),
     ours: false,
@@ -440,24 +434,21 @@ const NOW_STEPS = [
 ] as const;
 
 const NowSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the now" headline="all the pieces are falling together now">
+    <SlideFrame kicker="why now" headline="Three pieces clicked">
+      <div className="max-w-[68ch] text-ink [font:var(--riprap-title-md)]">
+        Insurance needed stable money, recurring premiums, and trustless claims, and all three are
+        now real on Solana.
+      </div>
       <div className="flex w-full flex-col gap-8">
-        <div style={rise(frame, 16)}>
-          <ol data-slot="expansion-strip" className="grid grid-cols-2 gap-4 md:grid-cols-3">
-            {NOW_STEPS.map((tile) => (
-              <ExpansionTile key={tile.id} {...tile} />
-            ))}
-          </ol>
-        </div>
+        <ol data-slot="expansion-strip" className="grid grid-cols-2 gap-4 md:grid-cols-3">
+          {NOW_STEPS.map((tile) => (
+            <ExpansionTile key={tile.id} {...tile} />
+          ))}
+        </ol>
         <div className="deck-narrow:grid deck-narrow:grid-cols-2 deck-narrow:items-start deck-narrow:gap-4 deck-narrow:md:grid-cols-3 flex w-full items-start gap-6">
-          {NOW_STEPS.map((n, i) => (
-            <div
-              key={n.step}
-              className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
-              style={rise(frame, 40 + i * 14)}
-            >
+          {NOW_STEPS.map((n) => (
+            <div key={n.step} className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4">
               <div className="deck-narrow:flex-wrap flex items-baseline justify-between gap-3">
                 <span className="text-ink [font:var(--riprap-title-sm)]">{n.head}</span>
                 {n.ours && (
@@ -519,37 +510,31 @@ const EVIDENCE_ROWS = [
   },
 ];
 
-const MarketSlide: FC = () => {
-  const frame = useSlideFrame();
+export const MarketSlide: FC = () => {
   return (
     <SlideFrame
       kicker="the market"
       headline="Millions of communities don't fit conventional insurances"
     >
-      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]" style={rise(frame, 12)}>
+      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]">
         We are building the infrastructure that lets those groups create their own risk pools.
       </div>
       <div className="deck-narrow:grid deck-narrow:grid-cols-2 deck-narrow:items-start deck-narrow:gap-4 flex w-full items-start gap-6">
-        {SKIPPED_COMMUNITIES.map((c, i) => (
-          <div
-            key={c.head}
-            className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4"
-            style={rise(frame, 36 + i * 10)}
-          >
+        {SKIPPED_COMMUNITIES.map((c) => (
+          <div key={c.head} className="flex flex-1 flex-col gap-2 border-t border-hairline pt-4">
             <div className="text-ink [font:var(--riprap-title-sm)]">{c.head}</div>
             <div className="text-muted [font:var(--riprap-body-sm)]">{c.body}</div>
           </div>
         ))}
       </div>
       <div className="flex w-full flex-col gap-4" data-num>
-        <div className="flex items-baseline" style={rise(frame, 84)}>
+        <div className="flex items-baseline">
           <span className="text-sm tracking-[0.2em] text-text-secondary">EVIDENCE</span>
         </div>
-        {EVIDENCE_ROWS.map((r, i) => (
+        {EVIDENCE_ROWS.map((r) => (
           <div
             key={r.label}
             className="deck-narrow:flex-wrap deck-narrow:gap-x-6 flex items-baseline gap-8 border-t border-hairline pt-3"
-            style={rise(frame, 92 + i * 12)}
           >
             <span className="deck-narrow:w-[14ch] w-[24ch] text-right text-accent [font:var(--riprap-mono-number)]">
               {r.v}
@@ -563,117 +548,111 @@ const MarketSlide: FC = () => {
   );
 };
 
-/* 07 — the pilot ------------------------------------------------------------- */
+/* 06 — the pilot (re-staged 2026-10-07: aid + bounties at Breakpoint) ------ */
 
-/** Why events, why Breakpoint first (PITCH.md §5/§8 + the 2026-09-15
- * additions: the Solana family's loyalty, sponsored covers). None of these
- * is market size — the market is slide 05's. */
-const LAUNCH_REASONS = [
+/** The pilot batch, narrowed from the landing's mutuals directory
+ * (apps/landing/src/mutuals/data.ts — every number is that file's §5 policy
+ * / terms tables verbatim; the three hot-drink bounties share one mechanic
+ * and ride one row, Blade Pool's devnet/mainnet listings are one pool).
+ * Two classes on the same mechanics: mutuals where members cover each
+ * other, bounties that pay for confirmed acts. */
+const PILOT_POOLS: {
+  name: string;
+  kind: "mutual" | "bounty";
+  pays: string;
+  entry: string;
+  payout: string;
+}[] = [
   {
-    head: "the cleanest legal surface",
-    body: "crypto-native members covering each other, one bounded window.",
+    name: "Blade Pool",
+    kind: "mutual",
+    pays: "bodily injury caused by another person with a knife or blade, during the conference",
+    entry: "$10–$40",
+    payout: "up to $4,000",
   },
   {
-    head: "the solana family is loyal",
-    body: "breakpoint puts the whole ecosystem in one hall. the family adopts its own and talks about what ships.",
+    name: "Chairmageddon",
+    kind: "mutual",
+    pays: "every seat taken at the opening ceremony — and you stood the whole thing",
+    entry: "$10",
+    payout: "$40",
   },
   {
-    head: "cover sponsorships (e.g. regional superteams)",
-    body: "companies or regional teams buy covers for their members.",
+    name: "NGMI Hairline",
+    kind: "mutual",
+    pays: "new gray hair first visible during the conference — graded from a few to Gandalf",
+    entry: "$10",
+    payout: "up to $200",
   },
-];
-
-/** The pilot's terms — policy §5 (tiers) and §10 (worked example). One mono
- * size, aligned grid columns; numerals never float in body text (the old
- * mixed-size floating math was retired 2026-09-15). */
-const PILOT_TIERS = [
-  { name: "basic", entry: "$10", cap: "$1,000" },
-  { name: "standard", entry: "$20", cap: "$2,000" },
-  { name: "premium", entry: "$40", cap: "$4,000" },
+  {
+    name: "Coffee Apocalypse",
+    kind: "mutual",
+    pays: "the coffee point runs out while you're standing in the queue",
+    entry: "$10",
+    payout: "$25",
+  },
+  {
+    name: "OnlyFriends",
+    kind: "bounty",
+    pays: "confirmed introductions to listed VIPs — paid per introduction, capped at ten",
+    entry: "$50",
+    payout: "up to $500",
+  },
+  {
+    name: "Hot-drink Runs",
+    kind: "bounty",
+    pays: "bring Raj, Lily, or Toly the hot drink they asked for — hand to hand, still hot",
+    entry: "$5",
+    payout: "$50",
+  },
+  {
+    name: "Mert of the Year",
+    kind: "bounty",
+    pays: "an over-the-top trophy he did not ask for — pays the one he declares best",
+    entry: "$10",
+    payout: "$1,000",
+  },
 ];
 
 const LaunchSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
-    <SlideFrame kicker="the pilot" headline="a knife-assault mutual aid for breakpoint">
-      <div
-        className="max-w-[100ch] text-body [font:var(--riprap-title-md)]"
-        style={rise(frame, 12)}
-      >
-        <span className="text-accent [font:var(--riprap-mono-number)] mr-6">
-          Blade Pool @ Breakpoint 2026
-        </span>
-        run in front of the entire Solana ecosystem.
+    <SlideFrame kicker="the pilot" headline="Pivoted, Piloting, Learning Fast">
+      {/* the statement — the pivot in one breath */}
+      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]">
+        We extended slow risk pools for fast crowdfunded bounties on the same mechanics, so every
+        pilot, silly or serious, turns into a lesson that sharpens the engine before real-world
+        insurance.
       </div>
-      <div className="deck-narrow:flex-col deck-narrow:gap-8 flex w-full items-start gap-10">
-        <div className="flex flex-1 flex-col gap-5 list list-disc" style={rise(frame, 30)}>
-          <ol className="list-disc ml-6 flex flex-col gap-3 text-2xl">
-            {LAUNCH_REASONS.map((r) => (
-              <li>{r.head}</li>
-            ))}
-          </ol>
+      {/* the batch — two classes, one engine; numbers are §5 verbatim */}
+      <div className="flex w-full flex-col gap-1" data-num>
+        <div className="grid grid-cols-[minmax(0,18ch)_9ch_minmax(0,1fr)_9ch_13ch] items-baseline gap-x-6 pb-2">
+          {["pool", "class", "pays for", "entry", "payout"].map((h) => (
+            <span
+              key={h}
+              className={`uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]${h === "entry" || h === "payout" ? " text-right" : ""}`}
+            >
+              {h}
+            </span>
+          ))}
         </div>
-        <div
-          className="deck-narrow:w-full flex w-[46ch] flex-col gap-3 border border-hairline bg-(--riprap-surface-card) p-7"
-          style={rise(frame, 48)}
-          data-num
-        >
-          <div className="text-muted [font:var(--riprap-mono-label)]">
-            Olympia, London · 15–17 November 2026 · 8,000+ attendees
+        {PILOT_POOLS.map((p) => (
+          <div
+            key={p.name}
+            className="grid grid-cols-[minmax(0,18ch)_9ch_minmax(0,1fr)_9ch_13ch] items-baseline gap-x-6 border-t border-hairline py-2"
+          >
+            <span className="text-ink [font:var(--riprap-title-sm)]">{p.name}</span>
+            <span className="uppercase text-muted [font:var(--riprap-mono-label)]">{p.kind}</span>
+            <span className="text-muted [font:var(--riprap-body-sm)]">{p.pays}</span>
+            <span className="text-right text-accent [font:var(--riprap-mono-number)]">
+              {p.entry}
+            </span>
+            <span className="text-right text-accent [font:var(--riprap-mono-number)]">
+              {p.payout}
+            </span>
           </div>
-          <div className="flex flex-col gap-1.5 border-t border-hairline pt-4">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-x-8 gap-y-1.5">
-              <span className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
-                tiers
-              </span>
-              <span className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
-                entry
-              </span>
-              <span className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
-                payout cap
-              </span>
-              {PILOT_TIERS.flatMap((t) => [
-                <span key={t.name} className="text-body [font:var(--riprap-body-sm)]">
-                  {t.name}
-                </span>,
-                <span
-                  key={`${t.name}-entry`}
-                  className="text-right text-accent [font:var(--riprap-mono-number)]"
-                >
-                  {t.entry}
-                </span>,
-                <span
-                  key={`${t.name}-cap`}
-                  className="text-right text-accent [font:var(--riprap-mono-number)]"
-                >
-                  {t.cap}
-                </span>,
-              ])}
-            </div>
-          </div>
-          {/*
-          <div className="flex flex-col gap-1.5 border-t border-hairline pt-4">
-            <div className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
-              worked example — standard tier
-            </div>
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-8 gap-y-1.5">
-              {PILOT_MATH.map((m) => [
-                <span key={m.label} className="text-body [font:var(--riprap-body-sm)]">
-                  {m.label}
-                </span>,
-                <span
-                  key={`${m.label}-value`}
-                  className="text-right text-accent [font:var(--riprap-mono-number)]"
-                >
-                  {m.v}
-                </span>,
-              ])}
-            </div>
-            <div className="pt-1 text-muted [font:var(--riprap-body-sm)]">
-              quiet event: every cent returns, then the pool dissolves
-            </div>
-          </div>
- */}
+        ))}
+        <div className="pt-3 text-muted-soft [font:var(--riprap-mono-label)]">
+          Breakpoint 2026 · Olympia, London · 15–17 November 2026 · policy & terms §5
         </div>
       </div>
     </SlideFrame>
@@ -683,7 +662,7 @@ const LaunchSlide: FC = () => {
 /* 08 — the business ---------------------------------------------------------- */
 
 const BUSINESS_LADDER = [
-  { v: "0%", label: "protocol take on pool #1, the pilot exists to confirm the market" },
+  { v: "0%", label: "protocol take on pilots, they exist to confirm the market" },
   {
     v: "% of surplus",
     label:
@@ -700,7 +679,6 @@ const BUSINESS_LADDER = [
 ];
 
 const BusinessSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <SlideFrame
       kicker="the business"
@@ -712,13 +690,15 @@ const BusinessSlide: FC = () => {
         </>
       }
     >
+      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]">
+        We earn like an insurer, through a share of surplus and fees for running pools.
+      </div>
       <div className="flex w-full flex-col gap-8">
         <div className="flex flex-col gap-4" data-num>
-          {BUSINESS_LADDER.map((r, i) => (
+          {BUSINESS_LADDER.map((r) => (
             <div
               key={r.v}
               className="deck-narrow:flex-col deck-narrow:items-start deck-narrow:gap-1 flex items-baseline gap-8 border-t border-hairline pt-4"
-              style={rise(frame, 24 + i * 16)}
             >
               <span className="deck-narrow:w-auto deck-narrow:text-left w-[18ch] text-right text-accent [font:var(--riprap-mono-number)]">
                 {r.v}
@@ -727,10 +707,7 @@ const BusinessSlide: FC = () => {
             </div>
           ))}
         </div>
-        <div
-          className="flex flex-col gap-2 text-muted [font:var(--riprap-body-sm)]"
-          style={rise(frame, 100)}
-        >
+        <div className="flex flex-col gap-2 text-muted [font:var(--riprap-body-sm)]">
           <div>USDC end to end. No product token required.</div>
         </div>
       </div>
@@ -755,8 +732,7 @@ const UNLOCK_STEPS = [
   "growth — convert pilot traction into organizer-initiated pools",
 ];
 
-const AskSlide: FC = () => {
-  const frame = useSlideFrame();
+export const AskSlide: FC = () => {
   return (
     <SlideFrame kicker="the ask" headline={<>raising $700k pre-seed at $7M</>}>
       <div
@@ -764,14 +740,14 @@ const AskSlide: FC = () => {
         data-num
       >
         <div className="flex flex-1 flex-col gap-6">
-          {ASK_TERMS.map((t, i) => (
-            <div key={t.v} className="flex flex-col gap-1" style={rise(frame, 20 + i * 14)}>
+          {ASK_TERMS.map((t) => (
+            <div key={t.v} className="flex flex-col gap-1">
               <span className="text-accent [font:var(--riprap-mono-number-lg)]">{t.v}</span>
               <span className="text-muted [font:var(--riprap-mono-label)]">{t.sub}</span>
             </div>
           ))}
         </div>
-        <div className="flex flex-1 flex-col gap-3" style={rise(frame, 60)}>
+        <div className="flex flex-1 flex-col gap-3">
           <div className="uppercase text-muted-soft [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
             capital → de-risk → prove → unlock organizer-initiated pools
           </div>
@@ -796,11 +772,18 @@ const AskSlide: FC = () => {
 /* 10 — the team (layout copied from the accord deck's builder slide) --------- */
 
 const FABIAN_ROWS = [
-  "Dr.-Ing., engineering",
-  "full-time crypto since 2014",
-  "first hire paid by a blockchain, ever",
-  "BitShares escrow & treasury — built",
-  "fabian@chainsquad.com · x.com/@xeroc",
+  "fluent in code",
+  "server whisperer",
+  "breaks things",
+  "sometimes fixes things",
+  "wannabe funny",
+];
+const STEFAN_ROWS = [
+  "chaos, quantified",
+  "risk, priced",
+  "assumptions, audited",
+  "optimism, stress-tested",
+  "tail risk, handled",
 ];
 
 const CORINNA_ROWS = [
@@ -811,23 +794,38 @@ const CORINNA_ROWS = [
   "on shift 24/7",
 ];
 
-const PERSONAS: { img: string; alt: string; caption: string; rows: string[] }[] = [
+/** imgAlign tunes the square's object-cover anchor (stefan's portrait is
+ * 896×1195 — bottom-anchored, the top of the frame is dropped). */
+const PERSONAS: {
+  img: string;
+  alt: string;
+  caption: string;
+  rows: string[];
+  imgAlign?: "bottom";
+}[] = [
   {
     img: "fabian.webp",
     alt: "Dr.-Ing. Fabian Schuh",
-    caption: "Dr.-Ing. Fabian Schuh · founder",
+    caption: "Dr.-Ing. Fabian Schuh · engineering PhD",
     rows: FABIAN_ROWS,
+  },
+  {
+    img: "stefan.webp",
+    alt: "Dr. Stefan Schießl",
+    caption: "Dr. Stefan Schießl · applied math PhD",
+    rows: STEFAN_ROWS,
+    imgAlign: "bottom",
   },
   {
     img: "corinna.webp",
     alt: "Corinna — ai agent",
-    caption: "Corinna · ai agent",
+    caption: "Corinna · ai agent 🤖",
     rows: CORINNA_ROWS,
   },
 ];
 
-/** The achievement wall — ambience, not a reading list. Two copies make the
- * marquee seamless; the audience catches fragments, that's the point. */
+/** The achievement wall — ambience, not a reading list; the audience catches
+ * fragments, that's the point. */
 const KUDOS = [
   "Accord — on-chain arbitration · live",
   "2× Gold · Colosseum Frontier 2026",
@@ -854,7 +852,6 @@ const KUDOS = [
 ];
 
 const TeamSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <div className="relative h-full w-full">
       <div className="deck-narrow:pr-[7cqw] flex h-full flex-col justify-center gap-10 pl-[7cqw] pr-[30cqw]">
@@ -866,24 +863,23 @@ const TeamSlide: FC = () => {
             decades of shipping in the team
           </h2>
         </div>
-        <div className="deck-narrow:flex-col deck-narrow:gap-10 flex items-start gap-20">
-          {PERSONAS.map((p, pi) => (
-            <figure key={p.img} className="flex flex-col gap-4" style={rise(frame, 24 + pi * 40)}>
+        {/* three personas, equal-width square photos — stefan's portrait
+         * (896×1195) is square-cropped in CSS, anchored to the bottom of
+         * the frame; the jpg original stays in public/ */}
+        <div className="deck-narrow:flex-col deck-narrow:gap-10 flex items-start gap-12">
+          {PERSONAS.map((p) => (
+            <figure key={p.img} className="flex min-w-0 flex-1 flex-col gap-4">
               <img
                 src={p.img}
                 alt={p.alt}
-                className="deck-narrow:h-64 h-[28cqh] w-auto border border-hairline object-cover"
+                className={`aspect-square deck-narrow:w-64 h-auto w-full border border-hairline object-cover${p.imgAlign === "bottom" ? " object-bottom" : ""}`}
               />
               <figcaption className="text-muted [font:var(--riprap-mono-label)]">
                 {p.caption}
               </figcaption>
               <div className="flex flex-col gap-2.5 pt-1">
-                {p.rows.map((r, i) => (
-                  <div
-                    key={r}
-                    className="text-body [font:var(--riprap-body-sm)]"
-                    style={rise(frame, 56 + pi * 40 + i * 8)}
-                  >
+                {p.rows.map((r) => (
+                  <div key={r} className="text-body [font:var(--riprap-body-sm)]">
                     <span className="text-accent">▶</span> {r}
                   </div>
                 ))}
@@ -898,7 +894,6 @@ const TeamSlide: FC = () => {
           maskImage: "linear-gradient(to bottom, transparent, black 18%, black 82%, transparent)",
           WebkitMaskImage:
             "linear-gradient(to bottom, transparent, black 18%, black 82%, transparent)",
-          ...rise(frame, 56),
         }}
       >
         <div className="kudos-track flex w-full flex-col">
@@ -927,30 +922,22 @@ const LINKS = [
 ];
 
 const CloseSlide: FC = () => {
-  const frame = useSlideFrame();
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-12 px-[7cqw] text-center">
-      <div className="flex flex-col items-center gap-5" style={rise(frame, 0)}>
-        <Wordmark size={64} />
-        <div
-          className="h-px w-56 bg-accent"
-          style={{ opacity: Math.min(1, Math.max(0, (frame - 20) / 24)) }}
-        />
+      <div className="flex flex-col items-center gap-5">
+        <LogoLockup size={64} />
+        <div className="h-px w-56 bg-accent" />
       </div>
-      <div data-rise className="flex flex-wrap justify-center gap-12">
-        {LINKS.map((l, i) => (
-          <span
-            key={l.url}
-            className="flex flex-col items-center gap-1"
-            style={rise(frame, 40 + i * 16)}
-          >
+      <div className="flex flex-wrap justify-center gap-12">
+        {LINKS.map((l) => (
+          <span key={l.url} className="flex flex-col items-center gap-1">
             <span className="text-ink [font:var(--riprap-mono-number)]">{l.url}</span>
             <span className="text-muted [font:var(--riprap-mono-label)]">{l.note}</span>
           </span>
         ))}
       </div>
-      <div className="text-ink [font:var(--riprap-display-lg)]" style={rise(frame, 104)}>
-        Pool risk peer-to-peer.
+      <div className="text-ink [font:var(--riprap-display-lg)]">
+        Insurance, Finally Programmable.
       </div>
     </div>
   );
@@ -986,13 +973,12 @@ const HARD_QUESTIONS: { index: string; q: string; a: string }[] = [
   },
 ];
 
-const AppendixQASlide: FC = () => {
-  const frame = useSlideFrame();
+export const AppendixQASlide: FC = () => {
   return (
     <SlideFrame kicker="the problems" headline="The hard questions that need solving.">
       <div className="deck-narrow:grid-cols-1 grid w-full grid-cols-2 gap-6">
-        {HARD_QUESTIONS.map((c, i) => (
-          <div key={c.index} style={rise(frame, 8 + i * 10)}>
+        {HARD_QUESTIONS.map((c) => (
+          <div key={c.index}>
             <ProblemSolutionCard index={c.index} question={c.q} answer={c.a} />
           </div>
         ))}
@@ -1132,14 +1118,14 @@ export const SLIDES: SlideDef[] = [
     id: "title",
     label: "riprap",
     notes:
-      "10s. Riprap — real-world risk protection on Solana. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet. Pre-Seed raise, 2026.",
+      "10s. Riprap — insurance, finally programmable. Pitched for Colosseum's World's Fair hackathon. Status honesty: pool program built, arbitration live on devnet, the event-mutual orchestrator (hanse) in build, payment rail live on mainnet.",
     component: TitleSlide,
   },
   {
     id: "problem",
     label: "the problem",
     notes:
-      "30s. The frame: traditional insurance is a slow, expensive monolith. One number, very big: ~26¢ of every US premium dollar is spent before a claim is paid (Verisk/APCIA '25) — the fixed-cost back office; at that floor microinsurance is often infeasible.",
+      "30s. The frame: traditional insurance is a slow, expensive monolith. Two numbers, side by side: ~26¢ of every US premium dollar is spent before a claim is paid (Verisk/APCIA '25) — the fixed-cost back office — while investors earn 11.6–18% interest on risk capital. At that cost floor, microinsurance is often infeasible.",
     component: ProblemSlide,
   },
   {
@@ -1164,13 +1150,6 @@ export const SLIDES: SlideDef[] = [
     component: NowSlide,
   },
   {
-    id: "launch",
-    label: "the pilot",
-    notes:
-      "35s. Events are the door — five reasons, none of them market size: the cleanest legal surface (discretionary mutual, crypto-native members, bounded window — no counsel spend at pilot scale); funds locked up briefly (a pool lives for the event window, then pays approved claims, returns the rest, dissolves — numbers published either way); the Solana family is loyal (Breakpoint concentrates the ecosystem in one hall — the space adopts its own and talks about what ships, so the pilot's first audience is the space itself); the organizer is a B2B2C channel — one sale brings the attendee list; covers can be sponsored — companies or regional superteams buying for their members. The pilot itself: Blade Pool at Breakpoint, Olympia London, 15–17 Nov 2026, 8,000+ attendees (solana.com/breakpoint); tiers $10/$20/$40 capped at $1k/$2k/$4k (policy §5); worked example (policy §10): 1,000 × $20 → $20,000 pooled; 4 approved claims × $2,000 → $8,000 paid; $12,000 returned → $12 back each; quiet event: every cent returns. Then the 2027 circuit — the PMF signal and the primary milestone: organizer-initiated pools, an organizer who shows up without us.",
-    component: LaunchSlide,
-  },
-  {
     id: "business",
     label: "the business",
     notes:
@@ -1178,17 +1157,24 @@ export const SLIDES: SlideDef[] = [
     component: BusinessSlide,
   },
   {
-    id: "ask",
-    label: "the ask",
+    id: "launch",
+    label: "the pilot",
     notes:
-      "30s. $700k on a post-money SAFE plus a bounded token warrant; range $600–800k; opening cap $7M post — 10%; 18 months; primary milestone organizer-initiated pools. The narrative: capital → de-risk → prove → unlock — security, product, proof, legal, growth. If asked what $100k gets an angel to: from an audited working product and an operational pilot to a repeatable network of organizer-initiated pools. Angel-ladder construction stays private.",
-    component: AskSlide,
+      "35s. The pilot, re-staged 2026-10-07: aid and bounties at Breakpoint. The pivot in one breath — we swapped slow risk pools for fast crowdfunded bounties on the same mechanics, so every pilot, silly or serious, turns into a lesson that sharpens the engine before real-world insurance. Two classes on one engine: mutuals where members cover each other — Blade Pool the serious anchor (capped payouts, bounded lifetime, one venue), Chairmageddon, NGMI Hairline and Coffee Apocalypse the silly-but-adjudicable ones — and bounties that pay for confirmed acts — OnlyFriends' per-introduction caps, the hot-drink runs for Raj/Lily/Toly (one mechanic, three pools), Mert of the Year. Numbers are the §5 policy/terms tables verbatim; the landing's mutuals directory carries the live batch. Venue unchanged: Olympia London, 15–17 Nov 2026, 8,000+ attendees.",
+    component: LaunchSlide,
   },
+  // {
+  //   id: "ask",
+  //   label: "the ask",
+  //   notes:
+  //     "30s. $700k on a post-money SAFE plus a bounded token warrant; range $600–800k; opening cap $7M post — 10%; 18 months; primary milestone organizer-initiated pools. The narrative: capital → de-risk → prove → unlock — security, product, proof, legal, growth. If asked what $100k gets an angel to: from an audited working product and an operational pilot to a repeatable network of organizer-initiated pools. Angel-ladder construction stays private.",
+  //   component: AskSlide,
+  // },
   {
     id: "team",
     label: "the team",
     notes:
-      "20s. Who builds this — the human and the AI teammate. Left: Dr.-Ing. Fabian Schuh — full-time crypto since 2014, first person hired and paid directly by a blockchain, built the BitShares escrow and worker-proposal treasury, Solana Security #2. Right: Corinna — BD, social, analytics, on shift 24/7. The scrolling wall is ambience — twenty years of shipping, on-chain since 2014. Gesture once, don't read it.",
+      "20s. Who builds this — the humans and the AI teammate. Left: Dr.-Ing. Fabian Schuh — full-time crypto since 2014, first person hired and paid directly by a blockchain, built the BitShares escrow and worker-proposal treasury, Solana Security #2. Middle: Dr. Stefan Schießl — applied math PhD; chaos quantified, risk priced, assumptions audited, optimism stress-tested, tail risk handled. Right: Corinna — BD, social, analytics, on shift 24/7. The wall is ambience — twenty years of shipping, on-chain since 2014. Gesture once, don't read it.",
     component: TeamSlide,
   },
   {
@@ -1198,13 +1184,13 @@ export const SLIDES: SlideDef[] = [
       "10s. The surfaces — riprap.xyz, useaccord.xyz (the arbitration layer), the repo, the build log. Hold on the tagline: pool risk peer-to-peer. Conversations after.",
     component: CloseSlide,
   },
-  {
-    id: "appendix-qa",
-    label: "appendix — the hard questions",
-    notes:
-      "15s. The appendix opens with the four questions every IC asks, one card each — problem on top, our answer on the plate. Legal: the mutual is deliberately limited in scope and time to stay outside UK insurance regulation; scope widens step by step as we progress. Adjudication: the company risk, owned — parameters are case by case and defined for the pilot; the metric set publishes from Blade Pool onward. Blade Pool: the cheapest place to find adjudication failures — payouts capped $1k–4k, stakes $10–40, one venue, a bounded lifetime. Team: started solo, became a real business — none of it without mtnDAO, and on-chain insurance has been on our minds for half a decade.",
-    component: AppendixQASlide,
-  },
+  // {
+  //   id: "appendix-qa",
+  //   label: "appendix — the hard questions",
+  //   notes:
+  //     "15s. The appendix opens with the four questions every IC asks, one card each — problem on top, our answer on the plate. Legal: the mutual is deliberately limited in scope and time to stay outside UK insurance regulation; scope widens step by step as we progress. Adjudication: the company risk, owned — parameters are case by case and defined for the pilot; the metric set publishes from Blade Pool onward. Blade Pool: the cheapest place to find adjudication failures — payouts capped $1k–4k, stakes $10–40, one venue, a bounded lifetime. Team: started solo, became a real business — none of it without mtnDAO, and on-chain insurance has been on our minds for half a decade.",
+  //   component: AppendixQASlide,
+  // },
   // {
   //   id: "appendix",
   //   label: "appendix — the destination",
@@ -1212,18 +1198,18 @@ export const SLIDES: SlideDef[] = [
   //     "Reference, not presented — the stack the vision slide carried before the 2026-09-18 re-stage. The five machines on-chain cover needs, one per plate: 01 money gathers — programmatic custody: the pool is a program, not a company, it holds USDC and nothing else; 02 peers decide — adjudication: staked members of the same pool, drawn at random, sealed votes, appeals that double the jury — Accord, honestly an arbitration oracle; 03 cover renews — recurring contributions on the payment rail, live on mainnet today; 04 a backstop grows — external risk capital staking the reserve for a rule-set share of surplus; 05 pools cover pools — first loss below, tail above: reinsurance and tranching as protocol properties. Custody, adjudication, recurrence, reserve capital, reinsurance — everything an insurer needs, none of it a company. The machines already exist — payment rail live on mainnet, arbitration live on devnet, pool program built.",
   //   component: AppendixSlide,
   // },
-  {
-    id: "market",
-    label: "the market",
-    notes:
-      "35s. The story first, then the numbers: millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics — a $20, 3-day, single-peril cover is sub-economic by construction when ~26¢ of every US P&C premium dollar is spent before a claim is paid (Verisk/APCIA '25). We are building the infrastructure that lets those groups create their own risk pools. Then read the evidence, do not editorialize: $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); ~26¢ per premium dollar (Verisk '25); $1.61T mutual premiums — the same behavior, formalized (ICMIF '24). If asked: $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama); market scan — Nexus Mutual $5.7M cover fees '25, $2.7M raised ever, $1B+ purchased; OpenCover $4.6M seed '22–23, $141.6M protected '25. Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
-    component: MarketSlide,
-  },
-  {
-    id: "Competitors",
-    label: "Competitors",
-    notes:
-      "30s. Gesture once, don't read it: the 2020–22 graveyard, one named failure per project — Neptune Mutual (upfront lump sum; token-vote claims), Cover Protocol (exploited itself), Solace (shared idle pool), OpenCover (web3 portfolio cover), Unslashed (no float income), InsurAce (twenty thin chains), Bridge Mutual (farmed, not mutual), Risk Harbor (wLUNA collateral). Same lesson at company scale: the rails were never the whole machine — custody without adjudication, one pool, or permissioning is just a slower bank. If asked, the mutual-history backing: pooled protection is the oldest fix — the formal version is $1.61T and winning (ICMIF '24); the informal version dies of opacity, disputes, and scale, which is why the friendly societies became licensed mutuals — formalization fixed trust at the price of the charter. The solvency and jurisdiction pains stay in Q&A — the vision table carries those ✗. Land: the behavior is universal, the on-ramp does not exist. Segue: the product — the rails that remove each ✗, next slide.",
-    component: IncumbantsProblemSlide,
-  },
+  // {
+  //   id: "market",
+  //   label: "the market",
+  //   notes:
+  //     "35s. The story first, then the numbers: millions of communities are too small, too geographically specific, too short-duration, or too low-premium for conventional insurance economics — a $20, 3-day, single-peril cover is sub-economic by construction when ~26¢ of every US P&C premium dollar is spent before a claim is paid (Verisk/APCIA '25). We are building the infrastructure that lets those groups create their own risk pools. Then read the evidence, do not editorialize: $424B protection gap (Swiss Re '25); 344M covered, 88% uncovered (MiN '24); ~26¢ per premium dollar (Verisk '25); $1.61T mutual premiums — the same behavior, formalized (ICMIF '24). If asked: $136B alternative capital gated at $200k QIB tickets (Aon '25); on-chain, $3.4B stolen per year against a $104M cover sector (Chainalysis, DeFiLlama); market scan — Nexus Mutual $5.7M cover fees '25, $2.7M raised ever, $1B+ purchased; OpenCover $4.6M seed '22–23, $141.6M protected '25. Close: one machine addresses every row — a mutual becomes a transaction, surplus returns by rule, the back office is the chain.",
+  //   component: MarketSlide,
+  // },
+  // {
+  //   id: "Competitors",
+  //   label: "Competitors",
+  //   notes:
+  //     "30s. Gesture once, don't read it: the 2020–22 graveyard, one named failure per project — Neptune Mutual (upfront lump sum; token-vote claims), Cover Protocol (exploited itself), Solace (shared idle pool), OpenCover (web3 portfolio cover), Unslashed (no float income), InsurAce (twenty thin chains), Bridge Mutual (farmed, not mutual), Risk Harbor (wLUNA collateral). Same lesson at company scale: the rails were never the whole machine — custody without adjudication, one pool, or permissioning is just a slower bank. If asked, the mutual-history backing: pooled protection is the oldest fix — the formal version is $1.61T and winning (ICMIF '24); the informal version dies of opacity, disputes, and scale, which is why the friendly societies became licensed mutuals — formalization fixed trust at the price of the charter. The solvency and jurisdiction pains stay in Q&A — the vision table carries those ✗. Land: the behavior is universal, the on-ramp does not exist. Segue: the product — the rails that remove each ✗, next slide.",
+  //   component: IncumbantsProblemSlide,
+  // },
 ];

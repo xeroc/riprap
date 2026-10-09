@@ -31,24 +31,6 @@ export const MUTUALS: MutualListing[] = [
   {
     name: "Blade Pool",
     kind: "mutual",
-    slug: "blade-pool-devnet",
-    claimFlow: "blade-pool",
-    // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
-    tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
-    tiers: [
-      { name: "Basic", fee: 10, cap: 1000 },
-      { name: "Standard", fee: 20, cap: 2000 },
-      { name: "Premium", fee: 40, cap: 4000 },
-    ],
-    // §5: the smallest tier's cap ($1,000 Basic) is the smallest success
-    smallestPayout: 1000,
-    badge: "Paranoid", // founder call 2026-10-06: the one severe pool gets the self-aware label
-    href: "#/2026-breakpoint-blade-pool",
-    pubkey: "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe", // devnet
-  },
-  {
-    name: "Blade Pool",
-    kind: "mutual",
     slug: "blade-pool",
     claimFlow: "blade-pool",
     // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
@@ -75,7 +57,28 @@ export const MUTUALS: MutualListing[] = [
     // §5: the flat $40 payout is the only success payment
     smallestPayout: 40,
     badge: "Most popular",
-    pubkey: "5Yo1BKU8Vy9mRRwXqrjJhtw4CFmfkZiZoW7VSTj5huEq", // mainnet
+    pubkey: "5Yo1BKU8Vy9mRRwXqrjJhtw4CFmfkZiZoW7VSTj5huEq", // mainnet +  devnet
+  },
+  ////////////////////////////////////////////////////////////////////////
+  // DEVNET //////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
+  {
+    name: "Blade Pool",
+    kind: "mutual",
+    slug: "blade-pool",
+    claimFlow: "blade-pool",
+    // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
+    tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
+    tiers: [
+      { name: "Basic", fee: 10, cap: 1000 },
+      { name: "Standard", fee: 20, cap: 2000 },
+      { name: "Premium", fee: 40, cap: 4000 },
+    ],
+    // §5: the smallest tier's cap ($1,000 Basic) is the smallest success
+    smallestPayout: 1000,
+    badge: "Paranoid", // founder call 2026-10-06: the one severe pool gets the self-aware label
+    href: "#/2026-breakpoint-blade-pool",
+    pubkey: "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe", // devnet
   },
   {
     name: "NGMI Hairline",
@@ -90,6 +93,7 @@ export const MUTUALS: MutualListing[] = [
     // §5: grade I pays 10% of the $200 maximum = $20 — the smallest success
     smallestPayout: 20,
     badge: "Ridiculous",
+    pubkey: "BXBSLZNLtXeYdb8HkMx9w5NidCkYTjDmmNUSs32RFeKT",
   },
   {
     name: "Coffee Apocalypse",
@@ -100,6 +104,7 @@ export const MUTUALS: MutualListing[] = [
       "The coffee point runs out while you're standing in the queue. You leave with nothing.",
     tiers: [{ name: "Flat", fee: 10, cap: 25 }],
     smallestPayout: 25,
+    pubkey: "A4Kmwi7ogJYjTKf88RBPMWrkxUcDURWE3eFEmdQo9zBj",
   },
   {
     name: "OnlyFriends",
@@ -112,6 +117,7 @@ export const MUTUALS: MutualListing[] = [
     tiers: [{ name: "Flat", fee: 50, cap: 500 }],
     // §5: one confirmed introduction pays up to $50 — the smallest success
     smallestPayout: 50,
+    pubkey: "2jaogkXadr63cFffB2tnFiDYHBCvHdnCurRUYAGEYJvA",
   },
   {
     name: "Operation Keep Raj Warm",
@@ -122,6 +128,7 @@ export const MUTUALS: MutualListing[] = [
       "Bring Raj a hot drink he asked for — hand to hand, still hot, confirmed by Raj himself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
     smallestPayout: 50,
+    pubkey: "CHESMuQsQMgCWkjJV3ww7XfRbedau2zddqXfcCvhBryR",
   },
   {
     name: "Lily's Liquid Lifeline",
@@ -132,6 +139,7 @@ export const MUTUALS: MutualListing[] = [
       "Bring Lily a hot drink she asked for — hand to hand, still hot, confirmed by Lily herself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
     smallestPayout: 50,
+    pubkey: "HKDNv9qWZCiDEUPPTsdx5pT2TB2n7pixbMB5wofjmsTC",
   },
   {
     name: "Toly Needs His Fuel",
@@ -142,6 +150,7 @@ export const MUTUALS: MutualListing[] = [
       "Bring Toly a hot drink he asked for — hand to hand, still hot, confirmed by Toly himself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
     smallestPayout: 50,
+    pubkey: "BxhfgM7FLeqXomWTrrVMjEWk7nEu2SmydBbWWwGrYBda",
   },
   {
     name: "Mert of the Year",
@@ -154,6 +163,7 @@ export const MUTUALS: MutualListing[] = [
     tiers: [{ name: "Flat", fee: 10, cap: 1000 }],
     // §5: the single $1000 bounty is the only success payment
     smallestPayout: 1000,
+    pubkey: "6X3478Sc77pkFXYTskGoSgm4vpXZjnKVv1SLZyUpkkhT",
   },
 ];
 
@@ -238,6 +248,17 @@ export function membersNeeded(m: MutualListing): number {
  */
 export function stillNeeded(m: MutualListing, members = 0): number {
   return Math.max(0, membersNeeded(m) - members);
+}
+
+/**
+ * Progress toward the funding threshold (membersNeeded, the founder
+ * formula): the live member count over the seats needed, clamped to
+ * [0,1] — 0 pre-launch, 1 once the smallest tier payout is fundable.
+ * The card meter's datum: both the fill width and its red→green color
+ * derive from this one number.
+ */
+export function fundingProgress(m: MutualListing, members = 0): number {
+  return Math.min(1, members / membersNeeded(m));
 }
 
 /** The card's supporter discs — a deterministic rotation of the mention list. */

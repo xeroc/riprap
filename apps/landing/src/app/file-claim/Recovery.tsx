@@ -141,7 +141,7 @@ export function Recovery({
           <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
             Re-upload your manifest.yaml
           </p>
-          <label className={buttonVariants({ variant: "outline" }) + " w-fit"}>
+          <label className={`${buttonVariants({ variant: "outline" })} w-fit`}>
             <input
               type="file"
               className="sr-only"
