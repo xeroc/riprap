@@ -14,6 +14,7 @@ export function MertOfTheYearPage() {
         name: "Mert of the Year",
         event: "Breakpoint",
         kind: "bounty",
+        slug: "mert-of-the-year",
         tagline:
           "A one-time bounty pool for members who want an excuse to hand Mert a trophy he did not ask for — and to have it judged.",
         promise: [

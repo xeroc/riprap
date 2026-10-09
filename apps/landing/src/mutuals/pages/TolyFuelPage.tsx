@@ -14,6 +14,7 @@ export function TolyFuelPage() {
         name: "Operation Keep Toly Warm",
         event: "Breakpoint",
         kind: "bounty",
+        slug: "toly-needs-his-fuel",
         tagline:
           "A one-time bounty pool for members who want an excuse to talk to Toly. The pot pays only for deliveries Toly himself confirms.",
         promise: [

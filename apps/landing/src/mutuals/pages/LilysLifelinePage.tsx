@@ -14,6 +14,7 @@ export function LilysLifelinePage() {
         name: "Operation Keep Lily Warm",
         event: "Breakpoint",
         kind: "bounty",
+        slug: "lilys-liquid-lifeline",
         tagline:
           "A one-time bounty pool for members who want an excuse to talk to Lily. The pot pays only for deliveries Lily herself confirms.",
         promise: [
