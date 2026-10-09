@@ -32,7 +32,6 @@ import {
   fundingProgress,
   payoutWord,
   poolRoute,
-  stillNeeded,
   supportersFor,
 } from "../mutuals/data";
 import { useMutualStore } from "../mutuals/store";
@@ -93,8 +92,9 @@ function PoolCard({ pool }: { pool: MutualListing }) {
     // the class distinction: mutuals hairline, bounties dashed
     <article
       data-kind={pool.kind}
-      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${bounty ? "border-dashed border-hairline-strong" : "border-hairline"
-        } bg-surface-card`}
+      className={`relative flex w-72 shrink-0 flex-col gap-4 border p-5 sm:w-80 ${
+        bounty ? "border-dashed border-hairline-strong" : "border-hairline"
+      } bg-surface-card`}
     >
       <EventBadge />
       <a
@@ -136,8 +136,9 @@ function PoolCard({ pool }: { pool: MutualListing }) {
           </dd>
         </div>
       </dl>
-      {/* the funding meter under the members-needed row: red far from
-          funding the smallest tier payout, green close (founder ask) */}
+      {/* the funding meter under the offer rows (founder ask 2026-10-09;
+          the members-needed number row retired the same day): red far
+          from funding the smallest tier payout, green close */}
       <NeedMeter pool={pool} members={members} />
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
         <CardDiscs pool={pool} />
