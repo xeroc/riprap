@@ -7,6 +7,7 @@ import { App } from "./App";
 import { MUTUALS } from "./mutuals/data";
 import type { MutualStore } from "./mutuals/store";
 import { fakeMutual } from "./pool/fixtures";
+import { needMeterColor } from "./sections/Mutuals";
 
 // The navbar carries the wallet controls on every surface (§0, 2026-09-29) —
 // stub the connector hooks; structure tests don't need the provider stack.
@@ -137,6 +138,25 @@ describe("landing", () => {
     expect(needed).toContain("100"); // Blade Pool — the 100x payout
     expect(needed).toContain("10"); // hot-drink bounties — the 10x
     expect(needed).toContain("2"); // NGMI + OnlyFriends — profit threshold
+    // the funding meter under the members-needed row (founder ask
+    // 2026-10-09): one per card, pre-launch at zero — empty fill, red
+    // state; the color is the semantic tokens mixed in oklab, so hexes
+    // stay in tokens.css and the fill is solid per state (no gradient)
+    const meters = [...(band?.querySelectorAll('[data-slot="need-meter"]') ?? [])];
+    expect(meters.length).toBe(18); // 9 pools on the duplicated drift rail
+    expect(meters[0]?.getAttribute("aria-hidden")).toBe("true"); // decorative — the dd number is the datum
+    const fill = meters[0]?.querySelector('[data-slot="need-meter-fill"]') as HTMLElement | null;
+    expect(fill?.style.width).toBe("0%");
+    expect(fill?.style.backgroundColor).toBe(
+      "color-mix(in oklab, var(--riprap-success) 0%, var(--riprap-error))",
+    );
+    // the color mapping: red at zero, green at full, clamped past 1
+    expect(needMeterColor(0)).toBe(
+      "color-mix(in oklab, var(--riprap-success) 0%, var(--riprap-error))",
+    );
+    expect(needMeterColor(0.5)).toContain(" 50%,");
+    expect(needMeterColor(1)).toContain(" 100%,");
+    expect(needMeterColor(7)).toContain(" 100%,");
     // the directory CTA; no arrows — the drift and drag carry the carousel
     const showAll = screen.getByRole("link", { name: "Show all" });
     expect(showAll.getAttribute("href")).toBe("#/mutuals");
@@ -147,17 +167,9 @@ describe("landing", () => {
     const cardLinks = [...(band?.querySelectorAll("article > a.absolute") ?? [])].map((a) =>
       a.getAttribute("href"),
     );
-    expect(cardLinks.slice(0, 9)).toEqual([
-      `#/m/${UNIQUE_POOLS[0].pubkey}`, // Blade Pool — the pinned pubkey routes
-      `#/m/${UNIQUE_POOLS[1].pubkey}`, // Chairmageddon — pinned since the devnet launch
-      "#/m/ngmi-hairline",
-      "#/m/coffee-apocalypse",
-      "#/m/onlyfriends",
-      "#/m/keep-raj-warm",
-      "#/m/lilys-liquid-lifeline",
-      "#/m/toly-needs-his-fuel",
-      "#/m/mert-of-the-year",
-    ]);
+    // every pool pinned since the devnet launch (2026-10-09) — routes are
+    // pubkeys all the way down
+    expect(cardLinks.slice(0, 9)).toEqual(UNIQUE_POOLS.map((p) => `#/m/${p.pubkey}`));
     // every card wears the event lockup — Breakpoint's brand chip, black on
     // the event pink, floating above the card (founder ask, copy doc §1.2)
     const chips = [...(band?.querySelectorAll('span[role="img"]') ?? [])].filter(

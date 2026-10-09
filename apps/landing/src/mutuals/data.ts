@@ -250,6 +250,17 @@ export function stillNeeded(m: MutualListing, members = 0): number {
   return Math.max(0, membersNeeded(m) - members);
 }
 
+/**
+ * Progress toward the funding threshold (membersNeeded, the founder
+ * formula): the live member count over the seats needed, clamped to
+ * [0,1] — 0 pre-launch, 1 once the smallest tier payout is fundable.
+ * The card meter's datum: both the fill width and its red→green color
+ * derive from this one number.
+ */
+export function fundingProgress(m: MutualListing, members = 0): number {
+  return Math.min(1, members / membersNeeded(m));
+}
+
 /** The card's supporter discs — a deterministic rotation of the mention list. */
 export function supportersFor(m: MutualListing, count = 5): Supporter[] {
   if (SUPPORTERS.length === 0) return [];
