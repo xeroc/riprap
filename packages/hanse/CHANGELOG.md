@@ -1,5 +1,12 @@
 # @riprap/hanse
 
+## 0.7.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @riprap/pool@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes
