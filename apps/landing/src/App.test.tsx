@@ -85,7 +85,7 @@ describe("landing", () => {
     for (const phrase of HEADLINES.slice(1)) {
       expect(phrase.split(" ").length, `${phrase} — 2–3 words`).toBeLessThanOrEqual(3);
     }
-    expect(HEADLINES).toContain("P2P Purpose Pools");
+    expect(HEADLINES).toContain("P2P purpose pools");
     expect(HEADLINES).toContain("On-chain insurance");
   });
 
@@ -264,7 +264,9 @@ describe("landing", () => {
       screen.getByText(/State Farm — is a mutual, owned by the people it covers/),
     ).toBeTruthy();
     expect(screen.getByText(/Programmatic custody holds the Treasury/)).toBeTruthy();
-    expect(screen.getByText("Protection without a protector.")).toBeTruthy();
+    // 2026-10-10 rewording: the closer line died; the band opens with the
+    // founder's Mutuals-first framing instead
+    expect(screen.getByText(/oldest form of risk protection on earth/)).toBeTruthy();
   });
 
   it("why-on-chain band: transparency, cost, composability (copy doc §1.5, v2)", () => {
