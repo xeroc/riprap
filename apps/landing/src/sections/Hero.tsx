@@ -100,10 +100,9 @@ export function Hero() {
             </Settle>
             <Settle delay={120}>
               <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                Your group's got you covered. The terms are written before anyone joins — chip in
-                and you're covered up to the published cap. Claims are settled by drawn peers, and
-                the same rails pay bounties for verified acts. Whatever the pool doesn't pay stays
-                the group's.
+                Each pool runs on its own terms, written before anyone joins. Accept them when you
+                join, and you can claim from the pool. Claims are reviewed and approved by other
+                pool members — transparent and on-chain. Build bounties, mutuals or insurances.
               </p>
             </Settle>
             {/* primary: browse the pools — the waitlist rides below, secondary */}
