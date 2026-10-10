@@ -86,7 +86,11 @@ describe("resolveMutualAddress — the localnet dev lane only", () => {
 
 describe("resolvePoolAddress — pins only, tried on any cluster", () => {
   const bladeMainnet = MUTUALS.find((m) => m.slug === "blade-pool");
-  const bladeDevnet = MUTUALS.find((m) => m.slug === "blade-pool-devnet");
+  // both blade listings share the slug now (mainnet first) — the devnet
+  // one is told apart by its pin
+  const bladeDevnet = MUTUALS.find(
+    (m) => m.pubkey === "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe",
+  );
   const mainnet = { isLocal: false, isMainnet: true, isDevnet: false };
   const devnet = { isLocal: false, isMainnet: false, isDevnet: true };
   const localnet = { isLocal: true, isMainnet: false, isDevnet: false };
@@ -115,8 +119,11 @@ describe("resolvePoolAddress — pins only, tried on any cluster", () => {
   });
 
   it("a listing with no pin is honestly unresolved", () => {
-    const ngmi = MUTUALS.find((m) => m.slug === "ngmi-hairline");
-    expect(ngmi && resolvePoolAddress(ngmi, devnet)).toBeUndefined();
+    // every live listing is pinned since the devnet launch — the unpinned
+    // case is synthetic now
+    const [head] = MUTUALS;
+    const unpinned = head && { ...head, pubkey: undefined };
+    expect(unpinned && resolvePoolAddress(unpinned, devnet)).toBeUndefined();
   });
 
   it("a pinned listing serves its pubkey", () => {
@@ -132,13 +139,13 @@ describe("poolByRouteId — the wizard route id's inverse lookup", () => {
     // a pinned listing's route id is its pubkey — the slug stops resolving
     // once the pin lands (same law as the #/m/ detail route)
     expect(poolByRouteId("DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF")?.slug).toBe("blade-pool");
-    expect(poolByRouteId("BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe")?.slug).toBe(
-      "blade-pool-devnet",
-    );
+    expect(poolByRouteId("BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe")?.slug).toBe("blade-pool");
     expect(poolByRouteId("5Yo1BKU8Vy9mRRwXqrjJhtw4CFmfkZiZoW7VSTj5huEq")?.slug).toBe(
       "chairmageddon",
     );
-    expect(poolByRouteId("ngmi-hairline")?.slug).toBe("ngmi-hairline");
+    expect(poolByRouteId("BXBSLZNLtXeYdb8HkMx9w5NidCkYTjDmmNUSs32RFeKT")?.slug).toBe(
+      "ngmi-hairline",
+    );
     expect(poolByRouteId("blade-pool")).toBeUndefined();
     expect(poolByRouteId("no-such-pool")).toBeUndefined();
   });

@@ -28,10 +28,11 @@ export function MutualsPage() {
           <div className="flex flex-col gap-(--riprap-space-xl)">
             <div className="flex max-w-2xl flex-col gap-4">
               <h1 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
-                Pools.
+                Purpose Pools
               </h1>
               <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
-                Every pool on Riprap, with its terms.
+                Every pool on Riprap, with its purpose. Some protect as mutuals, some reward as
+                bounties. The underlying program is the same, the purpose different.
               </p>
             </div>
 
@@ -104,9 +105,10 @@ export function MutualsPage() {
                 </table>
 
                 <p className="max-w-2xl leading-relaxed text-muted-soft [font:var(--riprap-body-sm)]">
-                  Prices are the tier tables of each pool's policy or terms document. Bounties share
-                  not risk but bounty pool - they pay for verified acts, on the same rails as the
-                  mutuals.
+                  Prices are the tier tables of each pool's policy or terms document. Bounties and
+                  Mutuals come with their own purpose-specific pool. One uses it for bounties, the
+                  other pool protects from risks. Both pay for verified acts or events through the
+                  same on-chain adjudication.
                 </p>
               </>
             )}

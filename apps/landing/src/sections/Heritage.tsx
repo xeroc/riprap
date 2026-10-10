@@ -48,11 +48,15 @@ const lineage = [
 
 export function Heritage() {
   return (
-    <SectionBand id="lineage" label="lineage" tone="soft">
+    <SectionBand id="lineage" label="Live today" tone="soft">
       <Settle className="flex flex-col gap-(--riprap-space-xl)">
         <h2 className="max-w-3xl tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
           The mutual is old. The Solana primitive is new.
         </h2>
+        <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
+          At first, we offer Mutuals, the oldest form of risk protection on earth. The pre-stage to
+          insurance.
+        </p>
 
         <ol className="border-y border-hairline">
           {lineage.map((l) => (
@@ -72,12 +76,6 @@ export function Heritage() {
             </li>
           ))}
         </ol>
-
-        <div className="flex flex-col gap-3">
-          <p className="max-w-2xl tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
-            Protection without a protector.
-          </p>
-        </div>
       </Settle>
     </SectionBand>
   );

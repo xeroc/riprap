@@ -3,7 +3,7 @@
 // honest not-live join state while the chain can't answer) and its doc
 import { AppProvider, getDefaultConfig } from "@solana/connector";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { MUTUALS, poolRouteId } from "../data";
@@ -72,6 +72,32 @@ describe("pool detail pages (#/m/<id>)", () => {
     expect(container.textContent).toContain("Prices follow the doc's tier table");
     expect(container.textContent).toContain("nothing on this page is live");
   });
+
+  it.each(Object.entries(PAGES))(
+    "%s carries the raw policy band the hero's acceptance note reveals",
+    (_id, Page) => {
+      const { container } = renderPage(Page);
+      // the acceptance note's reveal (PolicyAcceptNote.revealPolicy) opens
+      // the #policy band's disclosure — the link must land somewhere
+      const band = document.getElementById("policy");
+      expect(band).not.toBeNull();
+      const details = container.querySelector(
+        "details[data-slot='policy-details']",
+      ) as HTMLDetailsElement | null;
+      expect(details).not.toBeNull();
+      // blade-pool presentation (copy doc § Anchored terms, 2026-09-21):
+      // collapsed on load, the immutable-terms heading, and the honest
+      // idle state — {{PARAM}} until the mutual answers on-chain, never a
+      // fallback document
+      expect(details?.open).toBe(false);
+      expect(band?.textContent).toContain("The immutable terms of this mutual.");
+      expect(band?.textContent).toContain("Served by the Accord evidence server.");
+      expect(band?.textContent).toContain("terms: {{PARAM}}");
+      // the reveal itself: opening the disclosure is one click, in place
+      fireEvent.click(screen.getByText("Open the policy — verbatim"));
+      expect(details?.open).toBe(true);
+    },
+  );
 
   it("ngmi-hairline shows the flat price and the graded payout schedule (policy §5)", () => {
     const { container } = renderPage(NgmiHairlinePage);

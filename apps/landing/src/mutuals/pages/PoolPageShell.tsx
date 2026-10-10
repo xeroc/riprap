@@ -1,15 +1,22 @@
 // The shared skeleton for a pool's detail page (`#/m/<pubkey-or-slug>`).
 // The hero (the offer + the join flow, passed by the page) rides above the
-// doc bands: what's covered → not covered → claims → the math → the end,
-// content extracted from the pool's policy/terms markdown. The §5 tier
-// table stays under the hero as the doc-priced reference while the chain
-// can't answer; every number on it is the doc's, final.
+// doc bands: what's covered → not covered → claims → the math → the end →
+// the policy, content extracted from the pool's policy/terms markdown. The
+// §5 tier table stays under the hero as the doc-priced reference while the
+// chain can't answer; every number on it is the doc's, final. The closing
+// #policy band is blade-pool parity (2026-10-09): the collapsed disclosure
+// every hero's acceptance note links to, carrying the shared raw-terms
+// panel — the doc's exact pinned bytes off the evidence server.
 import { SectionBand, type WorkedExampleLine, WorkedExampleReceipt } from "@riprap/ui";
+import type { Address } from "@solana/kit";
 import type { ReactNode } from "react";
 import { Settle } from "../../components/Settle";
 import { SiteNav } from "../../components/SiteNav";
+import { RawPolicyTerms } from "../../pool/sections/RawPolicyTerms";
+import { useMutual } from "../../pool/useMutual";
 import { Footer } from "../../sections/Footer";
-import type { MutualTier, PoolKind } from "../types";
+import { poolBySlug } from "../data";
+import type { MutualListing, MutualTier, PoolKind } from "../types";
 export interface PoolPageConfig {
   name: string;
   /** the StampBadge event tag, e.g. "Breakpoint" */
@@ -20,6 +27,9 @@ export interface PoolPageConfig {
   /** §11 product promise, line per line */
   promise: string[];
   tiers: MutualTier[];
+  /** the pool's slug in the mutuals directory — resolves the listing (and
+   * its pinned pubkey) the #policy band's evidence-server read binds to */
+  slug: string;
   /** §5 severity grades — the grade → payment schedule, for graded pools */
   grades?: { grade: string; label: string; finding: string; pays: string }[];
   /** §3 definition, verbatim quote */
@@ -254,8 +264,52 @@ export function PoolPageShell({ config, hero }: { config: PoolPageConfig; hero: 
             </div>
           </Settle>
         </SectionBand>
+
+        {/* the policy — the raw doc, verbatim, off the evidence server */}
+        <PoolPolicyTerms listing={poolBySlug(c.slug)} />
       </main>
       <Footer />
     </>
+  );
+}
+
+/** The closing #policy band — the target every hero's acceptance note
+ * ("Chipping in accepts the {pool} policy") reveals: opens the collapsed
+ * disclosure and settles the page there (PolicyAcceptNote.revealPolicy).
+ * Blade-pool presentation (copy doc § Anchored terms, 2026-09-21), one
+ * difference by design: no tabs — the bands above ARE the explained view,
+ * the disclosure carries the verbatim doc alone. The mutual read is the
+ * listing's pinned pubkey (drafts resolve null → the idle {{PARAM}} state,
+ * never a fallback document). */
+function PoolPolicyTerms({ listing }: { listing: MutualListing }) {
+  const mutualQuery = useMutual((listing.pubkey as Address | undefined) ?? null);
+  const mutual = mutualQuery.state === "ready" ? mutualQuery.mutual : null;
+  return (
+    <SectionBand id="policy" label="the policy" tone="ground">
+      <div className="flex flex-col gap-(--riprap-space-lg)">
+        <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
+          The policy, in full.
+        </h2>
+        <p data-num className="text-muted-soft [font:var(--riprap-mono-label)]">
+          THE POOL IS A JOKE. THE POLICY IS NOT.
+        </p>
+
+        {/* collapsed on load — native disclosure */}
+        <details data-slot="policy-details" className="group border-y border-hairline">
+          <summary className="flex cursor-pointer list-none items-baseline justify-between gap-6 py-6 [&::-webkit-details-marker]:hidden">
+            <h3 className="tracking-tight text-ink [font:var(--riprap-display-sm)]">
+              Open the policy — verbatim
+            </h3>
+            <span aria-hidden className="font-mono text-base text-accent">
+              <span className="group-open:hidden">+</span>
+              <span className="hidden group-open:inline">–</span>
+            </span>
+          </summary>
+          <div className="pb-6">
+            <RawPolicyTerms mutual={mutual} />
+          </div>
+        </details>
+      </div>
+    </SectionBand>
   );
 }

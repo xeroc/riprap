@@ -14,6 +14,7 @@ export function KeepRajWarmPage() {
         name: "Operation Keep Raj Warm",
         event: "Breakpoint",
         kind: "bounty",
+        slug: "keep-raj-warm",
         tagline:
           "A one-time bounty pool for members who want an excuse to talk to Raj. The pot pays only for deliveries Raj himself confirms.",
         promise: [

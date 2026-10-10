@@ -14,6 +14,7 @@ export function CoffeeApocalypsePage() {
         name: "Coffee Apocalypse",
         event: "Breakpoint",
         kind: "mutual",
+        slug: "coffee-apocalypse",
         tagline:
           "A one-time mutual pool protecting members against the exhaustion of the venue's coffee supply while they are standing in the queue.",
         promise: [

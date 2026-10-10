@@ -14,6 +14,7 @@ export function OnlyFriendsPage() {
         name: "OnlyFriends",
         event: "Breakpoint",
         kind: "bounty",
+        slug: "onlyfriends",
         tagline:
           "A one-time bounty pool for people who know people — and for people who want to. Members join to make introductions (connectors) or to be connected (seekers); only connectors are paid.",
         promise: [

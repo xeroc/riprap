@@ -55,15 +55,15 @@ export function Compare() {
   const settled = arrived || (reduce ?? false);
 
   return (
-    <SectionBand id="compare" label="the alternative" tone="ground">
+    <SectionBand id="compare" label="the vision" tone="ground">
       <Settle className="flex flex-col gap-(--riprap-space-xl)">
         <div className="flex max-w-2xl flex-col gap-4">
           <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
-            Mutual, insurance, or nothing.
+            riprap pool for insurance
           </h2>
           <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
-            The three ways a group can carry a risk it can't avoid. The first batch runs the first
-            column.
+            The correct terms build the basis for on-chain insurance contracts. Public adjudication
+            brings human judgment. What's left is mostly math.
           </p>
         </div>
 

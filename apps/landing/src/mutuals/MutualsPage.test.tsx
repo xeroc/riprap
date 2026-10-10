@@ -3,7 +3,14 @@ import type { Address } from "@solana/kit";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeMutual } from "../pool/fixtures";
-import { entryRange, MUTUALS, membersNeeded, poolRoute, stillNeeded } from "./data";
+import {
+  entryRange,
+  fundingProgress,
+  MUTUALS,
+  membersNeeded,
+  poolRoute,
+  stillNeeded,
+} from "./data";
 import { MutualsPage } from "./MutualsPage";
 import type { MutualStore } from "./store";
 
@@ -28,7 +35,7 @@ const { storeState } = vi.hoisted(() => ({ storeState: { current: null as Mutual
 vi.mock("./store", () => ({ useMutualStore: () => storeState.current }));
 
 // Blade Pool pins twice — devnet and mainnet pubkeys are separate listings
-// under distinct slugs (data.ts); one cluster ever resolves one of them, so
+// sharing one slug (data.ts); one cluster ever resolves one of them, so
 // the realistic default carries one listing per pool name.
 const UNIQUE_POOLS = [...new Map(MUTUALS.map((m) => [m.name, m])).values()];
 
@@ -49,7 +56,7 @@ afterEach(cleanup);
 describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
   it("renders one row per pool with the strip rail — full-height, rotated 90°, zero spacing (copy doc § /mutuals v12)", () => {
     const { container } = render(<MutualsPage />);
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Pools.");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Purpose Pools");
     const rows = [...container.querySelectorAll("tbody tr")];
     expect(rows.length).toBe(UNIQUE_POOLS.length);
     expect([...container.querySelectorAll("thead th")].map((th) => th.textContent)).toEqual([
@@ -105,14 +112,15 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     const nameCells = [...container.querySelectorAll("tbody th")];
     expect(nameCells.every((th) => th.querySelector("span, p") === null)).toBe(true);
     expect(container.textContent).not.toContain("Status");
-    expect(container.textContent).toContain("Bounties share not risk but bounty pool");
+    expect(container.textContent).toContain(
+      "Bounties and Mutuals come with their own purpose-specific pool",
+    );
   });
 
   it("headline carries no event specifics — the BP26 chip labels the batch", () => {
     render(<MutualsPage />);
-    expect(screen.getByText("Every pool on Riprap, with its terms.")).toBeTruthy();
     expect(screen.queryByText(/Olympia Convention Centre/)).toBeNull();
-    expect(screen.queryByText(/15–17 November/)).toBeNull();
+    expect(screen.getByText(/Every pool on Riprap, with its purpose\./)).toBeTruthy();
   });
 
   it("carries each pool's real tier prices (docs §5) and cap — mono, data-num", () => {
@@ -141,7 +149,9 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
   it("footnote states the price provenance (docs §5 tables)", () => {
     const { container } = render(<MutualsPage />);
     expect(container.textContent).toContain("Prices are the tier tables");
-    expect(container.textContent).toContain("Bounties share not risk but bounty pool");
+    expect(container.textContent).toContain(
+      "Bounties and Mutuals come with their own purpose-specific pool",
+    );
   });
 
   it("seats the pool needs — the founder formula's worked examples (data.ts)", () => {
@@ -163,6 +173,14 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     if (!blade) throw new Error("no blade listing");
     expect(stillNeeded(blade, 6)).toBe(94); // the founder's own example
     expect(stillNeeded(blade, 400)).toBe(0);
+    // fundingProgress — the meter's datum: members over the seats needed,
+    // clamped to [0,1]; pre-launch 0, fundable at 1
+    expect(fundingProgress(blade, 6)).toBeCloseTo(0.06); // 6 of 100 seats
+    expect(fundingProgress(blade, 400)).toBe(1); // past the threshold — full
+    expect(fundingProgress(blade)).toBe(0); // pre-launch default
+    const only = MUTUALS.find((m) => m.name === "OnlyFriends");
+    if (!only) throw new Error("no OnlyFriends listing");
+    expect(fundingProgress(only, 1)).toBe(0.5); // 1 of the 2 profit seats
     for (const pool of UNIQUE_POOLS) {
       expect(entryRange(pool)).toMatch(/^\$\d+(–\$\d+)?$/);
     }

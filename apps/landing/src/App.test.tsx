@@ -7,6 +7,8 @@ import { App } from "./App";
 import { MUTUALS } from "./mutuals/data";
 import type { MutualStore } from "./mutuals/store";
 import { fakeMutual } from "./pool/fixtures";
+import { HEADLINES } from "./sections/Hero";
+import { needMeterColor } from "./sections/Mutuals";
 
 // The navbar carries the wallet controls on every surface (§0, 2026-09-29) —
 // stub the connector hooks; structure tests don't need the provider stack.
@@ -71,6 +73,22 @@ describe("landing", () => {
     expect(screen.queryByLabelText(/Blade Pool at Breakpoint/)).toBeNull();
   });
 
+  it("hero headline rotates through the marketing one-liners (founder ask 2026-10-09)", () => {
+    renderApp();
+    // first paint is the founder-locked campaign line — the no-JS read, the
+    // screen-reader read, and the reduced-motion rest state; the rest of
+    // HEADLINES crossfade in on a 2.5s cadence (motion-driven, asserted as
+    // the set below, not as wall-clock DOM flips)
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1.textContent).toBe("Self-governing money.");
+    expect(HEADLINES[0]).toBe("Self-governing money");
+    for (const phrase of HEADLINES.slice(1)) {
+      expect(phrase.split(" ").length, `${phrase} — 2–3 words`).toBeLessThanOrEqual(3);
+    }
+    expect(HEADLINES).toContain("P2P purpose pools");
+    expect(HEADLINES).toContain("On-chain insurance");
+  });
+
   it("mutuals band: one card per pool from the policy/terms docs, Show all routes to the directory (copy doc §1.2)", () => {
     const { container } = renderApp();
     const band = container.querySelector("section#mutuals");
@@ -127,16 +145,26 @@ describe("landing", () => {
     // no status anywhere — pools enable individually, when they exist
     // on-chain (§1.2 v13)
     expect(band?.textContent).not.toMatch(/policy in review|terms in review|First pool|draft/i);
-    // the members-needed row replaces the demo stats (founder formula,
-    // data.ts membersNeeded): need, not a cap — pre-launch every pool
-    // shows its full count
-    const needed = [...(band?.querySelectorAll("dd[data-num]") ?? [])]
-      .map((d) => d.textContent)
-      .filter((t) => /^\d+$/.test(t ?? ""));
-    expect(needed.length).toBe(18); // 9 pools on the duplicated drift rail
-    expect(needed).toContain("100"); // Blade Pool — the 100x payout
-    expect(needed).toContain("10"); // hot-drink bounties — the 10x
-    expect(needed).toContain("2"); // NGMI + OnlyFriends — profit threshold
+    // the members-needed number is gone from the cards (founder edit
+    // 2026-10-09, post-meter) — the funding meter is its replacement:
+    // one per card, pre-launch at zero — empty fill, red state; the
+    // color is the semantic tokens mixed in oklab, so hexes stay in
+    // tokens.css and the fill is solid per state (no gradient)
+    const meters = [...(band?.querySelectorAll('[data-slot="need-meter"]') ?? [])];
+    expect(meters.length).toBe(18); // 9 pools on the duplicated drift rail
+    expect(meters[0]?.getAttribute("aria-hidden")).toBe("true"); // decorative — founder call with the number row retired
+    const fill = meters[0]?.querySelector('[data-slot="need-meter-fill"]') as HTMLElement | null;
+    expect(fill?.style.width).toBe("0%");
+    expect(fill?.style.backgroundColor).toBe(
+      "color-mix(in oklab, var(--riprap-success) 0%, var(--riprap-error))",
+    );
+    // the color mapping: red at zero, green at full, clamped past 1
+    expect(needMeterColor(0)).toBe(
+      "color-mix(in oklab, var(--riprap-success) 0%, var(--riprap-error))",
+    );
+    expect(needMeterColor(0.5)).toContain(" 50%,");
+    expect(needMeterColor(1)).toContain(" 100%,");
+    expect(needMeterColor(7)).toContain(" 100%,");
     // the directory CTA; no arrows — the drift and drag carry the carousel
     const showAll = screen.getByRole("link", { name: "Show all" });
     expect(showAll.getAttribute("href")).toBe("#/mutuals");
@@ -147,17 +175,9 @@ describe("landing", () => {
     const cardLinks = [...(band?.querySelectorAll("article > a.absolute") ?? [])].map((a) =>
       a.getAttribute("href"),
     );
-    expect(cardLinks.slice(0, 9)).toEqual([
-      `#/m/${UNIQUE_POOLS[0].pubkey}`, // Blade Pool — the pinned pubkey routes
-      `#/m/${UNIQUE_POOLS[1].pubkey}`, // Chairmageddon — pinned since the devnet launch
-      "#/m/ngmi-hairline",
-      "#/m/coffee-apocalypse",
-      "#/m/onlyfriends",
-      "#/m/keep-raj-warm",
-      "#/m/lilys-liquid-lifeline",
-      "#/m/toly-needs-his-fuel",
-      "#/m/mert-of-the-year",
-    ]);
+    // every pool pinned since the devnet launch (2026-10-09) — routes are
+    // pubkeys all the way down
+    expect(cardLinks.slice(0, 9)).toEqual(UNIQUE_POOLS.map((p) => `#/m/${p.pubkey}`));
     // every card wears the event lockup — Breakpoint's brand chip, black on
     // the event pink, floating above the card (founder ask, copy doc §1.2)
     const chips = [...(band?.querySelectorAll('span[role="img"]') ?? [])].filter(
@@ -244,7 +264,9 @@ describe("landing", () => {
       screen.getByText(/State Farm — is a mutual, owned by the people it covers/),
     ).toBeTruthy();
     expect(screen.getByText(/Programmatic custody holds the Treasury/)).toBeTruthy();
-    expect(screen.getByText("Protection without a protector.")).toBeTruthy();
+    // 2026-10-10 rewording: the closer line died; the band opens with the
+    // founder's Mutuals-first framing instead
+    expect(screen.getByText(/oldest form of risk protection on earth/)).toBeTruthy();
   });
 
   it("why-on-chain band: transparency, cost, composability (copy doc §1.5, v2)", () => {
