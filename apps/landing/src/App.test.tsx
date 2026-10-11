@@ -268,7 +268,7 @@ describe("landing", () => {
     const joining = screen.getByRole("tab", { name: "Joining" });
     fireEvent.mouseDown(joining); // Radix tabs activate on mousedown, not click
     expect(document.querySelector('[data-slot="funding-pool"]')).not.toBeNull();
-    expect(screen.getByText(/and you're in\./, { exact: false })).toBeTruthy();
+    expect(screen.getByText(/the fee lands in the pool/, { exact: false })).toBeTruthy();
 
     const claiming = screen.getByRole("tab", { name: "Claiming" });
     fireEvent.mouseDown(claiming);
