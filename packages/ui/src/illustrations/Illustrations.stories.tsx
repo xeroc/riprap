@@ -2,8 +2,10 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 import { Backstop } from "./Backstop";
 import { Claim } from "./Claim";
+import { ClaimApproval } from "./ClaimApproval";
 import { ExpansionStrip } from "./ExpansionStrip";
 import { Found } from "./Found";
+import { FundingPool } from "./FundingPool";
 import { Gather } from "./Gather";
 import { HexBackdrop } from "./HexBackdrop";
 import { Join } from "./Join";
@@ -139,6 +141,24 @@ export const Expansion: StoryObj = {
   render: () => (
     <div className="p-8">
       <ExpansionStrip />
+    </div>
+  ),
+};
+
+export const FundingPoolStory: StoryObj = {
+  name: "funding pool — one act, one commitment",
+  render: () => (
+    <div className="bg-ground p-8">
+      <FundingPool />
+    </div>
+  ),
+};
+
+export const ClaimApprovalStory: StoryObj = {
+  name: "claim approval — submitted, reviewed, paid",
+  render: () => (
+    <div className="bg-ground p-8">
+      <ClaimApproval />
     </div>
   ),
 };

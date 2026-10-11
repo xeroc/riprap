@@ -4,9 +4,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { GlyphTile } from "../components/chrome/GlyphTile";
 import { Backstop } from "./Backstop";
 import { Claim } from "./Claim";
+import { ClaimApproval } from "./ClaimApproval";
 import { ExpansionStrip } from "./ExpansionStrip";
 import { Found } from "./Found";
+import { FundingPool } from "./FundingPool";
 import { Gather } from "./Gather";
+import { VESSEL } from "./Glyph";
 import { HexBackdrop } from "./HexBackdrop";
 import { Join } from "./Join";
 import { HOVER_LOOP_MS, LifecycleStrip } from "./LifecycleStrip";
@@ -403,5 +406,125 @@ describe("HexBackdrop — the hero's engineering paper", () => {
     // the paper itself remains complete
     expect(container.querySelectorAll("path[fill='none']").length).toBeGreaterThan(5);
     expect(container.querySelectorAll("polygon[fill]").length).toBeGreaterThan(10);
+  });
+});
+
+describe("FundingPool — the join ceremony: sign + contribute in one act", () => {
+  it("renders every beat: vessel pool, agreement, coin, member, confirmation", () => {
+    const { container } = render(<FundingPool />);
+    // the pool is the kit's vessel (open-top U — 3 walls) with funds water
+    expect(container.querySelectorAll('[data-slot="pool-vessel"] line').length).toBe(3);
+    expect(container.querySelector('[data-slot="pool-water"]')?.getAttribute("fill")).toBe(
+      "var(--riprap-funds)",
+    );
+    // the agreement: the payouts headline, both items, the signature line
+    expect(screen.getByText("Payouts")).toBeTruthy();
+    expect(screen.getByText("requirement A")).toBeTruthy();
+    expect(screen.getByText("requirement B")).toBeTruthy();
+    expect(container.querySelector('[data-slot="signature"] path')).toBeTruthy();
+    // the member, the $ coin, the confirmation stamp
+    expect(screen.getByText("You")).toBeTruthy();
+    expect(screen.getByText("$")).toBeTruthy();
+    expect(screen.getByText("You're in")).toBeTruthy();
+    // the caption is gone entirely (user law)
+    expect(screen.queryByText("One act. One commitment.")).toBeNull();
+    // the ✓ is drawn, not typed — no glyph stand-ins in copy
+    expect(screen.queryByText("✓")).toBeNull();
+    expect(container.querySelector('[data-slot="confirm-check"] path')).toBeTruthy();
+  });
+
+  it("payout boxes are NEVER checked — empty squares, no check marks anywhere", () => {
+    const { container } = render(<FundingPool />);
+    // the signature svg is the only svg inside the paper — no check svgs exist
+    expect(container.querySelectorAll('[data-slot="purpose-paper"] svg').length).toBe(1);
+    // and no check glyph path exists inside the paper (the confirmation
+    // stamp keeps its own drawn ✓ — it is not a payout box)
+    expect(
+      container.querySelector('[data-slot="purpose-paper"] path[d="M3 8l3 3 7-7"]'),
+    ).toBeNull();
+  });
+
+  it("colors only via tokens — no hex in fills, strokes, or inline styles", () => {
+    const { container } = render(<FundingPool />);
+    for (const c of colorAttrs(container)) {
+      expect(c, `funding-pool: ${c}`).toMatch(/^var\(--riprap-/);
+    }
+    for (const el of container.querySelectorAll("[style]")) {
+      expect(el.getAttribute("style")).not.toMatch(/#[0-9a-f]/i);
+    }
+  });
+
+  it("reduced motion: renders the completed join — coin gone, stamp shown", () => {
+    reducedMotion = true;
+    const { container } = render(<FundingPool />);
+    const coin = container.querySelector('[data-slot="coin"]') as HTMLElement;
+    const confirmation = container.querySelector('[data-slot="confirmation"]') as HTMLElement;
+    expect(coin.style.opacity).toBe("0");
+    expect(confirmation.style.opacity).toBe("1");
+    // the scene stays whole — every beat present as one static frame
+    expect(container.querySelectorAll('[data-slot="pool-vessel"] line').length).toBe(3);
+    expect(screen.getByText("Payouts")).toBeTruthy();
+  });
+});
+
+describe("ClaimApproval — submitted, reviewed, paid", () => {
+  it("renders every beat: steps, claim, agreement, stamp, member, pool, coin, badge", () => {
+    const { container } = render(<ClaimApproval />);
+    expect(screen.getByText("01 · Submit")).toBeTruthy();
+    expect(screen.getByText("02 · Review")).toBeTruthy();
+    expect(screen.getByText("03 · Payout")).toBeTruthy();
+    // the claim and the original agreement, each with its checks
+    expect(screen.getByText("Submitted")).toBeTruthy();
+    expect(screen.getByText("Original agreement")).toBeTruthy();
+    expect(screen.getByText("Request details")).toBeTruthy();
+    expect(screen.getByText("Purpose matches")).toBeTruthy();
+    expect(screen.getByText("Evidence checked")).toBeTruthy();
+    expect(screen.getByText("Terms satisfied")).toBeTruthy();
+    // three jurors sign, then the ruling stamp
+    expect(container.querySelectorAll('[data-slot="juror-signature"]').length).toBe(3);
+    expect(screen.getByText("Approved")).toBeTruthy();
+    expect(screen.getByText("Juror 2")).toBeTruthy();
+    // the member, the drained pool, the $ coin, the receipt
+    expect(screen.getByText("You")).toBeTruthy();
+    expect(screen.getByText("Funds released")).toBeTruthy();
+    // no panel box, no captions, no footer (user law)
+    expect(screen.queryByText("Jury review")).toBeNull();
+    expect(screen.queryByText("Compare against the original purpose")).toBeNull();
+    expect(screen.queryByText("Claim submitted. Jury approves. Funds released.")).toBeNull();
+    // the pool is the kit's vessel (open-top U — 3 walls)
+    expect(container.querySelectorAll('[data-slot="pool-vessel"] line').length).toBe(3);
+    // connectors drawn, not typed; ✓ drawn, not typed; $ not €
+    expect(container.querySelectorAll('[data-slot="connector-arrow"]').length).toBe(2);
+    expect(screen.queryByText("→")).toBeNull();
+    expect(screen.queryByText("✓")).toBeNull();
+    expect(screen.queryByText("€")).toBeNull();
+    expect(screen.getByText("$")).toBeTruthy();
+  });
+  it("colors only via tokens — no hex in fills, strokes, or inline styles", () => {
+    const { container } = render(<ClaimApproval />);
+    for (const c of colorAttrs(container).filter((v) => !v.startsWith("url("))) {
+      // url(#…) paint refs (the dot-grid pattern) are paint servers, not colors
+      expect(c, `claim-approval: ${c}`).toMatch(/^var\(--riprap-/);
+    }
+    for (const el of container.querySelectorAll("[style]")) {
+      expect(el.getAttribute("style")).not.toMatch(/#[0-9a-f]/i);
+    }
+  });
+
+  it("reduced motion: renders the completed payout — stamped, drained, funds released", () => {
+    reducedMotion = true;
+    const { container } = render(<ClaimApproval />);
+    const stamp = container.querySelector('[data-slot="approval-stamp"]') as HTMLElement;
+    const coin = container.querySelector('[data-slot="payout-coin"]') as HTMLElement;
+    const paid = container.querySelector('[data-slot="paid-badge"]') as HTMLElement;
+    const water = container.querySelector('[data-slot="pool-water"]') as HTMLElement;
+    const steps = [...container.querySelectorAll('[data-slot="ca-step"]')];
+    expect(stamp.style.opacity).toBe("1");
+    expect(coin.style.opacity).toBe("0");
+    expect(paid.style.opacity).toBe("1");
+    for (const s of steps) expect((s as HTMLElement).style.opacity).toBe("1");
+    // the vessel rests at the post-payout level (27% of the interior)
+    const h = water.getAttribute("height") ?? water.style.height;
+    expect(Number(String(h).replace(/[^\d.]/g, ""))).toBeCloseTo(0.27 * VESSEL.fill.fullHeight);
   });
 });

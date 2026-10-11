@@ -11,8 +11,10 @@
 export * from "./components";
 export { Backstop } from "./illustrations/Backstop";
 export { Claim } from "./illustrations/Claim";
+export { ClaimApproval } from "./illustrations/ClaimApproval";
 export { ExpansionStrip, ExpansionTile } from "./illustrations/ExpansionStrip";
 export { Found } from "./illustrations/Found";
+export { FundingPool } from "./illustrations/FundingPool";
 export { Gather } from "./illustrations/Gather";
 export type { GlyphClock } from "./illustrations/Glyph";
 export {
