@@ -145,7 +145,7 @@ export const MUTUALS: MutualListing[] = [
     name: "Toly Needs His Fuel",
     kind: "bounty",
     slug: "toly-needs-his-fuel",
-    // terms: Micro Bounty — Toly Needs His Fuel - Terms.md §3/§5 (prices set 2026-10-07)
+    claimFlow: "toly-needs-his-fuel",
     tagline:
       "Bring Toly a hot drink he asked for — hand to hand, still hot, confirmed by Toly himself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],

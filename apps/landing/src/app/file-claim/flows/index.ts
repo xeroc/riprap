@@ -4,9 +4,11 @@
 import type { MutualListing } from "../../../mutuals/types";
 import type { ClaimFlow } from "../flow";
 import { BLADE_POOL_FLOW } from "./blade-pool";
+import { TOLY_FUEL_FLOW } from "./toly-needs-his-fuel";
 
 const FLOWS: Record<string, ClaimFlow> = {
   [BLADE_POOL_FLOW.id]: BLADE_POOL_FLOW,
+  [TOLY_FUEL_FLOW.id]: TOLY_FUEL_FLOW,
 };
 
 /** The listing's filing pack — null when the pool names none or names an

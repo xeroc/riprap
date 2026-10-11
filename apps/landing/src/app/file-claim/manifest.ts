@@ -16,17 +16,19 @@ export const CLAIM_DOCUMENT_PATHS = [
   "05-statutory-declaration.pdf",
 ] as const;
 
+/** A slot as the serializer sees it: its canonical path, optionally its
+ *  url-slot manifest key (flow.ts DocSlot is this plus display fields). */
+export interface ManifestSlot {
+  path: string;
+  url?: string;
+}
 export type ClaimDocumentPath = (typeof CLAIM_DOCUMENT_PATHS)[number];
 
 /** One evidence entry: a canonical path + the client sha256 of the exact
- * uploaded bytes (hex, lower-case). */
-export interface ClaimManifestEntry {
-  /** riprap-claim/v1 manifest path — a pool's canonical policy §7 path
-   *  (runtime-validated against the caller's canonical list; the Blade
-   *  Pool's literal union would freeze the protocol to one pool). */
-  path: string;
-  sha256: string;
-}
+ * uploaded bytes (hex, lower-case), or — for a url-slot (flow.ts DocSlot)
+ * — the RAW link under the slot's manifest key + sha256 of its UTF-8 bytes.
+ * A URL entry has no file: the manifest itself is its delivery (no PUT). */
+export type ClaimManifestEntry = { path: string; sha256: string } | { url: string; sha256: string };
 
 /** Claimant-declared context (CLAIM-WIZARD §5 `claim_context`): informative —
  * the authoritative tier/contribution/treasury are the public chain accounts.
@@ -96,24 +98,43 @@ function iso(field: string, value: string): string {
 
 /** Serialize to the exact §5 layout. Pure and deterministic: same input,
  * same bytes — the on-chain hash must reproduce months later (recovery).
- * `canonicalPaths` is the pool's policy §7 proof list (the flow pack's
- * slot paths); the Blade Pool's CLAIM_DOCUMENT_PATHS is the default so the
- * adjudication-side parsers and recovery keep their single-source list. */
+ * `slots` is the pool's policy §7 proof list (the flow pack's document
+ * slots; plain path strings are accepted and mean file slots); the Blade
+ * Pool's CLAIM_DOCUMENT_PATHS is the default so the adjudication-side
+ * parsers and recovery keep their single-source list. A url-slot's entry
+ * carries the RAW link under the slot's manifest key — a URL has no file,
+ * the manifest is its delivery. */
 export function serializeClaimManifest(
   input: ClaimManifestInput,
-  canonicalPaths: readonly string[] = CLAIM_DOCUMENT_PATHS,
+  slots: readonly (string | ManifestSlot)[] = CLAIM_DOCUMENT_PATHS,
 ): string {
   const { claimContext: ctx } = input;
+  const canonical: ManifestSlot[] = slots.map((s) => (typeof s === "string" ? { path: s } : s));
 
-  const paths = input.entries.map((e) => e.path);
-  if (paths.length !== canonicalPaths.length || paths.some((p, i) => p !== canonicalPaths[i])) {
+  if (input.entries.length !== canonical.length) {
     throw new TypeError(
       "manifest: entries must be exactly the canonical policy §7 paths, in order",
     );
   }
-  for (const e of input.entries) {
-    if (!SHA256_HEX.test(e.sha256)) {
-      throw new TypeError(`manifest: ${e.path} needs a 64-hex lower-case sha256`);
+  const entryLines: string[] = [];
+  for (const [i, slot] of canonical.entries()) {
+    const entry = input.entries[i];
+    const name = slot.url ?? slot.path; // error/identity name for this slot
+    if (!SHA256_HEX.test(entry.sha256)) {
+      throw new TypeError(`manifest: ${name} needs a 64-hex lower-case sha256`);
+    }
+    if (slot.url !== undefined) {
+      if (!("url" in entry) || entry.url.trim() === "") {
+        throw new TypeError(`manifest: ${slot.url} entry needs the raw URL`);
+      }
+      entryLines.push(`  - { ${slot.url}: ${dq(entry.url)}, sha256: "${entry.sha256}" }`);
+    } else {
+      if (!("path" in entry) || entry.path !== slot.path) {
+        throw new TypeError(
+          "manifest: entries must be exactly the canonical policy §7 paths, in order",
+        );
+      }
+      entryLines.push(`  - { path: ${slot.path}, sha256: "${entry.sha256}" }`);
     }
   }
 
@@ -134,7 +155,7 @@ export function serializeClaimManifest(
     `  contribution_usdc: ${ctx.contributionUsdc}`,
     'options: { recipe: hanse-opt/v1, labels: ["Approve", "Deny"] }',
     "entries:",
-    ...input.entries.map((e) => `  - { path: ${e.path}, sha256: "${e.sha256}" }`),
+    ...entryLines,
   ];
   return `${lines.join("\n")}\n`;
 }
@@ -153,8 +174,8 @@ export async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string>
  * on-chain hash — never re-serialize (CLAIM-WIZARD §5). */
 export async function buildClaimManifest(
   input: ClaimManifestInput,
-  canonicalPaths?: readonly string[],
+  slots?: readonly (string | ManifestSlot)[],
 ): Promise<BuiltClaimManifest> {
-  const yaml = serializeClaimManifest(input, canonicalPaths);
+  const yaml = serializeClaimManifest(input, slots);
   return { yaml, sha256Hex: await sha256Hex(new TextEncoder().encode(yaml)) };
 }

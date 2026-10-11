@@ -636,8 +636,10 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     } as unknown as MaybeAccount<Member>);
     renderWizard();
     expect(await screen.findByText("This wallet isn't in the pool.")).toBeTruthy();
+    // the pool-page link follows the listing's detail route, not a hardcoded
+    // pool — the wizard serves every pool's flow now
     expect(screen.getByRole("link", { name: "the pool page" }).getAttribute("href")).toBe(
-      "#/2026-breakpoint-blade-pool",
+      `#/m/${BLADE_MAINNET}`,
     );
   });
 
@@ -695,6 +697,11 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     walletState.account = WALLET;
     renderWizard("");
     expect(await screen.findByText("Not live on this cluster")).toBeTruthy();
+    // the second line names the routed pool (the wizard's listing), not a
+    // hardcoded one
+    expect(
+      screen.getByText("Blade Pool isn't deployed on this network. Switch networks to find it."),
+    ).toBeTruthy();
     expect(mutualMock).not.toHaveBeenCalled();
   });
 
@@ -780,6 +787,86 @@ describe("#/app/file-claim/:pool — the pool-scoped wizard", () => {
     );
     expect(await screen.findByText(/Step 1 of 5 — Incident/i)).toBeTruthy();
     expect(screen.getByLabelText("Another person used a knife or blade against me")).toBeTruthy();
+  });
+  it("the Toly flow walks incident → evidence (URL slot) → manifest with the URL's hash", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    vi.stubEnv("VITE_LOCALNET_MUTUAL", MUTUAL_ADDR);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AppProvider connectorConfig={testConfig}>
+          <FileClaimPage pool="BxhfgM7FLeqXomWTrrVMjEWk7nEu2SmydBbWWwGrYBda" />
+        </AppProvider>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText(/Step 1 of 5 — Incident/i)).toBeTruthy();
+    expect(screen.queryByLabelText("Another person used a knife or blade against me")).toBeNull();
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "2026-11-16T14:10" } });
+    fireEvent.change(screen.getByLabelText("Where"), {
+      target: { value: "Olympia Convention Centre, main hall" },
+    });
+    fireEvent.change(screen.getByLabelText("What happened"), {
+      target: { value: "Toly asked for a coffee; I bought one and handed it to him." },
+    });
+    for (const label of [
+      "Toly asked for the hot drink — the request came from him, before the delivery",
+      "I obtained the drink myself, after the request, at my own expense",
+      "I placed it, still hot, in Toly's hand — inside the covered area, during the bounty period",
+      "Toly confirmed the request and the delivery",
+    ]) {
+      fireEvent.click(screen.getByLabelText(label));
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    // step 2: default amount rides through
+    expect(await screen.findByText(/Step 2 of 5 — Amount/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    // step 3: four file attaches + the one URL input (no fifth file picker)
+    expect(await screen.findByText(/Step 3 of 5 — Evidence/i)).toBeTruthy();
+    const fileInputs = document.querySelectorAll<HTMLInputElement>('input[type="file"]');
+    expect(fileInputs).toHaveLength(4);
+    const urlInput = screen.getByLabelText("Toly's post confirming the request and the delivery");
+    expect(urlInput.getAttribute("type")).toBe("url");
+
+    // an off-domain URL is rejected inline, honestly
+    fireEvent.change(urlInput, { target: { value: "https://example.com/not-a-post" } });
+    fireEvent.blur(urlInput);
+    expect(
+      await screen.findByText(
+        /is not a post URL — Toly's post confirming the request and the delivery needs a link to the post on x\.com or twitter\.com\./,
+      ),
+    ).toBeTruthy();
+
+    // the real confirmation URL: its UTF-8 bytes are the slot's document
+    const confirmationUrl = "https://x.com/Toly/status/1847000000000000000";
+    fireEvent.change(urlInput, { target: { value: confirmationUrl } });
+    fireEvent.blur(urlInput);
+    const expectedSha = await sha256Hex(new TextEncoder().encode(confirmationUrl));
+    await waitFor(() => {
+      expect(screen.getByText(`sha256 ${expectedSha.slice(0, 16)}…`)).toBeTruthy();
+    });
+
+    for (const input of fileInputs) {
+      fireEvent.change(input, { target: { files: [pdf("proof.pdf")] } });
+    }
+    fireEvent.click(screen.getByLabelText(/The ticket and the ID must both be yours/));
+    await waitFor(() => {
+      expect(screen.queryByText(/Attach the four documents and paste/)).toBeNull();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    // step 4: the manifest carries the RAW link under the url slot's key —
+    // no path entry, no file (the URL's sha256 binds it)
+    expect(await screen.findByText(/Step 4 of 5 — Manifest/i)).toBeTruthy();
+    const preview = document.querySelector("pre");
+    expect(preview?.textContent).toContain(
+      `- { confirmation-url: "${confirmationUrl}", sha256: "${expectedSha}" }`,
+    );
+    expect(preview?.textContent).not.toContain("05-confirmation.url");
   });
 
   it("an unknown pool id falls back to the app surface", async () => {

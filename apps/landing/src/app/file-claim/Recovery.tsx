@@ -42,6 +42,9 @@ export function Recovery({
   /** The pool's policy §7 slots (its ClaimFlow pack) — the re-attach rows. */
   slots: readonly DocSlot[];
 }) {
+  // url slots have no file to re-attach — their raw link rides the manifest
+  // (re-POSTed below); only file slots re-PUT.
+  const fileSlots = slots.filter((slot) => slot.url === undefined);
   const [state, setState] = useState<RecoveryState>({ phase: "idle" });
   const [files, setFiles] = useState(new Map<string, Uint8Array>());
 
@@ -86,7 +89,7 @@ export function Recovery({
       }
 
       const rows: Record<string, string> = {};
-      for (const slot of slots) {
+      for (const slot of fileSlots) {
         const bytes = files.get(slot.path);
         if (bytes === undefined) {
           rows[slot.path] = "failed";
@@ -115,8 +118,13 @@ export function Recovery({
         rows[slot.path] = "delivered";
         setState((current) => ({ ...current, rows: { ...rows } }));
       }
-      if (slots.every((slot) => rows[slot.path] === "delivered")) {
-        recordDelivery(mutual, nonce);
+      // url slots ride the manifest (re-POSTed above) — nothing to PUT
+      if (slots.every((slot) => slot.url !== undefined || rows[slot.path] === "delivered")) {
+        recordDelivery(
+          mutual,
+          nonce,
+          slots.map((slot) => slot.path),
+        );
         setState({ phase: "done" });
       }
     } catch (error) {
@@ -167,7 +175,7 @@ export function Recovery({
             Manifest verified against the claim — re-attach the five documents.
           </p>
           <ul className="flex flex-col">
-            {slots.map((slot) => (
+            {fileSlots.map((slot) => (
               <li
                 key={slot.path}
                 className="flex items-center justify-between gap-4 border-b border-hairline py-2 first:border-t"
@@ -192,7 +200,7 @@ export function Recovery({
             ))}
           </ul>
           <div>
-            <Button disabled={files.size < slots.length} onClick={() => void redeliver()}>
+            <Button disabled={files.size < fileSlots.length} onClick={() => void redeliver()}>
               Redeliver evidence
             </Button>
           </div>

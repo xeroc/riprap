@@ -11,16 +11,19 @@
 // slot paths carry document ordinals; those are file identities in the
 // evidence manifest, not rendered numerals.
 //
-// Pure module: no React, no chain, no env.
 
-/** One policy §7 proof slot, in policy order — `path` is the slot's identity
- *  in the riprap-claim/v1 manifest and at the evidence operator. */
 export interface DocSlot {
   /** riprap-claim/v1 manifest path — the wizard, the manifest hash, the
    *  operator, and the adjudication policy pack all key on this string. */
   path: string;
   /** The member-facing plain name (wizard step 3 row label). */
   label: string;
+  /** URL intake: the member pastes a link instead of attaching a file. The
+   *  value is this slot's manifest key — the manifest carries the RAW link
+   *  under it plus sha256(utf8(url)); there is no file and no PUT: the
+   *  manifest itself is the delivery (flow packs pick the key, e.g. the
+   *  Toly bounty's "confirmation-url"). */
+  url?: string;
 }
 
 /** One step-1 self-screen checkbox (policy §3 / §4): `key` is the draft's

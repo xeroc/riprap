@@ -26,7 +26,11 @@ describe("claimFlowFor (the data.ts → pack connection)", () => {
       expect(claimFlowFor(listing)).toBe(BLADE_POOL_FLOW);
     }
   });
-
+  it("the Toly bounty listing resolves to the Toly pack", () => {
+    const listing = MUTUALS.find((m) => m.slug === "toly-needs-his-fuel");
+    expect(listing).toBeDefined();
+    expect(claimFlowFor(listing)?.id).toBe("toly-needs-his-fuel");
+  });
   it("a listing without a claimFlow, or an unknown pool, resolves to null", () => {
     expect(claimFlowFor(MUTUALS.find((m) => m.slug === "chairmageddon"))).toBeNull();
     expect(claimFlowFor(undefined)).toBeNull();

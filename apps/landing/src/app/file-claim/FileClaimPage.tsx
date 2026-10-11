@@ -24,7 +24,7 @@ import { Navigate } from "react-router";
 import { toast } from "sonner";
 import { Settle } from "../../components/Settle";
 import { SiteNav } from "../../components/SiteNav";
-import { poolByRouteId } from "../../mutuals/data";
+import { poolByRouteId, poolRoute } from "../../mutuals/data";
 import type { MutualListing } from "../../mutuals/types";
 import {
   formatUtc,
@@ -36,7 +36,7 @@ import {
 import { useClusterRpc, useHanseEnv } from "../../shared/rpc";
 import { describeError, sendInstruction } from "../../shared/transaction";
 import { ClusterSwitch, ConnectWalletButton } from "../controls";
-import { intakeDocument } from "./documents";
+import { intakeDocument, intakeUrl } from "./documents";
 import { type ClaimDraft, clearDraft, emptyDraft, loadDraft, saveDraft } from "./draft";
 import { operatorPubFromKey, postManifest, putDocument } from "./evidence";
 import { recordDelivery } from "./evidenceRecord";
@@ -134,9 +134,21 @@ function WizardGate() {
   );
 }
 
-/** Step 0 — the preflight gate: hook states, honest copy, no fields. */
-function PreflightGate({ onPass }: { onPass: () => void }) {
-  const preflight = useClaimPreflight();
+/** Step 0 — the preflight gate: hook states, honest copy, no fields. The
+ *  pool's name and detail route parameterize the shared states (a deep
+ *  link that names no pool never renders here — the Wizard redirects). */
+function PreflightGate({
+  mutual,
+  poolName,
+  poolHref,
+  onPass,
+}: {
+  mutual?: Address;
+  poolName: string;
+  poolHref: string;
+  onPass: () => void;
+}) {
+  const preflight = useClaimPreflight(mutual);
   useEffect(() => {
     if (preflight.state === "pass") onPass();
   }, [preflight.state, onPass]);
@@ -146,7 +158,7 @@ function PreflightGate({ onPass }: { onPass: () => void }) {
       <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
         <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The Blade Pool isn't deployed on this network. Switch networks to find it.
+          {poolName} isn't deployed on this network. Switch networks to find it.
         </p>
         <ClusterSwitch />
       </div>
@@ -167,7 +179,7 @@ function PreflightGate({ onPass }: { onPass: () => void }) {
     );
   }
   if (preflight.state === "blocked") {
-    return <BlockedState block={preflight.block} />;
+    return <BlockedState block={preflight.block} poolHref={poolHref} />;
   }
   // loading and the pass instant before onPass advances
   return (
@@ -177,16 +189,14 @@ function PreflightGate({ onPass }: { onPass: () => void }) {
   );
 }
 
-/** The blocked kinds — each its copy-doc state (§ /app/file-claim step 0). */
-function BlockedState({ block }: { block: PreflightBlock }) {
+function BlockedState({ block, poolHref }: { block: PreflightBlock; poolHref: string }) {
   switch (block.kind) {
     case "not-member":
       return (
         <div className="flex max-w-3xl flex-col gap-2" data-slot="not-a-member">
           <p className="text-ink [font:var(--riprap-body-md)]">This wallet isn't in the pool.</p>
           <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-            Membership opens on{" "}
-            <TextLink href="#/2026-breakpoint-blade-pool">the pool page</TextLink>.
+            Membership opens on <TextLink href={poolHref}>the pool page</TextLink>.
           </p>
         </div>
       );
@@ -259,6 +269,10 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   const mutualAddress = invalidPool ? undefined : resolvePoolAddress(listing, clusters);
   const tierNames = listing !== undefined ? listing.tiers.map((t) => t.name) : TIER_NAMES;
   const docPaths = flow !== null ? flow.documentSlots.map((s) => s.path) : [];
+  /** File slots only — url slots have no document to PUT; the manifest
+   *  itself (raw link under the slot's key) is their delivery. */
+  const filePaths =
+    flow !== null ? flow.documentSlots.filter((s) => s.url === undefined).map((s) => s.path) : [];
 
   const clusterRpc = useClusterRpc();
   const hanseEnv = useHanseEnv();
@@ -323,6 +337,32 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
     }
   };
 
+  /** Url-slot intake — same machinery as attach: bytes in session memory,
+   *  hash + link in the draft (the URL's UTF-8 is the slot's document). */
+  const attachUrl = async (slot: DocSlot, url: string) => {
+    try {
+      const result = await intakeUrl(slot, url);
+      fileBytes.current.set(slot.path, result.bytes);
+      setIntakes((current) => ({
+        ...current,
+        [slot.path]: { sha256: result.sha256, fileName: result.fileName },
+      }));
+      setDraft((current) => ({
+        ...current,
+        docs: {
+          ...current.docs,
+          [slot.path]: { sha256: result.sha256, fileName: result.fileName, url },
+        },
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Couldn't read that link.";
+      setIntakes((current) => ({
+        ...current,
+        [slot.path]: { sha256: "", fileName: url, error: message },
+      }));
+    }
+  };
+
   const patch = (changes: Partial<ClaimDraft>) =>
     setDraft((current) => ({ ...current, ...changes }));
 
@@ -358,10 +398,18 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
           tier: tier.name,
           contributionUsdc: pass.mutual.tiers[pass.member.tier].contribution,
         },
-        // every slot attached — step 3 gates Continue on the complete set
-        entries: docPaths.map((path) => ({ path, sha256: draft.docs[path]?.sha256 ?? "" })),
+        // every slot attached — step 3 gates Continue on the complete set.
+        // A url-slot's entry carries the RAW link (no file exists).
+        entries: flow.documentSlots.map((slot) =>
+          slot.url === undefined
+            ? { path: slot.path, sha256: draft.docs[slot.path]?.sha256 ?? "" }
+            : {
+                url: draft.docs[slot.path]?.url ?? "",
+                sha256: draft.docs[slot.path]?.sha256 ?? "",
+              },
+        ),
       },
-      docPaths, // the pool's policy §7 canonical paths (ADR-0031 daemon set)
+      flow.documentSlots, // the pool's policy §7 slots (ADR-0031 daemon set)
     );
     return { yaml: built.yaml, sha256: built.sha256Hex };
   };
@@ -490,9 +538,14 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
       setConflictPath("manifest.yaml");
       return;
     }
+    // url slots ride the manifest — the POST above delivered their raw link
+    const urlPaths = docPaths.filter((path) => !filePaths.includes(path));
+    if (urlPaths.length > 0) {
+      setDocRows(Object.fromEntries(urlPaths.map((path) => [path, "delivered" as const])));
+    }
 
     let delivered = 0;
-    for (const path of docPaths) {
+    for (const path of filePaths) {
       const bytes = fileBytes.current.get(path);
       if (bytes === undefined) {
         setDocRows((current) => ({ ...current, [path]: "failed" }));
@@ -521,11 +574,12 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
         setOperatorDown(true);
       }
     }
-    if (delivered === docPaths.length) {
+    if (delivered === filePaths.length) {
       setStep(8);
       if (mutualAddress !== undefined) {
         clearDraft(mutualAddress);
-        recordDelivery(mutualAddress, result.nonce); // the #/app evidence line
+        // the #/app evidence line — the claim's full slot set (files + urls)
+        recordDelivery(mutualAddress, result.nonce, docPaths);
       }
     }
   };
@@ -544,7 +598,12 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
       {pass === null || tier === null ? (
         // Step 0 — and the honest re-gate if the chain state moved under an
         // open wizard: the flow never collects past an invalid gate.
-        <PreflightGate onPass={() => setStep(1)} />
+        <PreflightGate
+          mutual={mutualAddress}
+          poolName={listing.name}
+          poolHref={poolRoute(listing)}
+          onPass={() => setStep(1)}
+        />
       ) : step === 1 ? (
         <StepIncident
           checks={flow.screenChecks}
@@ -573,6 +632,7 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
           draft={draft}
           intakes={intakes}
           onAttach={attach}
+          onAttachUrl={attachUrl}
           onAttest={(checked) => patch({ samePerson: checked })}
           onBack={() => setStep(2)}
           onContinue={() => void enterManifest()}
@@ -621,7 +681,12 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
           onDownload={() => downloadManifest(manifest.yaml)}
         />
       ) : (
-        <PreflightGate onPass={() => setStep(1)} />
+        <PreflightGate
+          mutual={mutualAddress}
+          poolName={listing.name}
+          poolHref={poolRoute(listing)}
+          onPass={() => setStep(1)}
+        />
       )}
     </div>
   );

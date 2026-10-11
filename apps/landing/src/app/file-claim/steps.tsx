@@ -258,6 +258,7 @@ export function StepEvidence({
   draft,
   intakes,
   onAttach,
+  onAttachUrl,
   onAttest,
   onBack,
   onContinue,
@@ -270,6 +271,8 @@ export function StepEvidence({
   draft: ClaimDraft;
   intakes: Record<string, SlotIntake>;
   onAttach: (slot: DocSlot, file: File) => Promise<void>;
+  /** Url-slot intake — the pasted link replaces the file picker. */
+  onAttachUrl: (slot: DocSlot, url: string) => Promise<void>;
   onAttest: (checked: boolean) => void;
   onBack: () => void;
   onContinue: () => void;
@@ -299,19 +302,37 @@ export function StepEvidence({
                     sha256 {intake.sha256.slice(0, 16)}…
                   </span>
                 ) : null}
-                <label className={buttonVariants({ variant: "outline" })}>
-                  <input
-                    type="file"
-                    className="sr-only"
-                    accept=".pdf,.png,.jpg,.jpeg,.heic,.heif,image/jpeg,image/png,application/pdf"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void onAttach(slot, file);
-                      e.target.value = "";
+                {slot.url ? (
+                  <Input
+                    type="url"
+                    aria-label={slot.label}
+                    placeholder="https://x.com/…"
+                    defaultValue={draft.docs[slot.path]?.url ?? ""}
+                    className="w-80 font-mono"
+                    onBlur={(e) => {
+                      if (e.target.value !== (draft.docs[slot.path]?.url ?? "")) {
+                        void onAttachUrl(slot, e.target.value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.currentTarget.blur();
                     }}
                   />
-                  {intake && !intake.error ? "Replace" : "Attach"}
-                </label>
+                ) : (
+                  <label className={buttonVariants({ variant: "outline" })}>
+                    <input
+                      type="file"
+                      className="sr-only"
+                      accept=".pdf,.png,.jpg,.jpeg,.heic,.heif,image/jpeg,image/png,application/pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void onAttach(slot, file);
+                        e.target.value = "";
+                      }}
+                    />
+                    {intake && !intake.error ? "Replace" : "Attach"}
+                  </label>
+                )}
               </span>
               {intake?.error ? (
                 <p className="w-full text-sm text-error [font:var(--riprap-body-sm)]">

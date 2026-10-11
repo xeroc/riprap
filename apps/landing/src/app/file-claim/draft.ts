@@ -12,6 +12,9 @@ export interface DraftDoc {
   sha256: string;
   /** The attached file's original name (display only). */
   fileName: string;
+  /** A url-slot's pasted link — the stored bytes are the URL's UTF-8; this
+   *  field re-fills the input across sessions (files re-attach, URLs persist). */
+  url?: string;
 }
 
 /** The persisted draft — form fields and document hashes only. */
