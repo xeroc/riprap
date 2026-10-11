@@ -29,8 +29,8 @@ describe("BlurbPage — the unlisted blurb & brand kit", () => {
     // each CopyBlock names what it copies
     for (const label of [
       "one line — for chats",
-      "short blurb — 60 words",
-      "standard blurb — 150 words",
+      "short blurb — 95 words",
+      "standard blurb — 210 words",
       "forwardable email — your voice",
       "email",
     ]) {
@@ -64,7 +64,7 @@ describe("BlurbPage — the unlisted blurb & brand kit", () => {
     expect(grid).toBeTruthy();
     const standard = document.querySelector('[data-slot="copy-block"]')?.parentElement
       ? [...document.querySelectorAll('[data-slot="copy-block"]')].find((block) =>
-          block.textContent?.includes("standard blurb — 150 words"),
+          block.textContent?.includes("standard blurb — 210 words"),
         )
       : null;
     expect(standard).toBeTruthy();

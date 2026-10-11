@@ -143,7 +143,7 @@ function WordsBand() {
           />
         </CopyBlock>
         <CopyBlock
-          label="short blurb — 60 words"
+          label="short blurb — 95 words"
           value={SHORT_BLURB}
           hint="for a caption, a slide, a DM"
         >
@@ -156,7 +156,7 @@ function WordsBand() {
         </CopyBlock>
       </div>
       <CopyBlock
-        label="standard blurb — 150 words"
+        label="standard blurb — 210 words"
         value={STANDARD_BLURB}
         hint="for a one-pager or a press paragraph"
       >

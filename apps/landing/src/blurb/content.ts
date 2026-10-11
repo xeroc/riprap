@@ -5,6 +5,12 @@
 // the one market, bounties ride as a clause, insurance is the roadmap
 // destination (risk capital in, yield out). Source: brand-story.md +
 // messaging-guide.md § Payout-Pool Pass.
+// Cost/yield pass (2026-10-11, founder call): blurbs + email lead with
+// the two numbers — 25% cost load, 18% privileged-LP yield (founder-
+// supplied, deck sources) — and the DeFi-both-directions thesis (yield
+// open to everyone; pools using AMMs, staking, stacked re-insurance —
+// modal "can" per the composability law); motto: "Insurance, Finally
+// Programmable".
 // Register law: meta/marketing/07-brand-assets/messaging-guide.md — line
 // set, banned words, numbers with sources. Pre-round law (2026-09-23
 // founder call): no round numbers appear on this page or in the email —
@@ -19,14 +25,20 @@ export const STATUS = "raising a pre-seed now · terms and deck on request";
 
 /** One-liner for chats — pooled-cover line (payout-pool pass,
  * 2026-10-06) + domain. */
-export const ONE_LINE = "riprap — pooled cover on solana, settled by peers. riprap.xyz";
+export const ONE_LINE = "riprap — Insurance, Finally Programmable. On Solana. riprap.xyz";
 
-/** Short blurb — 20% stat (kept) + mechanism sentence + bounty clause
- * (payout-pool pass, 2026-10-06) + first batch (bound facts: Breakpoint,
- * November, London; nine pools = mutuals/data.ts MUTUALS) + founder. */
-export const SHORT_BLURB = `Over 20% of every insurance dollar vanishes before a single claim is paid.
+/** Short blurb — cost/yield pass (2026-10-11, founder call): the two
+ * numbers (25% cost load, 18% privileged-LP yield — founder-supplied,
+ * deck sources) + mutual-lineage mechanism + DeFi-both-directions +
+ * motto close. First batch = bound facts (Breakpoint, November, London;
+ * nine pools = mutuals/data.ts MUTUALS) + founder. */
+export const SHORT_BLURB = `Over 25% of every insurance dollar vanishes before a claim is paid; meanwhile, only privileged LPs earn up to 18% yield.
 
-riprap is pooled cover on Solana, settled by peers: any group chips in, drawn peers settle. The same rails pay bounties for verified acts — cover when it goes wrong, a bounty when it goes right. Risk capital and yield next: insurance as rails.
+riprap solves this, makes insurances permissionless, transparent and more competitive by putting the insurances business logic into a smart contract on solana.
+
+Today, it runs the original insurance — mutual risk pools — on-chain: peers chip in, peers settle claims.
+
+Insurance, Finally Programmable.
 
 Pilot: nine pools @ Breakpoint 2026, London, this November.
 
@@ -34,11 +46,16 @@ Built by Dr.-Ing. Fabian Schuh (full-time crypto since 2014) with Corinna, an AI
 
 riprap.xyz`;
 
-/** Standard blurb — mechanism + how-it-works + bounty clause + roadmap
- * close (payout-pool pass, 2026-10-06) + team + first batch. */
-export const STANDARD_BLURB = `Over 20% of every insurance dollar vanishes before a single claim is paid. The risks no insurer can sell — too small, too new, too narrow — were never priced at all.
+/** Standard blurb — cost/yield pass (2026-10-11, founder call): the two
+ * numbers (25% / 18%, founder-supplied, deck sources) + unfairness gloss
+ * + mutual-lineage mechanism + how-it-works + bounty clause (payout-pool
+ * pass, 2026-10-06) + DeFi-both-directions roadmap (modal: can —
+ * composability law) + motto close + team + first batch. */
+export const STANDARD_BLURB = `Over 25% of every insurance dollar vanishes before a single claim is paid. Meanwhile, privileged LPs earn up to 18% on the same risk — insurance is expensive for the people who buy it and closed to the people who would fund it.
 
-Mutual risk pools are humanity's oldest protection — the original insurance. riprap puts them on-chain: peers chip in, peers settle claims. On-chain, pools are composable, permissionless, and globally accessible 24/7 — they plug into other protocols, open to anyone, run without borders or gatekeepers.
+riprap solves this, makes insurances permissionless, transparent and more competitive by putting the insurances business logic into a smart contract on solana.
+
+We start with the original insurance: mutual risk pools — humanity's oldest protection — put on-chain. Peers chip in, peers settle claims. That changes what they can do.
 
 How it works:
 
@@ -47,9 +64,7 @@ How it works:
  - Verdicts run on Accord, a Schelling-point arbitration protocol.
  - Approved claims pay out of the pool.
 
-The same rails pay bounties for verified acts — cover when it goes wrong, a bounty when it goes right.
-
-Where it goes: risk capital stakes into pools and earns a rule-set share of the surplus; pools stack on pools. Insurance, rebuilt as rails — starting with the cover the incumbents can't sell.
+Insurance, Finally Programmable.
 
 Built by Dr.-Ing. Fabian Schuh — full-time crypto since 2014 — with Corinna, an AI agent on shift 24/7.
 
@@ -57,28 +72,33 @@ Pilot: nine pools @ Breakpoint 2026, Olympia, London, 15–17 Nov. riprap.xyz`;
 
 /** Forwardable email — written in the introducer's voice ("I want to
  * introduce you to Fabian…"), plain text, no links except the blurb page.
+ * Cost/yield pass (2026-10-11): opens on the two numbers + motto subject.
  * Founder rows and rails verbatim from the deck team/now slides; round
  * terms deliberately absent (pre-round law). */
 export const EMAIL_TO = "[investor name]";
 
-export const EMAIL_SUBJECT = "Intro: riprap — pooled cover, settled by peers.";
+export const EMAIL_SUBJECT = "Intro: riprap — Insurance, Finally Programmable.";
 
 export const EMAIL_BODY = `Hi [name],
 
-Meet Fabian. He's building riprap.
+Meet Fabian. He's building riprap — Insurance, Finally Programmable.
 
-Pooled cover on Solana, settled by peers: any group chips into one pool, and drawn peers settle the claims. First market — the risks no insurer can sell: too small, too new, too narrow. The same rails pay bounties for verified acts.
+Two numbers: over 25% of every insurance dollar vanishes before a single claim is paid, while privileged LPs earn up to 18% yield. Insurance is expensive for the people who buy it and closed to the people who would fund it.
+
+riprap to open both sides. At first we provide the original insurance — mutual risk pools, humanity's oldest protection — put on-chain: peers chip in, drawn peers settle claims. First market: the risks insurers can't sell — too small, too new, too narrow.
 
 They already built the rails this runs on:
 
  - Pull payments for recurring premiums — tributary.so
  - On-chain claims adjudication — useaccord.xyz
 
-Roadmap: risk capital stakes into pools and earns a rule-set share of the surplus — insurance, rebuilt as rails. A quarter of the world's cover already runs on the mutual structure ($1.61T, ICMIF 2024 data).
+Later, they will allow risk capital in and connect DeFi for investors to earn a yield. Permissionlessly, Transparent, Fair. Not just privileged LPs. And pools themselves can use DeFi primitives.
+
+A quarter of the world's cover already runs on the mutual structure ($1.61T, ICMIF 2024 data).
 
 First pools go live at Breakpoint, Solana's flagship conference — 15–17 Nov 2026, London.
 
-Why Fabian: full-time in crypto since 2014. He was the first hire ever paid directly by a blockchain, and he built BitShares' escrow and worker-proposal treasury. He ships with Corinna, an AI agent on shift 24/7.
+Why Fabian: full-time in crypto since 2014. He was the first hire ever paid directly by a blockchain, and he built BitShares' escrow and worker-proposal treasury, adviced MakerDAO in their very early days and has an engineering PhD. He ships with Corinna, an AI agent on shift 24/7.
 
 He's raising a pre-seed now — deck and terms on request.
 
