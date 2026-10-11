@@ -18,7 +18,9 @@ function Tabs({
     <TabsPrimitive.Root
       data-slot="tabs"
       data-orientation={orientation}
-      className={cn("group/tabs flex gap-(--riprap-space-lg) data-horizontal:flex-col", className)}
+      // the list sits ABOVE its body — hardcoded column (a data-orientation
+      // variant hook silently no-ops if the variant isn't registered)
+      className={cn("flex flex-col gap-(--riprap-space-lg)", className)}
       {...props}
     />
   );

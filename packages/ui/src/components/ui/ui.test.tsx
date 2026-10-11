@@ -191,6 +191,9 @@ describe("Tabs — hairline line tabs, mono stamps (DESIGN.md)", () => {
         <TabsContent value="claiming">the claim</TabsContent>
       </Tabs>,
     );
+    const root = document.querySelector('[data-slot="tabs"]') as HTMLElement;
+    // the list stacks ABOVE the body — never beside it
+    expect(root.className).toContain("flex-col");
     const list = document.querySelector('[data-slot="tabs-list"]') as HTMLElement;
     expect(list.className).toContain("border-b");
     expect(list.className).not.toMatch(/rounded-|shadow-/);
