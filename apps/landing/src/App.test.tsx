@@ -288,7 +288,6 @@ describe("landing", () => {
       screen.getByText(/State Farm — is a mutual, owned by the people it covers/),
     ).toBeTruthy();
     expect(screen.getByText(/Programmatic custody holds the Treasury/)).toBeTruthy();
-    expect(screen.getByText(/oldest form of risk protection on earth/)).toBeTruthy();
   });
 
   it("why-on-chain band: transparency, cost, composability (copy doc §1.5, v2)", () => {

@@ -1,5 +1,0 @@
----
-"@riprap/landing": patch
----
-
-Positioning pass (2026-10-06, payout-pool pass): cover-led copy across the landing and site metadata. Title tag, meta/OG/Twitter descriptions, the chat one-liner, short and standard blurbs, and the forwardable email describe riprap as pooled cover settled by peers; bounties ride as a clause ("the same rails pay bounties for verified acts"); risk capital and yield are stated as the roadmap to insurance rebuilt as rails. Landing sweep: hero kicker becomes "Pooled cover on Solana" and H1 becomes the campaign line "Self-governing money."; the mutuals band and directory retitle to pools ("The pools." / "Pools.", route title "Riprap: Pools") with the product-register explainer in the band intro; footer descriptor, lineage judge→court fix, pluralized first-pools copy in the final CTA, comparison intro, and waitlist message. Source: meta marketing vault — landing-page.md payout-pool amendments, brand-story.md, messaging-guide.md § Payout-Pool Pass (meta A, founder-approved).
