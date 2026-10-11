@@ -85,7 +85,7 @@ describe("landing", () => {
     for (const phrase of HEADLINES.slice(1)) {
       expect(phrase.split(" ").length, `${phrase} — 2–3 words`).toBeLessThanOrEqual(3);
     }
-    expect(HEADLINES).toContain("P2P Purpose Pools");
+    expect(HEADLINES).toContain("P2P purpose pools");
     expect(HEADLINES).toContain("On-chain insurance");
   });
 
@@ -264,7 +264,9 @@ describe("landing", () => {
       screen.getByText(/State Farm — is a mutual, owned by the people it covers/),
     ).toBeTruthy();
     expect(screen.getByText(/Programmatic custody holds the Treasury/)).toBeTruthy();
-    expect(screen.getByText("Protection without a protector.")).toBeTruthy();
+    // 2026-10-10 rewording: the closer line died; the band opens with the
+    // founder's Mutuals-first framing instead
+    expect(screen.getByText(/oldest form of risk protection on earth/)).toBeTruthy();
   });
 
   it("why-on-chain band: transparency, cost, composability (copy doc §1.5, v2)", () => {
@@ -361,14 +363,18 @@ describe("landing", () => {
     expect(faq?.textContent).not.toMatch(/[\d$]/);
   });
 
-  it("hero: the ring assembles — 7 stones, one slot open, one harbor-blue newest member", () => {
+  it("hero: the join ceremony shows first — vessel pool, agreement paper, member", () => {
     const { container } = renderApp();
     const hero = container.querySelector("section#top");
     expect(hero).not.toBeNull();
-    const stones = hero?.querySelectorAll("polygon") ?? [];
-    expect(stones.length).toBe(7); // 8 slots, one deliberately open
-    const blue = hero?.querySelectorAll('polygon[fill="var(--riprap-accent)"]') ?? [];
-    expect(blue.length).toBe(1); // the newest member, settled beside the gap
+    // the FundingPool demo is the first illustration (user law: join first,
+    // then the claim payout, alternating) — its beats are all present
+    expect(hero?.querySelector('[data-slot="funding-pool"]')).not.toBeNull();
+    expect(hero?.querySelectorAll('[data-slot="pool-vessel"] line').length).toBe(3);
+    expect(hero?.querySelector('[data-slot="purpose-paper"]')).not.toBeNull();
+    expect(hero?.querySelector('[data-slot="member"]')).not.toBeNull();
+    // the claim demo is not mounted on first paint
+    expect(hero?.querySelector('[data-slot="claim-approval"]')).toBeNull();
   });
 
   it("footer closing is the bare fact in mono", () => {
