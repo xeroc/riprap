@@ -90,11 +90,10 @@ export function Mechanism() {
           {/* joining — copy doc §2 tabs: one act, sign + pay (copy doc §2 tabs) */}
           <TabsContent value="joining" className="flex flex-col gap-(--riprap-space-lg)">
             <p className="max-w-2xl leading-relaxed text-body [font:var(--riprap-body-md)]">
-              One act. You read the pool's purpose — what's covered, what it pays, written at
-              founding, before anything happens — and you sign it. Your entry fee lands in the pool
-              in the same breath, and you're in.
+              Each pool comes with its own rules, a policy, or terms of service. On joining the
+              pool, a user accepts the immutable terms and the fee lands in the pool.
             </p>
-            <div className="flex justify-center py-(--riprap-space-sm)">
+            <div className="flex py-(--riprap-space-sm)">
               <FundingPool />
             </div>
           </TabsContent>
@@ -102,17 +101,16 @@ export function Mechanism() {
           {/* claiming — copy doc §2 tabs: payout requests and the process */}
           <TabsContent value="claiming" className="flex flex-col gap-(--riprap-space-lg)">
             <p className="max-w-2xl leading-relaxed text-body [font:var(--riprap-body-md)]">
-              A payout request carries the evidence the terms demand. A jury of staked members —
-              drawn at random, votes sealed until the round closes — rules against the original
-              purpose. An approved claim pays from the pool, never more than it holds. Adjudication
-              runs on{" "}
+              A payout request carries the evidence the terms demand. A jury of staked members rules
+              against the original purpose. An approved claim pays from the pool, never more than it
+              holds. Adjudication runs on{" "}
               <TextLink href="https://useaccord.xyz" external>
                 Accord
               </TextLink>
               , an open arbitration protocol — its ruling is what moves the money.
             </p>
-            <div className="flex justify-center py-(--riprap-space-sm)">
-              <div className="w-full max-w-[480px]">
+            <div className="flex py-(--riprap-space-sm)">
+              <div className="w-full">
                 <ClaimApproval />
               </div>
             </div>
