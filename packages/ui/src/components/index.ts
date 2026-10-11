@@ -133,4 +133,5 @@ export {
 } from "./ui/sheet";
 export { Slider } from "./ui/slider";
 export { Toaster } from "./ui/sonner";
+export { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 export { Textarea } from "./ui/textarea";
