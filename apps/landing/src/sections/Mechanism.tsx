@@ -94,7 +94,9 @@ export function Mechanism() {
               pool, a user accepts the immutable terms and the fee lands in the pool.
             </p>
             <div className="flex py-(--riprap-space-sm)">
-              <FundingPool />
+              <div className="w-full max-w-2xl">
+                <FundingPool />
+              </div>
             </div>
           </TabsContent>
 
@@ -110,7 +112,7 @@ export function Mechanism() {
               , an open arbitration protocol — its ruling is what moves the money.
             </p>
             <div className="flex py-(--riprap-space-sm)">
-              <div className="w-full">
+              <div className="w-full max-w-2xl">
                 <ClaimApproval />
               </div>
             </div>

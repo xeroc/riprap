@@ -310,9 +310,7 @@ export function StepEvidence({
                     defaultValue={draft.docs[slot.path]?.url ?? ""}
                     className="w-80 font-mono"
                     onBlur={(e) => {
-                      if (e.target.value !== (draft.docs[slot.path]?.url ?? "")) {
-                        void onAttachUrl(slot, e.target.value);
-                      }
+                      void onAttachUrl(slot, e.target.value);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") e.currentTarget.blur();
