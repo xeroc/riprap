@@ -1,5 +1,20 @@
 # @riprap/landing
 
+## 0.8.0
+
+### Minor Changes
+
+- Adds a `Tabs` chrome primitive to the kit (Radix, restyled to DESIGN.md: one hairline under the list, mono uppercase triggers, active = ink underline — no pill, no radius, no shadows) and turns the how-it-works band into three tabs: `The pool` keeps the lifecycle story, `Joining` pairs the copy-doc joining text with the FundingPool scene, `Claiming` pairs the payout-request text with the ClaimApproval scene and credits Accord (useaccord.xyz, external) for adjudication. Copy added to the copy doc §2 in the same change.
+
+### Patch Changes
+
+- [#14](https://github.com/xeroc/riprap/pull/14) [`3523d1f`](https://github.com/xeroc/riprap/commit/3523d1f57482a6bf9984c5f40ba2d3ae902f7d71) Thanks [@xeroc](https://github.com/xeroc)! - Cost/yield pass (2026-10-11, founder call): the blurb page's short blurb, standard blurb, and forwardable email now open on the two numbers — over 25% of every insurance dollar vanishing before a claim is paid, and privileged LPs earning up to 18% on the same risk (founder-supplied, deck sources) — with the unfairness gloss "expensive to buy, closed to fund." Roadmap copy names the DeFi-both-directions thesis: insurance yield opens to everyone (risk capital stakes into any pool, earns a rule-set share of the surplus), and pools themselves can use DeFi primitives — capital in AMMs and staking, re-insurance by stacking (modal per the composability law). "Insurance, Finally Programmable" becomes the standing motto close and the email subject; block labels recount to 95/210 words.
+
+- [#14](https://github.com/xeroc/riprap/pull/14) [`d8db3dd`](https://github.com/xeroc/riprap/commit/d8db3dddfb1c1edc36e4e88fd5276a9830207c89) Thanks [@xeroc](https://github.com/xeroc)! - Sync landing tests with the 2026-10-10 rewording: the headline-set assertion matches the shipped sentence-case `P2P purpose pools`, the lineage test asserts the new Mutuals-first opener instead of the removed "Protection without a protector." closer, and two typos in the new Heritage paragraph (Mututals/prestage) are fixed. The e2e harness now gates accord's loader Deploy on the buffer's actual content — re-sending missing 1 KiB chunks until every byte has landed — instead of an account-size poll that always passed immediately (the allocation is born full-size), which let Deploy race its own fire-and-forget writes and ship a truncated ELF ("Verifier error: jump to middle of LD_DW").
+- Updated dependencies [[`107eb7e`](https://github.com/xeroc/riprap/commit/107eb7e32223be13d8f8e5c20766f827201fc0d6), [`107eb7e`](https://github.com/xeroc/riprap/commit/107eb7e32223be13d8f8e5c20766f827201fc0d6)]:
+  - @riprap/ui@0.8.0
+  - @riprap/hanse@0.8.0
+
 ## 0.7.0
 
 ### Minor Changes
