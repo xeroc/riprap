@@ -11,52 +11,11 @@
 // read), the rest settle in on a 2.5s cadence; every phrase is 2–3 words
 // from the marketing material (provenance per line below).
 
-import { Button, ClaimApproval, FundingPool, HexBackdrop, SectionBand } from "@riprap/ui";
+import { Button, HexBackdrop, Logomark, SectionBand } from "@riprap/ui";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { Settle } from "../components/Settle";
 import { Waitlist } from "../components/Waitlist";
-
-/** The hero's rotating illustration: the join ceremony first, then the
- * claim payout, alternating — each shown for exactly one full loop so the
- * swap cuts at the loop boundary. Reduced motion keeps the first (the
- * join, as one static frame) and never swaps. */
-const DEMOS = [
-  { id: "funding-pool", dwell: 6000, node: <FundingPool /> },
-  { id: "claim-approval", dwell: 8000, node: <ClaimApproval /> },
-] as const;
-
-function DemoCycle() {
-  const reduce = useReducedMotion();
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (reduce) return;
-    const id = window.setTimeout(() => setIndex((i) => (i + 1) % DEMOS.length), DEMOS[index].dwell);
-    return () => window.clearTimeout(id);
-  }, [reduce, index]);
-
-  if (reduce) {
-    return <div className="flex h-full items-center justify-center">{DEMOS[0].node}</div>;
-  }
-
-  return (
-    <div className="relative h-full">
-      <AnimatePresence>
-        <motion.div
-          key={DEMOS[index].id}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.32, ease: [0.215, 0.61, 0.355, 1] }}
-          className="absolute inset-0 flex items-center justify-center"
-        >
-          {DEMOS[index].node}
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-}
 
 /** The rotating one-liners — 2–3 words each, from the marketing material.
  * The first is the founder-locked campaign H1 (copy doc §1, 2026-10-06);
@@ -164,10 +123,9 @@ export function Hero() {
               </div>
             </Settle>
           </div>
-          {/* the rotating story: join first, then the claim payout,
-              alternating — one full loop each, settle crossfade between */}
-          <div className="hidden h-[440px] w-[400px] lg:block">
-            <DemoCycle />
+          <div className="hidden lg:block">
+            {/* the ring: 7 stones settle clockwise, the harbor-blue newest member last (DESIGN.md § Motion) */}
+            <Logomark size={208} state="assemble" />
           </div>
         </div>
       </SectionBand>
