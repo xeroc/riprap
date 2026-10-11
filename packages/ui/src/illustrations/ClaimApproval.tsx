@@ -78,7 +78,7 @@ export function ClaimApproval({ className }: { className?: string }) {
 
         {/* the review column — the original agreement, reviewed and signed.
             No panel box around it (user law): the paper stands alone, top
-            aligned with the claim paper; the wrapper only anchors the stamp. */}
+            aligned with the claim paper. */}
         <motion.div
           data-slot="jury-panel"
           style={{ position: "absolute", left: "31%", top: "21%", width: "39%" }}
@@ -88,6 +88,53 @@ export function ClaimApproval({ className }: { className?: string }) {
         >
           <div style={{ display: "flex", justifyContent: "center" }}>
             <div style={{ width: "62%" }}>
+              {/* the ruling stamp — lands ON the Purpose headline once the
+                  jurors have signed. Flow layout, not absolute: the row's
+                  negative bottom margin slides the paper up under the stamp
+                  (the overlap is paper-relative, so it can't drift with the
+                  stage); relative + z-index keep it above the paper. */}
+              <motion.div
+                data-slot="approval-stamp"
+                style={{
+                  position: "relative",
+                  zIndex: 2,
+                  display: "flex",
+                  justifyContent: "center",
+                  marginBottom: -52,
+                }}
+                initial={
+                  reduced
+                    ? { opacity: 1, scale: 1, rotate: -10 }
+                    : { opacity: 0, scale: 0.4, rotate: -14 }
+                }
+                animate={
+                  reduced
+                    ? undefined
+                    : {
+                      opacity: [0, 0, 0, 1, 1, 1],
+                      scale: [0.4, 0.4, 0.4, 1, 1, 1],
+                      rotate: [-14, -14, -14, -10, -10, -10],
+                    }
+                }
+                transition={{ ...LOOP, times: [0, 0.47, 0.3, 0.34, 0.86, 1], ease: "easeIn" }}
+              >
+                <span
+                  style={{
+                    padding: "8px 5px",
+                    border: "2px solid var(--riprap-deliberation)",
+                    borderRadius: "50%",
+                    background: "var(--riprap-surface-card)",
+                    color: "var(--riprap-deliberation)",
+                    fontFamily: "var(--riprap-font-mono)",
+                    fontWeight: 700,
+                    fontSize: "clamp(7px, 1.1vw, 11px)",
+                    letterSpacing: "var(--riprap-tracking-stamp)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Approved
+                </span>
+              </motion.div>
               <Paper
                 eyebrow="Original agreement"
                 title="Purpose"
@@ -98,43 +145,6 @@ export function ClaimApproval({ className }: { className?: string }) {
               </Paper>
             </div>
           </div>
-          {/* the ruling stamp — lands once the jurors have signed */}
-          <motion.div
-            data-slot="approval-stamp"
-            style={{
-              position: "absolute",
-              zIndex: 2,
-              right: "3%",
-              bottom: "17%",
-              padding: "8px 5px",
-              border: "2px solid var(--riprap-deliberation)",
-              borderRadius: "50%",
-              background: "var(--riprap-surface-card)",
-              color: "var(--riprap-deliberation)",
-              fontFamily: "var(--riprap-font-mono)",
-              fontWeight: 700,
-              fontSize: "clamp(7px, 1.1vw, 11px)",
-              letterSpacing: "var(--riprap-tracking-stamp)",
-              textTransform: "uppercase",
-            }}
-            initial={
-              reduced
-                ? { opacity: 1, scale: 1, rotate: -8 }
-                : { opacity: 0, scale: 0.4, rotate: -12 }
-            }
-            animate={
-              reduced
-                ? undefined
-                : {
-                    opacity: [0, 0, 0, 1, 1, 1],
-                    scale: [0.4, 0.4, 0.4, 1, 1, 1],
-                    rotate: [-12, -12, -12, -8, -8, -8],
-                  }
-            }
-            transition={{ ...LOOP, times: [0, 0.47, 0.3, 0.34, 0.86, 1], ease: "easeIn" }}
-          >
-            Approved
-          </motion.div>
         </motion.div>
 
         <motion.div
@@ -293,10 +303,10 @@ export function ClaimApproval({ className }: { className?: string }) {
             reduced
               ? undefined
               : {
-                  top: ["68%", "68%", "68%", "34%", "34%", "34%"],
-                  opacity: [0, 0, 1, 1, 0, 0],
-                  scale: [0.7, 0.7, 1, 1, 0.8, 0.8],
-                }
+                top: ["68%", "68%", "68%", "34%", "34%", "34%"],
+                opacity: [0, 0, 1, 1, 0, 0],
+                scale: [0.7, 0.7, 1, 1, 0.8, 0.8],
+              }
           }
           transition={{ ...LOOP, times: [0, 0.55, 0.61, 0.75, 0.84, 1], ease: "easeInOut" }}
         >
@@ -381,15 +391,15 @@ function VesselWater({ reduced }: { reduced: boolean | null }) {
         reduced
           ? undefined
           : {
-              height: [FULL_LEVEL, FULL_LEVEL, FULL_LEVEL, DRAINED_LEVEL, DRAINED_LEVEL],
-              y: [
-                floor - FULL_LEVEL,
-                floor - FULL_LEVEL,
-                floor - FULL_LEVEL,
-                floor - DRAINED_LEVEL,
-                floor - DRAINED_LEVEL,
-              ],
-            }
+            height: [FULL_LEVEL, FULL_LEVEL, FULL_LEVEL, DRAINED_LEVEL, DRAINED_LEVEL],
+            y: [
+              floor - FULL_LEVEL,
+              floor - FULL_LEVEL,
+              floor - FULL_LEVEL,
+              floor - DRAINED_LEVEL,
+              floor - DRAINED_LEVEL,
+            ],
+          }
       }
       transition={{ ...LOOP, times: [0, 0.5, 0.57, 0.75, 1], ease: "easeInOut" }}
     />
@@ -545,11 +555,11 @@ function CheckRow({
           width={12}
           height={12}
           initial={reduced ? { opacity: 1 } : { opacity: 0 }}
-          animate={reduced ? undefined : { opacity: [0, 0, 1, 1, 0] }}
+          animate={reduced ? undefined : { opacity: [0, 0, 1, 1, 1] }}
           transition={{
             ...LOOP,
             times: [0, delay / D, (delay + 0.3) / D, 0.88, 1],
-            ease: "easeInOut",
+            ease: "easeIn",
           }}
         >
           <path
