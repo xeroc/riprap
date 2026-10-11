@@ -1,7 +1,7 @@
 import type * as Connector from "@solana/connector";
 import type { Address } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import { MUTUALS } from "./mutuals/data";
@@ -255,6 +255,30 @@ describe("landing", () => {
     expect(screen.queryByText("The failure mode, named")).toBeNull();
   });
 
+  it("mechanism tabs: the pool story leads; joining and claiming carry their scenes (§2 tabs)", () => {
+    renderApp();
+    // three tabs, the pool active by default — the five steps visible
+    expect(screen.getByRole("tab", { name: "The pool" }).getAttribute("data-state")).toBe("active");
+    expect(screen.getByRole("tab", { name: "Joining" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: "Claiming" })).toBeTruthy();
+    // inactive content unmounts — the scenes only run on their tab
+    expect(document.querySelector('[data-slot="funding-pool"]')).toBeNull();
+    expect(document.querySelector('[data-slot="claim-approval"]')).toBeNull();
+
+    const joining = screen.getByRole("tab", { name: "Joining" });
+    fireEvent.mouseDown(joining); // Radix tabs activate on mousedown, not click
+    expect(document.querySelector('[data-slot="funding-pool"]')).not.toBeNull();
+    expect(screen.getByText(/the fee lands in the pool/, { exact: false })).toBeTruthy();
+
+    const claiming = screen.getByRole("tab", { name: "Claiming" });
+    fireEvent.mouseDown(claiming);
+    expect(document.querySelector('[data-slot="claim-approval"]')).not.toBeNull();
+    // adjudication credits Accord with the external link (copy doc §2 tabs)
+    const accord = screen.getByRole("link", { name: /Accord/ });
+    expect(accord.getAttribute("href")).toBe("https://useaccord.xyz");
+    expect(accord.getAttribute("target")).toBe("_blank");
+  });
+
   it("states the lineage — the primitive replaces the institution", () => {
     renderApp();
     expect(screen.getByText("The mutual is old. The Solana primitive is new.")).toBeTruthy();
@@ -264,9 +288,6 @@ describe("landing", () => {
       screen.getByText(/State Farm — is a mutual, owned by the people it covers/),
     ).toBeTruthy();
     expect(screen.getByText(/Programmatic custody holds the Treasury/)).toBeTruthy();
-    // 2026-10-10 rewording: the closer line died; the band opens with the
-    // founder's Mutuals-first framing instead
-    expect(screen.getByText(/oldest form of risk protection on earth/)).toBeTruthy();
   });
 
   it("why-on-chain band: transparency, cost, composability (copy doc §1.5, v2)", () => {

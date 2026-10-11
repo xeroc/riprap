@@ -45,7 +45,6 @@ function Slider({
         />
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: thumb identity is positional — value keys remount the thumb every step and detach it mid-interaction
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           key={

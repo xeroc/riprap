@@ -1,7 +1,21 @@
-// §2 — the lifecycle in five plates; the full design lives in the repo (copy doc §2).
-import { LifecycleStrip, SectionBand } from "@riprap/ui";
+import {
+  ClaimApproval,
+  FundingPool,
+  LifecycleStrip,
+  SectionBand,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TextLink,
+} from "@riprap/ui";
 
 import { Settle } from "../components/Settle";
+
+// §2 — the lifecycle in five plates; the full design lives in the repo (copy doc §2).
+// 2026-10-11: the band runs as three tabs (copy doc §2 tabs) — the pool story
+// unchanged on the first tab; joining and claiming pair their explanation with
+// the kit's loop scenes.
 
 // Steps mirror LifecycleStrip's order (join → gather → rule → claim →
 // liquidate). §3's guarantees folded in: two doors → liquidate,
@@ -42,24 +56,66 @@ export function Mechanism() {
           Five steps. One pool.
         </h2>
 
-        <LifecycleStrip />
+        <Tabs defaultValue="pool">
+          <TabsList>
+            <TabsTrigger value="pool">The pool</TabsTrigger>
+            <TabsTrigger value="joining">Joining</TabsTrigger>
+            <TabsTrigger value="claiming">Claiming</TabsTrigger>
+          </TabsList>
 
-        <div className="border-t border-hairline">
-          {STEPS.map((s) => (
-            <div
-              key={s.n}
-              className="grid gap-4 border-b border-hairline py-8 sm:grid-cols-[3.5rem_1fr] sm:gap-10"
-            >
-              <p className="font-mono text-base text-accent">{s.n}</p>
-              <div>
-                <h3 className="tracking-tight text-ink [font:var(--riprap-display-sm)]">{s.h}</h3>
-                <p className="mt-3 max-w-2xl leading-relaxed text-body [font:var(--riprap-body-md)]">
-                  {s.p}
-                </p>
+          {/* the pool — the lifecycle story, unchanged (copy doc §2) */}
+          <TabsContent value="pool" className="flex flex-col gap-(--riprap-space-xl)">
+            <LifecycleStrip />
+
+            <div className="border-t border-hairline">
+              {STEPS.map((s) => (
+                <div
+                  key={s.n}
+                  className="grid gap-4 border-b border-hairline py-8 sm:grid-cols-[3.5rem_1fr] sm:gap-10"
+                >
+                  <p className="font-mono text-base text-accent">{s.n}</p>
+                  <div>
+                    <h3 className="tracking-tight text-ink [font:var(--riprap-display-sm)]">
+                      {s.h}
+                    </h3>
+                    <p className="mt-3 max-w-2xl leading-relaxed text-body [font:var(--riprap-body-md)]">
+                      {s.p}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* joining — copy doc §2 tabs: one act, sign + pay (copy doc §2 tabs) */}
+          <TabsContent value="joining" className="flex flex-col gap-(--riprap-space-lg)">
+            <p className="max-w-2xl leading-relaxed text-body [font:var(--riprap-body-md)]">
+              Each pool comes with its own rules, a policy, or terms of service. On joining the
+              pool, a user accepts the immutable terms and the fee lands in the pool.
+            </p>
+            <div className="flex py-(--riprap-space-sm)">
+              <FundingPool />
+            </div>
+          </TabsContent>
+
+          {/* claiming — copy doc §2 tabs: payout requests and the process */}
+          <TabsContent value="claiming" className="flex flex-col gap-(--riprap-space-lg)">
+            <p className="max-w-2xl leading-relaxed text-body [font:var(--riprap-body-md)]">
+              A payout request carries the evidence the terms demand. A jury of staked members rules
+              against the original purpose. An approved claim pays from the pool, never more than it
+              holds. Adjudication runs on{" "}
+              <TextLink href="https://useaccord.xyz" external>
+                Accord
+              </TextLink>
+              , an open arbitration protocol — its ruling is what moves the money.
+            </p>
+            <div className="flex py-(--riprap-space-sm)">
+              <div className="w-full">
+                <ClaimApproval />
               </div>
             </div>
-          ))}
-        </div>
+          </TabsContent>
+        </Tabs>
       </Settle>
     </SectionBand>
   );

@@ -294,8 +294,11 @@ export async function fileMemberClaim(
   const memberIdx = opts.memberIdx ?? 0;
   const requested = opts.requested ?? 95_000_000n;
   const { env, mutual, mint } = fx;
-  const claimant = fx.members[memberIdx]!;
-  const claimantAta = fx.memberAtas[memberIdx]!;
+  const claimant = fx.members[memberIdx];
+  const claimantAta = fx.memberAtas[memberIdx];
+  if (!claimant || !claimantAta) {
+    throw new Error(`mutual fixture has no member ${memberIdx}`);
+  }
   const fee = 4n * 5_000_000n; // (min_jury_size + 1) × fee_per_juror — ADR-0030 bounty unit (§12: $20)
 
   // fund the fee (join drained the contribution; the filing fee is extra)

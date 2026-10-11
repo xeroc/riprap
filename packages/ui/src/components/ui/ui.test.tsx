@@ -21,6 +21,7 @@ import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { Toaster } from "../ui/sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 afterEach(cleanup);
 
@@ -175,5 +176,42 @@ describe("Toaster (sonner)", () => {
     expect(toaster.style.getPropertyValue("--normal-bg")).toBe("var(--riprap-surface-card)");
     expect(toaster.style.getPropertyValue("--normal-border")).toBe("var(--riprap-hairline-strong)");
     expect(toaster.style.getPropertyValue("--border-radius")).toBe("0px");
+  });
+});
+
+describe("Tabs — hairline line tabs, mono stamps (DESIGN.md)", () => {
+  it("renders one hairline under the list; triggers are mono uppercase, active = ink underline", () => {
+    render(
+      <Tabs defaultValue="pool">
+        <TabsList>
+          <TabsTrigger value="pool">The pool</TabsTrigger>
+          <TabsTrigger value="claiming">Claiming</TabsTrigger>
+        </TabsList>
+        <TabsContent value="pool">the story</TabsContent>
+        <TabsContent value="claiming">the claim</TabsContent>
+      </Tabs>,
+    );
+    const root = document.querySelector('[data-slot="tabs"]') as HTMLElement;
+    // the list stacks ABOVE the body — never beside it
+    expect(root.className).toContain("flex-col");
+    const list = document.querySelector('[data-slot="tabs-list"]') as HTMLElement;
+    expect(list.className).toContain("border-b");
+    expect(list.className).not.toMatch(/rounded-|shadow-/);
+    const active = screen.getByRole("tab", { name: "The pool" });
+    const inactive = screen.getByRole("tab", { name: "Claiming" });
+    for (const t of [active, inactive]) {
+      expect(t.className).toContain("[font:var(--riprap-mono-label)]");
+      expect(t.className).toContain("uppercase");
+    }
+    expect(active.getAttribute("data-state")).toBe("active");
+    // inactive content unmounts — only the active tab's scene runs
+    expect(screen.getByText("the story")).toBeTruthy();
+    expect(screen.queryByText("the claim")).toBeNull();
+    fireEvent.pointerDown(inactive);
+    fireEvent.mouseDown(inactive);
+    fireEvent.focus(inactive);
+    fireEvent.click(inactive);
+    expect(screen.getByText("the claim")).toBeTruthy();
+    expect(screen.queryByText("the story")).toBeNull();
   });
 });
