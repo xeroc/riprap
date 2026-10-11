@@ -248,8 +248,11 @@ export async function deployProgram(
   ]);
 
   // Writes land at independent offsets, so batches fire concurrently sharing
-  // one blockhash (refreshed per batch against expiry), skip per-tx confirm,
-  // and are verified by the buffer-length poll below plus Deploy's ELF check.
+  // one blockhash (refreshed per batch against expiry) and skip per-tx
+  // confirm. Correctness does NOT rest on them landing: the buffer's
+  // allocated size is born full (zero-filled) at CreateAccount, so account
+  // size proves nothing — the loop below verifies the buffer CONTENT and
+  // gates Deploy on every chunk being provably in place.
   for (let batchStart = 0; batchStart < elf.length; batchStart += WRITE_CHUNK * WRITE_BATCH) {
     const batchEnd = Math.min(batchStart + WRITE_CHUNK * WRITE_BATCH, elf.length);
     const lifetime = (await env.rpc.getLatestBlockhash().send()).value;
@@ -264,15 +267,47 @@ export async function deployProgram(
         });
       }),
     );
-    // console.error(`[deploy] ${programId}: wrote ${batchEnd}/${elf.length} B`);
   }
 
-  // Confirm out-of-band: the buffer reaches full size once every write lands.
+  // Confirm out-of-band and self-heal: fetch the buffer, re-send any chunk
+  // whose bytes haven't landed (a dropped batch — expired blockhash, failed
+  // tx — would otherwise hand Deploy a truncated ELF, which surfaces as the
+  // loader's "Verifier error: jump to middle of LD_DW"). Re-sending an
+  // already-written chunk is an idempotent overwrite, so a diff that stays
+  // over-eager (all-zero legitimate chunks) is harmless.
+  let complete = false;
   for (let poll = 0; poll < 100; poll++) {
     const account = await env.rpc.getAccountInfo(buffer.address, { encoding: "base64" }).send();
-    const size = account.value ? Buffer.from(account.value.data[0], "base64").length : 0;
-    if (size >= bufferSpace) break;
+    const data = account.value ? Buffer.from(account.value.data[0], "base64") : Buffer.alloc(0);
+    const missing: number[] = [];
+    for (let o = 0; o < elf.length; o += WRITE_CHUNK) {
+      const end = Math.min(o + WRITE_CHUNK, elf.length);
+      const landed = data
+        .subarray(BUFFER_META_LEN + o, BUFFER_META_LEN + end)
+        .equals(elf.subarray(o, end));
+      if (!landed) missing.push(o);
+    }
+    if (missing.length === 0) {
+      complete = true;
+      break;
+    }
+    const lifetime = (await env.rpc.getLatestBlockhash().send()).value;
+    await Promise.all(
+      missing.map((offset) => {
+        const chunk = elf.subarray(offset, Math.min(offset + WRITE_CHUNK, elf.length));
+        return env.sendIxs([writeIx(buffer.address, env.payer.address, offset, chunk)], {
+          blockhash: lifetime,
+          skipConfirm: true,
+        });
+      }),
+    );
     await sleep(200);
+  }
+  if (!complete) {
+    throw new Error(
+      `[deploy] ${programId}: buffer writes did not converge after 100 polls — ` +
+        `${elf.length} B ELF at ${buffer.address}; refusing to deploy a truncated buffer.`,
+    );
   }
 
   await env.sendIxs([
