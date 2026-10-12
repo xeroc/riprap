@@ -431,9 +431,9 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
           slot.url === undefined
             ? { path: slot.path, sha256: draft.docs[slot.path]?.sha256 ?? "" }
             : {
-                url: draft.docs[slot.path]?.url ?? "",
-                sha256: draft.docs[slot.path]?.sha256 ?? "",
-              },
+              url: draft.docs[slot.path]?.url ?? "",
+              sha256: draft.docs[slot.path]?.sha256 ?? "",
+            },
         ),
       },
       flow.documentSlots, // the pool's policy §7 slots (ADR-0031 daemon set)
@@ -571,6 +571,7 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
         operatorPub,
       });
     } catch (error) {
+      console.log(error);
       // a 400 here is loud (unknown schema — never silently degraded); any
       // failure leaves the rows retryable (below) and from the app surface
       setOperatorDown(true);
@@ -657,6 +658,7 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
           "delivered",
         );
       } catch (error) {
+        console.log(error);
         setOperatorDown(true);
         toast.error(error instanceof Error ? error.message : "Couldn't reach the operator.");
         return;

@@ -57,6 +57,15 @@ export async function resolveEvidenceOperator(
   clusterRpc: ClusterRpc,
   operatorAuthority: Address,
 ): Promise<EvidenceOperator> {
+  const isDevnet = clusterRpc.endpoint.includes("devnet");
+  const url = `api${isDevnet ? ".devnet" : ""}.useaccord.xyz`;
+  return {
+    name: isDevnet ? "devnet" : "mainnet",
+    url,
+    encryptionKey: operatorAuthority,
+    healthy: await pingOperator(url),
+  };
+  /* TODO: later, when we store the operator details on chain, we can use METADATA PROGRAM_METADATA
   const addressEncoder = getAddressEncoder();
   const [pda] = await getProgramDerivedAddress({
     programAddress: PROGRAM_METADATA_ADDRESS,
@@ -83,6 +92,7 @@ export async function resolveEvidenceOperator(
     encryptionKey: typeof parsed.encryption_key === "string" ? parsed.encryption_key : "",
     healthy: await pingOperator(parsed.url),
   };
+   */
 }
 
 /** GET {url}/healthz — 200 ⇒ healthy; anything else ⇒ not (no throw). */
@@ -108,10 +118,13 @@ export function useEvidenceOperator(
   const query = useQuery({
     queryKey: ["evidence-operator", clusterRpc?.endpoint, operatorAuthority],
     queryFn: () => {
+      console.log(".");
       if (!clusterRpc || operatorAuthority === null) {
         throw new Error("evidence-operator prerequisites disappeared mid-flight");
       }
-      return resolveEvidenceOperator(clusterRpc, operatorAuthority);
+      const x = resolveEvidenceOperator(clusterRpc, operatorAuthority);
+      console.log(x);
+      return x;
     },
     enabled: clusterRpc !== null && operatorAuthority !== null,
     staleTime: Infinity, // once per session (CLAIM-WIZARD §8)
