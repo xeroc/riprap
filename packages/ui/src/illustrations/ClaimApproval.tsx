@@ -111,10 +111,10 @@ export function ClaimApproval({ className }: { className?: string }) {
                   reduced
                     ? undefined
                     : {
-                      opacity: [0, 0, 0, 1, 1, 1],
-                      scale: [0.4, 0.4, 0.4, 1, 1, 1],
-                      rotate: [-14, -14, -14, -10, -10, -10],
-                    }
+                        opacity: [0, 0, 0, 1, 1, 1],
+                        scale: [0.4, 0.4, 0.4, 1, 1, 1],
+                        rotate: [-14, -14, -14, -10, -10, -10],
+                      }
                 }
                 transition={{ ...LOOP, times: [0, 0.47, 0.3, 0.34, 0.86, 1], ease: "easeIn" }}
               >
@@ -303,10 +303,10 @@ export function ClaimApproval({ className }: { className?: string }) {
             reduced
               ? undefined
               : {
-                top: ["68%", "68%", "68%", "34%", "34%", "34%"],
-                opacity: [0, 0, 1, 1, 0, 0],
-                scale: [0.7, 0.7, 1, 1, 0.8, 0.8],
-              }
+                  top: ["68%", "68%", "68%", "34%", "34%", "34%"],
+                  opacity: [0, 0, 1, 1, 0, 0],
+                  scale: [0.7, 0.7, 1, 1, 0.8, 0.8],
+                }
           }
           transition={{ ...LOOP, times: [0, 0.55, 0.61, 0.75, 0.84, 1], ease: "easeInOut" }}
         >
@@ -391,15 +391,15 @@ function VesselWater({ reduced }: { reduced: boolean | null }) {
         reduced
           ? undefined
           : {
-            height: [FULL_LEVEL, FULL_LEVEL, FULL_LEVEL, DRAINED_LEVEL, DRAINED_LEVEL],
-            y: [
-              floor - FULL_LEVEL,
-              floor - FULL_LEVEL,
-              floor - FULL_LEVEL,
-              floor - DRAINED_LEVEL,
-              floor - DRAINED_LEVEL,
-            ],
-          }
+              height: [FULL_LEVEL, FULL_LEVEL, FULL_LEVEL, DRAINED_LEVEL, DRAINED_LEVEL],
+              y: [
+                floor - FULL_LEVEL,
+                floor - FULL_LEVEL,
+                floor - FULL_LEVEL,
+                floor - DRAINED_LEVEL,
+                floor - DRAINED_LEVEL,
+              ],
+            }
       }
       transition={{ ...LOOP, times: [0, 0.5, 0.57, 0.75, 1], ease: "easeInOut" }}
     />

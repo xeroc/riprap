@@ -70,14 +70,14 @@ export function FundingPool({ className }: { className?: string }) {
                 reduced
                   ? undefined
                   : {
-                    height: [LOW, LOW, HIGH, HIGH],
-                    y: [
-                      VESSEL.fill.floorY - LOW,
-                      VESSEL.fill.floorY - LOW,
-                      VESSEL.fill.floorY - HIGH,
-                      VESSEL.fill.floorY - HIGH,
-                    ],
-                  }
+                      height: [LOW, LOW, HIGH, HIGH],
+                      y: [
+                        VESSEL.fill.floorY - LOW,
+                        VESSEL.fill.floorY - LOW,
+                        VESSEL.fill.floorY - HIGH,
+                        VESSEL.fill.floorY - HIGH,
+                      ],
+                    }
               }
               transition={{ ...LOOP, times: [0, 0.28, 0.55, 1], ease: "easeInOut" }}
             />
@@ -238,10 +238,10 @@ export function FundingPool({ className }: { className?: string }) {
             reduced
               ? undefined
               : {
-                opacity: [0, 0, 1, 0, 0],
-                x: [0, 0, COIN.dx, COIN.dx, COIN.dx],
-                y: [0, 0, COIN.dy, COIN.dy, COIN.dy],
-              }
+                  opacity: [0, 0, 1, 0, 0],
+                  x: [0, 0, COIN.dx, COIN.dx, COIN.dx],
+                  y: [0, 0, COIN.dy, COIN.dy, COIN.dy],
+                }
           }
           transition={{ ...LOOP, times: [0, 0.16, 0.4, 0.55, 1], ease: "easeInOut" }}
         >
