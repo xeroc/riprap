@@ -272,7 +272,7 @@ describe("/app — the joined-pools table (data-bound to the chain)", () => {
       `#/app/file-claim/${BLADE_DEVNET}`,
     );
     expect(screen.getByRole("link", { name: "Jury duty" }).getAttribute("href")).toBe(
-      `#/app/adjudicate/${BLADE_DEVNET}`,
+      "#/app/adjudicate",
     );
     // actions are buttons: the anchors carry the kit's button chrome (asChild)
     const fileAction = screen.getByRole("link", { name: "File a payout request" });
@@ -328,7 +328,7 @@ describe("/app — payout-request entry action (copy doc § /app, CLAIM-WIZARD �
     await waitFor(() => expect(feeBalanceMock).toHaveBeenCalled());
     expect(screen.queryByRole("link", { name: "File a payout request" })).toBeNull();
     expect(screen.getByRole("link", { name: "Jury duty" }).getAttribute("href")).toBe(
-      `#/app/adjudicate/${BLADE_DEVNET}`,
+      "#/app/adjudicate",
     );
   });
 });
@@ -360,7 +360,6 @@ describe("/app — multi-pool listing (every entered pool gets its row)", () => 
     const juryHrefs = screen
       .getAllByRole("link", { name: "Jury duty" })
       .map((a) => a.getAttribute("href"));
-    expect(juryHrefs).toContain(`#/app/adjudicate/${BLADE_DEVNET}`);
-    expect(juryHrefs).toContain(`#/app/adjudicate/${CHAIR}`);
+    expect(juryHrefs).toEqual(["#/app/adjudicate", "#/app/adjudicate"]);
   });
 });

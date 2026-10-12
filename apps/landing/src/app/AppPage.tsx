@@ -163,7 +163,7 @@ function JoinedPoolRow({ pool, member }: { pool: LiveMutual; member: Member }) {
             </Button>
           ) : null}
           <Button asChild size="sm" variant="outline">
-            <a href={`#/app/adjudicate/${routeId}`}>Jury duty</a>
+            <a href="#/app/adjudicate">Jury duty</a>
           </Button>
         </div>
       </td>

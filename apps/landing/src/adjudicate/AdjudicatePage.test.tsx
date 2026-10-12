@@ -1,22 +1,25 @@
-// #/app/adjudicate under the on-chain binding (riprap-jfb5, spec §2–3):
-// reads-only. The connect gate, the shared not-live/not-member states, the
-// serve panel's honest stake states, drawn-seat cards (stamp, panel size,
-// clock-derived phase, prior tally, terminal), and the session route's
-// not-your-seat gate — copy verbatim from copy doc § "/app/adjudicate"
-// (riprap-r8wf); every number renders from the chain, never static.
+// #/app/adjudicate under the on-chain binding (riprap-jfb5, spec §2–3),
+// mutual-agnostic: reads-only. The connect gate, the shared /app scan states,
+// the serve panel's honest stake states (per pool block, under the pool's
+// name), drawn-seat cards (stamp, panel size, clock-derived phase, prior
+// tally, terminal), and the session route's not-your-seat gate + dispute→pool
+// resolution — copy verbatim from copy doc § "/app/adjudicate"; every number
+// renders from the chain, never static.
 
+import type * as Hanse from "@riprap/hanse";
 import {
   type Claim,
   ClaimStatus,
   fetchMaybeClaimByNonce,
   fetchMaybeMemberByOwner,
-  fetchMaybeMutual,
   type Member,
 } from "@riprap/hanse";
+import type * as Connector from "@solana/connector";
 import { AppProvider, getDefaultConfig } from "@solana/connector";
 import type { Address, MaybeAccount } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
+import type * as UseAccord from "@useaccord/sdk";
 import {
   type Dispute,
   DisputeState,
@@ -26,24 +29,30 @@ import {
   type Round,
 } from "@useaccord/sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { MUTUALS } from "../mutuals/data";
+import type * as StoreModule from "../mutuals/store";
+import type { LiveMutual, MutualStore } from "../mutuals/store";
+import type { MutualListing } from "../mutuals/types";
 import { fakeMutual } from "../pool/fixtures";
 import { AdjudicatePage } from "./AdjudicatePage";
 
-const { walletState } = vi.hoisted(() => ({
+const { walletState, storeState } = vi.hoisted(() => ({
   walletState: { isConnected: false, account: null as string | null },
+  // the mutuals store the board scans — swapped per test (the store's own
+  // resolution logic lives in its suite; here it is the seam)
+  storeState: { state: "loading" } as { state: string; pools?: unknown[] },
 }));
 
 vi.mock("@riprap/hanse", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@riprap/hanse")>();
+  const actual = await importOriginal<typeof Hanse>();
   return {
     ...actual,
-    fetchMaybeMutual: vi.fn(),
     fetchMaybeMemberByOwner: vi.fn(),
     fetchMaybeClaimByNonce: vi.fn(),
   };
 });
 vi.mock("@solana/connector", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@solana/connector")>();
+  const actual = await importOriginal<typeof Connector>();
   return {
     ...actual,
     useWallet: () => walletState,
@@ -51,7 +60,7 @@ vi.mock("@solana/connector", async (importOriginal) => {
   };
 });
 vi.mock("@useaccord/sdk", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@useaccord/sdk")>();
+  const actual = await importOriginal<typeof UseAccord>();
   return {
     ...actual,
     fetchSubaccordMaybe: vi.fn(async () => ({
@@ -66,6 +75,13 @@ vi.mock("@useaccord/sdk", async (importOriginal) => {
     findRoundPda: vi.fn(async () => ["R".repeat(32) as Address, 255]),
   };
 });
+vi.mock("../mutuals/store", async (importOriginal) => {
+  const actual = await importOriginal<typeof StoreModule>();
+  return {
+    ...actual,
+    useMutualStore: () => storeState as unknown as MutualStore,
+  };
+});
 vi.mock("../shared/rpc", () => ({
   useClusterRpc: () => ({
     endpoint: "http://127.0.0.1:8899",
@@ -75,7 +91,6 @@ vi.mock("../shared/rpc", () => ({
   useHanseEnv: () => null, // read-only board; writes are ServeActions' tests
 }));
 
-const mutualMock = vi.mocked(fetchMaybeMutual);
 const memberMock = vi.mocked(fetchMaybeMemberByOwner);
 const claimMock = vi.mocked(fetchMaybeClaimByNonce);
 const disputeMock = vi.mocked(fetchMaybeDispute);
@@ -160,13 +175,29 @@ const STAKED = {
   data: { staked: 10_000_000n, feesEarned: 5_000_000n },
 } as unknown as MaybeAccount<never>;
 
+/** One live pool fixture: the directory's Blade Pool listing over a decoded
+ * mutual whose subaccord matches the dispute fixture (A). */
+const bladeFound = MUTUALS.find((m) => m.slug === "blade-pool");
+if (bladeFound === undefined) throw new Error("no blade-pool listing in the directory");
+const BLADE_LISTING: MutualListing = bladeFound;
+
+function livePool(over: Partial<LiveMutual> = {}): LiveMutual {
+  return {
+    listing: BLADE_LISTING,
+    address: MUTUAL_ADDR as Address,
+    account: fakeMutual({ claimNonce: 1n, subaccord: A }),
+    ...over,
+  };
+}
+
 const testConfig = getDefaultConfig({ appName: "riprap-test", network: "localnet" });
 
 function renderPage(
-  mutualAddress = MUTUAL_ADDR,
+  pools: LiveMutual[] = [livePool()],
   session = null as null | { dispute: string; round: number },
 ) {
-  vi.stubEnv("VITE_LOCALNET_MUTUAL", mutualAddress);
+  storeState.state = "ready";
+  storeState.pools = pools;
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
   });
@@ -181,13 +212,13 @@ function renderPage(
 
 afterEach(() => {
   cleanup();
-  vi.unstubAllEnvs();
+  storeState.state = "loading";
+  storeState.pools = [];
 });
 
 function connectedMemberBase() {
   walletState.isConnected = true;
   walletState.account = WALLET;
-  mutualMock.mockResolvedValue(maybe(fakeMutual({ claimNonce: 1n })));
   memberMock.mockResolvedValue(MEMBER);
   claimMock.mockResolvedValue(CLAIM_WITH_DISPUTE);
   disputeMock.mockResolvedValue(disputeAccount());
@@ -205,27 +236,46 @@ describe("#/app/adjudicate — frame states (copy doc § /app/adjudicate frame)"
     expect(screen.getByRole("button", { name: "Connect a wallet" })).toBeTruthy();
   });
 
-  it("not live on this cluster: the shared /app state", () => {
+  it("no cluster: the shared /app not-live state", () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    renderPage(""); // no deployment on this cluster
+    storeState.state = "off";
+    storeState.pools = [];
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AppProvider connectorConfig={testConfig}>
+          <AdjudicatePage />
+        </AppProvider>
+      </QueryClientProvider>,
+    );
     expect(screen.getByText("Not live on this cluster")).toBeTruthy();
   });
 
-  it("connected, not a member: the closed-circle state", async () => {
+  it("connected, not a member of any pool: the /app closed-circle state", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    mutualMock.mockResolvedValue(maybe(fakeMutual({ claimNonce: 1n })));
     memberMock.mockResolvedValue({
       exists: false,
       address: "M".repeat(32),
     } as MaybeAccount<Member>);
     renderPage();
-    expect(await screen.findByText("This wallet isn't in the pool.")).toBeTruthy();
+    expect(await screen.findByText("This wallet isn't in any pool.")).toBeTruthy();
+    expect(screen.getByText(/Membership opens on/)).toBeTruthy();
   });
 });
 
-describe("#/app/adjudicate — board (spec §3)", () => {
+describe("#/app/adjudicate — board, one block per joined pool (spec §3)", () => {
+  it("renders the pool's name over its serve panel and seats", async () => {
+    connectedMemberBase();
+    renderPage();
+
+    expect(await screen.findByText("Seat — round 0")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 2, name: BLADE_LISTING.name })).toBeTruthy();
+  });
+
   it("staked, never drawn: the honest empty state", async () => {
     connectedMemberBase();
     claimMock.mockResolvedValue({ exists: false, address: "C".repeat(32) } as MaybeAccount<Claim>);
@@ -292,7 +342,7 @@ describe("#/app/adjudicate/:dispute/:round — session shell (spec §2)", () => 
   it("wallet not in the routed round: not your seat, nothing else renders", async () => {
     connectedMemberBase();
     roundMock.mockResolvedValue(maybe(roundAccount({ jurors: [OTHER as Address] })));
-    renderPage(MUTUAL_ADDR, { dispute: DISPUTE, round: 0 });
+    renderPage([livePool()], { dispute: DISPUTE, round: 0 });
 
     expect(await screen.findByText("This seat isn't yours.")).toBeTruthy();
     expect(screen.getByText("Your wallet wasn't drawn for this round.")).toBeTruthy();
@@ -301,7 +351,7 @@ describe("#/app/adjudicate/:dispute/:round — session shell (spec §2)", () => 
 
   it("drawn: the round shell with clock", async () => {
     connectedMemberBase();
-    renderPage(MUTUAL_ADDR, { dispute: DISPUTE, round: 0 });
+    renderPage([livePool()], { dispute: DISPUTE, round: 0 });
 
     expect(await screen.findByText("Round 0")).toBeTruthy();
     expect(screen.getByText(/review closes 2100-01/)).toBeTruthy();
@@ -310,8 +360,38 @@ describe("#/app/adjudicate/:dispute/:round — session shell (spec §2)", () => 
   it("round account missing: the same honest not-your-seat state", async () => {
     connectedMemberBase();
     roundMock.mockResolvedValue({ exists: false, address: "R".repeat(32) } as MaybeAccount<Round>);
-    renderPage(MUTUAL_ADDR, { dispute: DISPUTE, round: 9 });
+    renderPage([livePool()], { dispute: DISPUTE, round: 9 });
 
     expect(await screen.findByText("This seat isn't yours.")).toBeTruthy();
+  });
+
+  it("dispute missing on the cluster: the no-dispute state", async () => {
+    connectedMemberBase();
+    roundMock.mockResolvedValue(maybe(roundAccount()));
+    disputeMock.mockResolvedValue({ exists: false, address: DISPUTE } as MaybeAccount<Dispute>);
+    renderPage([livePool()], { dispute: DISPUTE, round: 0 });
+
+    expect(await screen.findByText("No such dispute on this cluster.")).toBeTruthy();
+  });
+
+  it("dispute's subaccord matches no live pool: the pool-not-live state", async () => {
+    connectedMemberBase();
+    roundMock.mockResolvedValue(maybe(roundAccount()));
+    disputeMock.mockResolvedValue(disputeAccount({ subaccord: "2".repeat(32) as Address }));
+    renderPage([livePool()], { dispute: DISPUTE, round: 0 });
+
+    expect(await screen.findByText("This dispute's pool isn't live on this cluster.")).toBeTruthy();
+    expect(screen.getByText("Switch networks to find it.")).toBeTruthy();
+  });
+
+  it("pool without an adjudication pack: the no-policy state", async () => {
+    connectedMemberBase();
+    roundMock.mockResolvedValue(maybe(roundAccount()));
+    const chairmageddon = MUTUALS.find((m) => m.slug === "chairmageddon");
+    if (chairmageddon === undefined) throw new Error("no chairmageddon listing");
+    renderPage([livePool({ listing: chairmageddon })], { dispute: DISPUTE, round: 0 });
+
+    expect(await screen.findByText("No adjudication policy for this pool yet.")).toBeTruthy();
+    expect(screen.getByText("This session can't run until the pool's policy ships.")).toBeTruthy();
   });
 });

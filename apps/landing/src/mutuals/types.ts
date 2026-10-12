@@ -41,5 +41,12 @@ export interface MutualListing {
    * its index test pins every listed id to a registered pack.
    */
   claimFlow?: string;
+  /**
+   * The id of this pool's adjudication pack (adjudicate/policies) — the
+   * policy questions its jury sessions run. Omitted while a pool has no
+   * pack; the policies registry resolves the id and its index test pins
+   * every listed id to a registered pack.
+   */
+  adjudicationPolicy?: string;
   /** route id until the pubkey is pinned — e.g. "blade-pool" */
 }

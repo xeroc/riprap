@@ -36,17 +36,10 @@ vi.mock("./app/file-claim/FileClaimPage", () => ({
   ),
 }));
 vi.mock("./adjudicate/AdjudicatePage", () => ({
-  AdjudicatePage: ({
-    session = null,
-    pool,
-  }: {
-    session?: { round: number } | null;
-    pool?: string;
-  }) => (
+  AdjudicatePage: ({ session = null }: { session?: { round: number } | null }) => (
     <div
       data-testid="adjudicate-route"
       data-session={session ? `round-${session.round}` : "board"}
-      data-pool={pool ?? "none"}
     />
   ),
 }));
@@ -114,17 +107,15 @@ describe("hash router", () => {
     expect(route.getAttribute("data-pool")).toBe("blade-pool");
   });
 
-  it("renders the adjudicate board on #/app/adjudicate and its pool-scoped route", async () => {
+  it("renders the adjudicate board on #/app/adjudicate — pool segments are not a route (retired)", async () => {
     window.location.hash = "#/app/adjudicate";
     renderRouter();
     const board = await screen.findByTestId("adjudicate-route");
     expect(board.getAttribute("data-session")).toBe("board");
-    expect(board.getAttribute("data-pool")).toBe("none");
-    goHash("#/app/adjudicate/blade-pool");
+    goHash("#/app/adjudicate/blade-pool"); // retired :pool form — falls to the board
     await waitFor(() => {
       const scoped = screen.getByTestId("adjudicate-route");
       expect(scoped.getAttribute("data-session")).toBe("board");
-      expect(scoped.getAttribute("data-pool")).toBe("blade-pool");
     });
   });
 
@@ -142,13 +133,6 @@ describe("hash router", () => {
     window.location.hash = `#/m/${blade.pubkey}`;
     renderRouter();
     expect(await screen.findByTestId("pool-route")).toBeTruthy();
-  });
-
-  it("renders the adjudicate board on #/app/adjudicate", async () => {
-    window.location.hash = "#/app/adjudicate";
-    renderRouter();
-    const route = await screen.findByTestId("adjudicate-route");
-    expect(route.getAttribute("data-session")).toBe("board");
   });
 
   it("renders the session route on #/app/adjudicate/:dispute/:round (trailing slash tolerated)", async () => {

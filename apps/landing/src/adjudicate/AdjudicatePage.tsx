@@ -1,12 +1,17 @@
 // #/app/adjudicate — the juror duty board + session shell (riprap-jfb5, spec
-// §2–3): serve-panel reads (stake status, min floor, fees), drawn-seat
-// discovery with clock-derived phases, honest states, and the session route's
-// not-your-seat gate. Reads-only v1 — the stake/withdraw write CTAs are the
-// serve-panel bean's (riprap-fy3q), the wizard steps are later lanes.
-// Copy source: meta/marketing/03-website-copy/landing-page.md § "/app/adjudicate"
-// — rendered verbatim; unknown values render {{PARAM}} mono placeholders,
-// never static numbers.
+// §2–3), mutual-agnostic (2026-10-12): the board serves every pool the
+// wallet joined (the /app store scan — one serve-panel + seat block per
+// pool), the session resolves its pool from the dispute (Dispute.subaccord
+// matched against the live mutuals) and its policy pack from the pool's
+// directory entry. Serve-panel reads (stake status, min floor, fees),
+// drawn-seat discovery with clock-derived phases, honest states, and the
+// session route's not-your-seat gate. Reads-only v1 — the stake/withdraw
+// write CTAs are the serve-panel bean's (riprap-fy3q), the wizard steps are
+// later lanes. Copy source: meta/marketing/03-website-copy/landing-page.md
+// § "/app/adjudicate" — rendered verbatim; unknown values render {{PARAM}}
+// mono placeholders, never static numbers.
 
+import { fetchMaybeMemberByOwner, type Member } from "@riprap/hanse";
 import {
   AddressChip,
   BadgeStamp,
@@ -16,20 +21,19 @@ import {
   TextLink,
   usd,
 } from "@riprap/ui";
-import { useCluster, useWallet } from "@solana/connector";
+import { useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
-import { useQuery } from "@tanstack/react-query";
-import { findRoundPda } from "@useaccord/sdk";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchMaybeDispute, findRoundPda } from "@useaccord/sdk";
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router";
 import { ClusterSwitch, ConnectWalletButton } from "../app/controls";
-import { useMembership } from "../app/useMembership";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
-import { poolByRouteId } from "../mutuals/data";
-import { formatUtc, microToUsd, resolveMutualAddress, resolvePoolAddress } from "../pool/mutual";
+import { poolRoute } from "../mutuals/data";
+import { type LiveMutual, useMutualStore } from "../mutuals/store";
+import { formatUtc, microToUsd } from "../pool/mutual";
 import { useMinStake, useMinStakeMicro } from "../pool/useMinStake";
-import { useMutual } from "../pool/useMutual";
+import { useClusterRpc } from "../shared/rpc";
 import { currentDecryptDelivery, localDeliveryKeyStore } from "./delivery";
 import { phaseLabel, seatPhase } from "./phase";
 import { adjudicationPolicyFor } from "./policies";
@@ -177,23 +181,33 @@ function ServePanel({
 }
 
 /** The session route (copy doc § /app/adjudicate session): the routed round,
- * not the dispute's current one. Not drawn for it — or it doesn't exist — is
- * one honest state: evidence never loads for a wallet that doesn't hold the
- * seat (the daemon enforces it too). */
+ * not the dispute's current one. The route names no pool — the shell
+ * resolves it from the dispute itself (Dispute.subaccord matched against
+ * the live mutuals) and its pack from the pool's directory entry. Not drawn
+ * for it — or it doesn't exist — is one honest state: evidence never loads
+ * for a wallet that doesn't hold the seat (the daemon enforces it too). */
 function SessionShell({
   session,
   wallet,
-  mutual,
-  subaccord,
+  pools,
 }: {
   session: SessionRoute;
   wallet: Address;
-  mutual: Address;
-  subaccord: Address;
+  pools: LiveMutual[];
 }) {
+  const clusterRpc = useClusterRpc();
   const roundPda = useQuery({
     queryKey: ["round-pda", session.dispute, session.round],
     queryFn: () => findRoundPda({ dispute: session.dispute as Address, roundIdx: session.round }),
+  });
+  const disputeQuery = useQuery({
+    queryKey: ["dispute", clusterRpc?.endpoint, session.dispute],
+    queryFn: () => {
+      if (!clusterRpc) throw new Error("dispute read prerequisites disappeared mid-flight");
+      return fetchMaybeDispute(clusterRpc.rpc, session.dispute as Address);
+    },
+    enabled: clusterRpc !== null,
+    retry: 1,
   });
   const roundSeat = useRoundSeat(session.dispute as Address, session.round);
   if (roundSeat.state === "loading") {
@@ -224,6 +238,59 @@ function SessionShell({
       </div>
     );
   }
+  if (disputeQuery.isPending) {
+    return (
+      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+        Reading the dispute from the chain.
+      </p>
+    );
+  }
+  if (disputeQuery.isError) {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2">
+        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't reach the cluster.</p>
+        <Button variant="outline" className="w-44" onClick={() => void disputeQuery.refetch()}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
+  const dispute = disputeQuery.data;
+  if (!dispute.exists) {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="no-dispute">
+        <h1 className="text-ink [font:var(--riprap-body-md)]">No such dispute on this cluster.</h1>
+        <ClusterSwitch />
+      </div>
+    );
+  }
+  const pool = pools.find((p) => p.account.subaccord === dispute.data.subaccord);
+  if (pool === undefined) {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="pool-not-live">
+        <h1 className="text-ink [font:var(--riprap-body-md)]">
+          This dispute's pool isn't live on this cluster.
+        </h1>
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          Switch networks to find it.
+        </p>
+        <ClusterSwitch />
+      </div>
+    );
+  }
+  const policy = adjudicationPolicyFor(pool.listing);
+  if (policy === null) {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="no-policy">
+        <h1 className="text-ink [font:var(--riprap-body-md)]">
+          No adjudication policy for this pool yet.
+        </h1>
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          This session can't run until the pool's policy ships.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="flex max-w-3xl flex-col gap-(--riprap-space-md)" data-slot="session">
       <Settle>
@@ -245,13 +312,13 @@ function SessionShell({
             gate renders the no-key state until it lands; the live reads
             (amount, fee, ruling) wire with the shell's chain reads. */}
         <SessionWizard
-          mutual={mutual}
-          subaccord={subaccord}
+          mutual={pool.address}
+          subaccord={pool.account.subaccord}
           dispute={session.dispute as Address}
           roundAddress={(roundPda.data?.[0] ?? ("R".repeat(32) as Address)) as Address}
           round={round}
           wallet={wallet}
-          policy={adjudicationPolicyFor(mutual)}
+          policy={policy}
           verification={
             currentDecryptDelivery(localDeliveryKeyStore()) === null ? { state: "no-key" } : null
           }
@@ -271,136 +338,46 @@ function SessionShell({
   );
 }
 
-/** Connected board: shared mutual/membership states (copy doc frame, verbatim
- * with /app), then the serve panel + seat cards or the session shell. `pool`
- * is the row's route id (`#/app/adjudicate/<pool>` from the member surface);
- * undefined = the static-map pool (the pool page's juror CTA). */
-function Board({
-  wallet,
-  session,
+/** One joined pool's block: its name (→ its detail route) over its serve
+ * panel and its seats — the pool's subaccord carries its own stake, its
+ * claims their own draw pool (spec §3). */
+function PoolBoard({
   pool,
+  member,
+  wallet,
 }: {
+  pool: LiveMutual;
+  member: Member;
   wallet: Address;
-  session: SessionRoute | null;
-  pool?: string;
 }) {
-  const clusters = useCluster();
-  // the pool this board serves; an unknown id falls back to the member
-  // surface (the joined-pools table) — the honest no-copy state
-  const listing = pool !== undefined ? poolByRouteId(pool) : undefined;
-  const invalidPool = pool !== undefined && listing === undefined;
-  const mutualAddress =
-    listing !== undefined ? resolvePoolAddress(listing, clusters) : resolveMutualAddress(clusters);
-  const mutualQuery = useMutual(mutualAddress);
-  const membership = useMembership(mutualAddress);
-  const member = membership.state === "ready" ? membership.member : null;
-
+  const subaccord = pool.account.subaccord;
   // Rules of hooks: every read runs before the early returns.
-  const subaccord = mutualQuery.state === "ready" ? mutualQuery.mutual.subaccord : null;
   const minStake = useMinStake(subaccord);
   const minStakeMicro = useMinStakeMicro(subaccord);
-  const stake = useJurorStake(
-    subaccord !== null && member !== null ? { subaccord, juror: wallet } : null,
-  );
-  const seats = useSeats(
-    mutualQuery.state === "ready" && member !== null && mutualAddress !== undefined
-      ? { mutual: mutualAddress, claimNonce: mutualQuery.mutual.claimNonce, wallet }
-      : null,
-  );
-
-  if (invalidPool) return <Navigate to="/app" replace />;
-
-  if (mutualQuery.state === "not-found") {
-    return (
-      <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
-        <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The Blade Pool isn't deployed on this network. Switch networks to find it.
-        </p>
-        <ClusterSwitch />
-      </div>
-    );
-  }
-  if (mutualQuery.state === "loading") {
-    return (
-      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-        Reading the pool from the chain.
-      </p>
-    );
-  }
-  if (mutualQuery.state === "error") {
-    return (
-      <div className="flex max-w-3xl flex-col gap-2">
-        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't reach the cluster.</p>
-        <Button variant="outline" className="w-44" onClick={mutualQuery.retry}>
-          Try again
-        </Button>
-      </div>
-    );
-  }
-  if (membership.state === "off" || membership.state === "loading") {
-    return (
-      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-        Reading your membership from the chain.
-      </p>
-    );
-  }
-  if (membership.state === "error") {
-    return (
-      <div className="flex max-w-3xl flex-col gap-2">
-        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't read your membership.</p>
-        <Button variant="outline" className="w-44" onClick={membership.retry}>
-          Try again
-        </Button>
-      </div>
-    );
-  }
-  if (member === null) {
-    return (
-      <div className="flex max-w-3xl flex-col gap-2" data-slot="not-a-member">
-        <h1 className="text-ink [font:var(--riprap-body-md)]">This wallet isn't in the pool.</h1>
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          Membership opens on <TextLink href="#/2026-breakpoint-blade-pool">the pool page</TextLink>
-          .
-        </p>
-      </div>
-    );
-  }
-
-  // member — the session route replaces the board list (copy doc: one
-  // session per seat, deep-linkable).
-  if (session !== null) {
-    return (
-      <SessionShell
-        session={session}
-        wallet={wallet}
-        mutual={mutualAddress as Address}
-        subaccord={mutualQuery.mutual.subaccord}
-      />
-    );
-  }
+  const stake = useJurorStake({ subaccord, juror: wallet });
+  const seats = useSeats({ mutual: pool.address, claimNonce: pool.account.claimNonce, wallet });
+  const tiers = pool.account.tiers;
+  const defaultAmountMicro = tiers[Math.min(member.tier, tiers.length - 1)]?.contribution ?? 0n;
 
   return (
-    <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" data-slot="board">
-      <Settle>
-        <h1 className="tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-sm)]">
-          Jury duty
-        </h1>
-      </Settle>
-      <Settle delay={60}>
-        <ServePanel
-          stake={stake}
-          minStake={minStake}
-          minStakeMicro={minStakeMicro}
-          subaccord={mutualQuery.mutual.subaccord}
-          wallet={wallet}
-          defaultAmountMicro={
-            mutualQuery.mutual.tiers[Math.min(member.tier, mutualQuery.mutual.tiers.length - 1)]
-              ?.contribution ?? 0n
-          }
-          attestation={member.attestation}
-        />
-      </Settle>
+    <section className="flex flex-col gap-(--riprap-space-md)" data-slot="pool-duty">
+      <h2 className="text-ink [font:var(--riprap-body-md)]">
+        <a
+          href={poolRoute(pool.listing)}
+          className="font-medium underline decoration-transparent underline-offset-4 transition-colors hover:decoration-current"
+        >
+          {pool.listing.name}
+        </a>
+      </h2>
+      <ServePanel
+        stake={stake}
+        minStake={minStake}
+        minStakeMicro={minStakeMicro}
+        subaccord={subaccord}
+        wallet={wallet}
+        defaultAmountMicro={defaultAmountMicro}
+        attestation={member.attestation}
+      />
       {seats.state === "loading" && (
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
           Reading your seats from the chain.
@@ -431,71 +408,134 @@ function Board({
             ))}
           </div>
         ))}
-    </div>
+    </section>
   );
 }
 
-/** The #/app jury-duty entry panel (copy doc § /app/adjudicate entry panel —
- * the #jurors panel's state layer): mechanic line + one entry state. Consumed
- * by AppPage's covered view; hooks run unconditionally, seeds gate the reads
- * (react-query shares the board's cache by key). */
-export function JuryDutyPanel({
-  subaccord,
-  mutual,
-  claimNonce,
-  wallet,
-}: {
-  subaccord: Address | null;
-  mutual: Address | null;
-  claimNonce: bigint | null;
-  wallet: Address;
-}) {
-  const minStake = useMinStake(subaccord);
-  const stake = useJurorStake(subaccord !== null ? { subaccord, juror: wallet } : null);
-  const seats = useSeats(
-    mutual !== null && claimNonce !== null ? { mutual, claimNonce, wallet } : null,
-  );
+/** Connected board, mutual-agnostic: the /app store scan (every live pool) ×
+ * this wallet's memberships — the /app shared states verbatim, then one
+ * serve-panel + seat block per joined pool, or the session shell (copy doc
+ * frame; no pool is named in the route — the memberships are the scope). */
+function Board({ wallet, session }: { wallet: Address; session: SessionRoute | null }) {
+  const store = useMutualStore();
+  const clusterRpc = useClusterRpc();
+  const queryClient = useQueryClient();
+  const pools = store.state === "ready" ? store.pools : [];
+
+  // The joined scan: one membership read per live pool. Keys mirror /app's
+  // member surface exactly, so the two surfaces share this cache.
+  const memberships = useQueries({
+    queries: pools.map((pool) => ({
+      queryKey: ["member", clusterRpc?.endpoint, pool.address, wallet],
+      queryFn: () => {
+        if (!clusterRpc) throw new Error("membership prerequisites disappeared mid-flight");
+        return fetchMaybeMemberByOwner(clusterRpc.rpc, {
+          mutual: pool.address,
+          member: wallet,
+        }).then((maybe) => (maybe.exists ? maybe.data : null));
+      },
+      enabled: clusterRpc !== null,
+      retry: 1,
+    })),
+  });
+
+  if (store.state === "off") {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
+        <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          The Blade Pool isn't deployed on this network. Switch networks to find it.
+        </p>
+        <ClusterSwitch />
+      </div>
+    );
+  }
+  if (store.state === "error") {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2">
+        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't reach the cluster.</p>
+        <Button variant="outline" className="w-44" onClick={store.retry}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
+  if (store.state === "loading") {
+    return (
+      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+        Reading the pools from the chain.
+      </p>
+    );
+  }
+  if (pools.length === 0) {
+    return (
+      <p className="max-w-2xl leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
+        No pools are live on this cluster yet.
+      </p>
+    );
+  }
+  if (memberships.some((q) => q.isPending)) {
+    return (
+      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+        Reading your membership from the chain.
+      </p>
+    );
+  }
+  const errored = memberships.find((q) => q.isError);
+  if (errored !== undefined) {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2">
+        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't read your membership.</p>
+        <Button
+          variant="outline"
+          className="w-44"
+          onClick={() => {
+            // retry re-runs the membership reads (refetch is idempotent)
+            for (const pool of pools) {
+              void queryClient.refetchQueries({
+                queryKey: ["member", clusterRpc?.endpoint, pool.address, wallet],
+              });
+            }
+          }}
+        >
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
+  const joined = pools.flatMap((pool, i) => {
+    const member = memberships[i].data ?? null;
+    return member !== null ? [{ pool, member }] : [];
+  });
+
+  if (joined.length === 0) {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="not-a-member">
+        <h1 className="text-ink [font:var(--riprap-body-md)]">This wallet isn't in any pool.</h1>
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          Membership opens on <TextLink href="#/mutuals">the pools</TextLink>.
+        </p>
+      </div>
+    );
+  }
+
+  // member — the session route replaces the board list (copy doc: one
+  // session per seat, deep-linkable).
+  if (session !== null) {
+    return <SessionShell session={session} wallet={wallet} pools={pools} />;
+  }
 
   return (
-    <div id="jurors" data-slot="jurors" className="flex max-w-[36rem] scroll-mt-24 flex-col gap-2">
-      <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-        Jurors
-      </p>
-      <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-sm)]">
-        Claims are settled by members who stake{" "}
-        <span data-num className="font-mono">
-          {minStake}
-        </span>{" "}
-        USDC and get drawn to read the evidence. Coherent jurors get paid; incoherent ones get
-        slashed. Unstake anytime.
-      </p>
-      {stake.state === "ready" &&
-        (stake.stake === null ? (
-          <div className="flex flex-col gap-2 pt-1">
-            <p className="text-ink [font:var(--riprap-body-sm)]">
-              You're not staked for jury duty.
-            </p>
-            <Button asChild variant="outline" size="sm" className="w-44">
-              <a href="#/app/adjudicate">Stake to serve</a>
-            </Button>
-          </div>
-        ) : seats.state === "ready" ? (
-          seats.seats.length > 0 ? (
-            <div className="flex flex-col gap-2 pt-1">
-              <p className="text-ink [font:var(--riprap-body-sm)]">Seat drawn for you.</p>
-              <Button asChild size="sm" className="w-44">
-                <a href="#/app/adjudicate">Open jury duty</a>
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1 pt-1">
-              <p className="text-ink [font:var(--riprap-body-sm)]">No seat drawn for you.</p>
-              <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                You stay in the draw. A drawn seat appears here.
-              </p>
-            </div>
-          )
-        ) : null)}
+    <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" data-slot="board">
+      <Settle>
+        <h1 className="tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-sm)]">
+          Jury duty
+        </h1>
+      </Settle>
+      {joined.map(({ pool, member }) => (
+        <PoolBoard key={pool.address} pool={pool} member={member} wallet={wallet} />
+      ))}
     </div>
   );
 }
@@ -521,13 +561,7 @@ function JuryGate() {
   );
 }
 
-export function AdjudicatePage({
-  session = null,
-  pool,
-}: {
-  session?: SessionRoute | null;
-  pool?: string;
-}) {
+export function AdjudicatePage({ session = null }: { session?: SessionRoute | null }) {
   const { isConnected, account } = useWallet();
   const connected = isConnected && account !== null;
 
@@ -543,7 +577,7 @@ export function AdjudicatePage({
             className="relative z-10 bg-transparent pt-(--riprap-space-section)"
           >
             {connected && account !== null ? (
-              <Board wallet={account} session={session} pool={pool} />
+              <Board wallet={account} session={session} />
             ) : (
               <JuryGate />
             )}

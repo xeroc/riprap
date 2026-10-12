@@ -33,7 +33,7 @@ export const MUTUALS: MutualListing[] = [
     kind: "mutual",
     slug: "blade-pool",
     claimFlow: "blade-pool",
-    // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
+    adjudicationPolicy: "blade-pool",
     // mutual address is env-driven (pool/mutual.ts) — pin pubkey at deploy.
     tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
     tiers: [
@@ -67,7 +67,7 @@ export const MUTUALS: MutualListing[] = [
     kind: "mutual",
     slug: "blade-pool",
     claimFlow: "blade-pool",
-    // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
+    adjudicationPolicy: "blade-pool",
     tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
     tiers: [
       { name: "Basic", fee: 10, cap: 1000 },

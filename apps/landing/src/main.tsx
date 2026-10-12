@@ -36,17 +36,17 @@ function FileClaimSurface() {
   return <FileClaimRoute pool={pool} />;
 }
 
-/** `#/app/adjudicate[/:pool]` and `#/app/adjudicate/:dispute/:round` — the
- * duty board for one pool (bare = the static-map pool, the pool page's
- * juror CTA) or the session shell; a non-numeric round or anything else
- * under the prefix is the board. */
+/** `#/app/adjudicate` and `#/app/adjudicate/:dispute/:round` — the duty
+ * board (mutual-agnostic: every pool the wallet joined, no pool in the
+ * route) or the session shell; a non-numeric round or anything else under
+ * the prefix is the board. */
 function AdjudicateSurface() {
-  const { pool, dispute, round } = useParams();
+  const { dispute, round } = useParams();
   const session =
     dispute !== undefined && dispute !== "" && round !== undefined && /^\d+$/.test(round)
       ? { dispute, round: Number(round) }
       : null;
-  return <AdjudicateRoute session={session} pool={pool} />;
+  return <AdjudicateRoute session={session} />;
 }
 
 /** `#/m/<id>` — a pool's detail route: the id is the pool's MUTUAL pubkey
@@ -93,7 +93,6 @@ export function Router() {
           <Route path="/app" element={<MemberRoute />} />
           <Route path="/app/file-claim/:pool" element={<FileClaimSurface />} />
           <Route path="/app/adjudicate" element={<AdjudicateSurface />} />
-          <Route path="/app/adjudicate/:pool" element={<AdjudicateSurface />} />
           <Route path="/app/adjudicate/:dispute/:round" element={<AdjudicateSurface />} />
           <Route path="/app/adjudicate/*" element={<AdjudicateSurface />} />
           <Route path="*" element={<PlatformSurface />} />
