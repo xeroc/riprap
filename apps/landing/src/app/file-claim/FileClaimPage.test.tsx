@@ -16,7 +16,7 @@ import {
 import { AppProvider, getDefaultConfig } from "@solana/connector";
 import type { Address, MaybeAccount } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ed25519PublicKeyFromSeed } from "@useaccord/sdk/evidence";
 import { MemoryRouter, Route, Routes, useParams } from "react-router";
 import type { Mock } from "vitest";
@@ -157,11 +157,16 @@ const BLADE_MAINNET = "DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF";
 
 const testConfig = getDefaultConfig({ appName: "riprap-test", network: "localnet" });
 
+/** The last rendered wizard's client — the regression replay below drives
+ * the same query invalidation the real send path fires on confirm. */
+let lastQueryClient: QueryClient;
+
 function renderWizard(mutualAddress = MUTUAL_ADDR) {
   vi.stubEnv("VITE_LOCALNET_MUTUAL", mutualAddress);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
   });
+  lastQueryClient = queryClient;
   return render(
     <QueryClientProvider client={queryClient}>
       <AppProvider connectorConfig={testConfig}>
@@ -738,6 +743,116 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
       expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
     });
     expect(sendMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("full-tier filing: the preflight flipping cap-exhausted after the tx lands never ejects the wizard", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    await walkToReview();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
+    await waitFor(() => {
+      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+    });
+    expect(sendMock).toHaveBeenCalledTimes(1);
+
+    // replay what the real send path does on confirm (transaction.ts
+    // invalidates every query): the refetched member shows the full-tier
+    // claim reserved against the cap (Standard max $2,000) — the LIVE
+    // preflight goes cap-exhausted. The wizard must stay on its
+    // post-submit screen: the gate is an entry gate, never an ejector.
+    memberMock.mockResolvedValue(memberAccount({ capUsed: 2_000_000_000n }));
+    // scoped to the membership read — the query whose refresh flips the
+    // gate (a blanket invalidation also kills provider-internal queries
+    // under the stubbed rpc, which is this harness's artifact, not the bug)
+    await act(async () => {
+      await lastQueryClient.invalidateQueries({ queryKey: ["member"] });
+    });
+
+    // settles once the refetch-driven re-render lands — the wizard stays
+    await waitFor(() => {
+      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+    });
+    expect(document.querySelector('[data-slot="cap-exhausted"]')).toBeNull();
+  });
+
+  it("a failed PUT row carries Retry — one click re-delivers that file and the step completes", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    await walkToReview();
+
+    // 01-ticket.pdf 500s through all three internal attempts → the row
+    // fails; its siblings deliver independently
+    let ticketDown = true;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (init?.method === "PUT" && String(input).endsWith("/01-ticket.pdf") && ticketDown) {
+          return new Response("boom", { status: 500 });
+        }
+        return ok201();
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
+      const ticket = rows.find((r) => r.textContent?.includes("01-ticket.pdf"));
+      expect(ticket?.textContent).toContain("failed");
+      expect(ticket?.querySelector("button")?.textContent).toBe("Retry");
+    });
+    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
+
+    // the operator recovers → one click re-delivers; the wizard completes
+    ticketDown = false;
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await waitFor(() => {
+      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+    });
+    expect(sendMock).toHaveBeenCalledTimes(1); // delivery never re-signs
+  });
+
+  it("a failed manifest POST: row retry re-posts the manifest first, then delivers that file", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    await walkToReview();
+
+    let postDown = true;
+    const calls: Array<{ method: string; url: string }> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        calls.push({ method: init?.method ?? "GET", url: String(input) });
+        if (init?.method === "POST" && postDown) {
+          return new Response("boom", { status: 500 });
+        }
+        return ok201();
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
+      expect(rows.length).toBe(5);
+      expect(rows.every((r) => r.textContent?.includes("failed"))).toBe(true);
+    });
+    expect(calls.filter((c) => c.method === "POST").length).toBe(1);
+
+    // the operator recovers → the row's Retry re-POSTs the manifest (leaf
+    // PUTs 404 without it), then PUTs the file
+    postDown = false;
+    const ticketRow = [...document.querySelectorAll('[data-slot="publish-row"]')].find((r) =>
+      r.textContent?.includes("01-ticket.pdf"),
+    );
+    fireEvent.click(ticketRow?.querySelector("button") as HTMLButtonElement);
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
+      const ticket = rows.find((r) => r.textContent?.includes("01-ticket.pdf"));
+      expect(ticket?.textContent).toContain("delivered");
+    });
+    expect(calls.filter((c) => c.method === "POST").length).toBe(2);
+    // the other rows are still failed — no filed screen until each is retried
+    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
   });
 
   it("a POST 400 (unknown schema) is surfaced loudly — rows failed, no silent degrade", async () => {

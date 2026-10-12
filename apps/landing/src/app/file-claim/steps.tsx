@@ -527,6 +527,7 @@ export function StepPublish({
   rows,
   conflictPath,
   unreachable,
+  onRetry,
 }: {
   /** sub.evidence_operator — presented truncated, never a full dump. */
   operatorAddress: string;
@@ -535,6 +536,10 @@ export function StepPublish({
   conflictPath?: string;
   /** Operator unreachable after the tx landed — delivery keeps retrying. */
   unreachable?: boolean;
+  /** Re-deliver one failed file (copy doc § PUBLISH): the manifest POST
+   * first if it never landed, then that file's PUT. Hidden on conflict —
+   * a 409 is a hard stop, not a retryable failure. */
+  onRetry?: (path: string) => void;
 }) {
   return (
     <StepFrame n={7} name="Publish">
@@ -552,11 +557,25 @@ export function StepPublish({
               <span data-num className="font-mono text-sm text-ink">
                 {row.path}
               </span>
-              <span
-                data-num={row.status === "delivered" || row.status === "failed" ? true : undefined}
-                className="font-mono text-xs text-stone"
-              >
-                {row.status === "pending" ? "delivering" : row.status}
+              <span className="flex items-baseline gap-3">
+                <span
+                  data-num={
+                    row.status === "delivered" || row.status === "failed" ? true : undefined
+                  }
+                  className="font-mono text-xs text-stone"
+                >
+                  {row.status === "pending" ? "delivering" : row.status}
+                </span>
+                {row.status === "failed" && conflictPath === undefined && onRetry !== undefined ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => onRetry(row.path)}
+                  >
+                    Retry
+                  </Button>
+                ) : null}
               </span>
             </li>
           ))}
