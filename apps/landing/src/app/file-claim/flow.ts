@@ -18,11 +18,11 @@ export interface DocSlot {
   path: string;
   /** The member-facing plain name (wizard step 3 row label). */
   label: string;
-  /** URL intake: the member pastes a link instead of attaching a file. The
-   *  value is this slot's manifest key — the manifest carries the RAW link
-   *  under it plus sha256(utf8(url)); there is no file and no PUT: the
-   *  manifest itself is the delivery (flow packs pick the key, e.g. the
-   *  Toly bounty's "confirmation-url"). */
+  /** URL intake: the member pastes a link instead of attaching a file.
+   *  PRESENCE marks the slot a url slot — the field's value is unused.
+   *  The manifest serializes it as a URL-path entry, `path: "<raw link>"`
+   *  plus sha256(utf8(url)) (EVIDENCE-FORMAT §2/§7.1: out-of-band — the
+   *  daemon never stores it, the round completes without a PUT). */
   url?: string;
 }
 

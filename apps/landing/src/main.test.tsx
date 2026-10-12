@@ -31,8 +31,12 @@ vi.mock("./app/AppPage", () => ({
   AppPage: () => <div data-testid="app-route" />,
 }));
 vi.mock("./app/file-claim/FileClaimPage", () => ({
-  FileClaimPage: ({ pool }: { pool?: string }) => (
-    <div data-testid="file-claim-route" data-pool={pool ?? "none"} />
+  FileClaimPage: ({ pool, restore }: { pool?: string; restore?: string }) => (
+    <div
+      data-testid="file-claim-route"
+      data-pool={pool ?? "none"}
+      data-restore={restore ?? "none"}
+    />
   ),
 }));
 vi.mock("./adjudicate/AdjudicatePage", () => ({
@@ -107,6 +111,13 @@ describe("hash router", () => {
     expect(route.getAttribute("data-pool")).toBe("blade-pool");
   });
 
+  it("renders the restore surface on #/app/file-claim/:pool/restore/:nonce", async () => {
+    window.location.hash = "#/app/file-claim/blade-pool/restore/3";
+    renderRouter();
+    const route = await screen.findByTestId("file-claim-route");
+    expect(route.getAttribute("data-pool")).toBe("blade-pool");
+    expect(route.getAttribute("data-restore")).toBe("3");
+  });
   it("renders the adjudicate board on #/app/adjudicate — pool segments are not a route (retired)", async () => {
     window.location.hash = "#/app/adjudicate";
     renderRouter();

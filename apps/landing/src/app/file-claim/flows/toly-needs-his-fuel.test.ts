@@ -35,13 +35,13 @@ describe("TOLY_FUEL_FLOW document slots (terms §7, in order)", () => {
     ]);
   });
 
-  it("the confirmation slot is the one URL slot and names its manifest key — every other slot is a file attach", () => {
+  it("the confirmation slot is the one URL slot (marker only) — every other slot is a file attach", () => {
     const urlSlots = TOLY_FUEL_FLOW.documentSlots.filter((s) => s.url !== undefined);
     expect(urlSlots).toEqual([
       {
         path: "05-confirmation.url",
         label: "Toly's post confirming the request and the delivery",
-        url: "confirmation-url",
+        url: "url",
       },
     ]);
   });

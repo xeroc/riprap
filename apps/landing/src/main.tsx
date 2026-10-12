@@ -30,12 +30,12 @@ const BlurbRoute = lazy(() =>
 
 /** `#/app/file-claim/:pool` — the payout wizard for one pool: the id is the
  * pool's route id (`pubkey ?? slug`). Unknown ids land on the app surface
- * (the joined-pools table). */
+ * (the joined-pools table). `#/app/file-claim/:pool/restore/:nonce` is the
+ * claim's read-only restore surface (copy doc § RESTORE). */
 function FileClaimSurface() {
-  const { pool } = useParams();
-  return <FileClaimRoute pool={pool} />;
+  const { pool, nonce } = useParams();
+  return <FileClaimRoute pool={pool} restore={nonce} />;
 }
-
 /** `#/app/adjudicate` and `#/app/adjudicate/:dispute/:round` — the duty
  * board (mutual-agnostic: every pool the wallet joined, no pool in the
  * route) or the session shell; a non-numeric round or anything else under
@@ -91,8 +91,8 @@ export function Router() {
           <Route path="/m/:id" element={<PoolSurface />} />
           <Route path="/blurb" element={<BlurbRoute />} />
           <Route path="/app" element={<MemberRoute />} />
+          <Route path="/app/file-claim/:pool/restore/:nonce" element={<FileClaimSurface />} />
           <Route path="/app/file-claim/:pool" element={<FileClaimSurface />} />
-          <Route path="/app/adjudicate" element={<AdjudicateSurface />} />
           <Route path="/app/adjudicate/:dispute/:round" element={<AdjudicateSurface />} />
           <Route path="/app/adjudicate/*" element={<AdjudicateSurface />} />
           <Route path="*" element={<PlatformSurface />} />

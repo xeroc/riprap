@@ -196,7 +196,7 @@ describe("riprap-claim/v1 — url-slot entries (the raw link rides the manifest)
     { path: "02-id-document.jpg" },
     { path: "03-request-evidence.png" },
     { path: "04-delivery-evidence.jpg" },
-    { path: "05-confirmation.url", url: "confirmation-url" },
+    { path: "05-confirmation.url", url: "url" },
   ];
 
   function urlInput(over: Partial<ClaimManifestInput> = {}): ClaimManifestInput {
@@ -210,9 +210,10 @@ describe("riprap-claim/v1 — url-slot entries (the raw link rides the manifest)
     return exampleInput({ entries, ...over });
   }
 
-  it("serializes the url slot as its key + the RAW link + sha256 — no path entry, no file", () => {
+  it("serializes the url slot as a URL-path entry — the RAW link as the path, no key form", () => {
     const yaml = serializeClaimManifest(urlInput(), slots);
-    expect(yaml).toContain(`  - { confirmation-url: "${url}", sha256: "${"e".repeat(64)}" }`);
+    expect(yaml).toContain(`  - { path: "${url}", sha256: "${"e".repeat(64)}" }`);
+    expect(yaml).not.toContain("confirmation-url");
     expect(yaml).not.toContain("05-confirmation.url");
   });
 
@@ -226,7 +227,7 @@ describe("riprap-claim/v1 — url-slot entries (the raw link rides the manifest)
       }),
       slots,
     );
-    expect(built.yaml).toContain(`confirmation-url: "${url}"`);
+    expect(built.yaml).toContain(`path: "${url}"`);
   });
 
   it("rejects a path entry where the slot is a url slot — the raw link is required", () => {

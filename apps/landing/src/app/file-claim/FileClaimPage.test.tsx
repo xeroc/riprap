@@ -475,16 +475,39 @@ describe("#/app/file-claim — the walk (0→5)", () => {
 });
 
 describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", () => {
-  it("happy path: one tx, POST + five PUTs, filed screen with claim/dispute/timeline; draft cleared", async () => {
+  it("happy path: one tx, manifest row + five PUTs, filed screen with claim/dispute/timeline; draft cleared", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
     await walkToReview();
 
+    // hold the last document's PUT so the publish table is assertable —
+    // the wizard races to FILED otherwise
+    let releaseLast: (() => void) | undefined;
+    const held = new Promise<Response>((resolve) => {
+      releaseLast = () => resolve(ok201());
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (init?.method === "PUT" && String(input).endsWith("/05-statutory-declaration.pdf")) {
+          return held;
+        }
+        return ok201();
+      }),
+    );
+
     fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
-    // sign phase renders; delivery then races through publish to the filed
-    // screen — publish's own states are pinned by the 409 test, where it
-    // hard-stops mounted
     expect(await screen.findByText("Building the transaction…")).toBeTruthy();
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
+      // the manifest row leads the table, delivered before any file
+      expect(rows.length).toBe(6);
+      expect(rows[0]?.textContent).toContain("manifest.yaml");
+      expect(rows[0]?.querySelector('[data-slot="row-status"]')?.textContent).toContain(
+        "delivered",
+      );
+    });
+    releaseLast?.();
     await waitFor(() => {
       expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
     });
@@ -710,7 +733,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     expect(mutualMock).not.toHaveBeenCalled();
   });
 
-  it("a 5xx PUT shows the retrying row, then delivers; the tx is never re-sent", async () => {
+  it("a 5xx PUT: the row spins uploading through its internal retry, then delivers; the tx is never re-sent", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
     await walkToReview();
@@ -736,7 +759,10 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     await waitFor(() => {
       const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
       const ticket = rows.find((r) => r.textContent?.includes("01-ticket.pdf"));
-      expect(ticket?.textContent).toContain("retrying");
+      // the in-flight upload renders the spinner in place of a status word
+      expect(ticket?.querySelector('[role="status"]')?.getAttribute("aria-label")).toBe(
+        "uploading",
+      );
     });
     release?.();
     await waitFor(() => {
@@ -833,7 +859,9 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
     await waitFor(() => {
       const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
-      expect(rows.length).toBe(5);
+      // the manifest row leads the table and failed with everything else
+      expect(rows.length).toBe(6);
+      expect(rows[0]?.textContent).toContain("manifest.yaml");
       expect(rows.every((r) => r.textContent?.includes("failed"))).toBe(true);
     });
     expect(calls.filter((c) => c.method === "POST").length).toBe(1);
@@ -855,6 +883,51 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     expect(screen.queryByText(/Filed — claim #/)).toBeNull();
   });
 
+  it("the manifest row's own Retry re-posts the manifest alone — files stay failed until their own retry", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    await walkToReview();
+
+    let postDown = true;
+    const calls: Array<{ method: string; url: string }> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        calls.push({ method: init?.method ?? "GET", url: String(input) });
+        if (init?.method === "POST" && postDown) {
+          return new Response("boom", { status: 500 });
+        }
+        return ok201();
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
+    await waitFor(() => {
+      const manifestRow = [...document.querySelectorAll('[data-slot="publish-row"]')].find((r) =>
+        r.textContent?.includes("manifest.yaml"),
+      );
+      expect(manifestRow?.textContent).toContain("failed");
+      expect(manifestRow?.querySelector("button")?.textContent).toBe("Retry");
+    });
+
+    // recover, then retry the manifest row: ONE POST, no PUTs — the file
+    // rows keep their own Retry buttons
+    postDown = false;
+    const manifestRow = [...document.querySelectorAll('[data-slot="publish-row"]')].find((r) =>
+      r.textContent?.includes("manifest.yaml"),
+    );
+    fireEvent.click(manifestRow?.querySelector("button") as HTMLButtonElement);
+    await waitFor(() => {
+      const row = [...document.querySelectorAll('[data-slot="publish-row"]')].find((r) =>
+        r.textContent?.includes("manifest.yaml"),
+      );
+      expect(row?.querySelector('[data-slot="row-status"]')?.textContent).toContain("delivered");
+    });
+    expect(calls.filter((c) => c.method === "POST").length).toBe(2);
+    expect(calls.filter((c) => c.method === "PUT").length).toBe(0);
+    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
+  });
+
   it("a POST 400 (unknown schema) is surfaced loudly — rows failed, no silent degrade", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
@@ -867,7 +940,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     await waitFor(() => {
       const unreachable = document.querySelector('[data-slot="publish-unreachable"]');
       expect(unreachable?.textContent).toContain("Couldn't reach the operator.");
-      expect(document.querySelectorAll('[data-slot="publish-row"]').length).toBe(5);
+      expect(document.querySelectorAll('[data-slot="publish-row"]').length).toBe(6);
     });
     expect(screen.queryByText(/Filed — claim #/)).toBeNull();
   });
@@ -979,7 +1052,7 @@ describe("#/app/file-claim/:pool — the pool-scoped wizard", () => {
     expect(await screen.findByText(/Step 4 of 5 — Manifest/i)).toBeTruthy();
     const preview = document.querySelector("pre");
     expect(preview?.textContent).toContain(
-      `- { confirmation-url: "${confirmationUrl}", sha256: "${expectedSha}" }`,
+      `- { path: "${confirmationUrl}", sha256: "${expectedSha}" }`,
     );
     expect(preview?.textContent).not.toContain("05-confirmation.url");
   });

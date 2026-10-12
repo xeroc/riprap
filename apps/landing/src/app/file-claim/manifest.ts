@@ -119,15 +119,17 @@ export function serializeClaimManifest(
   const entryLines: string[] = [];
   for (const [i, slot] of canonical.entries()) {
     const entry = input.entries[i];
-    const name = slot.url ?? slot.path; // error/identity name for this slot
     if (!SHA256_HEX.test(entry.sha256)) {
-      throw new TypeError(`manifest: ${name} needs a 64-hex lower-case sha256`);
+      throw new TypeError(`manifest: ${slot.path} needs a 64-hex lower-case sha256`);
     }
     if (slot.url !== undefined) {
       if (!("url" in entry) || entry.url.trim() === "") {
-        throw new TypeError(`manifest: ${slot.url} entry needs the raw URL`);
+        throw new TypeError(`manifest: ${slot.path} entry needs the raw URL`);
       }
-      entryLines.push(`  - { ${slot.url}: ${dq(entry.url)}, sha256: "${entry.sha256}" }`);
+      // URL-path entry (EVIDENCE-FORMAT §2/§7.1): the link IS the path —
+      // out-of-band for the daemon (never stored, never PUT, born
+      // satisfied); the raw text rides the manifest's own encryption.
+      entryLines.push(`  - { path: ${dq(entry.url)}, sha256: "${entry.sha256}" }`);
     } else {
       if (!("path" in entry) || entry.path !== slot.path) {
         throw new TypeError(

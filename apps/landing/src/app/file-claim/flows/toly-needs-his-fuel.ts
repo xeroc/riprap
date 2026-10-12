@@ -30,8 +30,9 @@ export const TOLY_FUEL_FLOW: ClaimFlow = {
     {
       path: "05-confirmation.url",
       label: "Toly's post confirming the request and the delivery",
-      // the manifest carries the RAW link under this key — no file, no PUT
-      url: "confirmation-url",
+      // url slot (presence is the marker): the manifest carries the RAW
+      // link as a URL-path entry — no file, no PUT (out-of-band)
+      url: "url",
     },
   ],
 

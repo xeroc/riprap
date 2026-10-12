@@ -283,22 +283,30 @@ describe("/app — the joined-pools table (data-bound to the chain)", () => {
     );
   });
 
-  it("claims ride in their own band: only this wallet's claims, every field from the chain", async () => {
+  it("claims ride in their own band: only this wallet's claims, every field from the chain; a PENDING row links its restore surface", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
     memberMock.mockResolvedValue(memberAccount(2)); // Premium
-    claimMock.mockImplementation(async (_rpc, seeds) =>
-      seeds.nonce === 0n ? claimAccount(WALLET) : claimAccount(OTHER),
-    );
+    claimMock.mockImplementation(async (_rpc, seeds) => {
+      if (seeds.nonce === 0n) return claimAccount(WALLET);
+      if (seeds.nonce === 1n) return claimAccount(WALLET, { status: ClaimStatus.Pending });
+      return claimAccount(OTHER);
+    });
     scanMock.mockResolvedValue([{ address: BLADE_DEVNET, data: fakeMutual({ claimNonce: 2n }) }]);
     renderApp();
 
     // the band label + the pool-named block
     expect(await screen.findByText("claims")).toBeTruthy();
     expect(await screen.findByText("#0 · $2,000 · PAID")).toBeTruthy();
-    expect(screen.getByText("filed 2026-11-16 10:00 UTC")).toBeTruthy();
-    // the other wallet's claim is filtered out — no second row, no nonce #1
-    expect(screen.queryByText(/#1/)).toBeNull();
+    expect(screen.getAllByText("filed 2026-11-16 10:00 UTC").length).toBe(2);
+    // the settled row is plain — no anchor
+    expect(screen.getByText("#0 · $2,000 · PAID").closest("a")).toBeNull();
+    // the wallet's PENDING claim is a link to its restore surface
+    const pending = document.querySelector('a[href$="/restore/1"]');
+    expect(pending?.textContent).toBe("#1 · $2,000 · PENDING");
+    expect(pending?.getAttribute("href")).toBe(`#/app/file-claim/${BLADE_DEVNET}/restore/1`);
+    // the other wallet's claim is filtered out — no third row, no nonce #2
+    expect(screen.queryByText(/#2/)).toBeNull();
   });
 
   it("claims read failure: honest retry, never invented rows", async () => {

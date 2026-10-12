@@ -1,14 +1,18 @@
-// Recovery.tsx — the #/app claim-detail recovery surface (bean riprap-wwvc):
-// manifest re-upload gate (sha256 == dispute.evidence_hashes[0], a pure
-// chain read), the five re-attach slots, and idempotent re-delivery
-// (POST no-op + per-file PUTs; 409 surfaced). Copy verbatim from
-// landing-page.md § /app "Claim rows, evidence + recovery".
+// Recovery.tsx — the claim restore surface (copy doc § /app/file-claim
+// RESTORE, 2026-10-12): the operator's stored manifest is read FIRST (public
+// endpoint); when it holds nothing the kept manifest.yaml uploads manually.
+// Either way sha256(manifest) == Dispute.evidence_hashes[0] is the gate, the
+// verified bytes parse into the read-only facts, and re-delivery runs the
+// PUBLISH table (manifest row first, per-row retry, 409 hard stop). Copy
+// verbatim from landing-page.md.
 
 import type { Address } from "@solana/kit";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sha256Hex } from "./documents";
 import { BLADE_POOL_FLOW } from "./flows/blade-pool";
+import { TOLY_FUEL_FLOW } from "./flows/toly-needs-his-fuel";
+import { buildClaimManifest } from "./manifest";
 import { Recovery } from "./Recovery";
 
 vi.mock("./useEvidenceOperator", async () => {
@@ -43,7 +47,9 @@ const CLUSTER_RPC = {
   rpcSubscriptions: {},
 } as unknown as Parameters<typeof Recovery>[0]["clusterRpc"];
 
-const MUTUAL = "MutualXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" as Address;
+// base58-valid (no 0/O/I/l) — the manifest's trust-boundary validation
+// rejects real-invalid fakes like "Mutual…".
+const MUTUAL = "Mutua1XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" as Address;
 const DISPUTE = "D".repeat(32) as Address;
 const SUBACCORD = "S".repeat(32) as Address;
 
@@ -53,20 +59,72 @@ function hexToBytes(hex: string): Uint8Array {
   return out;
 }
 
-function yamlFile(bytes = new TextEncoder().encode("schema: riprap-claim/v1\n")): File {
-  return new File([bytes], "manifest.yaml", { type: "text/yaml" });
-}
-
 function pdf(name: string): File {
   return new File([new Uint8Array([0x25, 0x50, 0x46, 0x44])], name, { type: "application/pdf" });
 }
 
-/** Manifest input #1, doc inputs after it — file inputs appear in DOM order. */
 function setInputFiles(input: HTMLInputElement, files: File[]): void {
   fireEvent.change(input, { target: { files } });
 }
 
-function renderRecovery() {
+/** Real `riprap-claim/v1` bytes — the stored/uploaded manifest must parse,
+ * so the fixtures are built by the builder, never hand-written. Built
+ * against `flow`'s own slots — a bounty manifest is not a blade manifest. */
+async function builtManifest(
+  flow: typeof BLADE_POOL_FLOW | typeof TOLY_FUEL_FLOW = BLADE_POOL_FLOW,
+  over: { requestedAmountUsdc?: bigint } = {},
+) {
+  const built = await buildClaimManifest(
+    {
+      subaccord: SUBACCORD,
+      filer: MUTUAL,
+      mutual: MUTUAL,
+      member: "W".repeat(32),
+      filedAt: "2026-11-15T19:05:00Z",
+      title: "Payout request — knife assault, 2026-11-15",
+      claimContext: {
+        incidentAt: "2026-11-15T18:05:00Z",
+        incidentPlace: "Olympia Convention Centre, Level 1, west corridor",
+        requestedAmountUsdc: over.requestedAmountUsdc ?? 2_000n * 1_000_000n,
+        tier: "Standard",
+        contributionUsdc: 20n * 1_000_000n,
+      },
+      entries: await Promise.all(
+        flow.documentSlots.map(async (slot) =>
+          slot.url === undefined
+            ? { path: slot.path, sha256: await sha256Hex(new TextEncoder().encode(slot.path)) }
+            : {
+                url: "https://x.com/toly/status/2109422383966933008",
+                sha256: await sha256Hex(new TextEncoder().encode(slot.path)),
+              },
+        ),
+      ),
+    },
+    flow.documentSlots,
+  );
+  return { bytes: new TextEncoder().encode(built.yaml), sha256: built.sha256Hex };
+}
+
+/** The operator's stored-manifest GET — 200 with `bytes` or 404 (nothing
+ * held); every POST/PUT answers 201. */
+function stubOperator(stored: Uint8Array<ArrayBuffer> | null): void {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const method = init?.method ?? "GET";
+      if (method === "GET") {
+        return stored === null
+          ? new Response("no bundle", { status: 404 })
+          : new Response(stored.buffer as ArrayBuffer, { status: 200 });
+      }
+      return new Response("{}", { status: 201 });
+    }),
+  );
+}
+
+function renderRecovery(
+  slots: Parameters<typeof Recovery>[0]["slots"] = BLADE_POOL_FLOW.documentSlots,
+) {
   return render(
     <Recovery
       clusterRpc={CLUSTER_RPC}
@@ -74,21 +132,42 @@ function renderRecovery() {
       subaccord={SUBACCORD}
       dispute={DISPUTE}
       nonce={0n}
-      slots={BLADE_POOL_FLOW.documentSlots}
+      slots={slots}
     />,
   );
 }
 
-async function disputeHashOf(manifest: Uint8Array): Promise<string> {
-  return await sha256Hex(manifest);
+/** Reach review via the stored-manifest path (the happy entry). */
+async function renderAtReview(
+  flow: typeof BLADE_POOL_FLOW | typeof TOLY_FUEL_FLOW = BLADE_POOL_FLOW,
+  slots: Parameters<typeof Recovery>[0]["slots"] = BLADE_POOL_FLOW.documentSlots,
+) {
+  const manifest = await builtManifest(flow);
+  disputeMock.fetchDispute.mockResolvedValue({
+    data: { evidenceHashes: [hexToBytes(manifest.sha256)] },
+  });
+  stubOperator(manifest.bytes);
+  renderRecovery(slots);
+  await screen.findByText(/Claim #0 — as filed/);
+  return manifest;
+}
+
+/** Attach a pdf to every file-slot row (review's Attach inputs). */
+async function attachAll() {
+  const inputs = [...document.querySelectorAll<HTMLInputElement>('input[type="file"]')];
+  for (const input of inputs) {
+    setInputFiles(input, [pdf("proof.pdf")]);
+  }
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Redeliver evidence" })).toHaveProperty(
+      "disabled",
+      false,
+    );
+  });
 }
 
 beforeEach(() => {
   localStorage.clear();
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async () => new Response("{}", { status: 201 })),
-  );
 });
 afterEach(() => {
   cleanup();
@@ -97,103 +176,95 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("Recovery — the manifest gate (pure chain read)", () => {
-  it("a matching manifest verifies: sha256(manifest) == evidence_hashes[0]", async () => {
-    const manifest = new TextEncoder().encode("schema: riprap-claim/v1\nentries:\n");
+describe("Recovery — entry: the operator's manifest first", () => {
+  it("a held manifest verifies straight into the read-only review", async () => {
+    const manifest = await builtManifest();
     disputeMock.fetchDispute.mockResolvedValue({
-      data: { evidenceHashes: [hexToBytes(await disputeHashOf(manifest))] },
+      data: { evidenceHashes: [hexToBytes(manifest.sha256)] },
     });
+    stubOperator(manifest.bytes);
     renderRecovery();
-    expect(screen.getByText("Re-upload your manifest.yaml")).toBeTruthy();
 
-    const inputs = document.querySelectorAll<HTMLInputElement>('input[type="file"]');
-    setInputFiles(inputs[0]!, [yamlFile(manifest)]);
-    expect(
-      await screen.findByText(
-        "Manifest verified against the claim — re-attach the five documents.",
-      ),
-    ).toBeTruthy();
-    // five re-attach slots render
-    expect(document.querySelectorAll('input[type="file"]').length).toBe(5);
+    expect(await screen.findByText(/Claim #0 — as filed/)).toBeTruthy();
+    // the read-only facts, labels verbatim with REVIEW
+    expect(screen.getByText("$2,000")).toBeTruthy();
+    expect(screen.getByText("2026-11-15T18:05:00Z")).toBeTruthy();
+    expect(screen.getByText("Standard")).toBeTruthy();
+    expect(screen.getByText("$20")).toBeTruthy();
+    // the manifest hash, full-length mono
+    expect(screen.getByText(new RegExp(`manifest.yaml — sha256 ${manifest.sha256}`))).toBeTruthy();
+    // five attach rows carry their manifest hashes
+    const rows = [...document.querySelectorAll("li")];
+    expect(rows.some((r) => r.textContent?.includes("01-ticket.pdf — sha256"))).toBe(true);
   });
 
-  it("a foreign manifest is refused", async () => {
+  it("nothing held: the manual upload path, then the same chain gate", async () => {
+    const manifest = await builtManifest();
     disputeMock.fetchDispute.mockResolvedValue({
-      data: { evidenceHashes: [new Uint8Array(32).fill(7)] },
+      data: { evidenceHashes: [hexToBytes(manifest.sha256)] },
     });
+    stubOperator(null);
     renderRecovery();
-    const input = document.querySelector<HTMLInputElement>('input[type="file"]');
-    setInputFiles(input!, [yamlFile()]);
+
+    expect(
+      await screen.findByText("The operator doesn't hold this claim's manifest."),
+    ).toBeTruthy();
+    setInputFiles(document.querySelector('input[type="file"]') as HTMLInputElement, [
+      new File([manifest.bytes], "manifest.yaml", { type: "text/yaml" }),
+    ]);
+    expect(await screen.findByText(/Claim #0 — as filed/)).toBeTruthy();
+  });
+
+  it("a manifest whose hash misses the chain slot is refused — fetched or uploaded alike", async () => {
+    const held = await builtManifest();
+    const onChain = await builtManifest(BLADE_POOL_FLOW, {
+      requestedAmountUsdc: 1_000n * 1_000_000n,
+    });
+    disputeMock.fetchDispute.mockResolvedValue({
+      data: { evidenceHashes: [hexToBytes(onChain.sha256)] },
+    });
+    stubOperator(held.bytes);
+    renderRecovery();
+
     expect(await screen.findByText("This manifest doesn't match this claim.")).toBeTruthy();
   });
 });
 
-describe("Recovery — re-delivery (idempotent)", () => {
+describe("Recovery — re-delivery (idempotent; the PUBLISH table)", () => {
   it("re-POSTs the manifest (no-op) and re-PUTs the five files; records delivery", async () => {
-    const manifest = new TextEncoder().encode("schema: riprap-claim/v1\n");
-    disputeMock.fetchDispute.mockResolvedValue({
-      data: { evidenceHashes: [hexToBytes(await disputeHashOf(manifest))] },
-    });
-    renderRecovery();
-    setInputFiles(document.querySelector<HTMLInputElement>('input[type="file"]')!, [
-      yamlFile(manifest),
-    ]);
-    await screen.findByText(/Manifest verified against the claim/);
-
-    const docInputs = [...document.querySelectorAll<HTMLInputElement>('input[type="file"]')].slice(
-      0,
-      5,
-    );
-    for (const input of docInputs) {
-      setInputFiles(input, [pdf("proof.pdf")]);
-    }
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Redeliver evidence" })).toHaveProperty(
-        "disabled",
-        false,
-      );
-    });
+    await renderAtReview();
+    await attachAll();
     fireEvent.click(screen.getByRole("button", { name: "Redeliver evidence" }));
 
     expect(await screen.findByText("Evidence: delivered")).toBeTruthy();
     const fetchMock = vi.mocked(fetch);
-    expect(fetchMock).toHaveBeenCalledTimes(6); // 1 POST + 5 PUTs
+    // 1 GET (entry) + 1 POST + 5 PUTs — and the table carried the manifest row
+    expect(fetchMock).toHaveBeenCalledTimes(7);
     // the local record now marks the claim complete for the #/app line
     expect(localStorage.getItem(`riprap:evidence:${MUTUAL}:0`)).toBeTruthy();
   });
 
-  it("a 409 leaf is a hard stop — wrong document, nothing overwritten", async () => {
-    const manifest = new TextEncoder().encode("schema: riprap-claim/v1\n");
+  it("a 409 leaf is a hard stop — wrong document, nothing overwritten, no retry", async () => {
+    const manifest = await builtManifest();
     disputeMock.fetchDispute.mockResolvedValue({
-      data: { evidenceHashes: [hexToBytes(await disputeHashOf(manifest))] },
-    });
-    renderRecovery();
-    setInputFiles(document.querySelector<HTMLInputElement>('input[type="file"]')!, [
-      yamlFile(manifest),
-    ]);
-    await screen.findByText(/Manifest verified against the claim/);
-    const docInputs = [...document.querySelectorAll<HTMLInputElement>('input[type="file"]')].slice(
-      0,
-      5,
-    );
-    for (const input of docInputs) {
-      setInputFiles(input, [pdf("proof.pdf")]);
-    }
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Redeliver evidence" })).toHaveProperty(
-        "disabled",
-        false,
-      );
+      data: { evidenceHashes: [hexToBytes(manifest.sha256)] },
     });
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: RequestInfo | URL) =>
-        String(input).endsWith("/04-medical-report.pdf")
-          ? new Response("conflict", { status: 409 })
-          : new Response("{}", { status: 201 }),
-      ),
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const method = init?.method ?? "GET";
+        if (method === "GET") return new Response(manifest.bytes, { status: 200 });
+        if (String(input).endsWith("/04-medical-report.pdf")) {
+          return new Response("conflict", { status: 409 });
+        }
+        return new Response("{}", { status: 201 });
+      }),
     );
+    renderRecovery();
+    await screen.findByText(/Claim #0 — as filed/);
+    await attachAll();
     fireEvent.click(screen.getByRole("button", { name: "Redeliver evidence" }));
+
     await waitFor(() => {
       const conflict = [...document.querySelectorAll("p")].find((p) =>
         p.textContent?.includes("already holds a different file"),
@@ -203,5 +274,101 @@ describe("Recovery — re-delivery (idempotent)", () => {
       );
     });
     expect(screen.queryByText("Evidence: delivered")).toBeNull();
+    // hard stop — no Retry buttons past a conflict
+    expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+  });
+
+  it("a failed PUT row retries and completes — same path as the wizard", async () => {
+    const manifest = await builtManifest();
+    disputeMock.fetchDispute.mockResolvedValue({
+      data: { evidenceHashes: [hexToBytes(manifest.sha256)] },
+    });
+    let ticketDown = true;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const method = init?.method ?? "GET";
+        if (method === "GET") return new Response(manifest.bytes, { status: 200 });
+        if (method === "PUT" && String(input).endsWith("/01-ticket.pdf") && ticketDown) {
+          return new Response("boom", { status: 500 });
+        }
+        return new Response("{}", { status: 201 });
+      }),
+    );
+    renderRecovery();
+    await screen.findByText(/Claim #0 — as filed/);
+    await attachAll();
+    fireEvent.click(screen.getByRole("button", { name: "Redeliver evidence" }));
+
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
+      const ticket = rows.find((r) => r.textContent?.includes("01-ticket.pdf"));
+      expect(ticket?.textContent).toContain("failed");
+    });
+    ticketDown = false;
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    expect(await screen.findByText("Evidence: delivered")).toBeTruthy();
+  });
+
+  it("a bounty claim restores too — its own slots, url entry and all", async () => {
+    const manifest = await builtManifest(TOLY_FUEL_FLOW);
+    disputeMock.fetchDispute.mockResolvedValue({
+      data: { evidenceHashes: [hexToBytes(manifest.sha256)] },
+    });
+    stubOperator(manifest.bytes);
+    renderRecovery(TOLY_FUEL_FLOW.documentSlots);
+
+    expect(await screen.findByText(/Claim #0 — as filed/)).toBeTruthy();
+    // the bounty's own paths parse and render — no blade-slot error
+    const rows = [...document.querySelectorAll("li")];
+    expect(rows.some((r) => r.textContent?.includes("03-request-evidence.png — sha256"))).toBe(
+      true,
+    );
+    // the url slot's row shows its RAW link (the URL-path entry)
+    expect(
+      rows.some((r) => r.textContent?.includes("https://x.com/toly/status/2109422383966933008")),
+    ).toBe(true);
+    // only the four FILE slots attach — the url slot rides the manifest
+    expect(document.querySelectorAll('input[type="file"]').length).toBe(4);
+
+    // redelivery: GET + POST + 4 PUTs — the url slot delivered with the POST
+    const inputs = [...document.querySelectorAll<HTMLInputElement>('input[type="file"]')];
+    for (const input of inputs) {
+      setInputFiles(input, [pdf("proof.pdf")]);
+    }
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Redeliver evidence" })).toHaveProperty(
+        "disabled",
+        false,
+      );
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Redeliver evidence" }));
+    expect(await screen.findByText("Evidence: delivered")).toBeTruthy();
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(6);
+  });
+
+  it("stored bytes of another pool's shape fall back to the upload prompt with the parse message — never a dead end", async () => {
+    // a TOLY manifest held against a BLADE restore — the cross-flow case
+    const stored = await builtManifest(TOLY_FUEL_FLOW);
+    disputeMock.fetchDispute.mockResolvedValue({
+      data: { evidenceHashes: [hexToBytes(stored.sha256)] },
+    });
+    stubOperator(stored.bytes);
+    renderRecovery(); // blade slots
+
+    expect(
+      await screen.findByText("The operator doesn't hold this claim's manifest."),
+    ).toBeTruthy();
+    // the parse message rides the prompt — naming the blade path it expected
+    expect(screen.getByText(/bad entry for 03-police-report.pdf/)).toBeTruthy();
+    // and the manual upload still works: the blade bytes via the blade slots
+    const manifest = await builtManifest(BLADE_POOL_FLOW);
+    disputeMock.fetchDispute.mockResolvedValue({
+      data: { evidenceHashes: [hexToBytes(manifest.sha256)] },
+    });
+    setInputFiles(document.querySelector('input[type="file"]') as HTMLInputElement, [
+      new File([manifest.bytes], "manifest.yaml", { type: "text/yaml" }),
+    ]);
+    expect(await screen.findByText(/Claim #0 — as filed/)).toBeTruthy();
   });
 });

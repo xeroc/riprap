@@ -8,40 +8,17 @@
 // the URL is health-checked against the daemon's /healthz. The resolution
 // shape matches the future curation path — a pointer change, not code.
 
-import { shortenAddress } from "@riprap/ui";
-import {
-  type Address,
-  fetchEncodedAccount,
-  getAddressEncoder,
-  getProgramDerivedAddress,
-} from "@solana/kit";
+import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 
 import type { ClusterRpc } from "../../shared/rpc";
 
-/** The program-metadata program (CLAIM-WIZARD §8). */
-const PROGRAM_METADATA_ADDRESS = "ProgM6JCCvbYkfKqJYHePx4xxSUSqJp7rh8Lyv7nk7S" as Address;
-
-/** The Accord program the subaccords live under (programs/hanse pin). */
-const ACCORD_PROGRAM_ADDRESS = "cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed" as Address;
-
-/** The metadata seed — "evidence-op" zero-padded to 16 bytes. */
-const EVIDENCE_OP_SEED = new Uint8Array([
-  ...new TextEncoder().encode("evidence-op"),
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-]);
-
-/** The account's JSON body — keys exactly as stored on chain. */
-interface OperatorMetadata {
-  name: string;
-  url: string;
-  encryption_key: string;
-}
+// The parked metadata-PDA resolution (below, in resolveEvidenceOperator's
+// TODO block) used to carry these: the program-metadata program
+// (ProgM6JCCvbYkfKqJYHePx4xx7rh8Lyv7nk7S), the accord program
+// (cordhVoshqRV6kzGBmM89A66wuusJGsDCvLMHPLyKed), the "evidence-op" seed
+// zero-padded to 16 bytes, and the OperatorMetadata JSON body — restored
+// with the block when on-chain operator details land.
 
 export interface EvidenceOperator {
   name: string;
@@ -58,7 +35,7 @@ export async function resolveEvidenceOperator(
   operatorAuthority: Address,
 ): Promise<EvidenceOperator> {
   const isDevnet = clusterRpc.endpoint.includes("devnet");
-  const url = `api${isDevnet ? ".devnet" : ""}.useaccord.xyz`;
+  const url = `https://api${isDevnet ? ".devnet" : ""}.useaccord.xyz`;
   return {
     name: isDevnet ? "devnet" : "mainnet",
     url,

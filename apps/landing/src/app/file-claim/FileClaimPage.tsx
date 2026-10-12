@@ -18,6 +18,7 @@ import { buildFileClaim, fetchMaybeMutual } from "@riprap/hanse";
 import { Button, HexBackdrop, SectionBand, TextLink, usd } from "@riprap/ui";
 import { useCluster, useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
+import { useQuery } from "@tanstack/react-query";
 import { findAccordStatePda, findDisputePda } from "@useaccord/sdk";
 import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router";
@@ -33,6 +34,7 @@ import {
   resolvePoolAddress,
   TIER_NAMES,
 } from "../../pool/mutual";
+import { useMutual } from "../../pool/useMutual";
 import { useClusterRpc, useHanseEnv } from "../../shared/rpc";
 import { describeError, sendInstruction } from "../../shared/transaction";
 import { ClusterSwitch, ConnectWalletButton } from "../controls";
@@ -43,9 +45,11 @@ import { recordDelivery } from "./evidenceRecord";
 import type { ClaimFlow, DocSlot } from "./flow";
 import { claimFlowFor } from "./flows/index";
 import { buildClaimManifest } from "./manifest";
+import { Recovery } from "./Recovery";
 import {
   type DocRowStatus,
   EmergencyBanner,
+  MANIFEST_ROW,
   type SignPhase,
   type SlotIntake,
   StepAmount,
@@ -71,12 +75,9 @@ interface FiledResult {
   nonce: bigint;
 }
 
-/**
- * One serialized manifest (CLAIM-WIZARD §5, ADR-0003 — address-free, so
- * nonce-invariant). The buffer is atomic: the tx's evidence hash, the
- * operator POST, and the downloaded recovery file all read from this one
- * object, never a re-serialization.
- */
+/** One serialized manifest (CLAIM-WIZARD §5, ADR-0003 — address-free, so
+ * a filing race never touches it). The buffer is immutable from step 4 on:
+ * preview, hash, signature, POST, and download all read the same bytes. */
 interface ManifestBuffer {
   yaml: string;
   sha256: string;
@@ -318,9 +319,6 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   const setRows = (paths: readonly string[], status: DocRowStatus) => {
     for (const path of paths) setRow(path, status);
   };
-  /** Whether the round-0 manifest POST landed — leaf PUTs 404 without it
-   * (manifest-first), so a row retry re-POSTs first when this is false. */
-  const [manifestPosted, setManifestPosted] = useState(false);
   const [conflictPath, setConflictPath] = useState<string | undefined>(undefined);
   const [operatorDown, setOperatorDown] = useState(false);
 
@@ -431,9 +429,9 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
           slot.url === undefined
             ? { path: slot.path, sha256: draft.docs[slot.path]?.sha256 ?? "" }
             : {
-              url: draft.docs[slot.path]?.url ?? "",
-              sha256: draft.docs[slot.path]?.sha256 ?? "",
-            },
+                url: draft.docs[slot.path]?.url ?? "",
+                sha256: draft.docs[slot.path]?.sha256 ?? "",
+              },
         ),
       },
       flow.documentSlots, // the pool's policy §7 slots (ADR-0031 daemon set)
@@ -529,11 +527,11 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
     }
   };
 
-  /** Every slot delivered (files + urls) → the filed screen: draft cleared,
-   * the #/app evidence record written. Idempotent — safe from both the
-   * delivery loop and each row retry. */
+  /** Every row delivered (manifest + files + urls) → the filed screen:
+   * draft cleared, the #/app evidence record written. Idempotent — safe
+   * from the delivery loop and each row retry. */
   const completeIfDelivered = (result: FiledResult) => {
-    if (!docPaths.every((path) => rowStatus.current[path] === "delivered")) return;
+    if (![MANIFEST_ROW, ...docPaths].every((p) => rowStatus.current[p] === "delivered")) return;
     setStep(8);
     if (mutualAddress !== undefined) {
       clearDraft(mutualAddress);
@@ -542,91 +540,124 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
     }
   };
 
+  /** POST the manifest and settle its row (copy doc § PUBLISH — the first
+   * row; every other row's PUT 404s until it lands). Shared by the
+   * delivery loop and every retry path: one place marks the manifest row.
+   * False = failed or conflicted (row failed; the caller stops). */
+  const deliverManifestRow = async (dispute: Address, yaml: string): Promise<boolean> => {
+    if (effPass === null || operator.state !== "ready") return false;
+    try {
+      const posted = await postManifest({
+        endpoint: operator.operator.url,
+        subaccord: effPass.mutual.subaccord,
+        dispute,
+        manifest: new TextEncoder().encode(yaml),
+        operatorPub: operatorPubFromKey(operator.operator.encryptionKey),
+        onPhase: (phase) => setRow(MANIFEST_ROW, phase),
+      });
+      if (posted === "conflict") {
+        // a different manifest is already stored for this dispute — the
+        // wrong manifest for this claim; hard stop, nothing to retry
+        setConflictPath(MANIFEST_ROW);
+        setRow(MANIFEST_ROW, "failed");
+        return false;
+      }
+      setRow(MANIFEST_ROW, "delivered");
+      setOperatorDown(false);
+      // url slots ride the manifest — the POST above delivered their raw link
+      setRows(
+        docPaths.filter((p) => !filePaths.includes(p)),
+        "delivered",
+      );
+      return true;
+    } catch (error) {
+      // a 400 here is loud (unknown schema — never silently degraded); any
+      // failure leaves the row retryable and the app surface re-entry open
+      setOperatorDown(true);
+      setRow(MANIFEST_ROW, "failed");
+      toast.error(error instanceof Error ? error.message : "Couldn't reach the operator.");
+      return false;
+    }
+  };
+
+  /** PUT one document and settle its row — shared by the delivery loop and
+   * row retry (DRY: one place wires the phase spinner). "conflict" = the
+   * 409 hard stop; "failed" leaves the row's Retry. */
+  const deliverFileRow = async (args: {
+    subaccord: Address;
+    dispute: Address;
+    path: string;
+    bytes: Uint8Array;
+  }): Promise<"delivered" | "failed" | "conflict"> => {
+    if (operator.state !== "ready") return "failed";
+    try {
+      const outcome = await putDocument({
+        endpoint: operator.operator.url,
+        subaccord: args.subaccord,
+        dispute: args.dispute,
+        path: args.path,
+        bytes: args.bytes,
+        operatorPub: operatorPubFromKey(operator.operator.encryptionKey),
+        onPhase: (phase) => setRow(args.path, phase),
+        onRetry: () => setRow(args.path, "uploading"),
+      });
+      if (outcome === "conflict") {
+        setConflictPath(args.path); // hard stop — wrong document under this path
+        setRow(args.path, "failed");
+        return "conflict";
+      }
+      setRow(args.path, "delivered");
+      return "delivered";
+    } catch {
+      setRow(args.path, "failed");
+      setOperatorDown(true);
+      return "failed";
+    }
+  };
+
   /**
-   * The publish step (copy doc § PUBLISH, ADR-0031): manifest POST first,
-   * then per-file PUTs — independent ECIES, per-file retry, 409 hard stop.
-   * Runs only after a landed tx (delivery retries never re-send the claim).
-   * Posts the buffer the claim was filed with — keyed at `result.dispute`,
-   * the LANDED one (chain addressing is tx-side, ADR-0003).
+   * The publish step (copy doc § PUBLISH, ADR-0031): the manifest row
+   * first, then per-file PUTs — independent ECIES, per-row retry, 409 hard
+   * stop. Runs only after a landed tx (delivery retries never re-send the
+   * claim). Posts the buffer the claim was filed with — keyed at
+   * `result.dispute`, the LANDED one (chain addressing is tx-side,
+   * ADR-0003).
    */
   const deliverEvidence = async (result: FiledResult, buf: ManifestBuffer) => {
     setStep(7);
     if (pass === null || mutualAddress === undefined) return;
     if (operator.state !== "ready") {
       setOperatorDown(true);
-      setRows(docPaths, "failed");
+      setRows([MANIFEST_ROW, ...docPaths], "failed");
       return;
     }
-    const endpoint = operator.operator.url;
-    const operatorPub = operatorPubFromKey(operator.operator.encryptionKey);
     setOperatorDown(false);
-
-    let posted: "posted" | "conflict";
-    try {
-      posted = await postManifest({
-        endpoint,
-        subaccord: pass.mutual.subaccord,
-        dispute: result.dispute,
-        manifest: new TextEncoder().encode(buf.yaml),
-        operatorPub,
-      });
-    } catch (error) {
-      console.log(error);
-      // a 400 here is loud (unknown schema — never silently degraded); any
-      // failure leaves the rows retryable (below) and from the app surface
-      setOperatorDown(true);
-      toast.error(error instanceof Error ? error.message : "Couldn't reach the operator.");
+    if (!(await deliverManifestRow(result.dispute, buf.yaml))) {
       setRows(docPaths, "failed");
       return;
     }
-    if (posted === "conflict") {
-      // a different manifest is already stored for this dispute — the wrong
-      // manifest for this claim; nothing to retry
-      setConflictPath("manifest.yaml");
-      return;
-    }
-    setManifestPosted(true);
-    // url slots ride the manifest — the POST above delivered their raw link
-    setRows(
-      docPaths.filter((path) => !filePaths.includes(path)),
-      "delivered",
-    );
-
     for (const path of filePaths) {
       const bytes = fileBytes.current.get(path);
       if (bytes === undefined) {
         setRow(path, "failed");
         continue;
       }
-      setRow(path, "delivering");
-      try {
-        const outcome = await putDocument({
-          endpoint,
-          subaccord: pass.mutual.subaccord,
-          dispute: result.dispute,
-          path,
-          bytes,
-          operatorPub,
-          onRetry: () => setRow(path, "retrying"),
-        });
-        if (outcome === "conflict") {
-          setConflictPath(path); // hard stop — wrong document under this path
-          setRow(path, "failed");
-          return;
-        }
-        setRow(path, "delivered");
-      } catch {
-        setRow(path, "failed");
-        setOperatorDown(true);
-      }
+      const outcome = await deliverFileRow({
+        subaccord: pass.mutual.subaccord,
+        dispute: result.dispute,
+        path,
+        bytes,
+      });
+      if (outcome === "conflict") return; // hard stop — nothing else runs
     }
     completeIfDelivered(result);
   };
 
-  /** Per-row retry (copy doc § PUBLISH): one click re-delivers that file —
-   * the manifest POST first if it never landed (leaf PUTs 404 without it,
-   * manifest-first). A 409 anywhere stays a hard stop: no retry past a
-   * conflict. Never re-sends the claim — `filed` is already on-chain. */
+  /** Per-row retry (copy doc § PUBLISH): the manifest row re-posts itself;
+   * a file row re-posts the manifest first when its row never delivered
+   * (leaf PUTs 404 without it, manifest-first), then PUTs the file. A 409
+   * anywhere stays a hard stop: no retry past a conflict. Never re-sends
+   * the claim — `filed` is already on-chain. */
   const retryDoc = async (path: string) => {
     if (filed === null || manifest === null || effPass === null) return;
     if (conflictPath !== undefined) return;
@@ -635,69 +666,35 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
       toast.error("Couldn't reach the operator.");
       return;
     }
-    const endpoint = operator.operator.url;
-    const operatorPub = operatorPubFromKey(operator.operator.encryptionKey);
-    if (!manifestPosted) {
-      try {
-        const posted = await postManifest({
-          endpoint,
-          subaccord: effPass.mutual.subaccord,
-          dispute: filed.dispute,
-          manifest: new TextEncoder().encode(manifest.yaml),
-          operatorPub,
-        });
-        if (posted === "conflict") {
-          setConflictPath("manifest.yaml");
-          return;
-        }
-        setManifestPosted(true);
-        setOperatorDown(false);
-        // url slots ride the manifest — delivered with it
-        setRows(
-          docPaths.filter((p) => !filePaths.includes(p)),
-          "delivered",
-        );
-      } catch (error) {
-        console.log(error);
-        setOperatorDown(true);
-        toast.error(error instanceof Error ? error.message : "Couldn't reach the operator.");
-        return;
-      }
+    if (path === MANIFEST_ROW) {
+      await deliverManifestRow(filed.dispute, manifest.yaml);
+      return;
+    }
+    if (rowStatus.current[MANIFEST_ROW] !== "delivered") {
+      if (!(await deliverManifestRow(filed.dispute, manifest.yaml))) return;
     }
     const bytes = fileBytes.current.get(path);
     if (bytes === undefined || !filePaths.includes(path)) {
       setRow(path, "failed");
       return;
     }
-    setRow(path, "delivering");
-    try {
-      const outcome = await putDocument({
-        endpoint,
-        subaccord: effPass.mutual.subaccord,
-        dispute: filed.dispute,
-        path,
-        bytes,
-        operatorPub,
-        onRetry: () => setRow(path, "retrying"),
-      });
-      if (outcome === "conflict") {
-        setConflictPath(path); // hard stop — wrong document under this path
-        setRow(path, "failed");
-        return;
-      }
-      setRow(path, "delivered");
-      setOperatorDown(false);
-      completeIfDelivered(filed);
-    } catch {
-      setRow(path, "failed");
-      setOperatorDown(true);
-    }
+    const outcome = await deliverFileRow({
+      subaccord: effPass.mutual.subaccord,
+      dispute: filed.dispute,
+      path,
+      bytes,
+    });
+    if (outcome === "delivered") setOperatorDown(false);
+    completeIfDelivered(filed);
   };
 
   const incidentIso =
     draft.incidentAt === "" ? "{{PARAM}}" : new Date(draft.incidentAt).toISOString();
 
-  const publishRows = docPaths.map((path) => ({ path, status: docRows[path] ?? "pending" }));
+  const publishRows = [
+    { path: MANIFEST_ROW, status: docRows[MANIFEST_ROW] ?? "pending" },
+    ...docPaths.map((path) => ({ path, status: docRows[path] ?? "pending" })),
+  ];
   const deliveredCount = docPaths.filter((path) => docRows[path] === "delivered").length;
 
   if (invalidPool) return <Navigate to="/app" replace />;
@@ -805,10 +802,95 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   );
 }
 
-export function FileClaimPage({ pool }: { pool?: string }) {
-  const { isConnected, account } = useWallet();
-  const connected = isConnected && account !== null;
+/** The restore route (`#/app/file-claim/:pool/restore/:nonce`, copy doc §
+ * RESTORE): resolves the pool's flow pack, mutual, and dispute PDA, then
+ * hands to the Recovery surface — the read-only replay. No wallet gate:
+ * nothing here signs, and delivery is unauthenticated HTTP. */
+function RestoreSurface({ pool, nonce }: { pool?: string; nonce?: string }) {
+  const clusters = useCluster();
+  const clusterRpc = useClusterRpc();
+  const listing = pool !== undefined ? poolByRouteId(pool) : undefined;
+  const flow = claimFlowFor(listing);
+  const invalid =
+    listing === undefined || flow === null || nonce === undefined || !/^\d+$/.test(nonce);
+  const mutualAddress = invalid ? null : resolvePoolAddress(listing, clusters);
+  const mutualQuery = useMutual(mutualAddress);
+  const disputePda = useQuery({
+    queryKey: ["dispute-pda", clusterRpc?.endpoint, mutualAddress, nonce],
+    queryFn: () =>
+      findDisputePda({ filer: mutualAddress as Address, nonce: BigInt(nonce as string) }),
+    enabled: clusterRpc !== null && mutualAddress !== null && nonce !== undefined,
+    retry: 1,
+  });
 
+  if (invalid) return <Navigate to="/app" replace />;
+  if (mutualQuery.state === "not-found") {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
+        <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          {listing.name} isn't deployed on this network. Switch networks to find it.
+        </p>
+        <ClusterSwitch />
+      </div>
+    );
+  }
+  if (mutualQuery.state === "loading") {
+    return (
+      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+        Reading the pool from the chain.
+      </p>
+    );
+  }
+  if (mutualQuery.state === "error") {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2">
+        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't reach the cluster.</p>
+        <Button variant="outline" className="w-44" onClick={mutualQuery.retry}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
+  if (clusterRpc === null) {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
+        <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
+        <ClusterSwitch />
+      </div>
+    );
+  }
+  const dispute = disputePda.data?.[0];
+  if (dispute === undefined) {
+    if (disputePda.isError) {
+      return (
+        <div className="flex max-w-3xl flex-col gap-2">
+          <p className="text-ink [font:var(--riprap-body-md)]">Couldn't reach the cluster.</p>
+          <Button variant="outline" className="w-44" onClick={() => void disputePda.refetch()}>
+            Try again
+          </Button>
+        </div>
+      );
+    }
+    return (
+      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+        Reading the dispute from the chain.
+      </p>
+    );
+  }
+  return (
+    <Recovery
+      clusterRpc={clusterRpc}
+      mutual={mutualAddress as Address}
+      subaccord={mutualQuery.mutual.subaccord}
+      dispute={dispute}
+      nonce={BigInt(nonce as string)}
+      slots={flow.documentSlots}
+    />
+  );
+}
+
+export function FileClaimPage({ pool, restore }: { pool?: string; restore?: string }) {
   return (
     <>
       <SiteNav inApp />
@@ -820,14 +902,21 @@ export function FileClaimPage({ pool }: { pool?: string }) {
             tone="ground"
             className="relative z-10 bg-transparent pt-(--riprap-space-section)"
           >
-            {connected && account !== null ? (
-              <Wizard wallet={account} pool={pool} />
+            {restore !== undefined ? (
+              <RestoreSurface pool={pool} nonce={restore} />
             ) : (
-              <WizardGate />
+              <FileClaimWalletGate pool={pool} />
             )}
           </SectionBand>
         </div>
       </main>
     </>
   );
+}
+
+/** The wizard's wallet gate — filing needs a signature; restore doesn't. */
+function FileClaimWalletGate({ pool }: { pool?: string }) {
+  const { isConnected, account } = useWallet();
+  const connected = isConnected && account !== null;
+  return connected && account !== null ? <Wizard wallet={account} pool={pool} /> : <WizardGate />;
 }
