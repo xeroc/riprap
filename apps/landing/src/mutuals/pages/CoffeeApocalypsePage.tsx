@@ -45,7 +45,6 @@ export function CoffeeApocalypsePage() {
           "Government photo ID",
           "Exhaustion evidence — a timestamped photo or video of the coffee point with no coffee left to dispense (empty urns, signage, or staff confirmation)",
           "Queue evidence — a timestamped photo or video of you in the queue at that coffee point, at or immediately before the exhaustion",
-          "Declaration of the facts, signed with your wallet",
         ],
         feeNote:
           "Filing pre-pays an adjudication fee of 4 USDC — denied forfeits it, approved returns it with the payment.",

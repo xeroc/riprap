@@ -12,7 +12,7 @@ import {
   TweetCard,
   Wordmark,
 } from "@riprap/ui";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Prose } from "../components/Prose";
 import { Settle } from "../components/Settle";
 import {
@@ -47,17 +47,26 @@ const FILE_BTN =
   "px-3 text-body [font:var(--riprap-mono-label)] tracking-(--riprap-tracking-stamp) " +
   "transition-[border-color,color] duration-[160ms] ease-out outline-none " +
   "hover:border-stone hover:text-ink focus-visible:ring-3 focus-visible:ring-ring";
+/** copy-confirmation flash: sets copied, self-clears after 2s, and the
+ *  timer dies with the button — never a setState after unmount */
+function useCopyFlash() {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const flash = () => {
+    setCopied(true);
+    timer.current = window.setTimeout(() => setCopied(false), 2000);
+  };
+  return { copied, flash };
+}
 
 /** copies a fixed string with the file-button chrome */
 function CopyValueButton({ value, label }: { value: string; label: string }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, flash } = useCopyFlash();
   const onClick = () => {
     navigator.clipboard
       ?.writeText(value)
-      .then(() => {
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 2000);
-      })
+      .then(flash)
       .catch((error: unknown) => console.error("copy failed", error));
   };
   return (
@@ -69,15 +78,12 @@ function CopyValueButton({ value, label }: { value: string; label: string }) {
 
 /** fetches the served SVG and copies its source verbatim */
 function CopySvgButton({ url }: { url: string }) {
-  const [copied, setCopied] = useState(false);
+  const { copied, flash } = useCopyFlash();
   const onClick = () => {
     fetch(url)
       .then((response) => response.text())
       .then((source) => navigator.clipboard?.writeText(source))
-      .then(() => {
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 2000);
-      })
+      .then(flash)
       .catch((error: unknown) => console.error("svg copy failed", error));
   };
   return (

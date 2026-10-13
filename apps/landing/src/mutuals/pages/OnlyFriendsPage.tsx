@@ -47,7 +47,6 @@ export function OnlyFriendsPage() {
           "Introduction evidence — the message thread, photograph, or other record showing you personally making the introduction",
           "VIP eligibility evidence — the archived sponsor page showing the person's company, plus a public source showing their role at the time",
           "Confirmation — a statement from the listed VIP, from an account the jury can verify. Without it, the claim fails. The confirmation is the proof.",
-          "Declaration of the facts, signed with your wallet",
         ],
         feeNote:
           "Filing pre-pays an adjudication fee of 4 USDC — denied forfeits it, approved returns it with the payment.",

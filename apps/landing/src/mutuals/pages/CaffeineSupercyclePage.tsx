@@ -43,10 +43,8 @@ export function CaffeineSupercyclePage() {
         proof: [
           "Event ticket in your own name",
           "Government photo ID",
-          "Request evidence — the post or message from the named person's known account containing the request, or a witnessed statement of it",
           "Delivery evidence — a timestamped photo or video of the handover, showing you, the named person, and the drink",
           "Confirmation — a statement from the named person, from an account or in a form the jury can verify. Without it, the claim fails. The confirmation is the proof.",
-          "Declaration of the facts, signed with your wallet",
         ],
         feeNote:
           "Filing pre-pays an adjudication fee of 8 USDC — denied forfeits it, approved returns it with the payment.",

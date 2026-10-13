@@ -72,7 +72,6 @@ export function NgmiHairlinePage() {
           "Baseline Hairline Snapshot — a dated, unedited photo of your hairline, committed when you joined",
           "Claim Hairline Snapshot — same region, within the claim window, comparable length, framing, and lighting",
           "Hairline Damage Report — the new grays catalogued (count, location) and the circumstances of their discovery",
-          "Declaration of the facts, signed with your wallet",
         ],
         feeNote:
           "Filing pre-pays an adjudication fee of 4 USDC — denied forfeits it, approved returns it with the payment.",

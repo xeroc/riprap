@@ -53,7 +53,6 @@ export function MertOfTheYearPage() {
           "Presentation evidence — a single continuous, timestamped video showing the speech in full and the handover: you speaking, Mert present, and the trophy. The thirty seconds are measured on this video.",
           "Notification evidence — the URL of your X post, showing the @riprapxyz tag and a publication timestamp within 24 hours of the presentation",
           "Verdict evidence — Mert’s declaration, from an account or in a form the jury can verify, naming the winning trophy or member. Without it, the claim fails. The verdict is the proof.",
-          "Declaration of the facts, signed with your wallet",
         ],
         feeNote:
           "Filing pre-pays an adjudication fee of 40 USDC — denied forfeits it, approved returns it with the payment.",

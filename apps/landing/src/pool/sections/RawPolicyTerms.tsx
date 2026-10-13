@@ -10,7 +10,7 @@
 import type { Mutual } from "@riprap/hanse";
 import { AddressChip, Button, Card } from "@riprap/ui";
 import { CheckIcon, CopyIcon } from "lucide-react";
-import { type ChangeEvent, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { domainRefHex, hansePreimage, sha256Hex, toHex } from "../domainRef";
 import { useEvidenceDaemonUrl } from "../evidenceServer";
 import { usePolicyDoc } from "../usePolicyDoc";
@@ -56,6 +56,8 @@ async function uploadTerms(
 /** `copy` ⇄ `copied` — the AddressChip settle-safe word swap, applied to the whole document. */
 function useCopyText(): { copied: boolean; copy: (text: string) => void } {
   const [copied, setCopied] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
   return {
     copied,
     copy: (text: string) => {
@@ -63,7 +65,7 @@ function useCopyText(): { copied: boolean; copy: (text: string) => void } {
         ?.writeText(text)
         .then(() => {
           setCopied(true);
-          window.setTimeout(() => setCopied(false), 2000);
+          timer.current = window.setTimeout(() => setCopied(false), 2000);
         })
         .catch((error: unknown) => console.error("terms copy failed", error));
     },
