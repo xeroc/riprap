@@ -108,7 +108,7 @@ export function CaffeineSupercycleHero() {
             </Settle>
             {covered ? null : (
               <Settle delay={120}>
-                <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
+                <p className="max-w-[45rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
                   <Prose
                     text={`Three of the biggest names at Breakpoint run on hot drinks — Lily, Toly, and Raj; the only question is whose. ${fee} puts you on the delivery roster for all three: ${cap} out for one confirmed hand-off — a hot drink they asked for, hand to hand, still hot, confirmed by the person themselves. One pot, one membership, at most ten paid deliveries across the roster. No confirmed act, no payout; unused funds return when the event ends. This is not a raffle. It's ${fee} and a thermos.`}
                   />
@@ -251,29 +251,7 @@ export function CaffeineSupercycleHero() {
               }
             />
           </div>
-          <aside className="lg:w-96 lg:border-l lg:border-hairline lg:pl-(--riprap-space-xl)">
-            <Settle delay={150}>
-              <div data-slot="odds">
-                <table className="w-full border-collapse">
-                  <caption className="mb-3 text-left uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-                    The odds
-                  </caption>
-                  <tbody>
-                    {ODDS.map(([event, odds]) => (
-                      <tr key={event} className="border-t border-hairline">
-                        <th className="py-3 pr-4 text-left align-top font-normal leading-snug text-body [font:var(--riprap-body-sm)]">
-                          {event}
-                        </th>
-                        <td className="py-3 pl-2 text-right align-top font-mono text-sm leading-snug text-muted-foreground whitespace-nowrap">
-                          {odds}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Settle>
-          </aside>
+          <aside className="lg:w-96 lg:border-l lg:border-hairline lg:pl-(--riprap-space-xl)"></aside>
         </div>
       </SectionBand>
     </div>
