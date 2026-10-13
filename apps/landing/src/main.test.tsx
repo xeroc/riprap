@@ -50,7 +50,20 @@ vi.mock("./adjudicate/AdjudicatePage", () => ({
 vi.mock("./mutuals/MutualsPage", () => ({
   MutualsPage: () => <div data-testid="mutuals-route" />,
 }));
-const PLATFORM_H1 = "Self-governing money."; // payout-pool pass (copy doc §1)
+/** The platform route's marker — an h1 and none of the stubbed route testids
+ *  (content-free: hero copy churn can't break the router suite). */
+function expectPlatformRoute() {
+  expect(screen.getByRole("heading", { level: 1 })).toBeTruthy();
+  for (const testid of [
+    "pool-route",
+    "app-route",
+    "file-claim-route",
+    "adjudicate-route",
+    "mutuals-route",
+  ]) {
+    expect(screen.queryByTestId(testid)).toBeNull();
+  }
+}
 
 // The platform route's mutuals band reads live member counts (useQuery) —
 // give the bare Router test renders a throwaway client.
@@ -79,10 +92,10 @@ afterEach(() => {
 describe("hash router", () => {
   it("renders the platform landing for the empty hash and for in-page anchors", () => {
     renderRouter();
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1);
+    expectPlatformRoute();
 
     goHash("#mechanism"); // section anchor, not a route — platform stays mounted
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1);
+    expectPlatformRoute();
   });
 
   it("renders the pool route on #/2026-breakpoint-blade-pool (trailing slash tolerated)", async () => {
@@ -101,7 +114,8 @@ describe("hash router", () => {
   it("the bare #/app/file-claim hash is not a route — the platform landing answers", async () => {
     window.location.hash = "#/app/file-claim";
     renderRouter();
-    expect((await screen.findByRole("heading", { level: 1 })).textContent).toBe(PLATFORM_H1);
+    await screen.findByRole("heading", { level: 1 });
+    expectPlatformRoute();
   });
 
   it("renders the wizard on its pool-scoped route #/app/file-claim/:pool", async () => {
@@ -164,15 +178,13 @@ describe("hash router", () => {
 
   it("swaps surfaces on hashchange without a reload", async () => {
     renderRouter();
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1);
+    expectPlatformRoute();
 
     goHash("#/app");
     expect(await screen.findByTestId("app-route")).toBeTruthy();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
 
     goHash("#/");
-    await waitFor(() =>
-      expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1),
-    );
+    await waitFor(() => expectPlatformRoute());
   });
 });

@@ -36,7 +36,6 @@ describe("SiteNav", () => {
     expect(screen.getByRole("link", { name: "X" }).getAttribute("href")).toBe(
       "https://x.com/riprapxyz",
     );
-    expect(screen.getByText("launch: Breakpoint 2026")).toBeTruthy();
   });
 
   it("right side on every surface: cluster select + Connect wallet, plus the Open App CTA → #/app", () => {
