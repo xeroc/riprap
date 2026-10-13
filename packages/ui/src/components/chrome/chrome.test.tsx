@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { TIERS, usd } from "../../lib/poolMath";
 import { BadgeStamp } from "./BadgeStamp";
@@ -92,15 +92,27 @@ describe("TopNav — DESIGN.md § top-nav", () => {
     expect(cta.className).toContain("bg-primary");
   });
 
-  it("carries a hamburger below 768px opening a mono drawer", () => {
+  it("carries a hamburger below 768px opening a drawer with the full nav content", () => {
     render(
       <TopNav
         links={[{ href: "#faq", label: "FAQ" }]}
+        actions={<button type="button">connect wallet</button>}
         cta={{ href: "#join", label: "Join the pool" }}
       />,
     );
     const burger = screen.getByRole("button", { name: "Open menu" });
     expect(burger.className).toContain("md:hidden");
+    // inline actions/cta are desktop-only — the drawer carries them below md
+    const slot = screen.getByRole("banner").querySelector('[data-slot="top-nav-actions"]');
+    expect(slot?.className).toContain("md:flex");
+    fireEvent.click(burger);
+    const drawer = screen.getByRole("dialog");
+    expect(within(drawer).getByText("FAQ")).toBeTruthy();
+    expect(within(drawer).getByText("connect wallet")).toBeTruthy();
+    expect(within(drawer).getByRole("link", { name: "Join the pool" })).toBeTruthy();
+    // a drawer link closes the menu on navigate
+    fireEvent.click(within(drawer).getByText("FAQ"));
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("is 64px tall with a hairline bottom rule", () => {

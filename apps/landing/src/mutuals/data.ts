@@ -33,7 +33,7 @@ export const MUTUALS: MutualListing[] = [
     kind: "mutual",
     slug: "blade-pool",
     claimFlow: "blade-pool",
-    // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
+    adjudicationPolicy: "blade-pool",
     // mutual address is env-driven (pool/mutual.ts) — pin pubkey at deploy.
     tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
     tiers: [
@@ -59,6 +59,71 @@ export const MUTUALS: MutualListing[] = [
     badge: "Most popular",
     pubkey: "5Yo1BKU8Vy9mRRwXqrjJhtw4CFmfkZiZoW7VSTj5huEq", // mainnet +  devnet
   },
+  {
+    name: "Caffeine Supercycle",
+    kind: "bounty",
+    slug: "caffeine-supercycle",
+    // terms: Micro Bounty — Caffeine Supercycle - Terms.md §3/§5 (merges the
+    // three hot-drink bounties — Raj/Lily/Toly stay devnet-deployed; one pot,
+    // roster Lily/Toly/Raj, 10 paid deliveries total; prices final 2026-10-13)
+    tagline:
+      "Bring Lily, Toly, or Raj a hot drink they asked for — hand to hand, still hot, confirmed by them. One pot, ten paid deliveries across the roster.",
+    tiers: [{ name: "Flat", fee: 5, cap: 50 }],
+    smallestPayout: 50,
+    pubkey: "FovDXMye3aqv6N6c4WAa6w7wTo2u1Q5To75M96Y7nqPQ", // devnet + mainnet
+  },
+  {
+    name: "NGMI Hairline",
+    kind: "mutual",
+    slug: "ngmi-hairline",
+    // policy: Micro Mutual — NGMI Hairline - Policy.md §3/§5 (entry cut to
+    // $10 on 2026-10-07 — grade I must outpay the entry; grades pay
+    // $20/$60/$100/$200 on the $200 maximum)
+    tagline:
+      "New gray hair first visible during the conference — graded from a countable few to basically Gandalf.",
+    tiers: [{ name: "Flat", fee: 10, cap: 200 }],
+    // §5: grade I pays 10% of the $200 maximum = $20 — the smallest success
+    smallestPayout: 20,
+    badge: "Ridiculous",
+    pubkey: "HtkDhURGzNz9Y15CAHKQn3WBQPFcDTwQ12yRBVqZ47BB", // mainnet
+  },
+  {
+    name: "Coffee Apocalypse",
+    kind: "mutual",
+    slug: "coffee-apocalypse",
+    // policy: Micro Mutual — Coffee Apocalypse - Policy.md §3/§5 (prices set 2026-10-07)
+    tagline:
+      "The coffee point runs out while you're standing in the queue. You leave with nothing.",
+    tiers: [{ name: "Flat", fee: 10, cap: 25 }],
+    smallestPayout: 25,
+    pubkey: "4gUmR7GyYrzRY7wunb6S8Y8Z46MrGcZvenSJPQ758RTk", // mainnet
+  },
+  {
+    name: "OnlyFriends",
+    kind: "bounty",
+    slug: "onlyfriends",
+    // terms: Micro Bounty — OnlyFriends - Terms.md §3/§5 (prices set 2026-10-07:
+    // $50 entry, up to $50 per introduction, VIP = sponsor founder/C-suite)
+    tagline:
+      "Confirmed introductions of a member to a listed VIP — paid per introduction, capped at ten.",
+    tiers: [{ name: "Flat", fee: 50, cap: 500 }],
+    // §5: one confirmed introduction pays up to $50 — the smallest success
+    smallestPayout: 50,
+    pubkey: "2pTynfZkG4eGa3QETiuBVnNjiVQjkFmfaxEyGQFcDd1J", // mainnet
+  },
+  {
+    name: "Mert of the Year",
+    kind: "bounty",
+    slug: "mert-of-the-year",
+    // terms: Micro Bounty — Mert of the Year - Terms.md §3/§5 (§5 prices
+    // final; the named person's consent §3 is still TODO in the doc)
+    tagline:
+      "Hand Mert an over-the-top trophy he did not ask for, with a completely serious acceptance speech on his behalf — the bounty pays the one he declares best.",
+    tiers: [{ name: "Flat", fee: 10, cap: 1000 }],
+    // §5: the single $1000 bounty is the only success payment
+    smallestPayout: 1000,
+    pubkey: "6X3478Sc77pkFXYTskGoSgm4vpXZjnKVv1SLZyUpkkhT",
+  },
   ////////////////////////////////////////////////////////////////////////
   // DEVNET //////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
@@ -67,7 +132,7 @@ export const MUTUALS: MutualListing[] = [
     kind: "mutual",
     slug: "blade-pool",
     claimFlow: "blade-pool",
-    // policy: Micro Mutual — Knife Assault - Policy.md §1/§3/§5. The live
+    adjudicationPolicy: "blade-pool",
     tagline: "Bodily injury caused by another person with a knife or blade, during the conference.",
     tiers: [
       { name: "Basic", fee: 10, cap: 1000 },
@@ -145,7 +210,7 @@ export const MUTUALS: MutualListing[] = [
     name: "Toly Needs His Fuel",
     kind: "bounty",
     slug: "toly-needs-his-fuel",
-    // terms: Micro Bounty — Toly Needs His Fuel - Terms.md §3/§5 (prices set 2026-10-07)
+    claimFlow: "toly-needs-his-fuel",
     tagline:
       "Bring Toly a hot drink he asked for — hand to hand, still hot, confirmed by Toly himself.",
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],

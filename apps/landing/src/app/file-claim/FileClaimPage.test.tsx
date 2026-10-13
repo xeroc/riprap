@@ -16,7 +16,7 @@ import {
 import { AppProvider, getDefaultConfig } from "@solana/connector";
 import type { Address, MaybeAccount } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ed25519PublicKeyFromSeed } from "@useaccord/sdk/evidence";
 import { MemoryRouter, Route, Routes, useParams } from "react-router";
 import type { Mock } from "vitest";
@@ -157,11 +157,16 @@ const BLADE_MAINNET = "DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF";
 
 const testConfig = getDefaultConfig({ appName: "riprap-test", network: "localnet" });
 
+/** The last rendered wizard's client — the regression replay below drives
+ * the same query invalidation the real send path fires on confirm. */
+let lastQueryClient: QueryClient;
+
 function renderWizard(mutualAddress = MUTUAL_ADDR) {
   vi.stubEnv("VITE_LOCALNET_MUTUAL", mutualAddress);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
   });
+  lastQueryClient = queryClient;
   return render(
     <QueryClientProvider client={queryClient}>
       <AppProvider connectorConfig={testConfig}>
@@ -470,16 +475,39 @@ describe("#/app/file-claim — the walk (0→5)", () => {
 });
 
 describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", () => {
-  it("happy path: one tx, POST + five PUTs, filed screen with claim/dispute/timeline; draft cleared", async () => {
+  it("happy path: one tx, manifest row + five PUTs, filed screen with claim/dispute/timeline; draft cleared", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
     await walkToReview();
 
+    // hold the last document's PUT so the publish table is assertable —
+    // the wizard races to FILED otherwise
+    let releaseLast: (() => void) | undefined;
+    const held = new Promise<Response>((resolve) => {
+      releaseLast = () => resolve(ok201());
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (init?.method === "PUT" && String(input).endsWith("/05-statutory-declaration.pdf")) {
+          return held;
+        }
+        return ok201();
+      }),
+    );
+
     fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
-    // sign phase renders; delivery then races through publish to the filed
-    // screen — publish's own states are pinned by the 409 test, where it
-    // hard-stops mounted
     expect(await screen.findByText("Building the transaction…")).toBeTruthy();
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
+      // the manifest row leads the table, delivered before any file
+      expect(rows.length).toBe(6);
+      expect(rows[0]?.textContent).toContain("manifest.yaml");
+      expect(rows[0]?.querySelector('[data-slot="row-status"]')?.textContent).toContain(
+        "delivered",
+      );
+    });
+    releaseLast?.();
     await waitFor(() => {
       expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
     });
@@ -636,8 +664,10 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     } as unknown as MaybeAccount<Member>);
     renderWizard();
     expect(await screen.findByText("This wallet isn't in the pool.")).toBeTruthy();
+    // the pool-page link follows the listing's detail route, not a hardcoded
+    // pool — the wizard serves every pool's flow now
     expect(screen.getByRole("link", { name: "the pool page" }).getAttribute("href")).toBe(
-      "#/2026-breakpoint-blade-pool",
+      `#/m/${BLADE_MAINNET}`,
     );
   });
 
@@ -695,10 +725,15 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     walletState.account = WALLET;
     renderWizard("");
     expect(await screen.findByText("Not live on this cluster")).toBeTruthy();
+    // the second line names the routed pool (the wizard's listing), not a
+    // hardcoded one
+    expect(
+      screen.getByText("Blade Pool isn't deployed on this network. Switch networks to find it."),
+    ).toBeTruthy();
     expect(mutualMock).not.toHaveBeenCalled();
   });
 
-  it("a 5xx PUT shows the retrying row, then delivers; the tx is never re-sent", async () => {
+  it("a 5xx PUT: the row spins uploading through its internal retry, then delivers; the tx is never re-sent", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
     await walkToReview();
@@ -724,13 +759,173 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     await waitFor(() => {
       const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
       const ticket = rows.find((r) => r.textContent?.includes("01-ticket.pdf"));
-      expect(ticket?.textContent).toContain("retrying");
+      // the in-flight upload renders the spinner in place of a status word
+      expect(ticket?.querySelector('[role="status"]')?.getAttribute("aria-label")).toBe(
+        "uploading",
+      );
     });
     release?.();
     await waitFor(() => {
       expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
     });
     expect(sendMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("full-tier filing: the preflight flipping cap-exhausted after the tx lands never ejects the wizard", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    await walkToReview();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
+    await waitFor(() => {
+      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+    });
+    expect(sendMock).toHaveBeenCalledTimes(1);
+
+    // replay what the real send path does on confirm (transaction.ts
+    // invalidates every query): the refetched member shows the full-tier
+    // claim reserved against the cap (Standard max $2,000) — the LIVE
+    // preflight goes cap-exhausted. The wizard must stay on its
+    // post-submit screen: the gate is an entry gate, never an ejector.
+    memberMock.mockResolvedValue(memberAccount({ capUsed: 2_000_000_000n }));
+    // scoped to the membership read — the query whose refresh flips the
+    // gate (a blanket invalidation also kills provider-internal queries
+    // under the stubbed rpc, which is this harness's artifact, not the bug)
+    await act(async () => {
+      await lastQueryClient.invalidateQueries({ queryKey: ["member"] });
+    });
+
+    // settles once the refetch-driven re-render lands — the wizard stays
+    await waitFor(() => {
+      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+    });
+    expect(document.querySelector('[data-slot="cap-exhausted"]')).toBeNull();
+  });
+
+  it("a failed PUT row carries Retry — one click re-delivers that file and the step completes", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    await walkToReview();
+
+    // 01-ticket.pdf 500s through all three internal attempts → the row
+    // fails; its siblings deliver independently
+    let ticketDown = true;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (init?.method === "PUT" && String(input).endsWith("/01-ticket.pdf") && ticketDown) {
+          return new Response("boom", { status: 500 });
+        }
+        return ok201();
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
+      const ticket = rows.find((r) => r.textContent?.includes("01-ticket.pdf"));
+      expect(ticket?.textContent).toContain("failed");
+      expect(ticket?.querySelector("button")?.textContent).toBe("Retry");
+    });
+    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
+
+    // the operator recovers → one click re-delivers; the wizard completes
+    ticketDown = false;
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await waitFor(() => {
+      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+    });
+    expect(sendMock).toHaveBeenCalledTimes(1); // delivery never re-signs
+  });
+
+  it("a failed manifest POST: row retry re-posts the manifest first, then delivers that file", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    await walkToReview();
+
+    let postDown = true;
+    const calls: Array<{ method: string; url: string }> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        calls.push({ method: init?.method ?? "GET", url: String(input) });
+        if (init?.method === "POST" && postDown) {
+          return new Response("boom", { status: 500 });
+        }
+        return ok201();
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
+      // the manifest row leads the table and failed with everything else
+      expect(rows.length).toBe(6);
+      expect(rows[0]?.textContent).toContain("manifest.yaml");
+      expect(rows.every((r) => r.textContent?.includes("failed"))).toBe(true);
+    });
+    expect(calls.filter((c) => c.method === "POST").length).toBe(1);
+
+    // the operator recovers → the row's Retry re-POSTs the manifest (leaf
+    // PUTs 404 without it), then PUTs the file
+    postDown = false;
+    const ticketRow = [...document.querySelectorAll('[data-slot="publish-row"]')].find((r) =>
+      r.textContent?.includes("01-ticket.pdf"),
+    );
+    fireEvent.click(ticketRow?.querySelector("button") as HTMLButtonElement);
+    await waitFor(() => {
+      const rows = [...document.querySelectorAll('[data-slot="publish-row"]')];
+      const ticket = rows.find((r) => r.textContent?.includes("01-ticket.pdf"));
+      expect(ticket?.textContent).toContain("delivered");
+    });
+    expect(calls.filter((c) => c.method === "POST").length).toBe(2);
+    // the other rows are still failed — no filed screen until each is retried
+    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
+  });
+
+  it("the manifest row's own Retry re-posts the manifest alone — files stay failed until their own retry", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    await walkToReview();
+
+    let postDown = true;
+    const calls: Array<{ method: string; url: string }> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        calls.push({ method: init?.method ?? "GET", url: String(input) });
+        if (init?.method === "POST" && postDown) {
+          return new Response("boom", { status: 500 });
+        }
+        return ok201();
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
+    await waitFor(() => {
+      const manifestRow = [...document.querySelectorAll('[data-slot="publish-row"]')].find((r) =>
+        r.textContent?.includes("manifest.yaml"),
+      );
+      expect(manifestRow?.textContent).toContain("failed");
+      expect(manifestRow?.querySelector("button")?.textContent).toBe("Retry");
+    });
+
+    // recover, then retry the manifest row: ONE POST, no PUTs — the file
+    // rows keep their own Retry buttons
+    postDown = false;
+    const manifestRow = [...document.querySelectorAll('[data-slot="publish-row"]')].find((r) =>
+      r.textContent?.includes("manifest.yaml"),
+    );
+    fireEvent.click(manifestRow?.querySelector("button") as HTMLButtonElement);
+    await waitFor(() => {
+      const row = [...document.querySelectorAll('[data-slot="publish-row"]')].find((r) =>
+        r.textContent?.includes("manifest.yaml"),
+      );
+      expect(row?.querySelector('[data-slot="row-status"]')?.textContent).toContain("delivered");
+    });
+    expect(calls.filter((c) => c.method === "POST").length).toBe(2);
+    expect(calls.filter((c) => c.method === "PUT").length).toBe(0);
+    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
   });
 
   it("a POST 400 (unknown schema) is surfaced loudly — rows failed, no silent degrade", async () => {
@@ -745,7 +940,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     await waitFor(() => {
       const unreachable = document.querySelector('[data-slot="publish-unreachable"]');
       expect(unreachable?.textContent).toContain("Couldn't reach the operator.");
-      expect(document.querySelectorAll('[data-slot="publish-row"]').length).toBe(5);
+      expect(document.querySelectorAll('[data-slot="publish-row"]').length).toBe(6);
     });
     expect(screen.queryByText(/Filed — claim #/)).toBeNull();
   });
@@ -780,6 +975,86 @@ describe("#/app/file-claim/:pool — the pool-scoped wizard", () => {
     );
     expect(await screen.findByText(/Step 1 of 5 — Incident/i)).toBeTruthy();
     expect(screen.getByLabelText("Another person used a knife or blade against me")).toBeTruthy();
+  });
+  it("the Toly flow walks incident → evidence (URL slot) → manifest with the URL's hash", async () => {
+    walletState.isConnected = true;
+    walletState.account = WALLET;
+    vi.stubEnv("VITE_LOCALNET_MUTUAL", MUTUAL_ADDR);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AppProvider connectorConfig={testConfig}>
+          <FileClaimPage pool="BxhfgM7FLeqXomWTrrVMjEWk7nEu2SmydBbWWwGrYBda" />
+        </AppProvider>
+      </QueryClientProvider>,
+    );
+    expect(await screen.findByText(/Step 1 of 5 — Incident/i)).toBeTruthy();
+    expect(screen.queryByLabelText("Another person used a knife or blade against me")).toBeNull();
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "2026-11-16T14:10" } });
+    fireEvent.change(screen.getByLabelText("Where"), {
+      target: { value: "Olympia Convention Centre, main hall" },
+    });
+    fireEvent.change(screen.getByLabelText("What happened"), {
+      target: { value: "Toly asked for a coffee; I bought one and handed it to him." },
+    });
+    for (const label of [
+      "Toly asked for the hot drink — the request came from him, before the delivery",
+      "I obtained the drink myself, after the request, at my own expense",
+      "I placed it, still hot, in Toly's hand — inside the covered area, during the bounty period",
+      "Toly confirmed the request and the delivery",
+    ]) {
+      fireEvent.click(screen.getByLabelText(label));
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    // step 2: default amount rides through
+    expect(await screen.findByText(/Step 2 of 5 — Amount/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    // step 3: four file attaches + the one URL input (no fifth file picker)
+    expect(await screen.findByText(/Step 3 of 5 — Evidence/i)).toBeTruthy();
+    const fileInputs = document.querySelectorAll<HTMLInputElement>('input[type="file"]');
+    expect(fileInputs).toHaveLength(4);
+    const urlInput = screen.getByLabelText("Toly's post confirming the request and the delivery");
+    expect(urlInput.getAttribute("type")).toBe("url");
+
+    // an off-domain URL is rejected inline, honestly
+    fireEvent.change(urlInput, { target: { value: "https://example.com/not-a-post" } });
+    fireEvent.blur(urlInput);
+    expect(
+      await screen.findByText(
+        /is not a post URL — Toly's post confirming the request and the delivery needs a link to the post on x\.com or twitter\.com\./,
+      ),
+    ).toBeTruthy();
+
+    // the real confirmation URL: its UTF-8 bytes are the slot's document
+    const confirmationUrl = "https://x.com/Toly/status/1847000000000000000";
+    fireEvent.change(urlInput, { target: { value: confirmationUrl } });
+    fireEvent.blur(urlInput);
+    const expectedSha = await sha256Hex(new TextEncoder().encode(confirmationUrl));
+    await waitFor(() => {
+      expect(screen.getByText(`sha256 ${expectedSha.slice(0, 16)}…`)).toBeTruthy();
+    });
+
+    for (const input of fileInputs) {
+      fireEvent.change(input, { target: { files: [pdf("proof.pdf")] } });
+    }
+    fireEvent.click(screen.getByLabelText(/The ticket and the ID must both be yours/));
+    await waitFor(() => {
+      expect(screen.queryByText(/Attach the four documents and paste/)).toBeNull();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    // step 4: the manifest carries the RAW link under the url slot's key —
+    // no path entry, no file (the URL's sha256 binds it)
+    expect(await screen.findByText(/Step 4 of 5 — Manifest/i)).toBeTruthy();
+    const preview = document.querySelector("pre");
+    expect(preview?.textContent).toContain(
+      `- { path: "${confirmationUrl}", sha256: "${expectedSha}" }`,
+    );
+    expect(preview?.textContent).not.toContain("05-confirmation.url");
   });
 
   it("an unknown pool id falls back to the app surface", async () => {

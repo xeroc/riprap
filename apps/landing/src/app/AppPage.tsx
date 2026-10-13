@@ -57,8 +57,18 @@ function statusLabel(status: ClaimStatus): string {
 
 /** The claims list (copy doc § /app claims): hairline rows, every field mono
  * and straight off the chain — `#nonce · amount · STATUS · filed date`. The
- * label names what the rows belong to (the pool, in the claims band). */
-function ClaimsBlock({ claims, label = "Claims" }: { claims: ClaimsQuery; label?: string }) {
+ * label names what the rows belong to (the pool, in the claims band). A
+ * PENDING row is a link to the claim's restore surface (§ /app/file-claim
+ * RESTORE); settled rows stay plain. */
+function ClaimsBlock({
+  claims,
+  label = "Claims",
+  routeId,
+}: {
+  claims: ClaimsQuery;
+  label?: string;
+  routeId: string;
+}) {
   const heading = (
     <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
       {label}
@@ -97,20 +107,29 @@ function ClaimsBlock({ claims, label = "Claims" }: { claims: ClaimsQuery; label?
         </p>
       ) : (
         <ul className="w-full">
-          {claims.claims.map(({ nonce, claim }) => (
-            <li
-              key={nonce.toString()}
-              data-num
-              className="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-hairline py-2 font-mono text-sm text-ink"
-            >
-              <span>
-                {`#${nonce.toString()} · ${usd(microToUsd(claim.claimAmount))} · ${statusLabel(claim.status)}`}
-              </span>
-              <span className="font-mono text-xs text-muted-foreground">
-                filed {formatUtc(claim.filedAt)}
-              </span>
-            </li>
-          ))}
+          {claims.claims.map(({ nonce, claim }) => {
+            const facts = `#${nonce.toString()} · ${usd(microToUsd(claim.claimAmount))} · ${statusLabel(claim.status)}`;
+            const filed = `filed ${formatUtc(claim.filedAt)}`;
+            return (
+              <li
+                key={nonce.toString()}
+                data-num
+                className="flex flex-wrap items-baseline justify-between gap-x-4 border-t border-hairline py-2 font-mono text-sm text-ink"
+              >
+                {claim.status === ClaimStatus.Pending && routeId !== undefined ? (
+                  <a
+                    href={`#/app/file-claim/${routeId}/restore/${nonce.toString()}`}
+                    className="underline decoration-transparent underline-offset-4 transition-colors hover:decoration-current"
+                  >
+                    {facts}
+                  </a>
+                ) : (
+                  <span>{facts}</span>
+                )}
+                <span className="font-mono text-xs text-muted-foreground">{filed}</span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -163,7 +182,7 @@ function JoinedPoolRow({ pool, member }: { pool: LiveMutual; member: Member }) {
             </Button>
           ) : null}
           <Button asChild size="sm" variant="outline">
-            <a href={`#/app/adjudicate/${routeId}`}>Jury duty</a>
+            <a href="#/app/adjudicate">Jury duty</a>
           </Button>
         </div>
       </td>
@@ -180,7 +199,9 @@ function PoolClaims({ pool, wallet }: { pool: LiveMutual; wallet: Address }) {
     claimant: wallet,
     claimNonce: pool.account.claimNonce,
   });
-  return <ClaimsBlock claims={claims} label={pool.listing.name} />;
+  return (
+    <ClaimsBlock claims={claims} label={pool.listing.name} routeId={poolRouteId(pool.listing)} />
+  );
 }
 
 /** Connected surface: scan every live pool on the cluster, read this

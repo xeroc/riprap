@@ -18,13 +18,14 @@ import { buildFileClaim, fetchMaybeMutual } from "@riprap/hanse";
 import { Button, HexBackdrop, SectionBand, TextLink, usd } from "@riprap/ui";
 import { useCluster, useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
+import { useQuery } from "@tanstack/react-query";
 import { findAccordStatePda, findDisputePda } from "@useaccord/sdk";
 import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router";
 import { toast } from "sonner";
 import { Settle } from "../../components/Settle";
 import { SiteNav } from "../../components/SiteNav";
-import { poolByRouteId } from "../../mutuals/data";
+import { poolByRouteId, poolRoute } from "../../mutuals/data";
 import type { MutualListing } from "../../mutuals/types";
 import {
   formatUtc,
@@ -33,19 +34,22 @@ import {
   resolvePoolAddress,
   TIER_NAMES,
 } from "../../pool/mutual";
+import { useMutual } from "../../pool/useMutual";
 import { useClusterRpc, useHanseEnv } from "../../shared/rpc";
 import { describeError, sendInstruction } from "../../shared/transaction";
 import { ClusterSwitch, ConnectWalletButton } from "../controls";
-import { intakeDocument } from "./documents";
+import { intakeDocument, intakeUrl } from "./documents";
 import { type ClaimDraft, clearDraft, emptyDraft, loadDraft, saveDraft } from "./draft";
 import { operatorPubFromKey, postManifest, putDocument } from "./evidence";
 import { recordDelivery } from "./evidenceRecord";
 import type { ClaimFlow, DocSlot } from "./flow";
 import { claimFlowFor } from "./flows/index";
 import { buildClaimManifest } from "./manifest";
+import { Recovery } from "./Recovery";
 import {
   type DocRowStatus,
   EmergencyBanner,
+  MANIFEST_ROW,
   type SignPhase,
   type SlotIntake,
   StepAmount,
@@ -71,12 +75,9 @@ interface FiledResult {
   nonce: bigint;
 }
 
-/**
- * One serialized manifest (CLAIM-WIZARD §5, ADR-0003 — address-free, so
- * nonce-invariant). The buffer is atomic: the tx's evidence hash, the
- * operator POST, and the downloaded recovery file all read from this one
- * object, never a re-serialization.
- */
+/** One serialized manifest (CLAIM-WIZARD §5, ADR-0003 — address-free, so
+ * a filing race never touches it). The buffer is immutable from step 4 on:
+ * preview, hash, signature, POST, and download all read the same bytes. */
 interface ManifestBuffer {
   yaml: string;
   sha256: string;
@@ -134,9 +135,21 @@ function WizardGate() {
   );
 }
 
-/** Step 0 — the preflight gate: hook states, honest copy, no fields. */
-function PreflightGate({ onPass }: { onPass: () => void }) {
-  const preflight = useClaimPreflight();
+/** Step 0 — the preflight gate: hook states, honest copy, no fields. The
+ *  pool's name and detail route parameterize the shared states (a deep
+ *  link that names no pool never renders here — the Wizard redirects). */
+function PreflightGate({
+  mutual,
+  poolName,
+  poolHref,
+  onPass,
+}: {
+  mutual?: Address;
+  poolName: string;
+  poolHref: string;
+  onPass: () => void;
+}) {
+  const preflight = useClaimPreflight(mutual);
   useEffect(() => {
     if (preflight.state === "pass") onPass();
   }, [preflight.state, onPass]);
@@ -146,7 +159,7 @@ function PreflightGate({ onPass }: { onPass: () => void }) {
       <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
         <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The Blade Pool isn't deployed on this network. Switch networks to find it.
+          {poolName} isn't deployed on this network. Switch networks to find it.
         </p>
         <ClusterSwitch />
       </div>
@@ -167,7 +180,7 @@ function PreflightGate({ onPass }: { onPass: () => void }) {
     );
   }
   if (preflight.state === "blocked") {
-    return <BlockedState block={preflight.block} />;
+    return <BlockedState block={preflight.block} poolHref={poolHref} />;
   }
   // loading and the pass instant before onPass advances
   return (
@@ -177,16 +190,14 @@ function PreflightGate({ onPass }: { onPass: () => void }) {
   );
 }
 
-/** The blocked kinds — each its copy-doc state (§ /app/file-claim step 0). */
-function BlockedState({ block }: { block: PreflightBlock }) {
+function BlockedState({ block, poolHref }: { block: PreflightBlock; poolHref: string }) {
   switch (block.kind) {
     case "not-member":
       return (
         <div className="flex max-w-3xl flex-col gap-2" data-slot="not-a-member">
           <p className="text-ink [font:var(--riprap-body-md)]">This wallet isn't in the pool.</p>
           <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-            Membership opens on{" "}
-            <TextLink href="#/2026-breakpoint-blade-pool">the pool page</TextLink>.
+            Membership opens on <TextLink href={poolHref}>the pool page</TextLink>.
           </p>
         </div>
       );
@@ -259,15 +270,30 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   const mutualAddress = invalidPool ? undefined : resolvePoolAddress(listing, clusters);
   const tierNames = listing !== undefined ? listing.tiers.map((t) => t.name) : TIER_NAMES;
   const docPaths = flow !== null ? flow.documentSlots.map((s) => s.path) : [];
+  /** File slots only — url slots have no document to PUT; the manifest
+   *  itself (raw link under the slot's key) is their delivery. */
+  const filePaths =
+    flow !== null ? flow.documentSlots.filter((s) => s.url === undefined).map((s) => s.path) : [];
 
   const clusterRpc = useClusterRpc();
   const hanseEnv = useHanseEnv();
 
   const preflight = useClaimPreflight(mutualAddress);
   const pass: PreflightPass | null = preflight.state === "pass" ? preflight.pass : null;
+  /** The pass the claim is being signed with — frozen at sign start. A
+   * full-tier filing exhausts the member's cap the moment the tx lands
+   * (the shared send path invalidates every query, so the LIVE preflight
+   * flips to cap-exhausted mid-delivery); the post-submit steps 6–8 run on
+   * this frozen pass — the preflight gate is an entry gate, never a
+   * mid-delivery ejector. Cleared again when a sign attempt fails with
+   * nothing landed (the live pass governs the retry). */
+  const [signPass, setSignPass] = useState<PreflightPass | null>(null);
+  const effPass = signPass ?? pass;
   // Operator discovery resolves once per session, whatever step renders it
-  // (CLAIM-WIZARD §8) — hoisted so the hook order never moves.
-  const operator = useEvidenceOperator(clusterRpc, pass?.evidenceOperator ?? null);
+  // (CLAIM-WIZARD §8) — hoisted so the hook order never moves. Seeded from
+  // effPass: post-filing the live pass is gone, the frozen one keeps the
+  // operator address alive for delivery and per-row retry.
+  const operator = useEvidenceOperator(clusterRpc, effPass?.evidenceOperator ?? null);
 
   const [step, setStep] = useState<Step>(0);
   const [draft, setDraft] = useState<ClaimDraft>(() =>
@@ -283,6 +309,16 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   const [nonceRace, setNonceRace] = useState(false);
   const [filed, setFiled] = useState<FiledResult | null>(null);
   const [docRows, setDocRows] = useState<Record<string, DocRowStatus>>({});
+  /** Row statuses outside React's render loop — the completion check and
+   * per-row retry read the latest status without racing a re-render. */
+  const rowStatus = useRef<Record<string, DocRowStatus>>({});
+  const setRow = (path: string, status: DocRowStatus) => {
+    rowStatus.current[path] = status;
+    setDocRows({ ...rowStatus.current });
+  };
+  const setRows = (paths: readonly string[], status: DocRowStatus) => {
+    for (const path of paths) setRow(path, status);
+  };
   const [conflictPath, setConflictPath] = useState<string | undefined>(undefined);
   const [operatorDown, setOperatorDown] = useState(false);
 
@@ -292,12 +328,15 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
     if (mutualAddress !== undefined) saveDraft(mutualAddress, draft);
   }, [mutualAddress, draft]);
 
-  const tiers = pass === null ? null : poolTiers(pass.mutual, tierNames);
+  const tiers = effPass === null ? null : poolTiers(effPass.mutual, tierNames);
   const tier =
-    pass === null || tiers === null ? null : tiers[Math.min(pass.member.tier, tiers.length - 1)];
+    effPass === null || tiers === null
+      ? null
+      : tiers[Math.min(effPass.member.tier, tiers.length - 1)];
   /** The REMAINING cap (chain truth): tier max − cap_used — concurrent
    * filings share the cumulative cap (multi-claim amendment). */
-  const capUsdc = pass === null ? 0 : Number(pass.capRemainingMicro) / 1_000_000;
+  const capUsdc = effPass === null ? 0 : Number(effPass.capRemainingMicro) / 1_000_000;
+
   const attach = async (slot: DocSlot, file: File) => {
     try {
       const result = await intakeDocument(slot, file);
@@ -323,6 +362,32 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
     }
   };
 
+  /** Url-slot intake — same machinery as attach: bytes in session memory,
+   *  hash + link in the draft (the URL's UTF-8 is the slot's document). */
+  const attachUrl = async (slot: DocSlot, url: string) => {
+    try {
+      const result = await intakeUrl(slot, url);
+      fileBytes.current.set(slot.path, result.bytes);
+      setIntakes((current) => ({
+        ...current,
+        [slot.path]: { sha256: result.sha256, fileName: result.fileName },
+      }));
+      setDraft((current) => ({
+        ...current,
+        docs: {
+          ...current.docs,
+          [slot.path]: { sha256: result.sha256, fileName: result.fileName, url },
+        },
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Couldn't read that link.";
+      setIntakes((current) => ({
+        ...current,
+        [slot.path]: { sha256: "", fileName: url, error: message },
+      }));
+    }
+  };
+
   const patch = (changes: Partial<ClaimDraft>) =>
     setDraft((current) => ({ ...current, ...changes }));
 
@@ -338,14 +403,14 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
    * feeds preview, hash, signature, POST, and download — never a second
    * serialization of the same claim. */
   const buildManifest = async (): Promise<ManifestBuffer> => {
-    if (pass === null || tier === null || mutualAddress === undefined || flow === null) {
+    if (effPass === null || tier === null || mutualAddress === undefined || flow === null) {
       throw new Error("manifest prerequisites disappeared mid-flight");
     }
     const amountMicro = BigInt(Math.round(Number.parseFloat(draft.amountUsdc) * 1_000_000));
     const incidentAt = new Date(draft.incidentAt);
     const built = await buildClaimManifest(
       {
-        subaccord: pass.mutual.subaccord,
+        subaccord: effPass.mutual.subaccord,
         filer: mutualAddress, // §5: the filer is the mutual PDA
         mutual: mutualAddress,
         member: wallet,
@@ -356,12 +421,20 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
           incidentPlace: draft.incidentPlace,
           requestedAmountUsdc: amountMicro,
           tier: tier.name,
-          contributionUsdc: pass.mutual.tiers[pass.member.tier].contribution,
+          contributionUsdc: effPass.mutual.tiers[effPass.member.tier].contribution,
         },
-        // every slot attached — step 3 gates Continue on the complete set
-        entries: docPaths.map((path) => ({ path, sha256: draft.docs[path]?.sha256 ?? "" })),
+        // every slot attached — step 3 gates Continue on the complete set.
+        // A url-slot's entry carries the RAW link (no file exists).
+        entries: flow.documentSlots.map((slot) =>
+          slot.url === undefined
+            ? { path: slot.path, sha256: draft.docs[slot.path]?.sha256 ?? "" }
+            : {
+                url: draft.docs[slot.path]?.url ?? "",
+                sha256: draft.docs[slot.path]?.sha256 ?? "",
+              },
+        ),
       },
-      docPaths, // the pool's policy §7 canonical paths (ADR-0031 daemon set)
+      flow.documentSlots, // the pool's policy §7 slots (ADR-0031 daemon set)
     );
     return { yaml: built.yaml, sha256: built.sha256Hex };
   };
@@ -370,7 +443,7 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   // re-serialize — the buffer is nonce-invariant, so nothing that happens
   // at signing can invalidate it or the member's step-4 download).
   const enterManifest = async () => {
-    if (pass === null) return;
+    if (effPass === null) return;
     const built = await buildManifest();
     setManifest(built);
     setStep(4);
@@ -420,6 +493,10 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
    */
   const signAndFile = async () => {
     if (filed !== null || manifest === null || pass === null || clusterRpc === null) return;
+    // freeze the passing preflight for the post-submit steps — the tx's
+    // confirm invalidates every query and a full-tier filing flips the live
+    // preflight to cap-exhausted mid-delivery (see signPass above)
+    setSignPass(pass);
     setStep(6);
     setSignPhase("building");
     setNonceRace(false);
@@ -442,98 +519,182 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
         setFiled(result);
         void deliverEvidence(result, manifest);
       } catch (raceErr) {
+        // nothing landed — unfreeze: the live preflight governs the retry
+        setSignPass(null);
         toast.error(describeError(raceErr));
         setStep(5);
       }
     }
   };
 
+  /** Every row delivered (manifest + files + urls) → the filed screen:
+   * draft cleared, the #/app evidence record written. Idempotent — safe
+   * from the delivery loop and each row retry. */
+  const completeIfDelivered = (result: FiledResult) => {
+    if (![MANIFEST_ROW, ...docPaths].every((p) => rowStatus.current[p] === "delivered")) return;
+    setStep(8);
+    if (mutualAddress !== undefined) {
+      clearDraft(mutualAddress);
+      // the #/app evidence line — the claim's full slot set (files + urls)
+      recordDelivery(mutualAddress, result.nonce, docPaths);
+    }
+  };
+
+  /** POST the manifest and settle its row (copy doc § PUBLISH — the first
+   * row; every other row's PUT 404s until it lands). Shared by the
+   * delivery loop and every retry path: one place marks the manifest row.
+   * False = failed or conflicted (row failed; the caller stops). */
+  const deliverManifestRow = async (dispute: Address, yaml: string): Promise<boolean> => {
+    if (effPass === null || operator.state !== "ready") return false;
+    try {
+      const posted = await postManifest({
+        endpoint: operator.operator.url,
+        subaccord: effPass.mutual.subaccord,
+        dispute,
+        manifest: new TextEncoder().encode(yaml),
+        operatorPub: operatorPubFromKey(operator.operator.encryptionKey),
+        onPhase: (phase) => setRow(MANIFEST_ROW, phase),
+      });
+      if (posted === "conflict") {
+        // a different manifest is already stored for this dispute — the
+        // wrong manifest for this claim; hard stop, nothing to retry
+        setConflictPath(MANIFEST_ROW);
+        setRow(MANIFEST_ROW, "failed");
+        return false;
+      }
+      setRow(MANIFEST_ROW, "delivered");
+      setOperatorDown(false);
+      // url slots ride the manifest — the POST above delivered their raw link
+      setRows(
+        docPaths.filter((p) => !filePaths.includes(p)),
+        "delivered",
+      );
+      return true;
+    } catch (error) {
+      // a 400 here is loud (unknown schema — never silently degraded); any
+      // failure leaves the row retryable and the app surface re-entry open
+      setOperatorDown(true);
+      setRow(MANIFEST_ROW, "failed");
+      toast.error(error instanceof Error ? error.message : "Couldn't reach the operator.");
+      return false;
+    }
+  };
+
+  /** PUT one document and settle its row — shared by the delivery loop and
+   * row retry (DRY: one place wires the phase spinner). "conflict" = the
+   * 409 hard stop; "failed" leaves the row's Retry. */
+  const deliverFileRow = async (args: {
+    subaccord: Address;
+    dispute: Address;
+    path: string;
+    bytes: Uint8Array;
+  }): Promise<"delivered" | "failed" | "conflict"> => {
+    if (operator.state !== "ready") return "failed";
+    try {
+      const outcome = await putDocument({
+        endpoint: operator.operator.url,
+        subaccord: args.subaccord,
+        dispute: args.dispute,
+        path: args.path,
+        bytes: args.bytes,
+        operatorPub: operatorPubFromKey(operator.operator.encryptionKey),
+        onPhase: (phase) => setRow(args.path, phase),
+        onRetry: () => setRow(args.path, "uploading"),
+      });
+      if (outcome === "conflict") {
+        setConflictPath(args.path); // hard stop — wrong document under this path
+        setRow(args.path, "failed");
+        return "conflict";
+      }
+      setRow(args.path, "delivered");
+      return "delivered";
+    } catch {
+      setRow(args.path, "failed");
+      setOperatorDown(true);
+      return "failed";
+    }
+  };
+
   /**
-   * The publish step (copy doc § PUBLISH, ADR-0031): manifest POST first,
-   * then per-file PUTs — independent ECIES, per-file retry, 409 hard stop.
-   * Runs only after a landed tx (delivery retries never re-send the claim).
-   * Posts the buffer the claim was filed with — keyed at `result.dispute`,
-   * the LANDED one (chain addressing is tx-side, ADR-0003).
+   * The publish step (copy doc § PUBLISH, ADR-0031): the manifest row
+   * first, then per-file PUTs — independent ECIES, per-row retry, 409 hard
+   * stop. Runs only after a landed tx (delivery retries never re-send the
+   * claim). Posts the buffer the claim was filed with — keyed at
+   * `result.dispute`, the LANDED one (chain addressing is tx-side,
+   * ADR-0003).
    */
   const deliverEvidence = async (result: FiledResult, buf: ManifestBuffer) => {
     setStep(7);
     if (pass === null || mutualAddress === undefined) return;
     if (operator.state !== "ready") {
       setOperatorDown(true);
-      setDocRows(Object.fromEntries(docPaths.map((path) => [path, "failed" as const])));
+      setRows([MANIFEST_ROW, ...docPaths], "failed");
       return;
     }
-    const endpoint = operator.operator.url;
-    const operatorPub = operatorPubFromKey(operator.operator.encryptionKey);
     setOperatorDown(false);
-
-    let posted: "posted" | "conflict";
-    try {
-      posted = await postManifest({
-        endpoint,
-        subaccord: pass.mutual.subaccord,
-        dispute: result.dispute,
-        manifest: new TextEncoder().encode(buf.yaml),
-        operatorPub,
-      });
-    } catch (error) {
-      // a 400 here is loud (unknown schema — never silently degraded); any
-      // failure leaves delivery retryable from the app surface
-      setOperatorDown(true);
-      toast.error(error instanceof Error ? error.message : "Couldn't reach the operator.");
-      setDocRows(Object.fromEntries(docPaths.map((path) => [path, "failed" as const])));
+    if (!(await deliverManifestRow(result.dispute, buf.yaml))) {
+      setRows(docPaths, "failed");
       return;
     }
-    if (posted === "conflict") {
-      // a different manifest is already stored for this dispute — the wrong
-      // manifest for this claim; nothing to retry
-      setConflictPath("manifest.yaml");
-      return;
-    }
-
-    let delivered = 0;
-    for (const path of docPaths) {
+    for (const path of filePaths) {
       const bytes = fileBytes.current.get(path);
       if (bytes === undefined) {
-        setDocRows((current) => ({ ...current, [path]: "failed" }));
+        setRow(path, "failed");
         continue;
       }
-      setDocRows((current) => ({ ...current, [path]: "delivering" }));
-      try {
-        const outcome = await putDocument({
-          endpoint,
-          subaccord: pass.mutual.subaccord,
-          dispute: result.dispute,
-          path,
-          bytes,
-          operatorPub,
-          onRetry: () => setDocRows((current) => ({ ...current, [path]: "retrying" })),
-        });
-        if (outcome === "conflict") {
-          setConflictPath(path); // hard stop — wrong document under this path
-          setDocRows((current) => ({ ...current, [path]: "failed" }));
-          return;
-        }
-        delivered += 1;
-        setDocRows((current) => ({ ...current, [path]: "delivered" }));
-      } catch {
-        setDocRows((current) => ({ ...current, [path]: "failed" }));
-        setOperatorDown(true);
-      }
+      const outcome = await deliverFileRow({
+        subaccord: pass.mutual.subaccord,
+        dispute: result.dispute,
+        path,
+        bytes,
+      });
+      if (outcome === "conflict") return; // hard stop — nothing else runs
     }
-    if (delivered === docPaths.length) {
-      setStep(8);
-      if (mutualAddress !== undefined) {
-        clearDraft(mutualAddress);
-        recordDelivery(mutualAddress, result.nonce); // the #/app evidence line
-      }
+    completeIfDelivered(result);
+  };
+
+  /** Per-row retry (copy doc § PUBLISH): the manifest row re-posts itself;
+   * a file row re-posts the manifest first when its row never delivered
+   * (leaf PUTs 404 without it, manifest-first), then PUTs the file. A 409
+   * anywhere stays a hard stop: no retry past a conflict. Never re-sends
+   * the claim — `filed` is already on-chain. */
+  const retryDoc = async (path: string) => {
+    if (filed === null || manifest === null || effPass === null) return;
+    if (conflictPath !== undefined) return;
+    if (operator.state !== "ready") {
+      setOperatorDown(true);
+      toast.error("Couldn't reach the operator.");
+      return;
     }
+    if (path === MANIFEST_ROW) {
+      await deliverManifestRow(filed.dispute, manifest.yaml);
+      return;
+    }
+    if (rowStatus.current[MANIFEST_ROW] !== "delivered") {
+      if (!(await deliverManifestRow(filed.dispute, manifest.yaml))) return;
+    }
+    const bytes = fileBytes.current.get(path);
+    if (bytes === undefined || !filePaths.includes(path)) {
+      setRow(path, "failed");
+      return;
+    }
+    const outcome = await deliverFileRow({
+      subaccord: effPass.mutual.subaccord,
+      dispute: filed.dispute,
+      path,
+      bytes,
+    });
+    if (outcome === "delivered") setOperatorDown(false);
+    completeIfDelivered(filed);
   };
 
   const incidentIso =
     draft.incidentAt === "" ? "{{PARAM}}" : new Date(draft.incidentAt).toISOString();
 
-  const publishRows = docPaths.map((path) => ({ path, status: docRows[path] ?? "pending" }));
+  const publishRows = [
+    { path: MANIFEST_ROW, status: docRows[MANIFEST_ROW] ?? "pending" },
+    ...docPaths.map((path) => ({ path, status: docRows[path] ?? "pending" })),
+  ];
   const deliveredCount = docPaths.filter((path) => docRows[path] === "delivered").length;
 
   if (invalidPool) return <Navigate to="/app" replace />;
@@ -541,10 +702,17 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   return (
     <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" data-slot="wizard">
       <EmergencyBanner spec={flow.emergency ?? null} />
-      {pass === null || tier === null ? (
+      {effPass === null || tier === null ? (
         // Step 0 — and the honest re-gate if the chain state moved under an
-        // open wizard: the flow never collects past an invalid gate.
-        <PreflightGate onPass={() => setStep(1)} />
+        // open wizard: the flow never collects past an invalid gate. Never
+        // re-asserts post-submit — signPass froze the filing's pass (steps
+        // 6–8 ride it even when the live gate has gone cap-exhausted).
+        <PreflightGate
+          mutual={mutualAddress}
+          poolName={listing.name}
+          poolHref={poolRoute(listing)}
+          onPass={() => setStep(1)}
+        />
       ) : step === 1 ? (
         <StepIncident
           checks={flow.screenChecks}
@@ -573,6 +741,7 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
           draft={draft}
           intakes={intakes}
           onAttach={attach}
+          onAttachUrl={attachUrl}
           onAttest={(checked) => patch({ samePerson: checked })}
           onBack={() => setStep(2)}
           onContinue={() => void enterManifest()}
@@ -594,9 +763,9 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
         <StepReview
           draft={draft}
           capUsdc={capUsdc}
-          feeMicro={pass.feeMicro}
+          feeMicro={effPass.feeMicro}
           incidentIso={incidentIso}
-          operatorAddress={pass.evidenceOperator}
+          operatorAddress={effPass.evidenceOperator}
           canSign={manifest !== null && hanseEnv !== null && filed === null}
           onBack={() => setStep(4)}
           onSign={() => void signAndFile()}
@@ -605,10 +774,11 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
         <StepSign phase={signPhase} nonceRace={nonceRace} />
       ) : step === 7 && filed !== null ? (
         <StepPublish
-          operatorAddress={pass.evidenceOperator}
+          operatorAddress={effPass.evidenceOperator}
           rows={publishRows}
           conflictPath={conflictPath}
           unreachable={operatorDown}
+          onRetry={(path) => void retryDoc(path)}
         />
       ) : step === 8 && filed !== null && manifest !== null ? (
         <StepFiled
@@ -617,20 +787,110 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
           dispute={filed.dispute}
           delivered={deliveredCount}
           total={flow.documentSlots.length}
-          feeUsd={usd(microToUsd(pass.feeMicro))}
+          feeUsd={usd(microToUsd(effPass.feeMicro))}
           onDownload={() => downloadManifest(manifest.yaml)}
         />
       ) : (
-        <PreflightGate onPass={() => setStep(1)} />
+        <PreflightGate
+          mutual={mutualAddress}
+          poolName={listing.name}
+          poolHref={poolRoute(listing)}
+          onPass={() => setStep(1)}
+        />
       )}
     </div>
   );
 }
 
-export function FileClaimPage({ pool }: { pool?: string }) {
-  const { isConnected, account } = useWallet();
-  const connected = isConnected && account !== null;
+/** The restore route (`#/app/file-claim/:pool/restore/:nonce`, copy doc §
+ * RESTORE): resolves the pool's flow pack, mutual, and dispute PDA, then
+ * hands to the Recovery surface — the read-only replay. No wallet gate:
+ * nothing here signs, and delivery is unauthenticated HTTP. */
+function RestoreSurface({ pool, nonce }: { pool?: string; nonce?: string }) {
+  const clusters = useCluster();
+  const clusterRpc = useClusterRpc();
+  const listing = pool !== undefined ? poolByRouteId(pool) : undefined;
+  const flow = claimFlowFor(listing);
+  const invalid =
+    listing === undefined || flow === null || nonce === undefined || !/^\d+$/.test(nonce);
+  const mutualAddress = invalid ? null : resolvePoolAddress(listing, clusters);
+  const mutualQuery = useMutual(mutualAddress);
+  const disputePda = useQuery({
+    queryKey: ["dispute-pda", clusterRpc?.endpoint, mutualAddress, nonce],
+    queryFn: () =>
+      findDisputePda({ filer: mutualAddress as Address, nonce: BigInt(nonce as string) }),
+    enabled: clusterRpc !== null && mutualAddress !== null && nonce !== undefined,
+    retry: 1,
+  });
 
+  if (invalid) return <Navigate to="/app" replace />;
+  if (mutualQuery.state === "not-found") {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
+        <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          {listing.name} isn't deployed on this network. Switch networks to find it.
+        </p>
+        <ClusterSwitch />
+      </div>
+    );
+  }
+  if (mutualQuery.state === "loading") {
+    return (
+      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+        Reading the pool from the chain.
+      </p>
+    );
+  }
+  if (mutualQuery.state === "error") {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2">
+        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't reach the cluster.</p>
+        <Button variant="outline" className="w-44" onClick={mutualQuery.retry}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
+  if (clusterRpc === null) {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
+        <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
+        <ClusterSwitch />
+      </div>
+    );
+  }
+  const dispute = disputePda.data?.[0];
+  if (dispute === undefined) {
+    if (disputePda.isError) {
+      return (
+        <div className="flex max-w-3xl flex-col gap-2">
+          <p className="text-ink [font:var(--riprap-body-md)]">Couldn't reach the cluster.</p>
+          <Button variant="outline" className="w-44" onClick={() => void disputePda.refetch()}>
+            Try again
+          </Button>
+        </div>
+      );
+    }
+    return (
+      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+        Reading the dispute from the chain.
+      </p>
+    );
+  }
+  return (
+    <Recovery
+      clusterRpc={clusterRpc}
+      mutual={mutualAddress as Address}
+      subaccord={mutualQuery.mutual.subaccord}
+      dispute={dispute}
+      nonce={BigInt(nonce as string)}
+      slots={flow.documentSlots}
+    />
+  );
+}
+
+export function FileClaimPage({ pool, restore }: { pool?: string; restore?: string }) {
   return (
     <>
       <SiteNav inApp />
@@ -642,14 +902,21 @@ export function FileClaimPage({ pool }: { pool?: string }) {
             tone="ground"
             className="relative z-10 bg-transparent pt-(--riprap-space-section)"
           >
-            {connected && account !== null ? (
-              <Wizard wallet={account} pool={pool} />
+            {restore !== undefined ? (
+              <RestoreSurface pool={pool} nonce={restore} />
             ) : (
-              <WizardGate />
+              <FileClaimWalletGate pool={pool} />
             )}
           </SectionBand>
         </div>
       </main>
     </>
   );
+}
+
+/** The wizard's wallet gate — filing needs a signature; restore doesn't. */
+function FileClaimWalletGate({ pool }: { pool?: string }) {
+  const { isConnected, account } = useWallet();
+  const connected = isConnected && account !== null;
+  return connected && account !== null ? <Wizard wallet={account} pool={pool} /> : <WizardGate />;
 }

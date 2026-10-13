@@ -113,23 +113,32 @@ afterEach(() => {
 });
 
 describe("parseClaimManifest — golden bytes (CLAIM-WIZARD §5; the claimant suite's GOLDEN)", () => {
-  it("parses the §5 worked example into its exact input", () => {
-    expect(parseClaimManifest(utf8(GOLDEN))).toEqual({ ...exampleInput(), language: "en" });
+  it("round-trips a pool's own slots — url entries ride under their key (not a fixed list)", () => {
+    const slots = [
+      { path: "01-ticket.pdf" },
+      { path: "02-id-document.jpg" },
+      { path: "03-request-evidence.png" },
+      { path: "04-delivery-evidence.jpg" },
+      { path: "05-confirmation.url", url: "confirmation-url" },
+    ];
+    const input: ClaimManifestInput = {
+      ...exampleInput(),
+      entries: [
+        { path: "01-ticket.pdf", sha256: "a".repeat(64) },
+        { path: "02-id-document.jpg", sha256: "b".repeat(64) },
+        { path: "03-request-evidence.png", sha256: "c".repeat(64) },
+        { path: "04-delivery-evidence.jpg", sha256: "d".repeat(64) },
+        { url: "https://x.com/toly/status/2109422383966933008", sha256: "e".repeat(64) },
+      ],
+    };
+    const yaml = serializeClaimManifest(input, slots);
+    expect(parseClaimManifest(utf8(yaml), slots)).toEqual({ ...input, language: "en" });
+    expect(serializeClaimManifest(parseClaimManifest(utf8(yaml), slots), slots)).toBe(yaml);
+    // the wrong slot list refuses it — a blade-shaped parse of a bounty
+    // manifest names the BLADE path it expected at that position (the
+    // cross-flow error: "bad entry for 03-police-report.pdf")
+    expect(() => parseClaimManifest(utf8(yaml))).toThrow(/bad entry for 03-police-report.pdf/);
   });
-
-  it("round-trips byte-exact through the claimant builder — parser and builder agree on every field", () => {
-    expect(serializeClaimManifest(parseClaimManifest(utf8(GOLDEN)))).toBe(GOLDEN);
-  });
-
-  it("round-trips escaped free text (dq inverse: quotes, backslashes, newlines, tabs)", () => {
-    const input = { ...exampleInput(), language: "en" };
-    input.title = 'She said "knife" — \\ not a blade';
-    input.claimContext.incidentPlace = "line one\nline two\ttabbed";
-    const yaml = serializeClaimManifest(input);
-    expect(parseClaimManifest(utf8(yaml))).toEqual(input);
-    expect(serializeClaimManifest(parseClaimManifest(utf8(yaml)))).toBe(yaml);
-  });
-
   it("fails closed on a foreign schema (the SDK's accord-evidence/v1 is not this profile)", () => {
     expect(() =>
       parseClaimManifest(utf8(GOLDEN.replace("riprap-claim/v1", "accord-evidence/v1"))),

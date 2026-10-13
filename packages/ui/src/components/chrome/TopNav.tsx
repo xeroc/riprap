@@ -11,7 +11,8 @@ import { Container } from "./Container";
  * `TopNav` — the top navigation (DESIGN.md § top-nav): ground fill, ink text,
  * 64px height, 1px hairline bottom rule. Mark + wordmark lockup left, mono
  * nav links center-left, Sign In + one primary CTA right. Below 768px the
- * links collapse into a hamburger drawer; the links stay mono.
+ * links, the actions slot, and the CTA collapse into the hamburger drawer —
+ * desktop and drawer carry the same content; the links stay mono.
  */
 export interface TopNavLink {
   href: string;
@@ -71,7 +72,7 @@ export function TopNav({
 
         <div className="flex items-center gap-2">
           {actions && (
-            <div data-slot="top-nav-actions" className="flex items-center gap-2">
+            <div data-slot="top-nav-actions" className="hidden items-center gap-2 md:flex">
               {actions}
             </div>
           )}
@@ -81,7 +82,7 @@ export function TopNav({
             </Button>
           )}
           {cta && (
-            <Button asChild>
+            <Button asChild className="hidden md:inline-flex">
               <a href={cta.href}>{cta.label}</a>
             </Button>
           )}
@@ -107,13 +108,33 @@ export function TopNav({
                   </a>
                 ))}
               </nav>
-              {signIn && (
-                <a
-                  href={signIn.href}
-                  className="px-2 py-3 text-(--riprap-accent) [font:var(--riprap-body-md)] hover:text-(--riprap-accent-hover)"
-                >
-                  {signIn.label}
-                </a>
+              {(signIn || actions || cta) && (
+                <div className="mx-4 mt-2 flex flex-col items-stretch gap-3 border-t border-hairline pt-4">
+                  {signIn && (
+                    <a
+                      href={signIn.href}
+                      onClick={() => setOpen(false)}
+                      className="px-2 py-3 text-(--riprap-accent) [font:var(--riprap-body-md)] hover:text-(--riprap-accent-hover)"
+                    >
+                      {signIn.label}
+                    </a>
+                  )}
+                  {actions && (
+                    <div
+                      data-slot="top-nav-actions"
+                      className="flex flex-col items-stretch gap-2 [&_button]:w-full"
+                    >
+                      {actions}
+                    </div>
+                  )}
+                  {cta && (
+                    <Button asChild className="w-full">
+                      <a href={cta.href} onClick={() => setOpen(false)}>
+                        {cta.label}
+                      </a>
+                    </Button>
+                  )}
+                </div>
               )}
             </SheetContent>
           </Sheet>

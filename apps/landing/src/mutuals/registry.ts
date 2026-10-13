@@ -32,6 +32,9 @@ const LilysLifeline = lazy(() =>
 const TolyFuel = lazy(() =>
   import("./pages/TolyFuelPage").then((m) => ({ default: m.TolyFuelPage })),
 );
+const CaffeineSupercycle = lazy(() =>
+  import("./pages/CaffeineSupercyclePage").then((m) => ({ default: m.CaffeineSupercyclePage })),
+);
 const MertOfTheYear = lazy(() =>
   import("./pages/MertOfTheYearPage").then((m) => ({ default: m.MertOfTheYearPage })),
 );
@@ -55,6 +58,7 @@ export const POOL_PAGES: Record<string, PoolPage> = Object.fromEntries(
       "lilys-liquid-lifeline": LilysLifeline,
       "toly-needs-his-fuel": TolyFuel,
       "mert-of-the-year": MertOfTheYear,
+      "caffeine-supercycle": CaffeineSupercycle,
     }[m.slug];
     if (!page) throw new Error(`no detail page registered for pool ${m.name} (${m.slug})`);
     return [id, page];

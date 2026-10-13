@@ -8,6 +8,7 @@ import {
   buildClaimManifest,
   CLAIM_DOCUMENT_PATHS,
   type ClaimManifestInput,
+  type ManifestSlot,
   serializeClaimManifest,
   sha256Hex,
 } from "./manifest";
@@ -188,7 +189,81 @@ describe("riprap-claim/v1 — the fixed option block (EVENT-MUTUAL: Approve=0, D
     expect("options" in exampleInput()).toBe(false);
   });
 });
+describe("riprap-claim/v1 — url-slot entries (the raw link rides the manifest)", () => {
+  const url = "https://x.com/Toly/status/1847000000000000000";
+  const slots: readonly ManifestSlot[] = [
+    { path: "01-ticket.pdf" },
+    { path: "02-id-document.jpg" },
+    { path: "03-request-evidence.png" },
+    { path: "04-delivery-evidence.jpg" },
+    { path: "05-confirmation.url", url: "url" },
+  ];
 
+  function urlInput(over: Partial<ClaimManifestInput> = {}): ClaimManifestInput {
+    const entries: ClaimManifestInput["entries"] = [
+      { path: "01-ticket.pdf", sha256: "a".repeat(64) },
+      { path: "02-id-document.jpg", sha256: "b".repeat(64) },
+      { path: "03-request-evidence.png", sha256: "c".repeat(64) },
+      { path: "04-delivery-evidence.jpg", sha256: "d".repeat(64) },
+      { url, sha256: "e".repeat(64) },
+    ];
+    return exampleInput({ entries, ...over });
+  }
+
+  it("serializes the url slot as a URL-path entry — the RAW link as the path, no key form", () => {
+    const yaml = serializeClaimManifest(urlInput(), slots);
+    expect(yaml).toContain(`  - { path: "${url}", sha256: "${"e".repeat(64)}" }`);
+    expect(yaml).not.toContain("confirmation-url");
+    expect(yaml).not.toContain("05-confirmation.url");
+  });
+
+  it("the url entry's sha256 is the hash of the link's UTF-8 bytes — the same value intakeUrl computes", async () => {
+    const built = await buildClaimManifest(
+      urlInput({
+        entries: [
+          ...urlInput().entries.slice(0, 4),
+          { url, sha256: await sha256Hex(new TextEncoder().encode(url)) },
+        ],
+      }),
+      slots,
+    );
+    expect(built.yaml).toContain(`path: "${url}"`);
+  });
+
+  it("rejects a path entry where the slot is a url slot — the raw link is required", () => {
+    const forged = {
+      path: "05-confirmation.url",
+      sha256: "e".repeat(64),
+    } as unknown as ClaimManifestInput["entries"][number];
+    expect(() =>
+      serializeClaimManifest(
+        urlInput({ entries: [...urlInput().entries.slice(0, 4), forged] }),
+        slots,
+      ),
+    ).toThrow(/needs the raw URL/);
+  });
+
+  it("rejects a url entry where the slot is a file slot — files keep their canonical paths", () => {
+    const swapped = [
+      { url, sha256: "a".repeat(64) },
+      ...urlInput().entries.slice(1),
+    ] as ClaimManifestInput["entries"];
+    expect(() => serializeClaimManifest(urlInput({ entries: swapped }), slots)).toThrow(
+      /canonical policy §7 paths/,
+    );
+  });
+
+  it("rejects an empty url — an unset link is not a proof", () => {
+    expect(() =>
+      serializeClaimManifest(
+        urlInput({
+          entries: [...urlInput().entries.slice(0, 4), { url: "  ", sha256: "e".repeat(64) }],
+        }),
+        slots,
+      ),
+    ).toThrow(/needs the raw URL/);
+  });
+});
 describe("riprap-claim/v1 — trust-boundary validation", () => {
   it("rejects a non-base58 address", () => {
     expect(() => serializeClaimManifest(exampleInput({ subaccord: "0ops" }))).toThrow(

@@ -70,7 +70,9 @@ describe("BlurbPage — the unlisted blurb & brand kit", () => {
     expect(standard).toBeTruthy();
     expect(standard?.closest('[class*="grid-cols-2"]')).toBeNull(); // not in the chat grid
     const shortBlurb = chats[1].closest('[data-slot="copy-block"]');
-    expect(standard!.compareDocumentPosition(shortBlurb!)).toBe(Node.DOCUMENT_POSITION_PRECEDING); // standard sits below
+    expect((standard as Node).compareDocumentPosition(shortBlurb as Node)).toBe(
+      Node.DOCUMENT_POSITION_PRECEDING,
+    ); // standard sits below
     // full width: no max-width cap on the standard block itself
     expect(standard?.className).not.toMatch(/max-w-/);
   });

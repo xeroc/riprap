@@ -8,7 +8,7 @@ ANCHOR_VERSION ?= 1.2.0
 ANCHOR_PROGRAM ?= anchor-$(ANCHOR_VERSION)
 
 TODAY := $(shell date +%Y-%m-%d)
-DEPLOY_KEY_PATH := $(or $(RIPRAP_DEPLOY_KEY_PATH),~/.config/solana/id.json)
+RIPRAP_DEPLOY_KEY_PATH := $(or $(RIPRAP_DEPLOY_KEY_PATH),~/.config/solana/id.json)
 SOLANA_API := $(or $(SOLANA_API),https://api.mainnet-beta.solana.com)
 SOLANA_WS := $(subst https://,wss://,$(SOLANA_API))
 
@@ -62,4 +62,4 @@ clean: ## Remove build artifacts and node_modules
 
 deploy:
 	$(ANCHOR_PROGRAM) program deploy --provider.cluster $(SOLANA_API) --provider.wallet $(RIPRAP_DEPLOY_KEY_PATH)
-	# solana program write-buffer --keypair $(DEPLOY_KEY_PATH) --ws $(SOLANA_WS) ./target/deploy/accord.so
+	# solana program write-buffer --keypair $(RIPRAP_DEPLOY_KEY_PATH) --ws $(SOLANA_WS) ./target/deploy/accord.so

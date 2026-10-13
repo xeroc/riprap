@@ -16,6 +16,7 @@ import {
   TextLink,
   usd,
 } from "@riprap/ui";
+import { Loader2Icon } from "lucide-react";
 import { Prose } from "../../components/Prose";
 import { Settle } from "../../components/Settle";
 import { microToUsd } from "../../pool/mutual";
@@ -258,6 +259,7 @@ export function StepEvidence({
   draft,
   intakes,
   onAttach,
+  onAttachUrl,
   onAttest,
   onBack,
   onContinue,
@@ -270,6 +272,8 @@ export function StepEvidence({
   draft: ClaimDraft;
   intakes: Record<string, SlotIntake>;
   onAttach: (slot: DocSlot, file: File) => Promise<void>;
+  /** Url-slot intake — the pasted link replaces the file picker. */
+  onAttachUrl: (slot: DocSlot, url: string) => Promise<void>;
   onAttest: (checked: boolean) => void;
   onBack: () => void;
   onContinue: () => void;
@@ -299,19 +303,35 @@ export function StepEvidence({
                     sha256 {intake.sha256.slice(0, 16)}…
                   </span>
                 ) : null}
-                <label className={buttonVariants({ variant: "outline" })}>
-                  <input
-                    type="file"
-                    className="sr-only"
-                    accept=".pdf,.png,.jpg,.jpeg,.heic,.heif,image/jpeg,image/png,application/pdf"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void onAttach(slot, file);
-                      e.target.value = "";
+                {slot.url ? (
+                  <Input
+                    type="url"
+                    aria-label={slot.label}
+                    placeholder="https://x.com/…"
+                    defaultValue={draft.docs[slot.path]?.url ?? ""}
+                    className="w-80 font-mono"
+                    onBlur={(e) => {
+                      void onAttachUrl(slot, e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.currentTarget.blur();
                     }}
                   />
-                  {intake && !intake.error ? "Replace" : "Attach"}
-                </label>
+                ) : (
+                  <label className={buttonVariants({ variant: "outline" })}>
+                    <input
+                      type="file"
+                      className="sr-only"
+                      accept=".pdf,.png,.jpg,.jpeg,.heic,.heif,image/jpeg,image/png,application/pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void onAttach(slot, file);
+                        e.target.value = "";
+                      }}
+                    />
+                    {intake && !intake.error ? "Replace" : "Attach"}
+                  </label>
+                )}
               </span>
               {intake?.error ? (
                 <p className="w-full text-sm text-error [font:var(--riprap-body-sm)]">
@@ -498,16 +518,57 @@ export function StepSign({ phase, nonceRace }: { phase: SignPhase; nonceRace: bo
     </StepFrame>
   );
 }
-
 // --- step 7: PUBLISH --------------------------------------------------------
 
-export type DocRowStatus = "pending" | "delivering" | "retrying" | "delivered" | "failed";
+/** The publish table's first row — the manifest artifact itself: every
+ * other row's PUT 404s until it lands (leaf PUTs are manifest-first). */
+export const MANIFEST_ROW = "manifest.yaml";
+
+export type DocRowStatus = "pending" | "encrypting" | "uploading" | "delivered" | "failed";
+
+/** The row spinner — the one loop the founder asked for (2026-10-12): a
+ * chrome spinner that stands still under prefers-reduced-motion. */
+function Spinner({ label }: { label: string }) {
+  return (
+    <Loader2Icon
+      role="status"
+      aria-label={label}
+      className="size-3 animate-spin text-stone motion-reduce:animate-none"
+    />
+  );
+}
+
+/** One row's live state: 🔒 + spinner while its ECIES bundle encrypts,
+ * spinner while uploading, then the settled mono word (copy doc § PUBLISH). */
+function RowStatus({ status }: { status: DocRowStatus }) {
+  if (status === "encrypting") {
+    return (
+      <span className="inline-flex items-center gap-1.5" data-slot="row-status">
+        <span aria-hidden="true">🔒</span>
+        <Spinner label="encrypting" />
+      </span>
+    );
+  }
+  if (status === "uploading") {
+    return <Spinner label="uploading" />;
+  }
+  return (
+    <span
+      data-num={status === "delivered" || status === "failed" ? true : undefined}
+      data-slot="row-status"
+      className="font-mono text-xs text-stone"
+    >
+      {status === "pending" ? "delivering" : status}
+    </span>
+  );
+}
 
 export function StepPublish({
   operatorAddress,
   rows,
   conflictPath,
   unreachable,
+  onRetry,
 }: {
   /** sub.evidence_operator — presented truncated, never a full dump. */
   operatorAddress: string;
@@ -516,6 +577,11 @@ export function StepPublish({
   conflictPath?: string;
   /** Operator unreachable after the tx landed — delivery keeps retrying. */
   unreachable?: boolean;
+  /** Re-deliver one failed row (copy doc § PUBLISH): the manifest row
+   * re-posts itself; a file row re-posts the manifest first if it never
+   * landed, then PUTs the file. Hidden on conflict — a 409 is a hard stop,
+   * not a retryable failure. */
+  onRetry?: (path: string) => void;
 }) {
   return (
     <StepFrame n={7} name="Publish">
@@ -533,11 +599,18 @@ export function StepPublish({
               <span data-num className="font-mono text-sm text-ink">
                 {row.path}
               </span>
-              <span
-                data-num={row.status === "delivered" || row.status === "failed" ? true : undefined}
-                className="font-mono text-xs text-stone"
-              >
-                {row.status === "pending" ? "delivering" : row.status}
+              <span className="flex items-baseline gap-3">
+                <RowStatus status={row.status} />
+                {row.status === "failed" && conflictPath === undefined && onRetry !== undefined ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => onRetry(row.path)}
+                  >
+                    Retry
+                  </Button>
+                ) : null}
               </span>
             </li>
           ))}

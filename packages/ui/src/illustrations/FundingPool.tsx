@@ -107,9 +107,9 @@ export function FundingPool({ className }: { className?: string }) {
           data-slot="purpose-paper"
           style={{
             position: "absolute",
-            right: 2,
+            left: 200,
             top: 12,
-            width: 164,
+            width: 240,
             padding: 14,
             background: "var(--riprap-surface-card)",
             border: "1px solid var(--riprap-hairline-strong)",
@@ -283,8 +283,8 @@ export function FundingPool({ className }: { className?: string }) {
           data-slot="confirmation"
           style={{
             position: "absolute",
-            right: 32,
-            bottom: 16,
+            right: 0,
+            bottom: 40,
             display: "flex",
             alignItems: "center",
             gap: 6,

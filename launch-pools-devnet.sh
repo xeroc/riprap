@@ -162,6 +162,25 @@ pnpm --filter @riprap/cli dev hanse:initialize \
   --reveal-threshold-bps 6666 --max-draw-attempts 3 \
   --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
   --rpc https://api.devnet.solana.com
+#
+# ── 9. Caffeine Supercycle · seed 10 · $5 / up to $50 · fee $8 (fpj $2) ────
+# The merged hot-drink bounty: roster Lily Liu + Anatoly "Toly" Yakovenko +
+# Raj Gokal, at most 10 paid deliveries TOTAL across the roster (terms §5).
+# The three single-person pools (seeds 6–8) stay devnet-deployed; this pool
+# is their mainnet successor.
+pnpm --filter @riprap/cli dev hanse:initialize \
+  --seed 10 \
+  --deposit-mint 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU --fee-mint 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU \
+  --tier 5000000:50000000 --tier 5000000:50000000 --tier 5000000:50000000 \
+  --policy-hash "$(sha256sum "meta/Breakpoint/Micro Bounty — Caffeine Supercycle - Terms.md" | cut -c1-64)" \
+  --deposits-close-at 1794729600 \
+  --claims-close-at 1795823999 \
+  --min-stake 5000000 --alpha-bps 10000 \
+  --review-window 172800 --commit-window 86400 --reveal-window 86400 \
+  --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 2000000 \
+  --reveal-threshold-bps 6666 --max-draw-attempts 3 \
+  --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
+  --rpc https://api.devnet.solana.com
 
 # OPS REMINDER (grill decision, accept + monitor): the honest-stake base is the
 # majority-capture defense. At deposits-close (2026-11-15T08:00Z) check staker

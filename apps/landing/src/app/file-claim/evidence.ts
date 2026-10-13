@@ -14,6 +14,10 @@ import { claimantEncrypt, type IngestBundle } from "@useaccord/sdk/evidence";
 /** Per-file retry: transient failures get this many attempts. */
 export const PUT_ATTEMPTS = 3;
 
+/** Where a delivery is: encrypting its ECIES bundle, then uploading it.
+ * One callback shape for the manifest POST and every leaf PUT — the UI's
+ * row spinner rides this (copy doc § PUBLISH, 2026-10-12). */
+export type DeliveryPhase = "encrypting" | "uploading";
 function toBase64(bytes: Uint8Array): string {
   return btoa(String.fromCharCode(...bytes));
 }
@@ -32,6 +36,26 @@ function base(endpoint: string): string {
   return endpoint.replace(/\/+$/, "");
 }
 
+/**
+ * GET the stored round-0 manifest — the daemon's public endpoint (SPEC.md
+ * §HTTP API): plaintext, no auth. Null = the operator holds nothing (404);
+ * anything else throws. The restore surface reads this first (copy doc §
+ * /app/file-claim RESTORE).
+ */
+export async function fetchManifest(params: {
+  endpoint: string;
+  subaccord: string;
+  dispute: string;
+}): Promise<Uint8Array | null> {
+  const res = await fetch(
+    `${base(params.endpoint)}/evidence/${params.subaccord}/${params.dispute}/0`,
+  );
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(`evidence manifest fetch failed: ${res.status} ${await bodyText(res)}`);
+  }
+  return new Uint8Array(await res.arrayBuffer());
+}
 async function bodyText(res: Response): Promise<string> {
   return await res.text().catch(() => "");
 }
@@ -47,12 +71,17 @@ export async function postManifest(params: {
   dispute: string;
   manifest: Uint8Array;
   operatorPub: Uint8Array;
+  /** Row-phase signal — encrypting before the ECIES bundle, uploading before fetch. */
+  onPhase?: (phase: DeliveryPhase) => void;
 }): Promise<"posted" | "conflict"> {
   const { endpoint, subaccord, dispute, manifest, operatorPub } = params;
+  params.onPhase?.("encrypting");
+  const body = await bundleJson(manifest, operatorPub);
+  params.onPhase?.("uploading");
   const res = await fetch(`${base(endpoint)}/evidence/${subaccord}/${dispute}/0`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: await bundleJson(manifest, operatorPub),
+    body,
   });
   if (res.status === 201) return "posted";
   if (res.status === 409) return "conflict";
@@ -71,11 +100,15 @@ export async function putDocument(params: {
   path: string;
   bytes: Uint8Array;
   operatorPub: Uint8Array;
-  /** Fires when a retry is scheduled — the UI's `retrying` row state. */
+  /** Fires when a retry is scheduled — the UI's row returns to uploading. */
   onRetry?: (attempt: number) => void;
+  /** Row-phase signal — encrypting before the ECIES bundle, uploading before fetch. */
+  onPhase?: (phase: DeliveryPhase) => void;
 }): Promise<"delivered" | "conflict"> {
   const { endpoint, subaccord, dispute, path, bytes, operatorPub } = params;
+  params.onPhase?.("encrypting");
   const body = await bundleJson(bytes, operatorPub);
+  params.onPhase?.("uploading");
   let lastError = "unknown error";
   for (let attempt = 1; attempt <= PUT_ATTEMPTS; attempt++) {
     try {

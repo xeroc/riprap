@@ -85,11 +85,9 @@ export function AppNavControls() {
 
   return (
     <div className="flex items-center gap-2">
-      {/* the cluster switch is desktop navbar chrome — below sm it overflows
-          the 64px bar (2026-10-05); /app's own ClusterSwitch still renders */}
-      <span className="hidden sm:inline-flex">
-        <ClusterSwitch />
-      </span>
+      {/* TopNav hides this row below md (the burger menu carries it), so no
+          per-item width gating is needed here anymore */}
+      <ClusterSwitch />
       {connected && account !== null ? (
         <AccountControls address={account} />
       ) : (

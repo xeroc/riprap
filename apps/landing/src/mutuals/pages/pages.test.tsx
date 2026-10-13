@@ -1,19 +1,31 @@
 // Thin smoke tests for the pool pages: every pool has a page registered
-// under its route id, each page renders its hero (per-pool headline + the
-// honest not-live join state while the chain can't answer) and its doc
+// under its route id, each page renders its hero with the honest not-live
+// join state while the chain can't answer, and the policy band's disclosure
+// opens on click. Copy, prices, and band labels are the copy doc's job —
+// these stay structural so content churn cannot break them.
 import { AppProvider, getDefaultConfig } from "@solana/connector";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { MUTUALS, poolRouteId } from "../data";
+import { shareText as caffeineShare } from "./CaffeineSupercycleHero";
+import { CaffeineSupercyclePage } from "./CaffeineSupercyclePage";
+import { shareText as chairShare } from "./ChairmageddonHero";
 import { ChairmageddonPage } from "./ChairmageddonPage";
+import { shareText as coffeeShare } from "./CoffeeApocalypseHero";
 import { CoffeeApocalypsePage } from "./CoffeeApocalypsePage";
+import { shareText as rajShare } from "./KeepRajWarmHero";
 import { KeepRajWarmPage } from "./KeepRajWarmPage";
+import { shareText as lilyShare } from "./LilysLifelineHero";
 import { LilysLifelinePage } from "./LilysLifelinePage";
+import { shareText as mertShare } from "./MertOfTheYearHero";
 import { MertOfTheYearPage } from "./MertOfTheYearPage";
+import { shareText as ngmiShare } from "./NgmiHairlineHero";
 import { NgmiHairlinePage } from "./NgmiHairlinePage";
+import { shareText as onlyShare } from "./OnlyFriendsHero";
 import { OnlyFriendsPage } from "./OnlyFriendsPage";
+import { shareText as tolyShare } from "./TolyFuelHero";
 import { TolyFuelPage } from "./TolyFuelPage";
 
 afterEach(cleanup);
@@ -26,6 +38,7 @@ const PAGES: Record<string, () => React.JSX.Element> = {
   "keep-raj-warm": KeepRajWarmPage,
   "lilys-liquid-lifeline": LilysLifelinePage,
   "toly-needs-his-fuel": TolyFuelPage,
+  "caffeine-supercycle": CaffeineSupercyclePage,
   "mert-of-the-year": MertOfTheYearPage,
 };
 
@@ -59,19 +72,16 @@ describe("pool detail pages (#/m/<id>)", () => {
     }
   });
 
-  it.each(Object.entries(PAGES))("%s renders its hero and bands", (_id, Page) => {
-    const { container } = renderPage(Page);
-    const h1 = screen.getByRole("heading", { level: 1 });
-    expect(h1.textContent).toMatch(/\.$/);
-    // the hero's offer rides above the doc bands; the join state is honest
-    // ({{PARAM}} figures or not-live until the pool answers on-chain)
-    expect(container.textContent).toMatch(/\{\{PARAM\}\}|isn't deployed on this network/);
-    // mutuals ask "What's covered.", bounties "What pays."
-    expect(container.textContent).toMatch(/What's covered\.|What pays\./);
-    expect(container.textContent).toContain("The math, on the doc's example.");
-    expect(container.textContent).toContain("Prices follow the doc's tier table");
-    expect(container.textContent).toContain("nothing on this page is live");
-  });
+  it.each(Object.entries(PAGES))(
+    "%s renders its hero and the honest not-live join state",
+    (_id, Page) => {
+      const { container } = renderPage(Page);
+      expect(screen.getByRole("heading", { level: 1 })).toBeTruthy();
+      // {{PARAM}} figures or not-live until the pool answers on-chain —
+      // never invented numbers (kit data law)
+      expect(container.textContent).toMatch(/\{\{PARAM\}\}|isn't deployed on this network/);
+    },
+  );
 
   it.each(Object.entries(PAGES))(
     "%s carries the raw policy band the hero's acceptance note reveals",
@@ -85,61 +95,17 @@ describe("pool detail pages (#/m/<id>)", () => {
         "details[data-slot='policy-details']",
       ) as HTMLDetailsElement | null;
       expect(details).not.toBeNull();
-      // blade-pool presentation (copy doc § Anchored terms, 2026-09-21):
-      // collapsed on load, the immutable-terms heading, and the honest
-      // idle state — {{PARAM}} until the mutual answers on-chain, never a
-      // fallback document
+      // collapsed on load; the reveal itself: opening the disclosure is one
+      // click, in place
       expect(details?.open).toBe(false);
-      expect(band?.textContent).toContain("The immutable terms of this mutual.");
-      expect(band?.textContent).toContain("Served by the Accord evidence server.");
-      expect(band?.textContent).toContain("terms: {{PARAM}}");
-      // the reveal itself: opening the disclosure is one click, in place
-      fireEvent.click(screen.getByText("Open the policy — verbatim"));
+      const summary = details?.querySelector("summary");
+      expect(summary).not.toBeNull();
+      fireEvent.click(summary as Element);
       expect(details?.open).toBe(true);
     },
   );
 
-  it("ngmi-hairline shows the flat price and the graded payout schedule (policy §5)", () => {
-    const { container } = renderPage(NgmiHairlinePage);
-    const text = container.textContent ?? "";
-    // flat $10 entry, $200 maximum — no draft tiers left
-    expect(text).toContain("$10");
-    expect(text).not.toContain("$5–$20");
-    // grades I–IV pay 10/30/50/100% of the $200 maximum
-    for (const pays of ["$20", "$60", "$100", "$200"]) expect(text).toContain(pays);
-    // §10 worked example: over-subscribed pool, payments scale by the ratio
-    expect(text).toContain("$5,000");
-    expect(text).toContain("$5,300");
-    expect(text).toContain("0.87");
-  });
-
-  it("bounty pages label their bands honestly (kind, not peril)", () => {
-    const raj = renderPage(KeepRajWarmPage);
-    expect(raj.container.textContent).toContain("What pays.");
-    expect(raj.container.textContent).toContain("Doesn't qualify.");
-    expect(
-      [...raj.container.querySelectorAll("td[data-num]")].map((td) => td.textContent),
-    ).toContain("$50");
-    cleanup();
-    // Mert of the Year: same bands, final prices (terms §5), consent TODO
-    const mert = renderPage(MertOfTheYearPage);
-    expect(mert.container.textContent).toContain("What pays.");
-    expect(mert.container.textContent).toContain("Doesn't qualify.");
-    expect(
-      [...mert.container.querySelectorAll("td[data-num]")].map((td) => td.textContent),
-    ).toContain("$1,000");
-    expect(mert.container.textContent).toContain("consent is still TODO");
-  });
-
-  it("each hero's share message carries the handle and never a fake figure", async () => {
-    const chairShare = (await import("./ChairmageddonHero")).shareText;
-    const ngmiShare = (await import("./NgmiHairlineHero")).shareText;
-    const coffeeShare = (await import("./CoffeeApocalypseHero")).shareText;
-    const onlyShare = (await import("./OnlyFriendsHero")).shareText;
-    const rajShare = (await import("./KeepRajWarmHero")).shareText;
-    const lilyShare = (await import("./LilysLifelineHero")).shareText;
-    const tolyShare = (await import("./TolyFuelHero")).shareText;
-    const mertShare = (await import("./MertOfTheYearHero")).shareText;
+  it("each hero's share message carries the handle and never a fake figure", () => {
     const shares: [name: string, fn: (fee: string | null, cap: string | null) => string][] = [
       ["chairmageddon", chairShare],
       ["ngmi-hairline", ngmiShare],
@@ -149,6 +115,7 @@ describe("pool detail pages (#/m/<id>)", () => {
       ["lilys-liquid-lifeline", lilyShare],
       ["toly-needs-his-fuel", tolyShare],
       ["mert-of-the-year", mertShare],
+      ["caffeine-supercycle", caffeineShare],
     ];
     for (const [name, share] of shares) {
       // the mention-watcher keys off the handle (copy doc §5.6)

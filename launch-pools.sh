@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# launch-pools.sh — launch the 8 Breakpoint pools (everything except Blade Pool)
+# launch-pools.sh — launch the 9 Breakpoint pools (everything except Blade Pool)
 # onto MAINNET. Plain CLI calls, all parameters hard-coded, in the same shape
 # as the SETUP.BLADE-POOL.md §4.2 example block.
 #
@@ -20,7 +20,7 @@
 # fee-per-juror = policy fee ÷ 4 with J=3 — each block's numbers reproduce the
 # doc's stated fee exactly:
 #   Chairmageddon $8  NGMI $4  Coffee $4  OnlyFriends $4
-#   Raj/Lily/Toly $8  Mert $40
+#   Raj/Lily/Toly/Caffeine $8  Mert $40
 # min-stake = max(entry fee, 2 × fee-per-juror) — the chain's slash-dominance
 # gate (α·min_stake ≥ 2·fpj); Mert is the only pool bumped ($10 → $20).
 # Everything else is byte-identical to the DEPLOYED mainnet Blade mutual
@@ -30,7 +30,7 @@
 #   deposits close 1794729600 = 2026-11-15T08:00Z (doors, §12)
 #   claims   close 1795823999 = 2026-11-27T23:59:59Z (conference end + 10d,
 #   end of day — every policy doc §2: "closes 10 days after the conference ends")
-# Seeds: 0 = Blade mainnet, 1 = Blade devnet — these pools take 2–9.
+# Seeds: 0 = Blade mainnet, 1 = Blade devnet — these pools take 2–10.
 # USDC mainnet: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v (6 decimals:
 # $X → X_000000 raw).
 #
@@ -56,120 +56,88 @@ pnpm --filter @riprap/cli dev hanse:initialize \
   --rpc https://api.mainnet-beta.solana.com \
   --dry-run
 
-# # ── 2. NGMI Hairline · seed 3 · $10 / up to $200 · fee $4 (fpj $1) ───────────
-# pnpm --filter @riprap/cli dev hanse:initialize \
-#   --seed 3 \
-#   --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
-#   --tier 10000000:200000000 --tier 10000000:200000000 --tier 10000000:200000000 \
-#   --policy-hash "$(sha256sum "meta/Breakpoint/Micro Mutual — NGMI Hairline - Policy.md" | cut -c1-64)" \
-#   --deposits-close-at 1794729600 \
-#   --claims-close-at 1795823999 \
-#   --min-stake 10000000 --alpha-bps 10000 \
-#   --review-window 172800 --commit-window 86400 --reveal-window 86400 \
-#   --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 1000000 \
-#   --reveal-threshold-bps 6666 --max-draw-attempts 3 \
-#   --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
-#   --rpc https://api.mainnet-beta.solana.com \
-#   --dry-run
-#
-# # ── 3. Coffee Apocalypse · seed 4 · $10 / up to $25 · fee $4 (fpj $1) ────────
-# pnpm --filter @riprap/cli dev hanse:initialize \
-#   --seed 4 \
-#   --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
-#   --tier 10000000:25000000 --tier 10000000:25000000 --tier 10000000:25000000 \
-#   --policy-hash "$(sha256sum "meta/Breakpoint/Micro Mutual — Coffee Apocalypse - Policy.md" | cut -c1-64)" \
-#   --deposits-close-at 1794729600 \
-#   --claims-close-at 1795823999 \
-#   --min-stake 10000000 --alpha-bps 10000 \
-#   --review-window 172800 --commit-window 86400 --reveal-window 86400 \
-#   --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 1000000 \
-#   --reveal-threshold-bps 6666 --max-draw-attempts 3 \
-#   --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
-#   --rpc https://api.mainnet-beta.solana.com \
-#   --dry-run
-#
-# # ── 4. OnlyFriends · seed 5 · $50 / up to $500 (10 × $50) · fee $4 (fpj $1) ──
-# pnpm --filter @riprap/cli dev hanse:initialize \
-#   --seed 5 \
-#   --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
-#   --tier 50000000:500000000 --tier 50000000:500000000 --tier 50000000:500000000 \
-#   --policy-hash "$(sha256sum "meta/Breakpoint/Micro Bounty — OnlyFriends - Terms.md" | cut -c1-64)" \
-#   --deposits-close-at 1794729600 \
-#   --claims-close-at 1795823999 \
-#   --min-stake 50000000 --alpha-bps 10000 \
-#   --review-window 172800 --commit-window 86400 --reveal-window 86400 \
-#   --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 1000000 \
-#   --reveal-threshold-bps 6666 --max-draw-attempts 3 \
-#   --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
-#   --rpc https://api.mainnet-beta.solana.com \
-#   --dry-run
-#
-# # ── 5. Operation Keep Raj Warm · seed 6 · $5 / up to $50 · fee $8 (fpj $2) ───
-# pnpm --filter @riprap/cli dev hanse:initialize \
-#   --seed 6 \
-#   --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
-#   --tier 5000000:50000000 --tier 5000000:50000000 --tier 5000000:50000000 \
-#   --policy-hash "$(sha256sum "meta/Breakpoint/Micro Bounty — Operation Keep Raj Warm - Terms.md" | cut -c1-64)" \
-#   --deposits-close-at 1794729600 \
-#   --claims-close-at 1795823999 \
-#   --min-stake 5000000 --alpha-bps 10000 \
-#   --review-window 172800 --commit-window 86400 --reveal-window 86400 \
-#   --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 2000000 \
-#   --reveal-threshold-bps 6666 --max-draw-attempts 3 \
-#   --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
-#   --rpc https://api.mainnet-beta.solana.com \
-#   --dry-run
-#
-# # ── 6. Lily's Liquid Lifeline · seed 7 · $5 / up to $50 · fee $8 (fpj $2) ────
-# pnpm --filter @riprap/cli dev hanse:initialize \
-#   --seed 7 \
-#   --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
-#   --tier 5000000:50000000 --tier 5000000:50000000 --tier 5000000:50000000 \
-#   --policy-hash "$(sha256sum "meta/Breakpoint/Micro Bounty — Lily's Liquid Lifeline - Terms.md" | cut -c1-64)" \
-#   --deposits-close-at 1794729600 \
-#   --claims-close-at 1795823999 \
-#   --min-stake 5000000 --alpha-bps 10000 \
-#   --review-window 172800 --commit-window 86400 --reveal-window 86400 \
-#   --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 2000000 \
-#   --reveal-threshold-bps 6666 --max-draw-attempts 3 \
-#   --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
-#   --rpc https://api.mainnet-beta.solana.com \
-#   --dry-run
-#
-# # ── 7. Toly Needs His Fuel · seed 8 · $5 / up to $50 · fee $8 (fpj $2) ───────
-# pnpm --filter @riprap/cli dev hanse:initialize \
-#   --seed 8 \
-#   --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
-#   --tier 5000000:50000000 --tier 5000000:50000000 --tier 5000000:50000000 \
-#   --policy-hash "$(sha256sum "meta/Breakpoint/Micro Bounty — Toly Needs His Fuel - Terms.md" | cut -c1-64)" \
-#   --deposits-close-at 1794729600 \
-#   --claims-close-at 1795823999 \
-#   --min-stake 5000000 --alpha-bps 10000 \
-#   --review-window 172800 --commit-window 86400 --reveal-window 86400 \
-#   --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 2000000 \
-#   --reveal-threshold-bps 6666 --max-draw-attempts 3 \
-#   --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
-#   --rpc https://api.mainnet-beta.solana.com \
-#   --dry-run
-#
-# # ── 8. Mert of the Year · seed 9 · $10 / up to $1000 · fee $40 (fpj $10) ─────
-# # min-stake $20 (not the $10 entry): slash-dominance needs α·min_stake ≥ 2·fpj
-# # = 2 × $10 — the one pool where the entry fee is below the floor.
-# pnpm --filter @riprap/cli dev hanse:initialize \
-#   --seed 9 \
-#   --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
-#   --tier 10000000:1000000000 --tier 10000000:1000000000 --tier 10000000:1000000000 \
-#   --policy-hash "$(sha256sum "meta/Breakpoint/Micro Bounty — Mert of the Year - Terms.md" | cut -c1-64)" \
-#   --deposits-close-at 1794729600 \
-#   --claims-close-at 1795823999 \
-#   --min-stake 20000000 --alpha-bps 10000 \
-#   --review-window 172800 --commit-window 86400 --reveal-window 86400 \
-#   --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 10000000 \
-#   --reveal-threshold-bps 6666 --max-draw-attempts 3 \
-#   --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
-#   --rpc https://api.mainnet-beta.solana.com \
-#   --dry-run
-#
+# ── 2. NGMI Hairline · seed 3 · $10 / up to $200 · fee $4 (fpj $1) ───────────
+pnpm --filter @riprap/cli dev hanse:initialize \
+  --seed 3 \
+  --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
+  --tier 10000000:200000000 --tier 10000000:200000000 --tier 10000000:200000000 \
+  --policy-hash "$(sha256sum "meta/Breakpoint/Micro Mutual — NGMI Hairline - Policy.md" | cut -c1-64)" \
+  --deposits-close-at 1794729600 \
+  --claims-close-at 1795823999 \
+  --min-stake 10000000 --alpha-bps 10000 \
+  --review-window 172800 --commit-window 86400 --reveal-window 86400 \
+  --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 1000000 \
+  --reveal-threshold-bps 6666 --max-draw-attempts 3 \
+  --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
+  --rpc https://api.mainnet-beta.solana.com
+
+# ── 3. Coffee Apocalypse · seed 4 · $10 / up to $25 · fee $4 (fpj $1) ────────
+pnpm --filter @riprap/cli dev hanse:initialize \
+  --seed 4 \
+  --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
+  --tier 10000000:25000000 --tier 10000000:25000000 --tier 10000000:25000000 \
+  --policy-hash "$(sha256sum "meta/Breakpoint/Micro Mutual — Coffee Apocalypse - Policy.md" | cut -c1-64)" \
+  --deposits-close-at 1794729600 \
+  --claims-close-at 1795823999 \
+  --min-stake 10000000 --alpha-bps 10000 \
+  --review-window 172800 --commit-window 86400 --reveal-window 86400 \
+  --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 1000000 \
+  --reveal-threshold-bps 6666 --max-draw-attempts 3 \
+  --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
+  --rpc https://api.mainnet-beta.solana.com
+
+# ── 4. OnlyFriends · seed 5 · $50 / up to $500 (10 × $50) · fee $4 (fpj $1) ──
+pnpm --filter @riprap/cli dev hanse:initialize \
+  --seed 5 \
+  --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
+  --tier 50000000:500000000 --tier 50000000:500000000 --tier 50000000:500000000 \
+  --policy-hash "$(sha256sum "meta/Breakpoint/Micro Bounty — OnlyFriends - Terms.md" | cut -c1-64)" \
+  --deposits-close-at 1794729600 \
+  --claims-close-at 1795823999 \
+  --min-stake 50000000 --alpha-bps 10000 \
+  --review-window 172800 --commit-window 86400 --reveal-window 86400 \
+  --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 1000000 \
+  --reveal-threshold-bps 6666 --max-draw-attempts 3 \
+  --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
+  --rpc https://api.mainnet-beta.solana.com
+
+# ── 8. Mert of the Year · seed 9 · $10 / up to $1000 · fee $40 (fpj $10) ─────
+# min-stake $20 (not the $10 entry): slash-dominance needs α·min_stake ≥ 2·fpj
+# = 2 × $10 — the one pool where the entry fee is below the floor.
+pnpm --filter @riprap/cli dev hanse:initialize \
+  --seed 9 \
+  --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
+  --tier 10000000:1000000000 --tier 10000000:1000000000 --tier 10000000:1000000000 \
+  --policy-hash "$(sha256sum "meta/Breakpoint/Micro Bounty — Mert of the Year - Terms.md" | cut -c1-64)" \
+  --deposits-close-at 1794729600 \
+  --claims-close-at 1795823999 \
+  --min-stake 20000000 --alpha-bps 10000 \
+  --review-window 172800 --commit-window 86400 --reveal-window 86400 \
+  --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 10000000 \
+  --reveal-threshold-bps 6666 --max-draw-attempts 3 \
+  --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
+  --rpc https://api.mainnet-beta.solana.com
+
+# ── 9. Caffeine Supercycle · seed 10 · $5 / up to $50 · fee $8 (fpj $2) ────
+# The merged hot-drink bounty: roster Lily Liu + Anatoly "Toly" Yakovenko +
+# Raj Gokal, at most 10 paid deliveries TOTAL across the roster (terms §5).
+# The three single-person pools (seeds 6–8) stay devnet-deployed; this pool
+# is their mainnet successor.
+pnpm --filter @riprap/cli dev hanse:initialize \
+  --seed 10 \
+  --deposit-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v --fee-mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
+  --tier 5000000:50000000 --tier 5000000:50000000 --tier 5000000:50000000 \
+  --policy-hash "$(sha256sum "meta/Breakpoint/Micro Bounty — Caffeine Supercycle - Terms.md" | cut -c1-64)" \
+  --deposits-close-at 1794729600 \
+  --claims-close-at 1795823999 \
+  --min-stake 5000000 --alpha-bps 10000 \
+  --review-window 172800 --commit-window 86400 --reveal-window 86400 \
+  --appeal-window 172800 --max-appeals 2 --min-jury-size 3 --fee-per-juror 2000000 \
+  --reveal-threshold-bps 6666 --max-draw-attempts 3 \
+  --evidence-operator evidb4PuV34bca3YGyLg3Q9bcDJ9USPBiHYuf97XjrK \
+  --rpc https://api.mainnet-beta.solana.com \
+  --dry-run
+
 # # OPS REMINDER (grill decision, accept + monitor): the honest-stake base is the
 # # majority-capture defense. At deposits-close (2026-11-15T08:00Z) check staker
 # # counts per pool; if thin (< ~20 stakers or stake base < 2× capped liability),

@@ -31,29 +31,39 @@ vi.mock("./app/AppPage", () => ({
   AppPage: () => <div data-testid="app-route" />,
 }));
 vi.mock("./app/file-claim/FileClaimPage", () => ({
-  FileClaimPage: ({ pool }: { pool?: string }) => (
-    <div data-testid="file-claim-route" data-pool={pool ?? "none"} />
+  FileClaimPage: ({ pool, restore }: { pool?: string; restore?: string }) => (
+    <div
+      data-testid="file-claim-route"
+      data-pool={pool ?? "none"}
+      data-restore={restore ?? "none"}
+    />
   ),
 }));
 vi.mock("./adjudicate/AdjudicatePage", () => ({
-  AdjudicatePage: ({
-    session = null,
-    pool,
-  }: {
-    session?: { round: number } | null;
-    pool?: string;
-  }) => (
+  AdjudicatePage: ({ session = null }: { session?: { round: number } | null }) => (
     <div
       data-testid="adjudicate-route"
       data-session={session ? `round-${session.round}` : "board"}
-      data-pool={pool ?? "none"}
     />
   ),
 }));
 vi.mock("./mutuals/MutualsPage", () => ({
   MutualsPage: () => <div data-testid="mutuals-route" />,
 }));
-const PLATFORM_H1 = "Self-governing money."; // payout-pool pass (copy doc §1)
+/** The platform route's marker — an h1 and none of the stubbed route testids
+ *  (content-free: hero copy churn can't break the router suite). */
+function expectPlatformRoute() {
+  expect(screen.getByRole("heading", { level: 1 })).toBeTruthy();
+  for (const testid of [
+    "pool-route",
+    "app-route",
+    "file-claim-route",
+    "adjudicate-route",
+    "mutuals-route",
+  ]) {
+    expect(screen.queryByTestId(testid)).toBeNull();
+  }
+}
 
 // The platform route's mutuals band reads live member counts (useQuery) —
 // give the bare Router test renders a throwaway client.
@@ -82,10 +92,10 @@ afterEach(() => {
 describe("hash router", () => {
   it("renders the platform landing for the empty hash and for in-page anchors", () => {
     renderRouter();
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1);
+    expectPlatformRoute();
 
     goHash("#mechanism"); // section anchor, not a route — platform stays mounted
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1);
+    expectPlatformRoute();
   });
 
   it("renders the pool route on #/2026-breakpoint-blade-pool (trailing slash tolerated)", async () => {
@@ -104,7 +114,8 @@ describe("hash router", () => {
   it("the bare #/app/file-claim hash is not a route — the platform landing answers", async () => {
     window.location.hash = "#/app/file-claim";
     renderRouter();
-    expect((await screen.findByRole("heading", { level: 1 })).textContent).toBe(PLATFORM_H1);
+    await screen.findByRole("heading", { level: 1 });
+    expectPlatformRoute();
   });
 
   it("renders the wizard on its pool-scoped route #/app/file-claim/:pool", async () => {
@@ -114,17 +125,22 @@ describe("hash router", () => {
     expect(route.getAttribute("data-pool")).toBe("blade-pool");
   });
 
-  it("renders the adjudicate board on #/app/adjudicate and its pool-scoped route", async () => {
+  it("renders the restore surface on #/app/file-claim/:pool/restore/:nonce", async () => {
+    window.location.hash = "#/app/file-claim/blade-pool/restore/3";
+    renderRouter();
+    const route = await screen.findByTestId("file-claim-route");
+    expect(route.getAttribute("data-pool")).toBe("blade-pool");
+    expect(route.getAttribute("data-restore")).toBe("3");
+  });
+  it("renders the adjudicate board on #/app/adjudicate — pool segments are not a route (retired)", async () => {
     window.location.hash = "#/app/adjudicate";
     renderRouter();
     const board = await screen.findByTestId("adjudicate-route");
     expect(board.getAttribute("data-session")).toBe("board");
-    expect(board.getAttribute("data-pool")).toBe("none");
-    goHash("#/app/adjudicate/blade-pool");
+    goHash("#/app/adjudicate/blade-pool"); // retired :pool form — falls to the board
     await waitFor(() => {
       const scoped = screen.getByTestId("adjudicate-route");
       expect(scoped.getAttribute("data-session")).toBe("board");
-      expect(scoped.getAttribute("data-pool")).toBe("blade-pool");
     });
   });
 
@@ -142,13 +158,6 @@ describe("hash router", () => {
     window.location.hash = `#/m/${blade.pubkey}`;
     renderRouter();
     expect(await screen.findByTestId("pool-route")).toBeTruthy();
-  });
-
-  it("renders the adjudicate board on #/app/adjudicate", async () => {
-    window.location.hash = "#/app/adjudicate";
-    renderRouter();
-    const route = await screen.findByTestId("adjudicate-route");
-    expect(route.getAttribute("data-session")).toBe("board");
   });
 
   it("renders the session route on #/app/adjudicate/:dispute/:round (trailing slash tolerated)", async () => {
@@ -169,15 +178,13 @@ describe("hash router", () => {
 
   it("swaps surfaces on hashchange without a reload", async () => {
     renderRouter();
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1);
+    expectPlatformRoute();
 
     goHash("#/app");
     expect(await screen.findByTestId("app-route")).toBeTruthy();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
 
     goHash("#/");
-    await waitFor(() =>
-      expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(PLATFORM_H1),
-    );
+    await waitFor(() => expectPlatformRoute());
   });
 });

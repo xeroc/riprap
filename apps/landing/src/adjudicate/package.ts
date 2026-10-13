@@ -24,7 +24,12 @@
 import type { Address, ReadonlyUint8Array } from "@solana/kit";
 import { verifyManifestHash } from "@useaccord/sdk/evidence";
 
-import { CLAIM_DOCUMENT_PATHS, type ClaimManifestInput } from "../app/file-claim/manifest";
+import {
+  CLAIM_DOCUMENT_PATHS,
+  type ClaimManifestEntry,
+  type ClaimManifestInput,
+  type ManifestSlot,
+} from "../app/file-claim/manifest";
 import { type DecryptDelivery, errorText } from "./delivery";
 
 /** The daemon's per-file status vocabulary (SPEC §HTTP API v2). */
@@ -47,8 +52,8 @@ export interface RoundIndexEntry {
   complete: boolean;
 }
 
-/** GET /evidence/{dispute}/for/{juror} → every non-zero evidence_hashes
- * slot's package deliverable to this juror (daemon SPEC §HTTP API). */
+/** The rounds index: every drawn round's package deliverable to this juror
+ * (daemon SPEC §HTTP API). */
 export interface RoundsIndex {
   rounds: RoundIndexEntry[];
 }
@@ -57,6 +62,9 @@ export interface RoundsIndex {
 // (CLAIM-WIZARD §5 "exact bytes, no canonicalization"); the golden
 // round-trip test keeps the pair in sync.
 const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+/** RFC-3986-ish scheme prefix ⇒ URL-path entry (EVIDENCE-FORMAT §2/§7.1 —
+ * out-of-band for the daemon; the link itself is the path). */
+const URL_PATH = /^[a-z][a-z0-9+.-]*:/i;
 const SHA256_HEX = /^[0-9a-f]{64}$/;
 const BASE58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
@@ -137,8 +145,15 @@ class ManifestCursor {
  * targets `accord-evidence/v1`. Throws on anything that is not exactly the
  * profile — wrong schema, malformed line, bad base58/ISO/hex, non-canonical
  * entry paths, a non-fixed options block, non-UTF-8 bytes.
+ *
+ * Entries validate against `slots` — the pool's own flow/policy slots, url
+ * slots included (their raw link rides the manifest under the slot's key);
+ * the default is the Blade Pool's five (the juror gate's fixed set).
  */
-export function parseClaimManifest(bytes: Uint8Array): ClaimManifestInput {
+export function parseClaimManifest(
+  bytes: Uint8Array,
+  slots: readonly (string | ManifestSlot)[] = CLAIM_DOCUMENT_PATHS,
+): ClaimManifestInput {
   const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   const lines = text.split("\n");
   if (lines[lines.length - 1] !== "") {
@@ -165,15 +180,32 @@ export function parseClaimManifest(bytes: Uint8Array): ClaimManifestInput {
   // hanse-opt/v1, labels Approve/Deny — no filer salt exists to vary it.
   c.expect('options: { recipe: hanse-opt/v1, labels: ["Approve", "Deny"] }');
   c.expect("entries:");
-  const entries = CLAIM_DOCUMENT_PATHS.map((path) => {
+  const canonical = slots.map((s) => (typeof s === "string" ? { path: s } : s));
+  const entries: ClaimManifestEntry[] = canonical.map((slot) => {
     const line = c.next();
+    if (slot.url !== undefined) {
+      // url slot: a URL-path entry — the RAW link, dq-quoted, AS the path
+      // (EVIDENCE-FORMAT §2/§7.1: out-of-band, never daemon-stored)
+      const match = /^[ ]{2}- \{ path: "(.*)", sha256: "(.*)" \}$/.exec(line);
+      const url = match?.[1] !== undefined ? unescapeDq(match[1]) : undefined;
+      const sha256 = match?.[2];
+      if (
+        url === undefined ||
+        !URL_PATH.test(url) ||
+        sha256 === undefined ||
+        !SHA256_HEX.test(sha256)
+      ) {
+        throw new TypeError(`manifest: bad entry for ${slot.path}: ${JSON.stringify(line)}`);
+      }
+      return { url, sha256 };
+    }
     const match = /^[ ]{2}- \{ path: (.+), sha256: "(.*)" \}$/.exec(line);
     const entryPath = match?.[1];
     const sha256 = match?.[2];
-    if (entryPath !== path || sha256 === undefined || !SHA256_HEX.test(sha256)) {
-      throw new TypeError(`manifest: bad entry for ${path}: ${JSON.stringify(line)}`);
+    if (entryPath !== slot.path || sha256 === undefined || !SHA256_HEX.test(sha256)) {
+      throw new TypeError(`manifest: bad entry for ${slot.path}: ${JSON.stringify(line)}`);
     }
-    return { path, sha256 };
+    return { path: slot.path, sha256 };
   });
   c.done();
 

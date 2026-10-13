@@ -1,3 +1,5 @@
+import { afterAll } from "vitest";
+
 /*
  * jsdom ships no IntersectionObserver; motion's useInView needs one at
  * effect time. Minimal stub: every observed element reports as entering
@@ -55,6 +57,49 @@ class ResizeObserverStub implements ResizeObserver {
 if (typeof ResizeObserver === "undefined") {
   globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
 }
+
+/*
+ * wallet-ui (pulled in via @solana/connector) keeps wallet state in
+ * @nanostores/persistent atoms, which bind `storage` listeners on `window`
+ * while mounted. When the last subscriber leaves, nanostores delays the
+ * destroy by STORE_UNMOUNT_DELAY (1000ms); if vitest disposes the jsdom
+ * environment first, the delayed `window.removeEventListener` throws
+ * `ReferenceError: window is not defined` as an unhandled error and fails
+ * the run with every test green. before disposing, wait for that delayed
+ * destroy to run while `window` still exists — but only in files that
+ * actually attached a persistent-store listener.
+ */
+let storageListeners = 0;
+const realAddEventListener = window.addEventListener.bind(window);
+const realRemoveEventListener = window.removeEventListener.bind(window);
+window.addEventListener = (
+  type: string,
+  listener: EventListenerOrEventListenerObject | null,
+  options?: AddEventListenerOptions | boolean,
+) => {
+  if (type === "storage") storageListeners++;
+  if (listener === null) return;
+  return realAddEventListener(type, listener, options);
+};
+window.removeEventListener = (
+  type: string,
+  listener: EventListenerOrEventListenerObject | null,
+  options?: EventListenerOptions | boolean,
+) => {
+  if (type === "storage") storageListeners--;
+  if (listener === null) return;
+  return realRemoveEventListener(type, listener, options);
+};
+
+afterAll(async () => {
+  if (storageListeners === 0) return;
+  const deadline = Date.now() + 2000;
+  while (storageListeners > 0 && Date.now() < deadline) {
+    const { promise, resolve } = Promise.withResolvers<void>();
+    setTimeout(resolve, 100);
+    await promise;
+  }
+});
 
 /*
  * Node ≥26 ships a native `localStorage` accessor on globalThis that returns
