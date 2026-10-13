@@ -109,7 +109,7 @@ Worth 20 minutes? → https://riprap.xyz/#/blurb`;
 export const EMAIL_FULL = `Subject: ${EMAIL_SUBJECT}\n\n${EMAIL_BODY}`;
 
 /** Team — from the seed deck team slide
- * (apps/pitch-seed-raise/src/deck/slides.tsx); founder rows edited by
+ * (apps/pitches/2026-11-pitch-seed-raise/src/deck/slides.tsx); founder rows edited by
  * Fabian 2026-09-23 (Superteam member, split contact rows). */
 export interface Persona {
   img: string;
@@ -146,7 +146,7 @@ export const PERSONAS: Persona[] = [
 ];
 
 /** Track record — the deck's kudos wall, all 22 lines verbatim
- * (apps/pitch-seed-raise/src/deck/slides.tsx, 2026-09-23). */
+ * (apps/pitches/2026-11-pitch-seed-raise/src/deck/slides.tsx, 2026-09-23). */
 export const KUDOS = [
   "Accord — on-chain arbitration · live",
   "Colosseum Honorable Mentions",
