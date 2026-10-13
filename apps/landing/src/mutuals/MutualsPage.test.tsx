@@ -104,10 +104,11 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
       "bounty",
       "bounty",
       "bounty",
+      "bounty",
     ]);
     // strip counts: the three badged pools carry 3, the rest 2
     const stripCounts = rails.map((td) => td.querySelectorAll(":scope > div > div").length);
-    expect(stripCounts).toEqual([3, 3, 3, 2, 2, 2, 2, 2, 2]);
+    expect(stripCounts).toEqual([3, 3, 3, 2, 2, 2, 2, 2, 2, 2]);
     // the name cell carries only the linked name
     const nameCells = [...container.querySelectorAll("tbody th")];
     expect(nameCells.every((th) => th.querySelector("span, p") === null)).toBe(true);
@@ -163,6 +164,7 @@ describe("/mutuals — the tabular directory (copy doc § /mutuals)", () => {
     expect(seats["Operation Keep Raj Warm"]).toBe(10); // 10x payout — $50 / $5
     expect(seats["Lily's Liquid Lifeline"]).toBe(10);
     expect(seats["Toly Needs His Fuel"]).toBe(10);
+    expect(seats["Caffeine Supercycle"]).toBe(10); // 10x payout — $50 / $5, merged roster pool
     expect(seats["Mert of the Year"]).toBe(100); // 100x bounty — $1000 / $10
     // profit threshold: the first success is already funded by one entry,
     // the push number is the second success — where the member profits

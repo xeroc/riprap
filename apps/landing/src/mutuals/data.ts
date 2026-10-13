@@ -153,6 +153,18 @@ export const MUTUALS: MutualListing[] = [
     pubkey: "BxhfgM7FLeqXomWTrrVMjEWk7nEu2SmydBbWWwGrYBda",
   },
   {
+    name: "Caffeine Supercycle",
+    kind: "bounty",
+    slug: "caffeine-supercycle",
+    // terms: Micro Bounty — Caffeine Supercycle - Terms.md §3/§5 (merges the
+    // three hot-drink bounties — Raj/Lily/Toly stay devnet-deployed; one pot,
+    // roster Lily/Toly/Raj, 10 paid deliveries total; prices final 2026-10-13)
+    tagline:
+      "Bring Lily, Toly, or Raj a hot drink they asked for — hand to hand, still hot, confirmed by them. One pot, ten paid deliveries across the roster.",
+    tiers: [{ name: "Flat", fee: 5, cap: 50 }],
+    smallestPayout: 50,
+  },
+  {
     name: "Mert of the Year",
     kind: "bounty",
     slug: "mert-of-the-year",

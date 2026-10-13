@@ -7,6 +7,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { MUTUALS, poolRouteId } from "../data";
+import { CaffeineSupercyclePage } from "./CaffeineSupercyclePage";
 import { ChairmageddonPage } from "./ChairmageddonPage";
 import { CoffeeApocalypsePage } from "./CoffeeApocalypsePage";
 import { KeepRajWarmPage } from "./KeepRajWarmPage";
@@ -26,6 +27,7 @@ const PAGES: Record<string, () => React.JSX.Element> = {
   "keep-raj-warm": KeepRajWarmPage,
   "lilys-liquid-lifeline": LilysLifelinePage,
   "toly-needs-his-fuel": TolyFuelPage,
+  "caffeine-supercycle": CaffeineSupercyclePage,
   "mert-of-the-year": MertOfTheYearPage,
 };
 
@@ -140,6 +142,7 @@ describe("pool detail pages (#/m/<id>)", () => {
     const lilyShare = (await import("./LilysLifelineHero")).shareText;
     const tolyShare = (await import("./TolyFuelHero")).shareText;
     const mertShare = (await import("./MertOfTheYearHero")).shareText;
+    const caffeineShare = (await import("./CaffeineSupercycleHero")).shareText;
     const shares: [name: string, fn: (fee: string | null, cap: string | null) => string][] = [
       ["chairmageddon", chairShare],
       ["ngmi-hairline", ngmiShare],
@@ -149,6 +152,7 @@ describe("pool detail pages (#/m/<id>)", () => {
       ["lilys-liquid-lifeline", lilyShare],
       ["toly-needs-his-fuel", tolyShare],
       ["mert-of-the-year", mertShare],
+      ["caffeine-supercycle", caffeineShare],
     ];
     for (const [name, share] of shares) {
       // the mention-watcher keys off the handle (copy doc §5.6)

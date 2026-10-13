@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
-import { MUTUALS } from "./mutuals/data";
+import { MUTUALS, poolRoute } from "./mutuals/data";
 import type { MutualStore } from "./mutuals/store";
 import { fakeMutual } from "./pool/fixtures";
 import { HEADLINES } from "./sections/Hero";
@@ -94,7 +94,7 @@ describe("landing", () => {
     const band = container.querySelector("section#mutuals");
     expect(band).not.toBeNull();
     expect(screen.getByText("The pools.")).toBeTruthy();
-    // the nine first-batch pools — four mutuals, five bounties; Blade leads
+    // the ten first-batch pools — four mutuals, six bounties; Blade leads
     // (data.ts order — Blade pins per cluster, one resolves per cluster)
     for (const name of [
       "Blade Pool",
@@ -105,13 +105,14 @@ describe("landing", () => {
       "Operation Keep Raj Warm",
       "Lily's Liquid Lifeline",
       "Toly Needs His Fuel",
+      "Caffeine Supercycle",
       "Mert of the Year",
     ]) {
       expect(band?.textContent).toContain(name);
     }
     // founder order (data.ts): Blade Pool leads, then the rest
     const names = [...(band?.querySelectorAll("article h3") ?? [])].map((h) => h.textContent);
-    expect(names.slice(0, 9)).toEqual([
+    expect(names.slice(0, 10)).toEqual([
       "Blade Pool",
       "Chairmageddon",
       "NGMI Hairline",
@@ -120,6 +121,7 @@ describe("landing", () => {
       "Operation Keep Raj Warm",
       "Lily's Liquid Lifeline",
       "Toly Needs His Fuel",
+      "Caffeine Supercycle",
       "Mert of the Year",
     ]);
     // real tier numbers on the cards (docs §5 — all final, 2026-10-07)
@@ -151,7 +153,7 @@ describe("landing", () => {
     // color is the semantic tokens mixed in oklab, so hexes stay in
     // tokens.css and the fill is solid per state (no gradient)
     const meters = [...(band?.querySelectorAll('[data-slot="need-meter"]') ?? [])];
-    expect(meters.length).toBe(18); // 9 pools on the duplicated drift rail
+    expect(meters.length).toBe(20); // 10 pools on the duplicated drift rail
     expect(meters[0]?.getAttribute("aria-hidden")).toBe("true"); // decorative — founder call with the number row retired
     const fill = meters[0]?.querySelector('[data-slot="need-meter-fill"]') as HTMLElement | null;
     expect(fill?.style.width).toBe("0%");
@@ -175,15 +177,16 @@ describe("landing", () => {
     const cardLinks = [...(band?.querySelectorAll("article > a.absolute") ?? [])].map((a) =>
       a.getAttribute("href"),
     );
-    // every pool pinned since the devnet launch (2026-10-09) — routes are
-    // pubkeys all the way down
-    expect(cardLinks.slice(0, 9)).toEqual(UNIQUE_POOLS.map((p) => `#/m/${p.pubkey}`));
+    // nine pools pinned since the devnet launch (2026-10-09) — pubkey routes;
+    // Caffeine Supercycle (the merged hot-drink pool) routes by slug until
+    // it deploys
+    expect(cardLinks.slice(0, 10)).toEqual(UNIQUE_POOLS.map((p) => poolRoute(p)));
     // every card wears the event lockup — Breakpoint's brand chip, black on
     // the event pink, floating above the card (founder ask, copy doc §1.2)
     const chips = [...(band?.querySelectorAll('span[role="img"]') ?? [])].filter(
       (c) => c.getAttribute("aria-label") === "Breakpoint 2026",
     );
-    expect(chips.length).toBe(18);
+    expect(chips.length).toBe(20);
     expect(chips[0].className).toContain("bg-(--bp-2026-pink)");
     expect(chips[0].className).toContain("pointer-events-none");
     expect(chips[0].querySelectorAll("img").length).toBe(2);
@@ -196,8 +199,8 @@ describe("landing", () => {
     expect(track?.className).toContain("no-scrollbar");
     expect(track?.getAttribute("data-autoplay")).toMatch(/^(on|off)$/);
     const articles = band?.querySelectorAll("article") ?? [];
-    expect(articles.length).toBe(18);
-    expect(band?.querySelectorAll('div[aria-hidden="true"] article').length).toBe(9);
+    expect(articles.length).toBe(20);
+    expect(band?.querySelectorAll('div[aria-hidden="true"] article').length).toBe(10);
   });
 
   it("mutuals band: only live pools render — drafts never show (copy doc §1.2 v13)", () => {
