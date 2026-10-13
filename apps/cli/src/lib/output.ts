@@ -7,7 +7,7 @@
  * Renderers are pure (return a string); the command emits the result. This keeps
  * them unit-testable and lets a command reuse the same renderer for `--out`.
  */
-import { groupBigInt, truncateAddress } from "./format";
+import { groupBigInt /*, truncateAddress */ } from "./format";
 
 export interface OutputFlags {
   json?: boolean;
@@ -16,7 +16,7 @@ export interface OutputFlags {
 
 export type Extra = Record<string, unknown>;
 
-const ADDRESS_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+// const ADDRESS_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
 /**
  * JSON.stringify that survives BigInt (Kit returns lamports/amounts as bigint).
@@ -66,7 +66,7 @@ export function renderRead(flags: OutputFlags, data: unknown, opts: ReadOptions 
 /** Coerce an `extra`/human value to a display string (bigint grouping, addr trunc). */
 function humanValue(value: unknown): string {
   if (typeof value === "bigint") return groupBigInt(value);
-  if (typeof value === "string" && ADDRESS_RE.test(value)) return truncateAddress(value);
+  // if (typeof value === "string" && ADDRESS_RE.test(value)) return truncateAddress(value);
   if (value === null || value === undefined) return "—";
   return String(value);
 }
