@@ -44,12 +44,12 @@ No confirmed act, no payout — unused funds come back.
 I'm in. @riprapxyz`;
 }
 
-const ODDS: readonly (readonly [string, string])[] = [
-  ["One of the three asks for a drink", "three shots at the safest bet"],
-  ["You're holding one when it happens", "now we're talking"],
-  ["It's still hot at the hand-off", "the whole game"],
-  ["You send this page to your friends", "dead cert"],
-];
+// const ODDS: readonly (readonly [string, string])[] = [
+//   ["One of the three asks for a drink", "three shots at the safest bet"],
+//   ["You're holding one when it happens", "now we're talking"],
+//   ["It's still hot at the hand-off", "the whole game"],
+//   ["You send this page to your friends", "dead cert"],
+// ];
 
 const PAGE_URL = `https://riprap.xyz${poolRoute(LISTING)}`;
 const POLICY_HREF = poolRoute(LISTING);
