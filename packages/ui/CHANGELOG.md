@@ -1,5 +1,15 @@
 # @riprap/ui
 
+## 0.9.0
+
+### Minor Changes
+
+- [#16](https://github.com/xeroc/riprap/pull/16) [`72a8026`](https://github.com/xeroc/riprap/commit/72a802663e6e31c4cd5c2555803302a6f6d0f8bf) Thanks [@xeroc](https://github.com/xeroc)! - Make the navbar responsive: below 768px the actions slot (cluster select, wallet controls) and the CTA now collapse into the burger drawer instead of overflowing the mobile bar. The drawer carries the same content as the desktop right side — links first, then a hairline-ruled section with the cluster select, the wallet controls (buttons full-width), and the Open App CTA, which stays dropped inside /app as on desktop. Drawer links and the CTA close the menu on navigate; AppNavControls drops its per-item sm gating since TopNav now owns the breakpoint.
+
+### Patch Changes
+
+- [#16](https://github.com/xeroc/riprap/pull/16) [`ff4760d`](https://github.com/xeroc/riprap/commit/ff4760d4ad397fad412efbae09a608bbba8cfcec) Thanks [@xeroc](https://github.com/xeroc)! - ClaimApproval: the Approved stamp now lands ON the Purpose headline instead of the review column's corner — rotated ~10° counterclockwise, resting over the title like a rubber stamp. Placed by flow layout (a relative row whose negative bottom margin slides the paper up under it), not absolute coordinates, so the overlap is paper-relative and cannot drift with the stage size.
+
 ## 0.8.0
 
 ### Minor Changes
