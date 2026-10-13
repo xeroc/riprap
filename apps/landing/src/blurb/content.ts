@@ -303,10 +303,11 @@ export const BRAND_TYPE: BrandType[] = [
  * from the founder's X build log, ordered by what they explain: the
  * mutual, the verdict layer, the court, the full pitch — then how the
  * explainers got made. Tweet bodies are verbatim quotes pulled from
- * x.com/xer0c via the twitterapi MCP on 2026-09-28; each entry's comment
- * carries its permalink. The trailing media t.co short link is stripped
+ * x.com/xer0c via the twitterapi MCP on 2026-09-28 (whitepaper entry via
+ * fxtwitter 2026-10-15); each entry's comment carries its permalink. The
+ * trailing media t.co short link is stripped
  * from each body exactly as x.com renders it (the poster frame below the
- * text IS that link). Counts are as of the 2026-09-28 fetch and will
+ * text IS that link). Counts are as of each entry's fetch date and will
  * drift. Poster frames are served locally from /blurb/. */
 export interface ExplainerTweet {
   /** mono kicker — the ordinal and what this tweet explains */
@@ -396,10 +397,24 @@ export const EXPLAINERS: ExplainerTweet[] = [
     url: "https://x.com/xer0c/status/2090336880126726271",
   },
   {
+    // x.com/xer0c/status/2110388109837779013 — Accord whitepaper
+    // announcement; text verbatim (media t.co stripped), counts as of the
+    // 2026-10-15 fetch
+    kicker: "06 · the whitepaper",
+    note: "The whitepaper thesis in one post: code handles execution, humans handle judgment — link to the paper in the thread.",
+    text: "Smart contracts are deterministic.\nDisputes are not.\n\nThat’s why I brought native on-chain arbitration to @solana with Accord.\n\nRandom jurors. Transparent process. Binding on-chain verdicts.\n\nCode handles execution. Humans handle judgment.\n\nLink to whitepaper in the comments\n🧵👇",
+    date: "Oct 14, 2026",
+    meta: "567 views · 13 likes",
+    media: "/blurb/accord-whitepaper.png",
+    mediaAlt:
+      "Cover of the Accord whitepaper: Schelling-Point Arbitration as a Composable Solana Primitive",
+    url: "https://x.com/xer0c/status/2110388109837779013",
+  },
+  {
     // x.com/xer0c/status/2094103781646712882 — mtnDAO demo day pitch;
     // the full talk is linked in the thread's first comment:
     // youtube.com/watch?v=W816NeczDx8 (resolved 2026-09-28)
-    kicker: "06 · the full pitch",
+    kicker: "07 · the full pitch",
     note: "Accord and mutual risk pools in one demo-day pitch; the full talk is on YouTube.",
     text: "Solana @mtnDAO Demo Day with\n\n💡 Accord and Mutual Risk Pools\n\nDemo day pitch presenting Accord (), a Schelling point based adjudication system on Solana.\n\n✅select jurors from a pool,\n✅have them commit to & reveal a verdict\n✅majority rules\n\nIncentives do the hard work to keep keep jurors in line with the truth. \nThe only outcome of accord: A verdict, to be consumed by another Program.  \n\nA program on top has been built called Hanse: mutual risk pool - the oldest form of pooled protection on earth.\n\nLinks below 👇👇",
     date: "Aug 30, 2026",
@@ -414,4 +429,4 @@ export const EXPLAINERS: ExplainerTweet[] = [
 
 /** Explainer band intro — authored 2026-09-28 with the tweet embeds. */
 export const EXPLAINERS_INTRO =
-  "Short cuts and talks from the founder's build log, ordered by what they explain: the mutual, the verdict layer, the court — how the explainers got made — and, last, the full mtnDAO demo-day pitch.";
+  "Short cuts and talks from the founder's build log, ordered by what they explain: the mutual, the verdict layer, the court — how the explainers got made — the whitepaper — and, last, the full mtnDAO demo-day pitch.";
