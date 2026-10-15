@@ -106,8 +106,8 @@ describe("buildSettleClaim (hanse:settle-claim)", () => {
   });
 });
 
-describe("buildClaimPayout (hanse:claim-payout) — the authority-gated payout crank", () => {
-  test("the cranker is the only signer; the claimant's ATA is the destination (§2.10)", async () => {
+describe("buildClaimPayout (hanse:claim-payout) — the permissionless payout crank", () => {
+  test("the cranker is the only signer; the claimant's ATA is the destination (ADR-0005)", async () => {
     const cranker = await keypairFromSeed(4);
     const claimant = (await keypairFromSeed(3)).address;
     const mutual = { address: MUTUAL, pool: POOL, depositMint: DEPOSIT_MINT };
