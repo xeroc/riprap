@@ -4,7 +4,6 @@
 // the same list (bean riprap-h6wp parity, adjudicate pack tests).
 import { describe, expect, it } from "vitest";
 import { BLADE_POOL_POLICY } from "../../../adjudicate/policies/blade-pool";
-import { CLAIM_DOCUMENT_PATHS } from "../manifest";
 import { BLADE_POOL_FLOW } from "./blade-pool";
 
 describe("BLADE_POOL_FLOW document slots (policy §7, copy doc step 3)", () => {
@@ -20,7 +19,15 @@ describe("BLADE_POOL_FLOW document slots (policy §7, copy doc step 3)", () => {
   });
 
   it("paths are the manifest's canonical paths — the wizard's slots never drift from the riprap-claim/v1 set", () => {
-    expect(BLADE_POOL_FLOW.documentSlots.map((s) => s.path)).toEqual([...CLAIM_DOCUMENT_PATHS]);
+    expect(BLADE_POOL_FLOW.documentSlots.map((s) => s.path)).toEqual([
+      "01-ticket.pdf",
+      "02-id-document.jpg",
+      "03-police-report.pdf",
+      "04-medical-report.pdf",
+      "05-statutory-declaration.pdf",
+    ]);
+    // the manifest has no default list anymore (de-blading, riprap-hs4r) —
+    // the pack IS the single source
   });
 
   it("paths match the adjudication policy pack — claimant slots and juror slots are one list", () => {

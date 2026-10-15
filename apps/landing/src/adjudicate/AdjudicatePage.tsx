@@ -24,12 +24,13 @@ import {
 import { useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchMaybeDispute, findRoundPda } from "@useaccord/sdk";
+import { fetchMaybeDispute, findRoundPda, type Round } from "@useaccord/sdk";
 import { useEffect, useState } from "react";
 import { ClusterSwitch, ConnectWalletButton } from "../app/controls";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
 import { poolRoute } from "../mutuals/data";
+import { usePoolDef } from "../mutuals/def/usePoolDef";
 import { type LiveMutual, useMutualStore } from "../mutuals/store";
 import { formatUtc, microToUsd } from "../pool/mutual";
 import { useMinStake, useMinStakeMicro } from "../pool/useMinStake";
@@ -196,10 +197,6 @@ function SessionShell({
   pools: LiveMutual[];
 }) {
   const clusterRpc = useClusterRpc();
-  const roundPda = useQuery({
-    queryKey: ["round-pda", session.dispute, session.round],
-    queryFn: () => findRoundPda({ dispute: session.dispute as Address, roundIdx: session.round }),
-  });
   const disputeQuery = useQuery({
     queryKey: ["dispute", clusterRpc?.endpoint, session.dispute],
     queryFn: () => {
@@ -278,7 +275,41 @@ function SessionShell({
       </div>
     );
   }
-  const policy = adjudicationPolicyFor(pool.listing);
+  return <PoolSession pool={pool} session={session} round={round} wallet={wallet} />;
+}
+
+/** The session for one resolved pool. First-party pools resolve their policy
+ *  pack from the directory entry; community pools (no entry) resolve theirs
+ *  from the pool's anchored def — the registry's def path (epic
+ *  riprap-hs4r). Every def refusal is an honest state, never a fallback. */
+function PoolSession({
+  pool,
+  session,
+  round,
+  wallet,
+}: {
+  pool: LiveMutual;
+  session: SessionRoute;
+  round: Round;
+  wallet: Address;
+}) {
+  const needsDef = pool.listing.adjudicationPolicy === undefined;
+  const resolution = usePoolDef(needsDef ? pool.address : null);
+  const def = resolution.state === "ready" ? resolution.def : undefined;
+  const policy = adjudicationPolicyFor(pool.listing, def);
+  const roundPda = useQuery({
+    queryKey: ["round-pda", session.dispute, session.round],
+    queryFn: () => findRoundPda({ dispute: session.dispute as Address, roundIdx: session.round }),
+  });
+  if (needsDef) {
+    if (resolution.state === "mutual-loading" || resolution.state === "doc-loading") {
+      return (
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          Reading the pool's terms from the chain.
+        </p>
+      );
+    }
+  }
   if (policy === null) {
     return (
       <div className="flex max-w-3xl flex-col gap-2" data-slot="no-policy">
@@ -444,7 +475,7 @@ function Board({ wallet, session }: { wallet: Address; session: SessionRoute | n
       <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
         <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The Blade Pool isn't deployed on this network. Switch networks to find it.
+          No pools are live on this network. Switch networks to find them.
         </p>
         <ClusterSwitch />
       </div>

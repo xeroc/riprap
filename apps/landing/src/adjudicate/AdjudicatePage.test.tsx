@@ -391,7 +391,11 @@ describe("#/app/adjudicate/:dispute/:round — session shell (spec §2)", () => 
     if (chairmageddon === undefined) throw new Error("no chairmageddon listing");
     renderPage([livePool({ listing: chairmageddon })], { dispute: DISPUTE, round: 0 });
 
-    expect(await screen.findByText("No adjudication policy for this pool yet.")).toBeTruthy();
+    // a pack-less pool now resolves its anchored def first (epic
+    // riprap-hs4r) — the no-policy verdict lands after that read refuses
+    expect(
+      await screen.findByText("No adjudication policy for this pool yet.", {}, { timeout: 4000 }),
+    ).toBeTruthy();
     expect(screen.getByText("This session can't run until the pool's policy ships.")).toBeTruthy();
   });
 });

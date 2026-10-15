@@ -87,3 +87,70 @@ function finish(section: { number: number; title: string; lines: string[] }): De
   while (lines.length > 0 && lines[lines.length - 1].trim() === "") lines.pop();
   return { number: section.number, title: section.title, body: lines.join("\n").trim() };
 }
+
+// ---------------------------------------------------------------------------
+// §-access helpers (epic riprap-hs4r) — the doc-band reads: § lookup by
+// number and the markdown extractions (paragraphs, list items, quote
+// lines, bold lines) the generic page, the listing, and the packs derive
+// from. Sections are keyed by number, never title: the two kind word-maps
+// name the same § differently, so consumers cite §3/§4/§5/§7/§8/§10/§11
+// by number, per the first-party docs' shared skeleton.
+// ---------------------------------------------------------------------------
+
+/** The § block by number (null when the doc doesn't carry it). */
+export function sectionByNo(sections: DefSection[], no: number): DefSection | null {
+  return sections.find((s) => s.number === no) ?? null;
+}
+
+/** Strip the markdown the doc bands don't re-render: bold/emphasis markers
+ *  and blockquote fences (line-oriented, so multi-line paragraphs work). */
+export function stripMd(text: string): string {
+  return text
+    .replace(/\*\*|\*|__/g, "")
+    .replace(/(^|\n)> ?/g, "$1")
+    .trim();
+}
+
+/** Blank-line-separated paragraphs of a § body, markdown stripped, empty
+ *  paragraphs dropped. A paragraph that is a list renders as one entry per
+ *  item (see listItems). */
+export function paragraphs(body: string): string[] {
+  return body
+    .split(/\n{2,}/)
+    .map((p) => stripMd(p))
+    .filter((p) => p.length > 0);
+}
+
+/** List items (`- …` or `1. …`) of a § body, in order, markdown stripped —
+ *  the §3 definition notes, the §4 exclusions, the §11 promise lines. */
+export function listItems(body: string): string[] {
+  const items: string[] = [];
+  for (const line of body.split("\n")) {
+    const item = /^\s*(?:[-*]|\d+\.)\s+(.*)$/.exec(line);
+    if (item !== null) {
+      const text = stripMd(item[1] ?? "");
+      if (text.length > 0) items.push(text);
+    }
+  }
+  return items;
+}
+
+/** The § body's blockquote lines (`> …`), stripped — the §3 definition's
+ *  verbatim quote shape. */
+export function quoteLines(body: string): string[] {
+  return body
+    .split("\n")
+    .filter((line) => line.startsWith(">"))
+    .map((line) => stripMd(line))
+    .filter((line) => line.length > 0);
+}
+
+/** Lines that are exactly one bold span (`**…**`) — the §11 promise lines
+ *  and the §10 example figures. */
+export function boldLines(body: string): string[] {
+  return body
+    .split("\n")
+    .map((line) => /^\*\*(.+)\*\*$/.exec(line.trim()))
+    .filter((m): m is RegExpExecArray => m !== null)
+    .map((m) => (m[1] ?? "").trim());
+}

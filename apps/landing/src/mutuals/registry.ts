@@ -3,7 +3,9 @@
 // its detail page component. The Blade Pool keeps its full on-chain page
 // (pool/BreakpointPage); the others are placeholder pages under ./pages
 // until they deploy. Add a pool: data.ts entry + a page file + one line
-// here; the router (`#/m/<id>`) picks it up.
+// here; the router (`#/m/<id>`) picks it up. Ids the directory doesn't pin
+// fall through to the generic def-driven page (poolPageFor, epic
+// riprap-hs4r) — community mutuals with a published riprap-def/v1 doc.
 import { type ComponentType, type LazyExoticComponent, lazy } from "react";
 
 import { MUTUALS } from "./data";
@@ -39,6 +41,14 @@ const MertOfTheYear = lazy(() =>
   import("./pages/MertOfTheYearPage").then((m) => ({ default: m.MertOfTheYearPage })),
 );
 
+// The community pools' page — any `#/m/<id>` the founder directory doesn't
+// pin (epic riprap-hs4r, D5): the generic page resolves the mutual on-chain,
+// pulls its anchored def off the evidence CAS, and renders from the def.
+// First-party pools keep their hand-written pages and rank.
+const GenericPool = lazy(() =>
+  import("./pages/GenericPoolPage").then((m) => ({ default: m.GenericPoolPage })),
+);
+
 /** A pool page receives the route id it was opened at (`pubkey ?? slug`) —
  *  pages that resolve their pool by on-chain address (the Blade Pool's,
  *  per-cluster pins) use it; the draft pages know their pool by slug. */
@@ -64,3 +74,10 @@ export const POOL_PAGES: Record<string, PoolPage> = Object.fromEntries(
     return [id, page];
   }),
 );
+
+/** The detail page for a route id: the pinned page when the founder
+ *  directory knows it, else the generic def-driven page — every on-chain
+ *  mutual with a published def renders, community pools included. */
+export function poolPageFor(id: string): PoolPage {
+  return POOL_PAGES[id] ?? GenericPool;
+}

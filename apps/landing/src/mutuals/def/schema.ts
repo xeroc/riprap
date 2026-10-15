@@ -447,3 +447,43 @@ export function parseFrontmatter(fm: string): DefFrontmatter {
     language: tree.language === undefined ? "en" : asString(tree.language, "language"),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Def-resolution bridge (epic riprap-hs4r): the store/page entry point.
+// The grammar stays the canonical one above — render.ts's inverse — so a
+// listed community def is always an artifact the full validate.ts matrix
+// can check; the gates below are the shape-level drop rules the
+// def-resolution surfaces own. Null is a state ("not a def"), never a
+// throw — usePoolDef/store drop on it.
+// ---------------------------------------------------------------------------
+
+/** `kind` — a copy-selector enum only; nothing mechanical differs (D8). */
+export type DefKind = PoolKind;
+
+/** A parsed riprap-def/v1 doc: the machine block plus the § body markdown
+ * (sections.ts parses it). */
+export interface RiprapDef extends DefFrontmatter {
+  body: string;
+}
+
+/** CAS bytes → a def, or null when the bytes are not canonical
+ * riprap-def/v1 (grammar, schema tag, kind enum, or the shape-level pool
+ * facts: 1–3 positive tiers, at least one proof slot). */
+export function parseDefDoc(doc: string): RiprapDef | null {
+  let fm: DefFrontmatter;
+  let body: string;
+  try {
+    const split = splitDefDocument(doc);
+    fm = parseFrontmatter(split.frontmatter);
+    body = split.body;
+  } catch {
+    return null;
+  }
+  if (fm.schema !== DEF_SCHEMA) return null;
+  if (fm.kind !== "mutual" && fm.kind !== "bounty") return null;
+  if (fm.slug.length === 0 || fm.name.trim() === "") return null;
+  if (fm.tiers.length < 1 || fm.tiers.length > 3) return null;
+  if (fm.tiers.some((t) => !(t.fee > 0) || !(t.cap > 0))) return null;
+  if (fm.proof.length < 1) return null;
+  return { ...fm, body };
+}

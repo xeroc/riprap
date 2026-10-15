@@ -19,7 +19,9 @@ import { useMutualStore } from "./store";
 export function MutualsPage() {
   const store = useMutualStore();
   const pools = store.state === "ready" ? store.pools : [];
-
+  // founder order first (the store sorts), community band below (D4)
+  const founders = pools.filter((p) => p.def === undefined);
+  const community = pools.filter((p) => p.def !== undefined);
   return (
     <>
       <SiteNav />
@@ -71,7 +73,7 @@ export function MutualsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pools.map(({ listing: pool }) => (
+                    {founders.map(({ listing: pool }) => (
                       <tr key={pool.name} className="border-b border-hairline last:border-b-0">
                         <td className="relative h-24 p-0 pr-18">
                           <PoolBadgeRail pool={pool} />
@@ -101,6 +103,51 @@ export function MutualsPage() {
                         </td>
                       </tr>
                     ))}
+                    {community.length > 0 ? (
+                      <>
+                        {/* the community band — def-driven pools below the
+                            founder list, no badges (D4) */}
+                        <tr className="border-b border-hairline">
+                          <td colSpan={5} className="py-3 pr-0">
+                            <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
+                              Community pools — anchored terms, anyone's authorship
+                            </p>
+                          </td>
+                        </tr>
+                        {community.map(({ listing: pool }) => (
+                          <tr key={pool.name} className="border-b border-hairline last:border-b-0">
+                            <td className="relative h-24 p-0 pr-18">
+                              <PoolBadgeRail pool={pool} />
+                            </td>
+                            <th scope="row" className="py-4 pr-4 text-left">
+                              <a
+                                href={poolRoute(pool)}
+                                className="font-medium text-ink underline decoration-transparent underline-offset-4 transition-colors hover:decoration-current [font:var(--riprap-body-sm)]"
+                              >
+                                {pool.name}
+                              </a>
+                            </th>
+                            <td className="hidden py-4 pr-4 text-body sm:table-cell [font:var(--riprap-body-sm)]">
+                              {pool.tagline}
+                            </td>
+                            <td
+                              data-num
+                              className="py-4 pr-4 font-mono text-sm whitespace-nowrap text-ink"
+                            >
+                              {entryRange(pool)}
+                            </td>
+                            <td
+                              data-num
+                              className="py-4 px-2 font-mono text-sm whitespace-nowrap text-ink"
+                            >
+                              <span className="bg-accent p-1 px-2.5 text-xl">
+                                {capSymbol(pool)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </>
+                    ) : null}
                   </tbody>
                 </table>
 

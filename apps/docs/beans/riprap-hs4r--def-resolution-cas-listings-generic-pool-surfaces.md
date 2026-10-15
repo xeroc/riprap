@@ -1,11 +1,11 @@
 ---
 # riprap-hs4r
 title: 'Def resolution: CAS listings, generic pool surfaces, def-built packs, de-blading'
-status: todo
+status: completed
 type: epic
 priority: high
 created_at: 2026-10-15T08:00:28Z
-updated_at: 2026-10-15T08:00:28Z
+updated_at: 2026-10-15T13:49:55Z
 parent: riprap-9bh4
 blocked_by:
     - riprap-plok
