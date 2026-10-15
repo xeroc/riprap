@@ -5,7 +5,8 @@ status: todo
 type: task
 priority: normal
 created_at: 2026-09-25T00:00:00Z
-updated_at: 2026-09-25T08:53:10Z
+updated_at: 2026-10-15T08:02:33Z
+parent: riprap-hs4r
 ---
 
 Decision (adjudication-dashboard grill, 2026-09-25, Q3 = C): the juror surface's
@@ -26,3 +27,5 @@ Same-family cleanup parked here: the claim wizard's hardcoded
 `CLAIM_DOCUMENT_PATHS` (file-claim/manifest.ts) should read from the same
 `AdjudicationPolicy` doc-slot definitions once a second policy exists, so
 claimant slots and juror checklists can never drift.
+
+- 2026-10-15: reparented under riprap-hs4r — the def-resolution epic's pack-builder task (riprap-97b6) implements this swap as its def-driven registry path; the wizard milestone (riprap-9bh4) is the 'policy author who is not a repo dev' this bean was waiting for. The open anchoring question is answered by the milestone: the def doc IS the anchored artifact (policy_hash over the whole file).
