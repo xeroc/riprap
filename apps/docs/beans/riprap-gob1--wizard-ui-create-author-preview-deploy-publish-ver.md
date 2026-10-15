@@ -1,11 +1,11 @@
 ---
 # riprap-gob1
 title: 'Wizard UI: #/create - author, preview, deploy, publish, verify'
-status: todo
+status: completed
 type: epic
 priority: high
 created_at: 2026-10-15T08:00:34Z
-updated_at: 2026-10-15T08:00:34Z
+updated_at: 2026-10-15T13:46:58Z
 parent: riprap-9bh4
 blocked_by:
     - riprap-plok
