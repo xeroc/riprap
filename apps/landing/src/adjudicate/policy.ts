@@ -1,9 +1,13 @@
 // AdjudicationPolicy — the typed policy pack the session wizard's documents
 // (step 1), policy (step 2), and verdict (step 3) screens consume
 // (ADJUDICATION-DASHBOARD §7, bean riprap-gtni). Interface ONLY: the engine
-// imports this module and never a concrete pack — the pack source is a
-// provider behind the seam recorded in bean riprap-h6wp (swap to an anchored
-// domain-CAS fetch when a second policy appears; an engine no-op).
+// imports this module and never a concrete pack. The pack source is the
+// registry (policies/) — a static table for first-party pools and, since
+// bean riprap-h6wp's swap landed with the def-resolution epic
+// (riprap-97b6), the pool's anchored riprap-def/v1 doc for community pools:
+// fetched from the evidence daemon's domain CAS, client-verified against
+// the on-chain policy hash, and built behind this interface. The anchoring
+// convention is the def doc itself — policy_hash over the whole file.
 //
 // ZERO NUMBERS (spec §7, kit data law): no contributions, caps, windows, or
 // treasury values ride the pack — every amount and clock is a chain read.
