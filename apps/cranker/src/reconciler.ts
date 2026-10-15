@@ -10,9 +10,8 @@
  *              (deferred a cycle when settle_claim ran — the counters move
  *              on-chain, the snapshot is stale)
  *   Settled  → claim_payout × Approved claims while now < pull_close_at —
- *              PILOT GATE (ADR-0005): only when the cranker holds
- *              mutual.authority; otherwise skipped with a reason
- *              dissolve once now >= pull_close_at
+ *              permissionless (the pilot authority gate retired 2026-10-15,
+ *              ADR-0005 amendment); then dissolve once now >= pull_close_at
  *   Dissolved→ pool_crank × (unsettled positions with total > 0) once the
  *              pool is Liquidated — the residual exits
  *
@@ -177,7 +176,7 @@ async function reconcileActive(
   return executed;
 }
 
-/** Settled: crank payouts inside the window (pilot: authority only); dissolve after. */
+/** Settled: crank payouts inside the window; dissolve after. */
 async function reconcileSettled(
   ctx: CrankContext,
   config: ReconcilerConfig,
@@ -185,17 +184,6 @@ async function reconcileSettled(
   now: bigint,
 ): Promise<number> {
   if (now < mutual.data.pullCloseAt) {
-    if (mutual.data.authority !== ctx.cranker) {
-      // Pilot pass gate (ADR-0005 §2.10/§12): claim_payout is authority-gated.
-      // Skip rather than simulate-until-Unauthorized; when the on-chain gate
-      // retires, delete this check.
-      ctx.log(
-        "claim_payout",
-        mutual.address,
-        "skipped: cranker is not the mutual authority (pilot pass gate)",
-      );
-      return 0;
-    }
     const approved = await fetchClaimsOfMutual(ctx.rpc, mutual.address, {
       statuses: [ClaimStatus.Approved],
     });

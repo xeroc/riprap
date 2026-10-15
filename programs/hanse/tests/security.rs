@@ -1,11 +1,12 @@
 //! Hanse security matrix (LiteSVM) — bean riprap-pow4. Systematic negative
 //! suite across every instruction; safe-solana-builder checklist categories
-//! cited per row. Every case asserts the typed error (ours) or the precise
-//! anchor constraint error — never a generic panic.
+//! cited per row. Every case asserts a typed outcome — the typed error
+//! (ours) or the precise anchor constraint error, never a generic panic;
+//! S1 asserts the permissionless success (pilot gate retired 2026-10-15).
 //!
 //! | Row | Case | Expected |
 //! |-----|------|----------|
-//! | S1  | claim_payout by a non-authority cranker (broken auth) | Unauthorized |
+//! | S1  | claim_payout by a non-authority cranker (pilot gate retired 2026-10-15) | succeeds — Paid, payout to the claimant ATA |
 //! | S2  | set_subaccord_param by non-admin (broken auth) | Unauthorized |
 //! | S3  | file_claim: claimant ≠ the member PDA's member (signer chain) | ConstraintSeeds (the seeds bind member to claimant) |
 //! | S4  | join with another mutual's pool (cross-mutual) | WrongPool |
@@ -242,7 +243,9 @@ fn approve_and_settle(
 
 // ── rows ───────────────────────────────────────────────────────────────────
 
-/// S1 — broken auth: payout cranked by a non-authority key.
+/// S1 — pilot gate retired 2026-10-15 (ADR-0005 amendment): the crank is
+/// permissionless. A non-authority key cranks the payout — the claim flips
+/// Paid and the tokens land in the claimant's ATA, never the cranker's.
 #[test]
 fn s1_payout_non_authority_cranker() {
     let (mut env, cfg) = setup_with_mutual(1);
@@ -257,16 +260,28 @@ fn s1_payout_non_authority_cranker() {
     settle_pool_now(&mut env, &cfg);
 
     let impostor = cranker(&mut env);
-    assert_custom_err(
-        payout_attacked(
-            &mut env,
-            &cfg,
-            &impostor,
-            mutual_pda(1),
-            claim_pda(&mutual_pda(1), 0),
-        ),
-        hanse::HanseError::Unauthorized,
+    let before = token_amount(&env.svm, &ata_addr);
+    payout_attacked(
+        &mut env,
+        &cfg,
+        &impostor,
+        mutual_pda(1),
+        claim_pda(&mutual_pda(1), 0),
+    )
+    .unwrap();
+    assert!(
+        token_amount(&env.svm, &ata_addr) > before,
+        "the payout lands in the claimant's ATA whoever cranks"
     );
+    let c: hanse::Claim = anchor_lang::AccountDeserialize::try_deserialize(
+        &mut &env
+            .svm
+            .get_account(&claim_pda(&mutual_pda(1), 0))
+            .unwrap()
+            .data[..],
+    )
+    .unwrap();
+    assert_eq!(c.status, hanse::state::ClaimStatus::Paid);
 }
 
 /// S2 — broken auth: the param lever by a stranger.

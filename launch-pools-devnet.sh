@@ -5,7 +5,8 @@
 #
 # Prerequisites (SETUP.BLADE-POOL.md §1–§2):
 #   export RIPRAP_KEYPAIR_PATH=/path/to/operator.json  # becomes the IMMUTABLE
-#       authority (payout pass-gate cranker) — dedicated ops keypair, not a personal key
+#       authority (proposes subaccord params; payouts are permissionless) —
+#       dedicated ops keypair, not a personal key
 #
 # Every command below ends in --dry-run (builds + prints the instruction,
 # signs nothing). To SEND: delete the --dry-run line, run again, record the

@@ -141,10 +141,10 @@ export type ClaimPayoutAsyncInput<
   TAccountPoolProgram extends string = string,
 > = {
   /**
-   * The crank initiator — permissionless in principle. Pilot pass gate
-   * (§2.10 amendment / §12): Breakpoint passes are verified off-chain,
-   * so the cranker must be the mutual's authority. ONE constraint —
-   * comment it out when the pass check retires and anyone may crank.
+   * The crank initiator — permissionless (pool::crank pattern): the
+   * cranker pays fees and gains nothing. The pilot pass gate (§2.10
+   * amendment / §12) retired 2026-10-15 (ADR-0005 amendment): the
+   * authority constraint below is commented out and any key may crank.
    */
   cranker: TransactionSigner<TAccountCranker>;
   /**
@@ -341,10 +341,10 @@ export type ClaimPayoutInput<
   TAccountPoolProgram extends string = string,
 > = {
   /**
-   * The crank initiator — permissionless in principle. Pilot pass gate
-   * (§2.10 amendment / §12): Breakpoint passes are verified off-chain,
-   * so the cranker must be the mutual's authority. ONE constraint —
-   * comment it out when the pass check retires and anyone may crank.
+   * The crank initiator — permissionless (pool::crank pattern): the
+   * cranker pays fees and gains nothing. The pilot pass gate (§2.10
+   * amendment / §12) retired 2026-10-15 (ADR-0005 amendment): the
+   * authority constraint below is commented out and any key may crank.
    */
   cranker: TransactionSigner<TAccountCranker>;
   /**
@@ -503,10 +503,10 @@ export type ParsedClaimPayoutInstruction<
   programAddress: Address<TProgram>;
   accounts: {
     /**
-     * The crank initiator — permissionless in principle. Pilot pass gate
-     * (§2.10 amendment / §12): Breakpoint passes are verified off-chain,
-     * so the cranker must be the mutual's authority. ONE constraint —
-     * comment it out when the pass check retires and anyone may crank.
+     * The crank initiator — permissionless (pool::crank pattern): the
+     * cranker pays fees and gains nothing. The pilot pass gate (§2.10
+     * amendment / §12) retired 2026-10-15 (ADR-0005 amendment): the
+     * authority constraint below is commented out and any key may crank.
      */
     cranker: TAccountMetas[0];
     /**
