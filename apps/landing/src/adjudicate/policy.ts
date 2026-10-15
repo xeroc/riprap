@@ -16,7 +16,7 @@
 /** One policy §7 proof slot, in policy order. */
 export interface PolicyDocumentSlot {
   /** riprap-claim/v1 manifest path — the slot's identity in the delivered
-   * evidence (the claim wizard's CLAIM_DOCUMENT_PATHS is the same list). */
+   *  evidence (the claim wizard's flow pack carries the same list). */
   path: string;
   /** The document's plain name (policy §7). */
   label: string;

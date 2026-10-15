@@ -7,7 +7,7 @@
 // string quotes the copy doc § /app/adjudicate (steps 1–3) byte-exact.
 
 import { describe, expect, it } from "vitest";
-import { CLAIM_DOCUMENT_PATHS } from "../../app/file-claim/manifest";
+import { BLADE_POOL_FLOW } from "../../app/file-claim/flows/blade-pool";
 import { BLADE_POOL_POLICY } from "./blade-pool";
 
 /** Every pack string except `path` — the riprap-claim/v1 paths carry profile
@@ -35,7 +35,9 @@ describe("BLADE_POOL_POLICY document slots (policy §7, copy doc step 1)", () =>
   });
 
   it("paths are the claim wizard's manifest paths — juror slots and claimant slots never drift (bean riprap-h6wp)", () => {
-    expect(BLADE_POOL_POLICY.documentSlots.map((s) => s.path)).toEqual([...CLAIM_DOCUMENT_PATHS]);
+    expect(BLADE_POOL_POLICY.documentSlots.map((s) => s.path)).toEqual(
+      BLADE_POOL_FLOW.documentSlots.map((s) => s.path),
+    );
   });
 
   it("whatToVerify quotes copy doc step 1 verbatim", () => {

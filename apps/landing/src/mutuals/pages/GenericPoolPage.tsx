@@ -9,14 +9,11 @@
 
 import { Button, SectionBand } from "@riprap/ui";
 import { type Address, isAddress } from "@solana/kit";
-import { useMemo } from "react";
 
 import { SiteNav } from "../../components/SiteNav";
-import { useMutual } from "../../pool/useMutual";
-import { usePolicyDoc } from "../../pool/usePolicyDoc";
 import { Footer } from "../../sections/Footer";
 import { listingFromDef } from "../def/listing";
-import { parseDefDoc, type RiprapDef } from "../def/schema";
+import type { RiprapDef } from "../def/schema";
 import {
   boldLines,
   listItems,
@@ -25,6 +22,7 @@ import {
   quoteLines,
   sectionByNo,
 } from "../def/sections";
+import { usePoolDef } from "../def/usePoolDef";
 import type { MutualListing } from "../types";
 import { GenericPoolHero } from "./GenericPoolHero";
 import { type PoolPageConfig, PoolPageShell } from "./PoolPageShell";
@@ -190,11 +188,7 @@ export function GenericPoolPage({ id }: { id?: string }) {
   // the generic page only ever opens at an unknown route id — for community
   // pools that is the on-chain MUTUAL pubkey
   const address = id !== undefined && isAddress(id) ? (id as Address) : null;
-
-  const mutualQuery = useMutual(address);
-  const mutual = mutualQuery.state === "ready" ? mutualQuery.mutual : null;
-  const doc = usePolicyDoc(mutual);
-  const def = useMemo(() => (doc.state === "ready" ? parseDefDoc(doc.text) : null), [doc]);
+  const resolution = usePoolDef(address);
 
   if (address === null) {
     return (
@@ -205,76 +199,75 @@ export function GenericPoolPage({ id }: { id?: string }) {
       </GenericBand>
     );
   }
-  if (mutualQuery.state === "loading") {
-    return (
-      <GenericBand label="pool" title="Reading the pool from the chain.">
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The mutual account and its pinned terms take a moment.
-        </p>
-      </GenericBand>
-    );
-  }
-  if (mutualQuery.state === "error") {
-    return (
-      <GenericBand label="pool" title="Couldn't reach the cluster." retry={mutualQuery.retry}>
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The read failed before anything could render.
-        </p>
-      </GenericBand>
-    );
-  }
-  if (mutualQuery.state === "not-found") {
-    return (
-      <GenericBand label="pool" title="No pool at this address.">
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          This address holds no riprap mutual on the active cluster. It may have dissolved, or the
-          link is wrong.
-        </p>
-      </GenericBand>
-    );
-  }
-  if (doc.state === "loading" || doc.state === "idle") {
-    return (
-      <GenericBand label="pool" title="Reading the terms from the evidence server.">
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The doc this pool's policy hash pins, served content-addressed.
-        </p>
-      </GenericBand>
-    );
-  }
-  if (doc.state === "error") {
-    return (
-      <GenericBand label="pool" title="Couldn't reach the evidence server." retry={doc.retry}>
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The terms read failed before anything could render.
-        </p>
-      </GenericBand>
-    );
-  }
-  if (doc.state === "missing") {
-    return (
-      <GenericBand label="pool" title="Not published yet.">
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The terms this pool pins aren't on the evidence server, so there is nothing to render.
-        </p>
-      </GenericBand>
-    );
-  }
-  if (def === null) {
-    return (
-      <GenericBand label="pool" title="The published terms aren't a riprap def.">
-        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          This pool anchored a document this surface can't render.
-        </p>
-      </GenericBand>
-    );
+  switch (resolution.state) {
+    case "mutual-loading":
+      return (
+        <GenericBand label="pool" title="Reading the pool from the chain.">
+          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+            The mutual account and its pinned terms take a moment.
+          </p>
+        </GenericBand>
+      );
+    case "mutual-error":
+      return (
+        <GenericBand label="pool" title="Couldn't reach the cluster." retry={resolution.retry}>
+          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+            The read failed before anything could render.
+          </p>
+        </GenericBand>
+      );
+    case "not-found":
+      return (
+        <GenericBand label="pool" title="No pool at this address.">
+          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+            This address holds no riprap mutual on the active cluster. It may have dissolved, or the
+            link is wrong.
+          </p>
+        </GenericBand>
+      );
+    case "doc-loading":
+      return (
+        <GenericBand label="pool" title="Reading the terms from the evidence server.">
+          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+            The doc this pool's policy hash pins, served content-addressed.
+          </p>
+        </GenericBand>
+      );
+    case "doc-error":
+      return (
+        <GenericBand
+          label="pool"
+          title="Couldn't reach the evidence server."
+          retry={resolution.retry}
+        >
+          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+            The terms read failed before anything could render.
+          </p>
+        </GenericBand>
+      );
+    case "missing":
+      return (
+        <GenericBand label="pool" title="Not published yet.">
+          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+            The terms this pool pins aren't on the evidence server, so there is nothing to render.
+          </p>
+        </GenericBand>
+      );
+    case "not-a-def":
+      return (
+        <GenericBand label="pool" title="The published terms aren't a riprap def.">
+          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+            This pool anchored a document this surface can't render.
+          </p>
+        </GenericBand>
+      );
   }
 
-  const listing = listingFromDef(def, address);
+  const listing = listingFromDef(resolution.def, address);
   return (
     <PoolPageShell
-      config={poolPageConfigFromDef(def, listing)}
-      hero={<GenericPoolHero listing={listing} def={def} />}
+      config={poolPageConfigFromDef(resolution.def, listing)}
+      hero={<GenericPoolHero listing={listing} def={resolution.def} />}
       policyAddress={address}
     />
   );

@@ -24,11 +24,10 @@
 import type { Address, ReadonlyUint8Array } from "@solana/kit";
 import { verifyManifestHash } from "@useaccord/sdk/evidence";
 
-import {
-  CLAIM_DOCUMENT_PATHS,
-  type ClaimManifestEntry,
-  type ClaimManifestInput,
-  type ManifestSlot,
+import type {
+  ClaimManifestEntry,
+  ClaimManifestInput,
+  ManifestSlot,
 } from "../app/file-claim/manifest";
 import { type DecryptDelivery, errorText } from "./delivery";
 
@@ -138,21 +137,16 @@ class ManifestCursor {
 }
 
 /**
- * Parse `riprap-claim/v1` manifest bytes (CLAIM-WIZARD §5) into the same
- * shape the claimant builder serializes — the parser and the builder agree
- * on every field by construction (byte-exact round-trip, pinned by the
- * golden test). The landing owns this parser: the SDK's `parseManifest`
- * targets `accord-evidence/v1`. Throws on anything that is not exactly the
- * profile — wrong schema, malformed line, bad base58/ISO/hex, non-canonical
- * entry paths, a non-fixed options block, non-UTF-8 bytes.
- *
- * Entries validate against `slots` — the pool's own flow/policy slots, url
- * slots included (their raw link rides the manifest under the slot's key);
- * the default is the Blade Pool's five (the juror gate's fixed set).
+ * Parse `rirap-claim/v1` manifest bytes (CLAIM-WIZARD §5) into the same
+ * typed shape the builder serialized — strict, byte-exact, no lenient
+ * YAML. `slots` is the session's policy pack proof list (ALWAYS threaded by
+ * the caller; there is no default list — a blade-shaped parse of another
+ * pool's manifest must refuse, not misread). Fails closed on any drift:
+ * layout, quoting, path order, hash shape, options block.
  */
 export function parseClaimManifest(
   bytes: Uint8Array,
-  slots: readonly (string | ManifestSlot)[] = CLAIM_DOCUMENT_PATHS,
+  slots: readonly (string | ManifestSlot)[],
 ): ClaimManifestInput {
   const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   const lines = text.split("\n");
@@ -257,6 +251,10 @@ export async function fetchJurorPackage(params: {
   /** Cross-check inputs (§5): the mutual's subaccord + the mutual PDA. */
   subaccord: Address;
   mutual: Address;
+  /** The session's policy pack proof list — the manifest parse's canonical
+   *  paths (no default list exists; a blade-shaped parse of another pool's
+   *  manifest must refuse). */
+  slots: readonly (string | ManifestSlot)[];
   decrypt: DecryptDelivery;
 }): Promise<PackageVerification> {
   const root = params.evidenceHash;
@@ -320,10 +318,9 @@ export async function fetchJurorPackage(params: {
       reason: "root gate failed: sha256(manifest) != Dispute.evidence_hashes[round]",
     };
   }
-
   let manifest: ClaimManifestInput;
   try {
-    manifest = parseClaimManifest(bytes);
+    manifest = parseClaimManifest(bytes, params.slots);
   } catch (err) {
     return { state: "failed", reason: `manifest unparseable: ${String(err)}` };
   }
