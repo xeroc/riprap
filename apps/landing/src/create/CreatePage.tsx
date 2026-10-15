@@ -1,13 +1,11 @@
-// CreatePage.tsx — the #/create wizard's AUTHOR and PREVIEW steps (copy doc
-// § /create; user-defined mutuals milestone D7). The author form edits the
-// def schema (create/doc.ts); the advanced drawer carries every remaining
-// `initialize_mutual` input behind the §12 pilot preset, each field with
-// its mirrored on-chain gate; the preview renders the exact `riprap-def/v1`
-// bytes with their on-chain anchors (policy_hash, derived domain_ref,
-// seed). DEPLOY/PUBLISH/VERIFY extend this machine — `Step` stays a string
-// union for that, and the deploy step owns the draft clear (clearDraft) and
-// the wallet gate. No wallet gate before deploy — authoring is local;
-// drafts persist in localStorage only (create/draft.ts).
+// CreatePage.tsx — the #/create wizard (copy doc § /create; user-defined
+// mutuals milestone D7): AUTHOR + PREVIEW (the def-schema form, the advanced
+// drawer with every remaining initialize_mutual input behind the §12 preset,
+// the exact-bytes preview with its anchors) and the DEPLOY / PUBLISH /
+// VERIFY steps (create/steps.tsx): one wallet-signed initialize_mutual, the
+// hash-gated CAS PUT of the exact bytes, the read-back check. No wallet gate
+// before deploy — authoring is local; drafts persist in localStorage only
+// (create/draft.ts) and clear the moment the deploy confirms.
 
 import { fetchMaybeMutualBySeed } from "@riprap/hanse";
 import {
@@ -31,6 +29,7 @@ import {
   SheetTrigger,
   Textarea,
 } from "@riprap/ui";
+import { useWallet } from "@solana/connector";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDownIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -38,6 +37,7 @@ import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
 import { domainRefHex, sha256Hex } from "../pool/domainRef";
 import { useClusterRpc } from "../shared/rpc";
+import type { Deployed } from "./deploy";
 import {
   type DefKind,
   type DefProofSlot,
@@ -51,10 +51,11 @@ import {
   validateAdvanced,
   validateDef,
 } from "./doc";
-import { type CreateDraft, loadDraft, saveDraft } from "./draft";
+import { type CreateDraft, clearDraft, emptyDraft, loadDraft, saveDraft } from "./draft";
+import { DeployStep, PublishStep, VerifyStep } from "./steps";
 
-/** The wizard machine — DEPLOY/PUBLISH/VERIFY join these two later. */
-type Step = "author" | "preview";
+/** The wizard machine: author → preview → deploy → publish → verify. */
+type Step = "author" | "preview" | "deploy" | "publish" | "verify";
 
 // ─── shared bits ────────────────────────────────────────────────────────────
 
@@ -160,6 +161,12 @@ function CreateWizard() {
   const [slugAuto, setSlugAuto] = useState(draft.def.slug === "");
   const [seed, setSeed] = useState<bigint>(() => randomSeed());
   const [anchors, setAnchors] = useState<{ doc: string; hash: string; ref: string } | null>(null);
+  /** Frozen at deploy confirm — the exact deployed artifacts (the live
+   * draft clears; publish/verify render only from this record). */
+  const [deployed, setDeployed] = useState<Deployed | null>(null);
+  const { isConnected, account } = useWallet();
+  const walletConnected = isConnected && account !== null;
+  const walletAccount = walletConnected ? account : null;
 
   // Fields-only persistence (copy doc § /create draft persistence).
   useEffect(() => {
@@ -254,6 +261,55 @@ function CreateWizard() {
           }}
           onContinue={() => setStep("preview")}
         />
+      ) : step === "preview" ? (
+        <PreviewStep
+          doc={anchors?.doc ?? ""}
+          hash={anchors?.hash ?? ""}
+          ref={anchors?.ref ?? ""}
+          seed={seed}
+          seedFreedom={seedFreedom}
+          slug={draft.def.slug}
+          onBack={() => setStep("author")}
+          onDeploy={() => setStep("deploy")}
+        />
+      ) : step === "deploy" && deployed === null ? (
+        <DeployStep
+          walletConnected={walletConnected}
+          walletAddress={walletAccount}
+          draft={draft}
+          advancedRejections={advancedRejections}
+          doc={anchors?.doc ?? ""}
+          hash={anchors?.hash ?? ""}
+          ref={anchors?.ref ?? ""}
+          seed={seed}
+          onBack={() => setStep("preview")}
+          onDeployed={(result) => {
+            // The deploy confirms: the draft's job is done (copy doc —
+            // cleared the moment the deploy confirms), and the frozen
+            // record carries every later step.
+            clearDraft();
+            setDeployed(result);
+            setStep("publish");
+          }}
+        />
+      ) : step === "publish" && deployed !== null ? (
+        <PublishStep
+          deployed={deployed}
+          onPublished={() => setStep("verify")}
+          onSkipped={() => setStep("verify")}
+        />
+      ) : step === "verify" && deployed !== null ? (
+        <VerifyStep
+          deployed={deployed}
+          onDone={() => {
+            // A new policy is a new pool — reset the machine, fresh draft.
+            setDeployed(null);
+            setDraft(emptyDraft());
+            setSlugAuto(true);
+            setSeed(randomSeed());
+            setStep("author");
+          }}
+        />
       ) : (
         <PreviewStep
           doc={anchors?.doc ?? ""}
@@ -263,6 +319,7 @@ function CreateWizard() {
           seedFreedom={seedFreedom}
           slug={draft.def.slug}
           onBack={() => setStep("author")}
+          onDeploy={() => setStep("deploy")}
         />
       )}
     </div>
@@ -848,7 +905,7 @@ function AdvancedDrawer({
           <Field
             id="adv-operator"
             label="Evidence operator"
-            note="Leave empty to use Riprap's operator for this cluster."
+            note="Leave empty and this wallet is the evidence operator."
             rejections={advErrorsFor("evidenceOperator")}
           >
             {(props) => (
@@ -933,6 +990,7 @@ function PreviewStep({
   seedFreedom,
   slug,
   onBack,
+  onDeploy,
 }: {
   doc: string;
   hash: string;
@@ -941,6 +999,7 @@ function PreviewStep({
   seedFreedom: SeedFreedom;
   slug: string;
   onBack: () => void;
+  onDeploy: () => void;
 }) {
   return (
     <Settle className="flex w-full flex-col gap-(--riprap-space-lg)" delay={180}>
@@ -981,6 +1040,9 @@ function PreviewStep({
           onClick={() => downloadText(`${slug || "pool"}.md`, doc, "text/markdown")}
         >
           Download terms document
+        </Button>
+        <Button data-participate disabled={hash === ""} onClick={onDeploy}>
+          Continue to deploy
         </Button>
       </div>
     </Settle>
