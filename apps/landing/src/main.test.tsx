@@ -4,6 +4,8 @@
 // their real graphs are covered by the BreakpointPage, AppPage, and
 // FileClaimPage suites.
 
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import type * as Connector from "@solana/connector";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
@@ -159,6 +161,11 @@ describe("hash router", () => {
     renderRouter();
     expect(await screen.findByTestId("create-route")).toBeTruthy();
     await waitFor(() => expect(document.title).toBe("Riprap: Create a pool"));
+    // the route is sitemap-addressable only through llms.txt — its entry
+    // rides with the route (AGENTS.md landing-routes rule)
+    const llms = await readFile(resolve(process.cwd(), "public/llms.txt"), "utf8");
+    expect(llms).toContain("#/create");
+    expect(llms).toContain("[Create a pool]");
     goHash("#/");
     await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
     expect(document.title).toBe("Riprap — pooled cover on Solana");

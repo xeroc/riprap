@@ -108,8 +108,8 @@ export interface AdvancedConfig {
   /** One mint for entries, payouts, and juror fees — the program rejects
    * mixed mints (single-asset MVP, security review 2026-09-18). */
   mint: string;
-  /** Encrypted-evidence operator pubkey; empty = Riprap's operator for the
-   * cluster (resolved at deploy). */
+  /** Encrypted-evidence operator pubkey; empty = the creator's wallet (v1:
+   * the initializer's key, EVENT-MUTUAL §7). */
   evidenceOperator: string;
   minStakeUsdc: number;
   feePerJurorUsdc: number;
@@ -307,7 +307,7 @@ export function validateAdvanced(
     sub("advanced.mint", "A mint pubkey — classic SPL Token, no Token-2022.");
   }
   if (advanced.evidenceOperator !== "" && !looksLikePubkey(advanced.evidenceOperator)) {
-    sub("advanced.evidenceOperator", "An operator pubkey, or empty for Riprap's.");
+    sub("advanced.evidenceOperator", "An operator pubkey, or leave empty.");
   }
   const depositsClose = dateToUnix(def.period.start);
   const claimsClose = dateToUnix(def.period.claimsClose);

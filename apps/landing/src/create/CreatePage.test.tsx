@@ -19,7 +19,7 @@ vi.mock("@riprap/hanse", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@riprap/hanse")>();
   return {
     ...actual,
-    fetchMaybeMutualBySeed: vi.fn(async () => null),
+    fetchMaybeMutualBySeed: vi.fn<() => Promise<unknown>>(async () => null),
     getInitializeMutualInstructionAsync: vi.fn(async () => ({})),
   };
 });
@@ -328,5 +328,118 @@ describe("#/create deploy → publish → verify", () => {
     ).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Publish later" }));
     await screen.findByText(/Reading the document back|doesn't match/);
+  });
+});
+
+// ─── the tester-matrix: mapped gate lines, publish states, seed re-pick ────
+
+describe("#/create gate + state matrix", () => {
+  const MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+  const WALLET = "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe";
+
+  /** The drawer's input by id — opens the drawer only if it isn't already. */
+  async function openDrawer(id: string): Promise<HTMLInputElement> {
+    if (document.getElementById(id) === null) {
+      fireEvent.click(screen.getByRole("button", { name: /Advanced pool settings/ }));
+    }
+    return waitFor(() => {
+      const input = document.getElementById(id) as HTMLInputElement | null;
+      if (input === null) throw new Error("drawer not open yet");
+      return input;
+    });
+  }
+
+  /** Fill one drawer field with a value. */
+  async function setAdvanced(id: string, value: string) {
+    fireEvent.change(await openDrawer(id), { target: { value } });
+  }
+
+  it("maps every advanced gate to its one line, under its own field", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(null, { status: 200 })),
+    );
+    renderPage();
+    await setAdvanced("adv-jury", "4"); // even → odd gate
+    expect(await screen.findByText("Must be odd.")).toBeTruthy();
+    await setAdvanced("adv-appeals", "4"); // above the accord bound → ladder
+    expect(await screen.findByText("The appeal ladder must fit 31 jurors.")).toBeTruthy();
+    await setAdvanced("adv-alpha", "10001");
+    expect(screen.getAllByText("0–10000.").length).toBeGreaterThanOrEqual(1);
+    await setAdvanced("adv-reveal-bps", "10001");
+    expect(screen.getAllByText("0–10000.").length).toBeGreaterThanOrEqual(2);
+    await setAdvanced("adv-commit", "0");
+    expect(await screen.findByText("Windows must be above zero.")).toBeTruthy();
+    await setAdvanced("adv-appeal", "0.5");
+    expect(await screen.findByText("At least 1 hour.")).toBeTruthy();
+    await setAdvanced("adv-draws", "11");
+    expect(await screen.findByText("1–10.")).toBeTruthy();
+    await setAdvanced("adv-operator", "not-a-key");
+    expect(await screen.findByText("An operator pubkey, or leave empty.")).toBeTruthy();
+  });
+
+  it("publish states: 400 rejected, 404 mutual-not-visible — each its deadpan line", async () => {
+    for (const [status, line] of [
+      [400, "The daemon rejected the document."],
+      [404, "The daemon can't see the mutual yet. Try again in a moment."],
+    ] as const) {
+      walletState.isConnected = true;
+      walletState.account = WALLET;
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) =>
+          init?.method === "PUT"
+            ? new Response(null, { status })
+            : new Response("", { status: 200 }),
+        ),
+      );
+      renderPage();
+      fill("def-name", "Chairmageddon");
+      fill("def-definition", "Bodily injury from standing through the opening ceremony.");
+      fill("def-exclusions", "injuries you caused yourself");
+      fill("tier-0-fee", "10");
+      fill("tier-0-cap", "40");
+      fill("period-start", "2027-03-01");
+      fill("period-end", "2027-03-03");
+      fill("period-claims", "2027-03-10");
+      fill("proof-0-label", "your event ticket");
+      fireEvent.change(await openDrawer("adv-mint"), { target: { value: MINT } });
+      fireEvent.keyDown(document.activeElement ?? document, { key: "Escape" });
+      fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+      const deployButton = await screen.findByRole("button", { name: "Continue to deploy" });
+      await waitFor(() => {
+        if ((deployButton as HTMLButtonElement).disabled) throw new Error("anchors pending");
+      });
+      fireEvent.click(deployButton);
+      fireEvent.click(await screen.findByRole("button", { name: "Deploy the pool" }));
+      fireEvent.click(await screen.findByRole("button", { name: "Publish the document" }));
+      expect(await screen.findByText(line)).toBeTruthy();
+      cleanup();
+      localStorage.clear();
+    }
+  });
+
+  it("re-picks the seed while its mutual address is taken, and says so on the preview", async () => {
+    // an existing mutual answers every seed query — cast to the SDK shape
+    // (content irrelevant: the wizard only checks existence)
+    const taken = { exists: true, address: "A".repeat(32), data: {} } as unknown as Parameters<
+      typeof seedMock.mockResolvedValue
+    >[0];
+    seedMock.mockResolvedValue(taken);
+    renderPage();
+    await waitFor(() => expect(seedMock.mock.calls.length).toBeGreaterThanOrEqual(2));
+    fill("def-name", "Chairmageddon");
+    fill("def-definition", "Bodily injury from standing.");
+    fill("def-exclusions", "injuries you caused yourself");
+    fill("tier-0-fee", "10");
+    fill("tier-0-cap", "40");
+    fill("period-start", "2027-03-01");
+    fill("period-end", "2027-03-03");
+    fill("period-claims", "2027-03-10");
+    fill("proof-0-label", "your event ticket");
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(
+      await screen.findByText(/This seed's address is taken — go back and the wizard re-picks/),
+    ).toBeTruthy();
   });
 });
