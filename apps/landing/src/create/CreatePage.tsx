@@ -403,7 +403,7 @@ function AuthorStep({
                 {...props}
                 value={def.name}
                 onChange={(e) => onNameChange(e.target.value)}
-                placeholder="Chairmageddon"
+                placeholder="The pool's name"
               />
             )}
           </Field>
