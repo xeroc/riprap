@@ -145,7 +145,6 @@ const MEMBER = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" as Address;
 
 function mutualItem(overrides: {
   phase: Phase;
-  authority?: Address;
   claimsCloseAt?: bigint;
   pullCloseAt?: bigint;
   claimsFiled?: number;
@@ -156,7 +155,7 @@ function mutualItem(overrides: {
     program: HANSE_PROGRAM_ADDRESS,
     data: getBase64Decoder().decode(
       getMutualEncoder().encode({
-        authority: overrides.authority ?? AUTHORITY,
+        authority: AUTHORITY,
         pool: POOL_A,
         subaccord: STRANGER,
         jurorCredential: STRANGER,

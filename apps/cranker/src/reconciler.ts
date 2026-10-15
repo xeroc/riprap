@@ -10,9 +10,8 @@
  *              (deferred a cycle when settle_claim ran — the counters move
  *              on-chain, the snapshot is stale)
  *   Settled  → claim_payout × Approved claims while now < pull_close_at —
- *              PILOT GATE (ADR-0005): only when the cranker holds
- *              mutual.authority; otherwise skipped with a reason
- *              dissolve once now >= pull_close_at
+ *              permissionless (the pilot authority gate retired 2026-10-15,
+ *              ADR-0005 amendment); then dissolve once now >= pull_close_at
  *   Dissolved→ pool_crank × (unsettled positions with total > 0) once the
  *              pool is Liquidated — the residual exits
  *
