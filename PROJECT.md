@@ -58,7 +58,7 @@ The name is the architecture: riprap is the armor on a breakwater's face — tho
 - **Guaranteed death (v1 shape).** Dissolution is permissionless after the claims window: a crank pays out `user_stake / total_stake × treasury` per member. No permanent treasury, no retained profit, nothing left to capture. Ongoing mutuals end differently — member-driven liquidation or withdrawal under the same custody guarantee, no scheduled death.
 
 ### First instance — Micro Mutual: Knife Assault
-The reference deployment: **Riprap: Blade Pool @ Breakpoint 2026** — a pool scoped to knife assault during the conference window (15–17 November 2026), in Olympia Convention Centre and its designated event area, London ([solana.com/breakpoint](https://solana.com/breakpoint)). Coverage opens with the conference and closes with the conference, per policy §2 (`meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md`).
+The reference deployment: **Riprap: Blade Pool @ Breakpoint 2026** — a pool scoped to knife assault during the conference window (15–17 November 2026), in Olympia Convention Centre and its designated event area, London ([solana.com/breakpoint](https://solana.com/breakpoint)). Coverage opens with the conference and closes with the conference. The official listing — tiers, peril, pinned pubkey — is `apps/landing/src/mutuals/data.ts`.
 
 | Tier | Entry fee | Max payout |
 | --- | --------: | ---------: |
@@ -86,8 +86,8 @@ Every figure is the pilot's Standard tier (tier table above); the worked example
 
 | Protocol (Layer 1 — open parameter) | Pilot specific (Layer 2 — Breakpoint) |
 | --- | --- |
-| any entry amount | $10 / $20 / $40 tiers (policy §5) |
-| any policy content the group defines | knife assault, defined in the policy |
+| any entry amount | $10 / $20 / $40 tiers (pool listing) |
+| any policy content the group defines | knife assault, defined in the pool listing |
 | any scope, any lifetime | one event: Breakpoint 2026, 15–17 November, Olympia + designated area |
 | anyone may join | conference attendance required |
 | finite or ongoing — the members' choice | expires with the event; claims window, then permanent dissolution |
@@ -106,11 +106,11 @@ Every figure is the pilot's Standard tier (tier table above); the worked example
 
 | # | Question | Status |
 | --- | --- | --- |
-| 1 | First event | **resolved** — Breakpoint 2026, 15–17 November 2026, Olympia Convention Centre, London; coverage window = the conference (policy §2); conference-side daily hours follow the published event schedule |
+| 1 | First event | **resolved** — Breakpoint 2026, 15–17 November 2026, Olympia Convention Centre, London; coverage window = the conference; conference-side daily hours follow the published event schedule |
 | 2 | Name | **resolved** — Riprap locked; Breakwater killed as runner-up. Domain: **riprap.xyz registered (primary)**; `riprap.io` not grabbed (optional). X: **@riprapxyz** (x.com/riprapxyz) (`meta/naming.md`) |
 | 3 | Juror pool | **resolved** — members only: the draw pool is this mutual's opted-in members ($10 stake, unstakeable); no outside jurors |
 | 4 | Copy register | **resolved** — deadpan-honest: state the peril plainly, never joke about it, never dramatize it; safety-engineering tone everywhere |
 | 5 | Marketing scope | **resolved** — platform leads: Riprap is marketed as the event-scoped-mutual primitive; the knife-assault pool rides along as demo #1, not the hero |
-| 6 | Instance naming | **resolved** — pattern `Riprap: {{PERIL}} Pool @ {{EVENT}}`; first instance: "Riprap: Blade Pool" (peril word stays precise in the policy doc) |
+| 6 | Instance naming | **resolved** — pattern `Riprap: {{PERIL}} Pool @ {{EVENT}}`; first instance: "Riprap: Blade Pool" (peril word stays precise in the pool listing) |
 | 7 | Protocol take | **resolved** — zero for the first pool(s): prove the mechanism, no protocol cut; a take-rate on entry becomes a launch parameter once a second sponsor wants in |
 | 8 | Platform scope | **resolved (2026-09-15)** — mutuals as a protocol: permissionless creation, any terms, any lifetime. Supersedes the "event-scoped" platform framing in row 5; event mutuals remain the v1 build and pilot shape, not the protocol's limit |
