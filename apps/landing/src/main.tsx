@@ -5,7 +5,7 @@ import "./index.css";
 import App from "./App.tsx";
 // The pool registry maps every `#/m/<id>` detail route (pubkey once pinned,
 // else slug) to its page component (mutuals/registry.ts).
-import { POOL_PAGES } from "./mutuals/registry.ts";
+import { poolPageFor } from "./mutuals/registry.ts";
 // One provider stack for every route (ADR-0007): a wallet connected on any
 // surface stays connected on all of them. Pages stay lazy so route code
 // keeps its own chunks.
@@ -50,15 +50,17 @@ function AdjudicateSurface() {
 }
 
 /** `#/m/<id>` — a pool's detail route: the id is the pool's MUTUAL pubkey
- * once pinned, else its slug. Unknown ids fall back to the platform landing,
- * same as any other unmatched path. The route id rides down to the page:
- * pool pages that resolve by on-chain address (the Blade Pool's,
- * per-cluster pins) take the id they were opened at. */
+ * once pinned, else its slug. Ids the founder directory pins get their
+ * hand-written page; every other id lands on the generic def-driven page
+ * (community pools — it renders honest states when the address holds no
+ * mutual or the def isn't published). The route id rides down to the page:
+ * pool pages that resolve by on-chain address take the id they were opened
+ * at. */
 function PoolSurface() {
   const { id } = useParams();
   if (id === undefined) return <App />;
-  const Page = POOL_PAGES[id];
-  return Page ? <Page id={id} /> : <App />;
+  const Page = poolPageFor(id);
+  return <Page id={id} />;
 }
 
 /** In-page anchors ("#mechanism" clicked anywhere) land here as "/mechanism":
