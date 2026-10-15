@@ -49,6 +49,16 @@ function usd(n: number): string {
 export function renderDef(input: DefInput): string {
   if (input.peril.trim() === "") throw new Error("renderDef: peril must not be empty");
   if (input.tiers.length === 0) throw new Error("renderDef: at least one tier is required");
+  for (const tier of input.tiers) {
+    for (const [field, value] of [
+      ["fee", tier.fee],
+      ["cap", tier.cap],
+    ] as const) {
+      if (!Number.isSafeInteger(value)) {
+        throw new Error(`renderDef: tier '${tier.name}' ${field} must be a safe integer`);
+      }
+    }
+  }
   if (input.proof.length === 0) throw new Error("renderDef: at least one proof slot is required");
   if (input.definition.length === 0 || input.definition.some((b) => b.trim() === "")) {
     throw new Error("renderDef: definition must hold non-empty blocks");
@@ -58,7 +68,7 @@ export function renderDef(input: DefInput): string {
   }
   if (input.economics !== undefined) {
     const fee = input.economics.filingFeeUsdc;
-    if (!Number.isInteger(fee) || fee <= 0) {
+    if (!Number.isSafeInteger(fee) || fee <= 0) {
       throw new Error("renderDef: economics.filingFeeUsdc must be a positive whole USDC amount");
     }
   }

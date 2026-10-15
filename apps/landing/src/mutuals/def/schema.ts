@@ -160,7 +160,15 @@ function parseScalar(raw: string, at: string): string | number {
     if (end !== v.length) throw new DefFormatError(`${at}: junk after closing quote`);
     return value;
   }
-  if (/^-?\d+$/.test(v)) return Number(v);
+  if (/^-?\d+$/.test(v)) {
+    const n = Number(v);
+    // beyond 2^53 the round-trip loses precision and the renderer would
+    // emit scientific notation the grammar cannot parse back
+    if (!Number.isSafeInteger(n)) {
+      throw new DefFormatError(`${at}: integer '${v}' exceeds the safe range`);
+    }
+    return n;
+  }
   throw new DefFormatError(
     `${at}: unsupported value '${v}' — the grammar has quoted strings and bare integers only`,
   );

@@ -722,6 +722,17 @@ describe("riprap-def/v1 — validation matrix (HANDOFF §3/§6)", () => {
     ).toThrow(/unknown key 'doors'/);
   });
 
+  it("integers beyond the safe range are rejected at parse and render (round-trip precision)", () => {
+    expect(() =>
+      parseFrontmatter(
+        'schema: "riprap-def/v1"\ntiers:\n  - name: "Flat"\n    fee: 99999999999999999999\n    cap: 100',
+      ),
+    ).toThrow(DefFormatError);
+    expect(() =>
+      renderDef({ ...chairmageddon, tiers: [{ name: "Flat", fee: 1e21, cap: 40 }] }),
+    ).toThrow(/safe integer/);
+  });
+
   it("validateDefInput carries the prose presence rules", () => {
     expect(validateDefInput({ ...chairmageddon, peril: " " })).toContainEqual({
       code: "bad-prose",
