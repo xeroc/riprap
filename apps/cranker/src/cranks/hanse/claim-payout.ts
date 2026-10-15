@@ -1,9 +1,8 @@
 /**
  * claim_payout crank — the payout crank (ADR-0005): pays an approved claim
  * into the claimant's canonical ATA (they never sign) and burns the matching
- * rights stake. Permissionless in principle; for the pilot the on-chain gate
- * pins the cranker to mutual.authority (§2.10/§12) — the reconciler checks
- * that before emitting. Account assembly mirrors the CLI buildClaimPayout.
+ * rights stake. Permissionless (the pilot authority gate retired 2026-10-15,
+ * ADR-0005 amendment). Account assembly mirrors the CLI buildClaimPayout.
  */
 import {
   fetchClaim,

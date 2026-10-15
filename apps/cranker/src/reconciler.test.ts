@@ -353,7 +353,7 @@ describe("reconcileOnce — Active", () => {
 });
 
 describe("reconcileOnce — Settled", () => {
-  test("authority cranker + Approved claim inside the window → claim_payout", async () => {
+  test("Approved claim inside the window → claim_payout", async () => {
     const rec = recordingDispatch();
     const executed = await reconcileOnce(
       config(
@@ -368,7 +368,7 @@ describe("reconcileOnce — Settled", () => {
     expect(rec.actions).toEqual([{ kind: "claim_payout", mutual: MUTUAL_A, claim: CLAIM_A }]);
   });
 
-  test("non-authority cranker skips payouts (pilot pass gate, ADR-0005)", async () => {
+  test("non-authority cranker also dispatches payouts (pilot gate retired, ADR-0005)", async () => {
     const rec = recordingDispatch();
     const executed = await reconcileOnce(
       config(
@@ -380,8 +380,8 @@ describe("reconcileOnce — Settled", () => {
         STRANGER,
       ),
     );
-    expect(executed).toBe(0);
-    expect(rec.actions).toEqual([]);
+    expect(executed).toBe(1);
+    expect(rec.actions).toEqual([{ kind: "claim_payout", mutual: MUTUAL_A, claim: CLAIM_A }]);
   });
 
   test("past pull_close_at → dissolve", async () => {

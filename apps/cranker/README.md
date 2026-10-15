@@ -5,10 +5,9 @@ Lifecycle daemon for the permissionless cranks: watches every Mutual (or a confi
 ```
 Active   → settle_claim × N   (Pending claims whose accord Dispute is Final/Failed)
           settle_pool         (claims_close_at passed AND filed == resolved)
-Settled  → claim_payout × N   (Approved claims, inside the pull window)
-                               PILOT GATE: only when the cranker key IS the
-                               mutual's authority (ADR-0005); skipped otherwise
-          dissolve            (pull_close_at passed)
+Settled  → claim_payout × N   (Approved claims, inside the pull window —
+                               permissionless; the pilot authority gate
+                               retired 2026-10-15, ADR-0005 amendment)
 Dissolved→ pool_crank × N     (unsettled depositors with total > 0 — the residual)
 ```
 
@@ -17,7 +16,7 @@ Every crank is permissionless on-chain; the cranker pays fees and gains nothing.
 ## Running
 
 ```bash
-cp .env.example .env    # set RIPRAP_CRANKER_KEYPAIR (pilot: the operator/authority key)
+cp .env.example .env    # set RIPRAP_CRANKER_KEYPAIR (any funded key)
 pnpm --filter @riprap/cranker dev          # bun --watch
 RIPRAP_CRANKER_ONCE=1 pnpm --filter @riprap/cranker start   # single cycle (cron/CI)
 ```

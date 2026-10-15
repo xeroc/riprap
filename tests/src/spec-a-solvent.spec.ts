@@ -6,7 +6,7 @@
 //   initialize_mutual → 4 × Basic + 4 × Standard + 2 × Premium join →
 //   3 member-jurors stake → file_claim → draw → commit/reveal Approve →
 //   finalize_dispute → settle_claim Approved → settle_pool ratio 1e9 →
-//   claim_payout (authority-cranked; spend + burn) → dissolve → crank residuals.
+//   claim_payout (permissionless crank; spend + burn) → dissolve → crank residuals.
 //
 // Cohort math (6-dp USDC units): 4 × $10 + 4 × $20 + 2 × $40 = $200 treasury;
 // a Standard claimant's $95 claim + $15 fee = $110 obligations (ratio exactly
@@ -48,7 +48,7 @@ import {
   setupMutualCohort,
 } from "./mutual-harness.js";
 import { ensureAccordProgram } from "./setup/deploy.js";
-import { createTestEnv, type TestEnv } from "./setup/env.js";
+import { createTestEnv, fundSigner, type TestEnv } from "./setup/env.js";
 
 const N_MEMBERS = 10;
 const CLAIM_AMOUNT = 90_000_000n; // $90 + $20 fee (ADR-0030) → $110 payout — residual $90 over $180
@@ -138,10 +138,11 @@ describe("e2e spec a: solvent lifecycle to the cent (riprap-efdw)", () => {
     expect(mutual3.data.phase).toBe(Phase.Settled);
     expect(mutual3.data.ratio1e9).toBe(1_000_000_000n);
 
-    // ── claim_payout: authority-cranked; spend + burn atomically ────────
+    // ── claim_payout: permissionless — a NON-authority key cranks ───────
+    const payoutCranker = await fundSigner(env); // pilot gate retired 2026-10-15
     await env.sendIx(
       await getClaimPayoutInstructionAsync({
-        cranker: env.payer, // §12 pass gate: initializer cranks
+        cranker: payoutCranker,
         claimant: filed.claimant.address,
         mutual,
         claim: filed.claimPda,
