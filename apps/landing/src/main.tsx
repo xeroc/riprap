@@ -24,6 +24,9 @@ const AdjudicateRoute = lazy(() =>
 const MutualsRoute = lazy(() =>
   import("./mutuals/MutualsPage.tsx").then((m) => ({ default: m.MutualsPage })),
 );
+const CreateRoute = lazy(() =>
+  import("./create/CreatePage.tsx").then((m) => ({ default: m.CreatePage })),
+);
 const BlurbRoute = lazy(() =>
   import("./blurb/BlurbPage.tsx").then((m) => ({ default: m.BlurbPage })),
 );
@@ -61,6 +64,22 @@ function PoolSurface() {
   return Page ? <Page id={id} /> : <App />;
 }
 
+/** Route-scoped `<title>` swaps (copy doc § per-route Head lines): the
+ * platform title is the default; routes that name their own reset it on
+ * entry and on every hashchange back. */
+const ROUTE_TITLES: Record<string, string> = {
+  "/create": "Riprap: Create a pool",
+};
+const PLATFORM_TITLE = "Riprap — pooled cover on Solana";
+
+function RouteTitle() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.title = ROUTE_TITLES[pathname] ?? PLATFORM_TITLE;
+  }, [pathname]);
+  return null;
+}
+
 /** In-page anchors ("#mechanism" clicked anywhere) land here as "/mechanism":
  * the browser's native anchor jump fires before the platform has settled, so
  * scroll once immediately and again right after. */
@@ -83,6 +102,7 @@ function PlatformSurface() {
 export function Router() {
   return (
     <HashRouter>
+      <RouteTitle />
       <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<PlatformSurface />} />
@@ -90,6 +110,7 @@ export function Router() {
           <Route path="/mutuals" element={<MutualsRoute />} />
           <Route path="/m/:id" element={<PoolSurface />} />
           <Route path="/blurb" element={<BlurbRoute />} />
+          <Route path="/create" element={<CreateRoute />} />
           <Route path="/app" element={<MemberRoute />} />
           <Route path="/app/file-claim/:pool/restore/:nonce" element={<FileClaimSurface />} />
           <Route path="/app/file-claim/:pool" element={<FileClaimSurface />} />
