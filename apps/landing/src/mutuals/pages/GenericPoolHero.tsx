@@ -41,10 +41,10 @@ const KIND_COPY = {
     subline:
       "{fee} buys a defined payout if the covered event happens to you during the event window — up to {cap} out, every cent back if nothing does, then the pool dissolves. This is not insurance.",
     odds: [
-      "You read the policy before joining — the safest bet here",
-      "It happens to someone — almost certain",
-      "It happens to you — why you're here",
-      "You send this page to your friends — dead cert",
+      ["You read the policy before joining", "the safest bet here"],
+      ["It happens to someone", "almost certain"],
+      ["It happens to you", "why you're here"],
+      ["You send this page to your friends", "dead cert"],
     ],
     share:
       "I just entered {name} at {event}.\nUp to {cap} out if it lands. Unused funds come back.\nNo adjudicated claim, no payout.\nI'm in. @riprapxyz",
@@ -54,10 +54,10 @@ const KIND_COPY = {
     subline:
       "{fee} puts you on the roster: {cap} out for one confirmed qualifying act, adjudicated by a jury of members. No confirmed act, no payout; unused funds return when the event ends.",
     odds: [
-      "You read the terms before joining — the safest bet here",
-      "Someone pulls it off — almost certain",
-      "You pull it off — why you're here",
-      "You send this page to your friends — dead cert",
+      ["You read the terms before joining", "the safest bet here"],
+      ["Someone pulls it off", "almost certain"],
+      ["You pull it off", "why you're here"],
+      ["You send this page to your friends", "dead cert"],
     ],
     share:
       "I just entered {name} at {event}.\n{cap} for one confirmed act. Unused funds come back.\nNo adjudicated claim, no payout.\nI'm in. @riprapxyz",
@@ -92,21 +92,18 @@ export function buildShareText(def: RiprapDef): (fee: string | null, cap: string
     });
 }
 
-/** One odds row — `event — quip` splits two-column when the em-dash is there. */
-function OddsRow({ line }: { line: string }) {
-  const split = line.split(" — ");
-  const event = split[0] ?? line;
-  const quip = split[1];
+/** One odds row — the [event, quip] pair renders two-column, matching the
+ * first-party heroes' odds tables. */
+function OddsRow({ row }: { row: readonly [string, string] }) {
+  const [event, quip] = row;
   return (
     <tr className="border-t border-hairline">
       <th className="py-3 pr-4 text-left align-top font-normal leading-snug text-body [font:var(--riprap-body-sm)]">
         {event}
       </th>
-      {quip === undefined ? null : (
-        <td className="py-3 pl-2 text-right align-top font-mono text-sm leading-snug text-muted-foreground whitespace-nowrap">
-          {quip}
-        </td>
-      )}
+      <td className="py-3 pl-2 text-right align-top font-mono text-sm leading-snug text-muted-foreground whitespace-nowrap">
+        {quip}
+      </td>
     </tr>
   );
 }
@@ -349,8 +346,8 @@ export function GenericPoolHero({ listing, def }: { listing: MutualListing; def:
                     The odds
                   </caption>
                   <tbody>
-                    {odds.map((line) => (
-                      <OddsRow key={line} line={line} />
+                    {odds.map((row) => (
+                      <OddsRow key={row[0]} row={row} />
                     ))}
                   </tbody>
                 </table>

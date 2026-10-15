@@ -19,47 +19,47 @@ const ADDR = "FovDXMye3aqv6N6c4WAa6w7wTo2u1Q5To75M96Y7nqPQ" as Address;
  *  block + the shared 11-§ skeleton (abbreviated to the § the surfaces
  *  read). Two url-kind proof slots exercise the https intake path. */
 const CAFFEINE_DEF = `---
-schema: riprap-def/v1
-kind: bounty
-slug: hot-drink-bounty
-name: Hot Drink Bounty
+schema: "riprap-def/v1"
+kind: "bounty"
+slug: "hot-drink-bounty"
+name: "Hot Drink Bounty"
 period:
   start: "2026-11-15"
   end: "2026-11-17"
   claims_close: "2026-11-27"
-  venue: Olympia Convention Centre, London
+  venue: "Olympia Convention Centre, London"
 tiers:
-  - name: Flat
+  - name: "Flat"
     fee: 5
     cap: 50
 proof:
-  - slot: 01-ticket.pdf
-    kind: file
-    label: your event ticket
-    verify: a valid ticket for the event, in the requester's own name
-  - slot: 02-id.jpg
-    kind: file
-    label: government photo ID
-  - slot: 03-request.url
-    kind: url
-    label: the request — their post, message, or a witnessed statement
-    verify: the request came from the named person, before the delivery
-  - slot: 04-delivery.jpg
-    kind: file
-    label: the timestamped photo or video of the handover
-  - slot: 05-confirmation.url
-    kind: url
-    label: their post confirming the request and the delivery
+  - slot: "01-ticket.pdf"
+    kind: "file"
+    label: "your event ticket"
+    verify: "a valid ticket for the event, in the requester's own name"
+  - slot: "02-id.jpg"
+    kind: "file"
+    label: "government photo ID"
+  - slot: "03-request.url"
+    kind: "url"
+    label: "the request — their post, message, or a witnessed statement"
+    verify: "the request came from the named person, before the delivery"
+  - slot: "04-delivery.jpg"
+    kind: "file"
+    label: "the timestamped photo or video of the handover"
+  - slot: "05-confirmation.url"
+    kind: "url"
+    label: "their post confirming the request and the delivery"
 marketing:
-  headline: Bring the drink. Get paid.
-  blurb: Bring the named person a hot drink they asked for — hand to hand, still hot, confirmed by them.
+  headline: "Bring the drink. Get paid."
+  blurb: "Bring the named person a hot drink they asked for — hand to hand, still hot, confirmed by them."
   odds:
-    - You read the terms before joining — the safest bet here
-    - Someone pulls it off — almost certain
+  - [ "You read the terms before joining", "the safest bet here" ]
+  - [ "Someone pulls it off", "almost certain" ]
   share: "I'm on drink duty at {event}.\\n{cap} for one confirmed hand-off.\\nI'm in. @riprapxyz"
-  event: Breakpoint
+  event: "Breakpoint"
   smallestPayout: 50
-language: en
+language: "en"
 ---
 ## 3. Qualifying Delivery
 
