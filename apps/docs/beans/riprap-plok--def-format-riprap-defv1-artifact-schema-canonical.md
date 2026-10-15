@@ -1,11 +1,11 @@
 ---
 # riprap-plok
 title: 'Def format: riprap-def/v1 artifact (schema, canonical renderer, validators)'
-status: todo
+status: completed
 type: epic
 priority: high
 created_at: 2026-10-15T08:00:11Z
-updated_at: 2026-10-15T08:00:11Z
+updated_at: 2026-10-15T13:20:22Z
 parent: riprap-9bh4
 ---
 
