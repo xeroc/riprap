@@ -118,12 +118,7 @@ function renderMarketing(marketing: DefInput["marketing"]): string[] {
   const lines: string[] = [];
   if (marketing.headline !== undefined) lines.push(`  headline: ${dq(marketing.headline)}`);
   if (marketing.blurb !== undefined) lines.push(`  blurb: ${dq(marketing.blurb)}`);
-  if (marketing.odds !== undefined && marketing.odds.length > 0) {
-    lines.push("  odds:");
-    for (const [event, odds] of marketing.odds) {
-      lines.push(`  - [ ${dq(event)}, ${dq(odds)} ]`);
-    }
-  }
+  if (marketing.logo !== undefined) lines.push(`  logo: ${dq(marketing.logo)}`);
   if (marketing.share !== undefined) lines.push(`  share: ${dq(marketing.share)}`);
   if (marketing.event !== undefined) lines.push(`  event: ${dq(marketing.event)}`);
   if (marketing.smallestPayout !== undefined) {

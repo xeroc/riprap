@@ -21,34 +21,32 @@ afterEach(cleanup);
 /** A worked mutual def vector — the Chairmageddon shape: frontmatter machine
  *  block + the shared 11-§ skeleton (abbreviated to the § the bands read). */
 const WORKED_DEF = `---
-schema: riprap-def/v1
-kind: mutual
-slug: chairmageddon
-name: Chairmageddon
+schema: "riprap-def/v1"
+kind: "mutual"
+slug: "chairmageddon"
+name: "Chairmageddon"
 period:
   start: "2026-11-15"
   end: "2026-11-17"
   claims_close: "2026-11-24"
-  venue: Olympia Convention Centre, London
+  venue: "Olympia Convention Centre, London"
 tiers:
-  - name: Flat
+  - name: "Flat"
     fee: 10
     cap: 40
 proof:
-  - slot: 01-ticket.jpg
-    kind: file
-    label: Event ticket in your own name
-  - slot: 02-declaration.md
-    kind: file
-    label: Declaration of the facts, signed with your wallet
+  - slot: "01-ticket.jpg"
+    kind: "file"
+    label: "Event ticket in your own name"
+  - slot: "02-declaration.md"
+    kind: "file"
+    label: "Declaration of the facts, signed with your wallet"
 marketing:
-  headline: Every seat taken. You stood.
-  blurb: Every seat taken at the opening ceremony — and you stood the whole thing.
-  odds:
-    - You get there early — wasted caution
-    - Every seat fills — near cert
+  headline: "Every seat taken. You stood."
+  blurb: "Every seat taken at the opening ceremony — and you stood the whole thing."
+  logo: "https://riprap.xyz/pools/chairmageddon/logo.svg"
   share: "I stood through it at {event}.\\nUp to {cap} if it lands.\\nI'm in. @riprapxyz"
-  event: Breakpoint
+  event: "Breakpoint"
   smallestPayout: 40
 ---
 ## 1. Product
@@ -250,12 +248,14 @@ function renderPage(Page: () => React.JSX.Element) {
 }
 
 describe("GenericPoolHero", () => {
-  it("renders the marketing block's headline and the odds rail", () => {
+  it("renders the marketing block's headline and the pool's own logo", () => {
     const { container } = renderPage(() => <GenericPoolHero listing={LISTING} def={DEF} />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
       "Every seat taken. You stood.",
     );
-    expect(container.textContent).toContain("You get there early");
+    const logo = container.querySelector('[data-slot="pool-logo"]');
+    if (logo === null) throw new Error("logo not rendered");
+    expect(logo.getAttribute("src")).toBe("https://riprap.xyz/pools/chairmageddon/logo.svg");
     // figures are chain reads — PARAM or an honest chain state, never faked
     expect(container.textContent).toMatch(
       /\{\{PARAM\}\}|Reading the pool|Couldn't reach the cluster|isn't deployed/,

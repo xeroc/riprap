@@ -33,7 +33,7 @@ export type DefRejection =
       reason: "grammar" | "ordinal-duplicate" | "bad-kind" | "kind-mismatch" | "empty-optional";
       detail?: string;
     }
-  | { code: "bad-marketing"; field: string; reason: "empty" | "bad-odds-row" | "not-positive" }
+  | { code: "bad-marketing"; field: string; reason: "empty" | "bad-url" | "not-positive" }
   | { code: "bad-language"; found: string }
   | { code: "bad-prose"; field: "peril" | "definition" | "exclusions" | "economics" }
   | {
@@ -150,21 +150,14 @@ export function validateFrontmatter(def: DefFrontmatter): DefRejection[] {
 
   const marketing = def.marketing;
   if (marketing !== undefined) {
-    for (const field of ["headline", "blurb", "share", "event"] as const) {
+    for (const field of ["headline", "blurb", "logo", "share", "event"] as const) {
       const value = marketing[field];
       if (value !== undefined && value.trim() === "") {
         rejections.push({ code: "bad-marketing", field, reason: "empty" });
       }
     }
-    if (marketing.odds !== undefined) {
-      marketing.odds.forEach((row, n) => {
-        if (
-          row.length !== 2 ||
-          row.some((cell) => typeof cell !== "string" || cell.trim() === "")
-        ) {
-          rejections.push({ code: "bad-marketing", field: `odds[${n}]`, reason: "bad-odds-row" });
-        }
-      });
+    if (marketing.logo !== undefined && !/^https?:\/\/\S+$/.test(marketing.logo)) {
+      rejections.push({ code: "bad-marketing", field: "logo", reason: "bad-url" });
     }
     if (
       marketing.smallestPayout !== undefined &&

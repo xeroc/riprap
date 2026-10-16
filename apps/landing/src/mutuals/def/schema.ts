@@ -39,8 +39,9 @@ export interface DefProofSlot {
   verify?: string;
 }
 
-/** The mock actuarial table (marketing.odds): [event, odds] string pairs. */
-export type DefOddsRow = [string, string];
+/** The pool's own logo — an external image link the hero shows (2026-10-16
+ * founder call: replaced the mock actuarial odds table). */
+export type DefLogoUrl = string;
 
 /** Optional hero/card marketing copy (milestone D5) — template defaults
  * fill every absent field downstream; all keys optional. */
@@ -48,7 +49,7 @@ export interface DefMarketing {
   headline?: string;
   /** doubles as the derived listing's tagline (store resolution) */
   blurb?: string;
-  odds?: DefOddsRow[];
+  logo?: DefLogoUrl;
   share?: string;
   /** the event frame, e.g. "Breakpoint 2026" */
   event?: string;
@@ -143,9 +144,9 @@ function readQuoted(s: string, start: number, at: string): [string, number] {
 // output), key order aside. Blank lines between entries and trailing
 // whitespace are tolerated; every other deviation throws. One flat level
 // of nesting: a `key:` block is either a list of flat mappings (tiers,
-// proof), a flat mapping whose values are scalars or one nested list
-// (period, marketing.odds), or empty (rejected downstream as a value
-// matter, not a grammar one).
+// proof), a flat mapping whose values are scalars (period, marketing), or
+// empty (rejected downstream as a value matter, not a grammar one).
+
 // ---------------------------------------------------------------------------
 
 const KEY_LINE = /^([A-Za-z_][A-Za-z0-9_]*):(?: (.*))?$/;
@@ -174,30 +175,6 @@ function parseScalar(raw: string, at: string): string | number {
   );
 }
 
-/** `[ "a", "b" ]` — the flow-array form, used by marketing.odds rows. */
-function parseFlowArray(raw: string, at: string): string[] {
-  const outer = raw.trim();
-  if (!outer.startsWith("[") || !outer.endsWith("]")) {
-    throw new DefFormatError(`${at}: expected a [ ... ] flow array`);
-  }
-  const s = outer.slice(1, -1).trim();
-  if (s === "") return [];
-  const out: string[] = [];
-  let j = 0;
-  while (true) {
-    if (s[j] !== '"') throw new DefFormatError(`${at}: flow arrays hold quoted strings only`);
-    const [value, next] = readQuoted(s, j, at);
-    out.push(value);
-    j = next;
-    while (s[j] === " ") j += 1;
-    if (j >= s.length) break;
-    if (s[j] !== ",") throw new DefFormatError(`${at}: expected ',' between flow entries`);
-    j += 1;
-    while (s[j] === " ") j += 1;
-  }
-  return out;
-}
-
 /** Parse the frontmatter block into an untyped tree; typed extraction
  * (with unknown-key rejection) follows. */
 function parseTree(fm: string): Record<string, unknown> {
@@ -209,8 +186,8 @@ function parseTree(fm: string): Record<string, unknown> {
     while (i < lines.length && lines[i].trim() === "") i += 1;
   };
 
-  /** `- ` items at 2-space indent — mapping items (tiers, proof) or flow
-   * arrays (marketing.odds rows). Stops at the first non-item line. */
+  /** `- ` items at 2-space indent — mapping items (tiers, proof). Stops at
+   * the first non-item line. */
   const parseList = (): unknown[] => {
     const items: unknown[] = [];
     while (true) {
@@ -221,10 +198,6 @@ function parseTree(fm: string): Record<string, unknown> {
       const at = `line ${i + 1}`;
       i += 1; // consume the marker line
       const after = line.slice(4);
-      if (after.startsWith("[")) {
-        items.push(parseFlowArray(after, at));
-        continue;
-      }
       // mapping item: first key rides the marker line, more keys at 4-space indent
       const m = KEY_LINE.exec(after);
       if (m === null) throw new DefFormatError(`${at}: bad list item`);
@@ -248,8 +221,7 @@ function parseTree(fm: string): Record<string, unknown> {
     return items;
   };
 
-  /** `key: value` lines at 2-space indent. An empty value (`  odds:`)
-   * takes a nested list whose `- ` items ride at the same indent. */
+  /** `key: value` lines at 2-space indent. */
   const parseNestedMapping = (): Record<string, unknown> => {
     const map: Record<string, unknown> = {};
     while (true) {
@@ -343,7 +315,7 @@ function rejectUnknown(
 const PERIOD_KEYS = ["start", "end", "claims_close", "venue"] as const;
 const TIER_KEYS = ["name", "fee", "cap"] as const;
 const PROOF_KEYS = ["slot", "kind", "label", "verify"] as const;
-const MARKETING_KEYS = ["headline", "blurb", "odds", "share", "event", "smallestPayout"] as const;
+const MARKETING_KEYS = ["headline", "blurb", "logo", "share", "event", "smallestPayout"] as const;
 const TOP_KEYS = [
   "schema",
   "kind",
@@ -413,25 +385,13 @@ export function parseFrontmatter(fm: string): DefFrontmatter {
     const mTree = asRecord(tree.marketing, "marketing");
     rejectUnknown(mTree, MARKETING_KEYS, "marketing");
     marketing = {};
-    for (const key of ["headline", "blurb", "share", "event"] as const) {
+    for (const key of ["headline", "blurb", "logo", "share", "event"] as const) {
       if (mTree[key] !== undefined) {
         marketing[key] = asString(mTree[key], `marketing.${key}`);
       }
     }
     if (mTree.smallestPayout !== undefined) {
       marketing.smallestPayout = asInt(mTree.smallestPayout, "marketing.smallestPayout");
-    }
-    if (mTree.odds !== undefined) {
-      if (!Array.isArray(mTree.odds)) throw new DefFormatError("marketing.odds: expected a list");
-      marketing.odds = mTree.odds.map((row, n) => {
-        if (!Array.isArray(row) || row.length !== 2) {
-          throw new DefFormatError(`marketing.odds[${n}]: expected a [ "event", "odds" ] pair`);
-        }
-        return [
-          asString(row[0], `marketing.odds[${n}][0]`),
-          asString(row[1], `marketing.odds[${n}][1]`),
-        ] as DefOddsRow;
-      });
     }
   }
 

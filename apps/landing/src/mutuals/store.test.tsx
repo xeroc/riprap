@@ -150,22 +150,22 @@ describe("useMutualStore — the scan hook", () => {
 
 /** A minimal valid def doc; its sha256 becomes the account's policyHash. */
 const DEF_DOC = `---
-schema: riprap-def/v1
-kind: mutual
-slug: chairmageddon
-name: Chairmageddon
+schema: "riprap-def/v1"
+kind: "mutual"
+slug: "chairmageddon"
+name: "Chairmageddon"
 period:
   start: "2026-11-15"
   end: "2026-11-17"
   claims_close: "2026-11-24"
 tiers:
-  - name: Flat
+  - name: "Flat"
     fee: 10
     cap: 40
 proof:
-  - slot: 01-ticket.pdf
-    kind: file
-    label: your event ticket
+  - slot: "01-ticket.pdf"
+    kind: "file"
+    label: "your event ticket"
 ---
 ## 4. Exclusions
 
