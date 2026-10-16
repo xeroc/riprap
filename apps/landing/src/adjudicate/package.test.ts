@@ -16,14 +16,15 @@ import {
   x25519SharedSecret,
 } from "@useaccord/sdk/evidence";
 import { afterEach, describe, expect, it, vi } from "vitest";
-
-import {
-  CLAIM_DOCUMENT_PATHS,
-  type ClaimManifestInput,
-  serializeClaimManifest,
-} from "../app/file-claim/manifest";
+import { BLADE_POOL_FLOW } from "../app/file-claim/flows/blade-pool";
+import { type ClaimManifestInput, serializeClaimManifest } from "../app/file-claim/manifest";
 import { type DeliveredDocumentBundle, deliveryKeyDecrypt } from "./delivery";
 import { fetchJurorPackage, parseClaimManifest } from "./package";
+
+/** The blade pack's canonical proof paths — the blade-shaped vectors' slot
+ *  list, threaded explicitly now that no default exists (de-blading,
+ *  riprap-hs4r). */
+const BLADE_PATHS = BLADE_POOL_FLOW.documentSlots.map((s) => s.path);
 
 const DISPUTE = "D".repeat(32);
 const JUROR = "J".repeat(32);
@@ -47,7 +48,7 @@ function exampleInput(over: Partial<ClaimManifestInput> = {}): ClaimManifestInpu
       tier: "Standard",
       contributionUsdc: 20_000_000n,
     },
-    entries: CLAIM_DOCUMENT_PATHS.map((path, i) => ({
+    entries: BLADE_PATHS.map((path: string, i: number) => ({
       path,
       sha256: String.fromCharCode(97 + i).repeat(64),
     })),
@@ -137,25 +138,32 @@ describe("parseClaimManifest — golden bytes (CLAIM-WIZARD §5; the claimant su
     // the wrong slot list refuses it — a blade-shaped parse of a bounty
     // manifest names the BLADE path it expected at that position (the
     // cross-flow error: "bad entry for 03-police-report.pdf")
-    expect(() => parseClaimManifest(utf8(yaml))).toThrow(/bad entry for 03-police-report.pdf/);
+    expect(() => parseClaimManifest(utf8(yaml), BLADE_PATHS)).toThrow(
+      /bad entry for 03-police-report.pdf/,
+    );
   });
   it("fails closed on a foreign schema (the SDK's accord-evidence/v1 is not this profile)", () => {
     expect(() =>
-      parseClaimManifest(utf8(GOLDEN.replace("riprap-claim/v1", "accord-evidence/v1"))),
+      parseClaimManifest(
+        utf8(GOLDEN.replace("riprap-claim/v1", "accord-evidence/v1")),
+        BLADE_PATHS,
+      ),
     ).toThrow(/schema/);
   });
 
   it("fails closed on layout drift: missing trailing newline, trailing junk, uppercase leaf hex, swapped entry order", () => {
-    expect(() => parseClaimManifest(utf8(GOLDEN.trimEnd()))).toThrow(/newline/);
-    expect(() => parseClaimManifest(utf8(`${GOLDEN}extra: line\n`))).toThrow(/trailing/);
-    expect(() => parseClaimManifest(utf8(GOLDEN.replace("a".repeat(64), "A".repeat(64))))).toThrow(
-      /bad entry/,
+    expect(() => parseClaimManifest(utf8(GOLDEN.trimEnd()), BLADE_PATHS)).toThrow(/newline/);
+    expect(() => parseClaimManifest(utf8(`${GOLDEN}extra: line\n`), BLADE_PATHS)).toThrow(
+      /trailing/,
     );
+    expect(() =>
+      parseClaimManifest(utf8(GOLDEN.replace("a".repeat(64), "A".repeat(64))), BLADE_PATHS),
+    ).toThrow(/bad entry/);
     const swapped = GOLDEN.replace(
       `  - { path: 01-ticket.pdf, sha256: "${"a".repeat(64)}" }\n  - { path: 02-id-document.jpg, sha256: "${"b".repeat(64)}" }`,
       `  - { path: 02-id-document.jpg, sha256: "${"b".repeat(64)}" }\n  - { path: 01-ticket.pdf, sha256: "${"a".repeat(64)}" }`,
     );
-    expect(() => parseClaimManifest(utf8(swapped))).toThrow(/bad entry/);
+    expect(() => parseClaimManifest(utf8(swapped), BLADE_PATHS)).toThrow(/bad entry/);
   });
 
   it("fails closed on malformed free text: unknown escape, raw control character, non-UTF-8 bytes", () => {
@@ -163,18 +171,20 @@ describe("parseClaimManifest — golden bytes (CLAIM-WIZARD §5; the claimant su
       'title: "Payout request — knife assault, 2026-11-15"',
       'title: "bad \\q escape"',
     );
-    expect(() => parseClaimManifest(utf8(badEscape))).toThrow(/unknown escape/);
+    expect(() => parseClaimManifest(utf8(badEscape), BLADE_PATHS)).toThrow(/unknown escape/);
     const controlChar = GOLDEN.replace(
       'title: "Payout request — knife assault, 2026-11-15"',
       'title: "ok\x01not ok"',
     );
-    expect(() => parseClaimManifest(utf8(controlChar))).toThrow(/control character/);
-    expect(() => parseClaimManifest(new Uint8Array([0xff, 0xfe, 0x00, 0x81]))).toThrow();
+    expect(() => parseClaimManifest(utf8(controlChar), BLADE_PATHS)).toThrow(/control character/);
+    expect(() =>
+      parseClaimManifest(new Uint8Array([0xff, 0xfe, 0x00, 0x81]), BLADE_PATHS),
+    ).toThrow();
   });
 
   it("fails closed on a non-fixed options block (§5: recipe hanse-opt/v1, Approve=0/Deny=1)", () => {
     const tampered = GOLDEN.replace('labels: ["Approve", "Deny"]', 'labels: ["Yes", "No"]');
-    expect(() => parseClaimManifest(utf8(tampered))).toThrow(/options/);
+    expect(() => parseClaimManifest(utf8(tampered), BLADE_PATHS)).toThrow(/options/);
   });
 });
 
@@ -205,6 +215,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(result.state).toBe("verified");
@@ -237,6 +248,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(result.state).toBe("pending");
@@ -255,6 +267,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(result.state).toBe("pending");
@@ -273,6 +286,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(incomplete.state).toBe("pending");
@@ -289,6 +303,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(fiveHundred.state).toBe("pending");
@@ -307,6 +322,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(offline.state).toBe("pending");
@@ -325,6 +341,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(notDrawn).toEqual({ state: "failed", reason: "juror not drawn for this dispute" });
@@ -343,6 +360,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(tamper.state).toBe("failed");
@@ -361,6 +379,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt: deliveryKeyDecrypt(newX25519KeyPair().secret),
     });
     expect(result.state).toBe("failed");
@@ -379,6 +398,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8("a different manifest")),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(result).toEqual({
@@ -401,6 +421,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(garbage)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(result.state).toBe("failed");
@@ -410,7 +431,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
   });
 
   it("cross-check: manifest subaccord ≠ mutual subaccord → failed", async () => {
-    const swapped = serializeClaimManifest(exampleInput({ subaccord: addr("X") }));
+    const swapped = serializeClaimManifest(exampleInput({ subaccord: addr("X") }), BLADE_PATHS);
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => await roundIndex(swapped)),
@@ -423,6 +444,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(swapped)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(result.state).toBe("failed");
@@ -432,7 +454,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
   });
 
   it("cross-check: manifest filer ≠ mutual PDA → failed", async () => {
-    const swapped = serializeClaimManifest(exampleInput({ filer: addr("Z") }));
+    const swapped = serializeClaimManifest(exampleInput({ filer: addr("Z") }), BLADE_PATHS);
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => await roundIndex(swapped)),
@@ -445,6 +467,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(swapped)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(result.state).toBe("failed");
@@ -466,6 +489,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(notJson.state).toBe("failed");
@@ -482,6 +506,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(noRounds.state).toBe("failed");
@@ -498,6 +523,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: new Uint8Array(32),
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(zero).toEqual({ state: "no-evidence" });
@@ -509,6 +535,7 @@ describe("fetchJurorPackage (index → seam → root gate → parser → cross-c
       evidenceHash: undefined,
       subaccord: addr("S"),
       mutual: addr("F"),
+      slots: BLADE_PATHS,
       decrypt,
     });
     expect(absent).toEqual({ state: "no-evidence" });

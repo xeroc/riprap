@@ -18,11 +18,8 @@ import {
   x25519SharedSecret,
 } from "@useaccord/sdk/evidence";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  CLAIM_DOCUMENT_PATHS,
-  type ClaimManifestInput,
-  serializeClaimManifest,
-} from "../app/file-claim/manifest";
+import { BLADE_POOL_FLOW } from "../app/file-claim/flows/blade-pool";
+import { type ClaimManifestInput, serializeClaimManifest } from "../app/file-claim/manifest";
 import {
   currentDecryptDelivery,
   type DeliveredDocumentBundle,
@@ -57,13 +54,13 @@ function exampleManifest(over: Partial<ClaimManifestInput> = {}): string {
       tier: "Standard",
       contributionUsdc: 20_000_000n,
     },
-    entries: CLAIM_DOCUMENT_PATHS.map((path, i) => ({
-      path,
+    entries: BLADE_POOL_FLOW.documentSlots.map((slot, i) => ({
+      path: slot.path,
       sha256: String.fromCharCode(97 + i).repeat(64),
     })),
     ...over,
   };
-  return serializeClaimManifest(input);
+  return serializeClaimManifest(input, BLADE_POOL_FLOW.documentSlots);
 }
 
 const GOLDEN = exampleManifest();
@@ -119,6 +116,7 @@ describe("HANDOFF §6 row 2 — tampered manifest bytes → terminal do-not-vote
       evidenceHash: await sha256(utf8(GOLDEN)), // the on-chain root — the TRUE bytes
       subaccord: SUBACCORD,
       mutual: MUTUAL,
+      slots: BLADE_POOL_FLOW.documentSlots.map((s) => s.path),
       decrypt: deliveryKeyDecrypt(key.secret),
     });
 
@@ -175,6 +173,7 @@ describe("HANDOFF §6 row 3 — incomplete round → honest pending, retried, th
       evidenceHash: await sha256(utf8(GOLDEN)),
       subaccord: SUBACCORD,
       mutual: MUTUAL,
+      slots: BLADE_POOL_FLOW.documentSlots.map((s) => s.path),
       decrypt: deliveryKeyDecrypt(key.secret),
     };
     const first = await fetchJurorPackage(params);
@@ -197,19 +196,19 @@ describe("leaf gates over the golden manifest — one tampered document is termi
       ),
     );
     const results = await Promise.all(
-      CLAIM_DOCUMENT_PATHS.map(async (path) =>
+      BLADE_POOL_FLOW.documentSlots.map(async (slot) =>
         fetchJurorDocument({
           endpoint: ENDPOINT,
           dispute: DISPUTE,
           juror: JUROR,
           round: 0,
-          path,
+          path: slot.path,
           decrypt: deliveryKeyDecrypt(key.secret),
-          entry: { path, sha256: await sha256HexOf(utf8("document bytes")) },
+          entry: { path: slot.path, sha256: await sha256HexOf(utf8("document bytes")) },
         }),
       ),
     );
-    expect(results.every((r) => r.state === "verified")).toBe(true);
+    expect(results.every((r: { state: string }) => r.state === "verified")).toBe(true);
   });
 
   it("one swapped document fails its leaf gate — terminal, fails closed", async () => {

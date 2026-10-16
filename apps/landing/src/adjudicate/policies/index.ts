@@ -1,11 +1,13 @@
-// The adjudication-pack registry — resolves a directory listing's
-// `adjudicationPolicy` field (mutuals/data.ts) to its policy pack
-// (ADJUDICATION-DASHBOARD §7). Add a pool: a pack file under ./policies + one
-// line here + the `adjudicationPolicy` field on its data.ts entry — the claim
-// wizard's `claimFlow` pattern. When a second policy appears the anchored
-// domain-CAS fetch can replace this table behind the same interface
-// (bean riprap-h6wp) — an engine no-op.
+// The adjudication-pack registry — resolves a pool's policy pack: a
+// directory listing's `adjudicationPolicy` field (mutuals/data.ts) to its
+// hand-written pack, or — for def-driven community pools — the pool's
+// anchored riprap-def/v1 doc to a built pack (mutuals/def/packs.ts; epic
+// riprap-hs4r) (ADJUDICATION-DASHBOARD §7). Add a first-party pool: a pack
+// file under ./policies + one line here + the `adjudicationPolicy` field on
+// its data.ts entry. Community pools never touch this table.
 
+import { buildAdjudicationPolicy } from "../../mutuals/def/packs";
+import type { RiprapDef } from "../../mutuals/def/schema";
 import type { MutualListing } from "../../mutuals/types";
 import type { AdjudicationPolicy } from "../policy";
 import { BLADE_POOL_POLICY } from "./blade-pool";
@@ -14,12 +16,16 @@ const POLICIES: Record<string, AdjudicationPolicy> = {
   [BLADE_POOL_POLICY.id]: BLADE_POOL_POLICY,
 };
 
-/** The listing's adjudication pack — null when the pool names none or names
- * an unregistered one (the session renders its no-policy honest state; the
- * index test pins every listed id to a registered pack). */
+/** The pool's adjudication pack — def-driven pools build theirs from the
+ *  anchored doc (never this table); first-party pools resolve their
+ *  `adjudicationPolicy` id, and null means no pack (the session renders its
+ *  no-policy honest state; the index test pins every listed id to a
+ *  registered pack). */
 export function adjudicationPolicyFor(
   listing: MutualListing | undefined,
+  def?: RiprapDef,
 ): AdjudicationPolicy | null {
+  if (def !== undefined) return buildAdjudicationPolicy(def);
   if (listing === undefined || listing.adjudicationPolicy === undefined) return null;
   return POLICIES[listing.adjudicationPolicy] ?? null;
 }

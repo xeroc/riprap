@@ -1020,14 +1020,24 @@ describe("#/app/file-claim/:pool — the pool-scoped wizard", () => {
     const urlInput = screen.getByLabelText("Toly's post confirming the request and the delivery");
     expect(urlInput.getAttribute("type")).toBe("url");
 
-    // an off-domain URL is rejected inline, honestly
-    fireEvent.change(urlInput, { target: { value: "https://example.com/not-a-post" } });
+    // any https link is a valid url-slot document now (de-blading, epic
+    // riprap-hs4r: the x.com-only gate is gone) — a plain-http link is not
+    fireEvent.change(urlInput, { target: { value: "http://example.com/not-https" } });
     fireEvent.blur(urlInput);
     expect(
       await screen.findByText(
-        /is not a post URL — Toly's post confirming the request and the delivery needs a link to the post on x\.com or twitter\.com\./,
+        /is not a valid link — Toly's post confirming the request and the delivery needs an https URL\./,
       ),
     ).toBeTruthy();
+
+    // an off-domain https URL is accepted: its UTF-8 bytes are the document
+    const offDomain = "https://example.com/not-a-post";
+    fireEvent.change(urlInput, { target: { value: offDomain } });
+    fireEvent.blur(urlInput);
+    const offDomainSha = await sha256Hex(new TextEncoder().encode(offDomain));
+    await waitFor(() => {
+      expect(screen.getByText(`sha256 ${offDomainSha.slice(0, 16)}…`)).toBeTruthy();
+    });
 
     // the real confirmation URL: its UTF-8 bytes are the slot's document
     const confirmationUrl = "https://x.com/Toly/status/1847000000000000000";

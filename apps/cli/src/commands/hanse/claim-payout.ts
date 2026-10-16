@@ -1,10 +1,9 @@
 /**
  * `riprap hanse:claim-payout` — the payout crank: pays an approved claim
  * into the claimant's canonical ATA (they never sign) and burns the
- * matching rights stake — atomic and idempotent. Permissionless in
- * principle; for the pilot the cranker must be the mutual's authority
- * (Breakpoint pass gate §2.10/§12 — one on-chain constraint). Load the
- * operator wallet and crank every approved claim.
+ * matching rights stake — atomic and idempotent. Permissionless (the pilot
+ * authority gate retired 2026-10-15, ADR-0005 amendment): any loaded
+ * keypair cranks.
  */
 import { Flags } from "@oclif/core";
 import {
@@ -24,7 +23,7 @@ import { ChainCommand, chainFlags } from "../../lib/base-command";
 export async function buildClaimPayout(input: {
   claim: { address: Address; member: Address };
   mutual: { address: Address; pool: Address; depositMint: Address };
-  /** The crank initiator — the mutual authority while the pass gate is on (§2.10). */
+  /** The crank initiator — any key (permissionless; pilot gate retired 2026-10-15). */
   cranker: KeyPairSigner;
 }): Promise<Instruction> {
   const { claim, mutual, cranker } = input;
@@ -46,16 +45,14 @@ export async function buildClaimPayout(input: {
 }
 
 export default class HanseClaimPayout extends ChainCommand {
-  static summary = "Crank an approved claim's payout to the claimant (authority-gated)";
+  static summary = "Crank an approved claim's payout to the claimant (permissionless)";
 
   static description =
     "The payout crank: pays claim_amount × frozen ratio into the claimant's " +
     "deposit-mint ATA and burns the matching rights stake — atomic and " +
     "idempotent. The claimant never signs: whoever turns the crank, the " +
-    "money lands in the claimant's ATA. For the pilot the cranker must be " +
-    "the mutual's authority (Breakpoint pass gate, spec §2.10) — load the " +
-    "operator wallet; the gate is one on-chain constraint, removed when the " +
-    "pass check retires.";
+    "money lands in the claimant's ATA. Permissionless — the pilot " +
+    "authority gate retired 2026-10-15 (ADR-0005 amendment).";
 
   static examples = ["<%= config.bin %> hanse:claim-payout --claim 9xQe…"];
 

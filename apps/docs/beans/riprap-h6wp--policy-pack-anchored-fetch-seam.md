@@ -1,7 +1,7 @@
 ---
 # riprap-h6wp
 title: 'Adjudication policy pack: swap in-repo module for anchored domain-CAS fetch when a second policy appears'
-status: todo
+status: completed
 type: task
 priority: normal
 created_at: 2026-09-25T00:00:00Z
@@ -27,5 +27,24 @@ Same-family cleanup parked here: the claim wizard's hardcoded
 `CLAIM_DOCUMENT_PATHS` (file-claim/manifest.ts) should read from the same
 `AdjudicationPolicy` doc-slot definitions once a second policy exists, so
 claimant slots and juror checklists can never drift.
+
+- 2026-10-15: reparented under riprap-hs4r — the def-resolution epic's pack-builder task (riprap-97b6) implements this swap as its def-driven registry path; the wizard milestone (riprap-9bh4) is the 'policy author who is not a repo dev' this bean was waiting for. The open anchoring question is answered by the milestone: the def doc IS the anchored artifact (policy_hash over the whole file).
+
+## Summary of Changes
+
+- The swap this bean waited on shipped with riprap-97b6 (same lane):
+  `adjudicationPolicyFor(listing, def?)` builds community pools' packs from
+  the anchored def (usePoolDef: domain-CAS fetch, sha256-vs-policyHash
+  verify, riprap-def/v1 parse) — a provider change behind the unchanged
+  `AdjudicationPolicy` interface; the engine (SessionWizard, PolicyStep,
+  VerdictStep, DocumentsStep) consumed interface fields only. The parked
+  CLAIM_DOCUMENT_PATHS cleanup also shipped there: the default list is
+  deleted, serialize/parse/fetchJurorPackage thread the pack's slots, so
+  claimant slots and juror checklists derive from one list.
+- This change retires the stale seam note in `adjudicate/policy.ts`'s header
+  (the anchored fetch is no longer pending — it is the registry's def path;
+  the anchoring convention is the def doc itself). Verified: tsc clean,
+  policies + SessionWizard suites green (24 tests), workspace lint 0.
+  Changeset: patch (comment retirement; the swap rode with 97b6's minor).
 
 - 2026-10-15: reparented under riprap-hs4r — the def-resolution epic's pack-builder task (riprap-97b6) implements this swap as its def-driven registry path; the wizard milestone (riprap-9bh4) is the 'policy author who is not a repo dev' this bean was waiting for. The open anchoring question is answered by the milestone: the def doc IS the anchored artifact (policy_hash over the whole file).

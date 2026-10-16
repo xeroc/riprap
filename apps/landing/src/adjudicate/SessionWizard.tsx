@@ -243,6 +243,8 @@ export function SessionWizard({
         <div data-slot="step-1">
           <DocumentsStep
             slots={slots}
+            samePersonRule={policy.samePersonRule}
+            evidenceUseNote={policy.evidenceUseNote}
             storageKey={documentsKey}
             onBack={back}
             onDone={() => advanceFrom(1)}

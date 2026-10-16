@@ -16,7 +16,7 @@ import { RawPolicyTerms } from "../../pool/sections/RawPolicyTerms";
 import { useMutual } from "../../pool/useMutual";
 import { Footer } from "../../sections/Footer";
 import { poolBySlug } from "../data";
-import type { MutualListing, MutualTier, PoolKind } from "../types";
+import type { MutualTier, PoolKind } from "../types";
 export interface PoolPageConfig {
   name: string;
   /** the StampBadge event tag, e.g. "Breakpoint" */
@@ -50,7 +50,19 @@ export interface PoolPageConfig {
   caveat?: string;
 }
 
-export function PoolPageShell({ config, hero }: { config: PoolPageConfig; hero: ReactNode }) {
+export function PoolPageShell({
+  config,
+  hero,
+  policyAddress,
+}: {
+  config: PoolPageConfig;
+  hero: ReactNode;
+  /** overrides the #policy band's mutual read for pages with no data.ts
+   *  listing — the community pools' generic page passes its route id (the
+   *  on-chain MUTUAL pubkey) so RawPolicyTerms binds to the derived
+   *  domain_ref. */
+  policyAddress?: Address;
+}) {
   const c = config;
   const bounty = c.kind === "bounty";
   const fees = c.tiers.map((t) => `$${t.fee}`);
@@ -265,8 +277,9 @@ export function PoolPageShell({ config, hero }: { config: PoolPageConfig; hero: 
           </Settle>
         </SectionBand>
 
-        {/* the policy — the raw doc, verbatim, off the evidence server */}
-        <PoolPolicyTerms listing={poolBySlug(c.slug)} />
+        <PoolPolicyTerms
+          address={policyAddress ?? (poolBySlug(c.slug).pubkey as Address | undefined)}
+        />
       </main>
       <Footer />
     </>
@@ -279,10 +292,11 @@ export function PoolPageShell({ config, hero }: { config: PoolPageConfig; hero: 
  * Blade-pool presentation (copy doc § Anchored terms, 2026-09-21), one
  * difference by design: no tabs — the bands above ARE the explained view,
  * the disclosure carries the verbatim doc alone. The mutual read is the
- * listing's pinned pubkey (drafts resolve null → the idle {{PARAM}} state,
- * never a fallback document). */
-function PoolPolicyTerms({ listing }: { listing: MutualListing }) {
-  const mutualQuery = useMutual((listing.pubkey as Address | undefined) ?? null);
+ * address the caller resolved — the listing's pinned pubkey (drafts resolve
+ * null → the idle {{PARAM}} state, never a fallback document), or the
+ * community pools' on-chain route id (policyAddress). */
+function PoolPolicyTerms({ address }: { address: Address | undefined }) {
+  const mutualQuery = useMutual(address ?? null);
   const mutual = mutualQuery.state === "ready" ? mutualQuery.mutual : null;
   return (
     <SectionBand id="policy" label="the policy" tone="ground">

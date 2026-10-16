@@ -12,11 +12,11 @@ use crate::state::{Claim, ClaimStatus, Mutual, Phase};
 /// nothing).
 #[derive(Accounts)]
 pub struct ClaimPayout<'info> {
-    /// The crank initiator — permissionless in principle. Pilot pass gate
-    /// (§2.10 amendment / §12): Breakpoint passes are verified off-chain,
-    /// so the cranker must be the mutual's authority. ONE constraint —
-    /// comment it out when the pass check retires and anyone may crank.
-    #[account(constraint = cranker.key() == mutual.authority @ HanseError::Unauthorized)]
+    /// The crank initiator — permissionless (pool::crank pattern): the
+    /// cranker pays fees and gains nothing. The pilot pass gate (§2.10
+    /// amendment / §12) retired 2026-10-15 (ADR-0005 amendment): the
+    /// authority constraint below is commented out and any key may crank.
+    // #[account(constraint = cranker.key() == mutual.authority @ HanseError::Unauthorized)]
     pub cranker: Signer<'info>,
 
     /// The claimant — receives the payout, never signs: cranking someone

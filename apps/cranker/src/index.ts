@@ -3,9 +3,9 @@
  * @useaccord/cranker src/index.ts). Boots the wallet, builds the full crank
  * dispatch, and starts the reconciler poll loop over the mutual lifecycle.
  *
- * All five cranks are permissionless on-chain; the pilot pass gate pins
- * claim_payout to the mutual's authority (ADR-0005) — run the cranker with
- * the operator key during the pilot.
+ * All five cranks are permissionless on-chain (the claim_payout pilot
+ * authority gate retired 2026-10-15 — ADR-0005 amendment); any funded key
+ * may run the cranker.
  */
 import { type Address, createSolanaRpc, createSolanaRpcSubscriptions } from "@solana/kit";
 import { register as registerHanseClaimPayout } from "./cranks/hanse/claim-payout.js";
