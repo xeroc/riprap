@@ -30,7 +30,6 @@ export function emptyDraft(): CreateDraft {
       proof: [{ slot: "01-proof.pdf", kind: "file", label: "", verify: "" }],
       language: "en",
       definition: "",
-      exclusions: [""],
       roster: "",
     },
     advanced: defaultAdvanced(),
@@ -42,16 +41,20 @@ export function emptyDraft(): CreateDraft {
 const DRAFT_KEY = "riprap:create";
 
 /** The draft with unknown-shape fields dropped — a corrupt or
- *  foreign-version draft must never crash the wizard. */
+ * foreign-version draft must never crash the wizard. A blank saved mint
+ * is a pre-USDC-default draft's never-authored blank, not a choice: the
+ * default fills it (the gate still catches anything the author breaks). */
 export function loadDraft(): CreateDraft {
   const base = emptyDraft();
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
     if (raw === null) return base;
     const parsed = JSON.parse(raw) as Partial<CreateDraft>;
+    const advanced = { ...base.advanced, ...parsed.advanced };
+    if (advanced.mint === "") advanced.mint = base.advanced.mint;
     return {
       def: { ...base.def, ...parsed.def },
-      advanced: { ...base.advanced, ...parsed.advanced },
+      advanced,
       marketingOpen: parsed.marketingOpen ?? false,
     };
   } catch {

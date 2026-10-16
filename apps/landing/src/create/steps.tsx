@@ -24,7 +24,7 @@ import { useEffect, useState } from "react";
 import { ConnectWalletButton } from "../app/controls";
 import { Settle } from "../components/Settle";
 import { sha256Hex } from "../pool/domainRef";
-import { useEvidenceDaemonUrl } from "../pool/evidenceServer";
+import { useClusterEvidenceOperator, useEvidenceDaemonUrl } from "../pool/evidenceServer";
 import { useHanseEnv } from "../shared/rpc";
 import { describeError, sendInstruction } from "../shared/transaction";
 import {
@@ -120,6 +120,7 @@ export function DeployStep({
   onDeployed: (deployed: Deployed) => void;
 }) {
   const hanseEnv = useHanseEnv();
+  const clusterOperator = useClusterEvidenceOperator();
   const [phase, setPhase] = useState<DeployPhase>("review");
   const [error, setError] = useState<string | null>(null);
 
@@ -197,7 +198,7 @@ export function DeployStep({
         tiers: tierArgs(draft.def),
         policyHash: hashBytes,
         ...windowArgs(draft.def),
-        subaccordArg: subaccordArgs(draft.advanced, walletAddress as Address),
+        subaccordArg: subaccordArgs(draft.advanced, (clusterOperator || walletAddress) as Address),
         sasProgram: SAS_PROGRAM_ADDRESS,
       });
       setPhase("wallet-signing");

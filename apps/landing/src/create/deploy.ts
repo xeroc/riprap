@@ -99,11 +99,13 @@ export function preimageHex(seed: bigint, hashBytes: Uint8Array): string {
 }
 
 /** The subaccord economics the drawer carries → the on-chain arg shape
- * (hours → seconds, USDC → raw). An empty operator field resolves to the
- * creator's wallet (v1: the initializer's key, EVENT-MUTUAL §7). */
+ * (hours → seconds, USDC → raw). The evidence operator is the caller's
+ * resolved value: the cluster's configured operator, else the creator's
+ * wallet (v1: the initializer's key, EVENT-MUTUAL §7) — the wizard never
+ * customizes it (founder call 2026-10-16). */
 export function subaccordArgs(
   advanced: AdvancedConfig,
-  operatorFallback: Address,
+  evidenceOperator: Address,
 ): {
   feePerJuror: bigint;
   minStake: bigint;
@@ -130,8 +132,7 @@ export function subaccordArgs(
     minJurySize: advanced.minJurySize,
     revealThresholdBps: advanced.revealThresholdBps,
     maxDrawAttempts: advanced.maxDrawAttempts,
-    evidenceOperator:
-      advanced.evidenceOperator !== "" ? (advanced.evidenceOperator as Address) : operatorFallback,
+    evidenceOperator,
   };
 }
 

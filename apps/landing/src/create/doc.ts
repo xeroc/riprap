@@ -5,11 +5,15 @@
 //
 // CONVERGENCE NOTE: the def-format epic lands the canonical module at
 // `mutuals/def/` (schema.ts / render.ts / validate.ts / sections.ts). Until
-// it lands, THIS renderer is the wizard's single byte source: the previewed
+// the swap, THIS renderer is the wizard's single byte source: the previewed
 // document is what gets hashed into `policy_hash` and published to the CAS,
-// so it must be deterministic by itself. When `mutuals/def/` arrives, swap
-// `renderDefDoc`/`validateDef` for its exports — the DefDoc shape mirrors
-// the milestone HANDOFF §2 frontmatter contract field for field.
+// so it must be deterministic by itself. The swap must reconcile the
+// founder call of 2026-10-16: the explicit exclusions field is gone — the
+// wizard's body is 10 §s (exclusions ride in §3's raw-policy prose), while
+// mutuals/def still pins 11 §s with a §4 list the packs (juror checklist,
+// claim summary) read. Until that moves, wizard-authored docs do not list
+// in the store. (The marketing block agrees as of the same call: `logo`
+// replaced `odds` on both sides.)
 //
 // Number law: doc BYTES may carry numbers (they are the pool's terms —
 // entries, caps, windows); the wizard's UI packs carry none beyond inputs,
@@ -56,8 +60,8 @@ export interface DefPeriod {
 export interface DefMarketing {
   headline?: string;
   blurb?: string;
-  /** One line per odds row. */
-  odds?: string[];
+  /** The pool's own logo — an external image link the hero shows. */
+  logo?: string;
   share?: string;
   event?: string;
   smallestPayout?: number;
@@ -73,10 +77,10 @@ export interface DefDoc {
   proof: DefProofSlot[];
   marketing?: DefMarketing;
   language: string;
-  /** §3 body prose — what the pool covers (mutual) / pays for (bounty). */
+  /** §3 body prose — the raw policy: the covered act, its boundaries, and
+   * its exclusions (founder call 2026-10-16: one prose field, not a forced
+   * exclusions machine field). */
   definition: string;
-  /** §4 body lines — one exclusion per line. */
-  exclusions: string[];
   /** Bounty only: the named people or acts the bounty pays for. */
   roster?: string;
 }
@@ -100,17 +104,11 @@ export const PILOT_PRESET = {
   maxDrawAttempts: 3,
 } as const;
 
-/** Every remaining `initialize_mutual` input the advanced drawer carries
- * (mint + evidence operator + the eleven SubaccordConfig fields); the other
- * config leaves (seed, tiers, policy_hash, deposits/claims close) derive
- * from the def and render read-only. */
 export interface AdvancedConfig {
   /** One mint for entries, payouts, and juror fees — the program rejects
-   * mixed mints (single-asset MVP, security review 2026-09-18). */
+   * mixed mints (single-asset MVP, security review 2026-09-18). Prefilled
+   * with USDC; the author may point it elsewhere. */
   mint: string;
-  /** Encrypted-evidence operator pubkey; empty = the creator's wallet (v1:
-   * the initializer's key, EVENT-MUTUAL §7). */
-  evidenceOperator: string;
   minStakeUsdc: number;
   feePerJurorUsdc: number;
   minJurySize: number;
@@ -124,8 +122,11 @@ export interface AdvancedConfig {
   maxDrawAttempts: number;
 }
 
+/** Mainnet USDC (the CLI README's example mint) — the wizard's default. */
+export const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+
 export function defaultAdvanced(): AdvancedConfig {
-  return { mint: "", evidenceOperator: "", ...PILOT_PRESET };
+  return { mint: USDC_MINT, ...PILOT_PRESET };
 }
 
 /** Accord domain bounds, restated (initialize_mutual.rs mirrors them;
@@ -272,13 +273,13 @@ export function validateDef(def: DefDoc): Rejection[] {
   if (def.definition.trim() === "") {
     rejections.push({
       field: "definition",
-      line: def.kind === "mutual" ? "What does this pool cover?" : "What does this pool pay for?",
+      line: "The terms are the pool's whole policy — write them.",
     });
   }
-  if (def.exclusions.filter((line) => line.trim() !== "").length < 1) {
+  if (def.marketing?.logo !== undefined && !/^https?:\/\/\S+$/.test(def.marketing.logo)) {
     rejections.push({
-      field: "exclusions",
-      line: "At least one exclusion — no pool covers everything.",
+      field: "marketing.logo",
+      line: "The logo is an image link — http(s) only.",
     });
   }
   if (
@@ -305,9 +306,6 @@ export function validateAdvanced(
 
   if (!looksLikePubkey(advanced.mint)) {
     sub("advanced.mint", "A mint pubkey — classic SPL Token, no Token-2022.");
-  }
-  if (advanced.evidenceOperator !== "" && !looksLikePubkey(advanced.evidenceOperator)) {
-    sub("advanced.evidenceOperator", "An operator pubkey, or leave empty.");
   }
   const depositsClose = dateToUnix(def.period.start);
   const claimsClose = dateToUnix(def.period.claimsClose);
@@ -371,7 +369,6 @@ const KIND_WORDS: Record<
   {
     actHeader: string;
     productLine: string;
-    exclusionsLead: string;
     memberNoun: string;
     requestNoun: string;
   }
@@ -380,7 +377,6 @@ const KIND_WORDS: Record<
     actHeader: "Covered event",
     productLine:
       "a mutual: members chip a fixed entry against one narrowly defined peril, and a qualifying incident is paid from the pool.",
-    exclusionsLead: "Not covered:",
     memberNoun: "members",
     requestNoun: "payout request",
   },
@@ -388,7 +384,6 @@ const KIND_WORDS: Record<
     actHeader: "Paid act",
     productLine:
       "a bounty: the pool pays for verified acts, on the terms in this document and nothing else.",
-    exclusionsLead: "Not paid:",
     memberNoun: "participants",
     requestNoun: "payout claim",
   },
@@ -406,10 +401,12 @@ function dollars(amount: number): string {
 
 /**
  * The canonical `riprap-def/v1` document: YAML frontmatter (fixed key
- * order) + the 11-§ terms body. Deterministic — the same (def, advanced)
- * renders byte-identical, no timestamps, no locale, no randomness. The
- * §7 prose embeds the chosen economics once (milestone D2: wizard-time
- * instruction args rendered into §7 prose).
+ * order) + the 10-§ terms body (§4 Exclusions folded into §3's raw policy
+ * prose, founder call 2026-10-16 — the sections renumbered to stay
+ * continuous). Deterministic — the same (def, advanced) renders
+ * byte-identical, no timestamps, no locale, no randomness. The §6 prose
+ * embeds the chosen economics once (milestone D2: wizard-time instruction
+ * args rendered into §6 prose).
  */
 export function renderDefDoc(def: DefDoc, advanced: AdvancedConfig): string {
   const words = KIND_WORDS[def.kind];
@@ -448,7 +445,7 @@ export function renderDefDoc(def: DefDoc, advanced: AdvancedConfig): string {
     marketing !== undefined &&
     (marketing.headline ||
       marketing.blurb ||
-      (marketing.odds && marketing.odds.length > 0) ||
+      marketing.logo ||
       marketing.share ||
       marketing.event ||
       marketing.smallestPayout !== undefined)
@@ -456,10 +453,7 @@ export function renderDefDoc(def: DefDoc, advanced: AdvancedConfig): string {
     lines.push("marketing:");
     if (marketing.headline) lines.push(`  headline: ${yamlString(marketing.headline)}`);
     if (marketing.blurb) lines.push(`  blurb: ${yamlString(marketing.blurb)}`);
-    if (marketing.odds && marketing.odds.length > 0) {
-      lines.push("  odds:");
-      for (const odd of marketing.odds) lines.push(`    - ${yamlString(odd)}`);
-    }
+    if (marketing.logo) lines.push(`  logo: ${yamlString(marketing.logo)}`);
     if (marketing.share) lines.push(`  share: ${yamlString(marketing.share)}`);
     if (marketing.event) lines.push(`  event: ${yamlString(marketing.event)}`);
     if (marketing.smallestPayout !== undefined) {
@@ -470,7 +464,7 @@ export function renderDefDoc(def: DefDoc, advanced: AdvancedConfig): string {
   lines.push("---");
   lines.push("");
 
-  // ── body (11 fixed § headers; kind words select, prose carries) ────────
+  // ── body (10 fixed § headers; kind words select, prose carries) ────────
   lines.push(`# ${def.name} — terms`);
   lines.push("");
   lines.push("## 1. Product");
@@ -504,14 +498,7 @@ export function renderDefDoc(def: DefDoc, advanced: AdvancedConfig): string {
     lines.push(def.roster.trim());
     lines.push("");
   }
-  lines.push("## 4. Exclusions");
-  lines.push("");
-  lines.push(words.exclusionsLead);
-  for (const exclusion of def.exclusions.filter((line) => line.trim() !== "")) {
-    lines.push(`- ${exclusion.trim()}`);
-  }
-  lines.push("");
-  lines.push("## 5. Tiers");
+  lines.push("## 4. Tiers");
   lines.push("");
   lines.push("| Tier | Entry | Max payout |");
   lines.push("| --- | --- | --- |");
@@ -519,13 +506,13 @@ export function renderDefDoc(def: DefDoc, advanced: AdvancedConfig): string {
     lines.push(`| ${tier.name} | ${dollars(tier.fee)} | ${dollars(tier.cap)} |`);
   }
   lines.push("");
-  lines.push("## 6. Pool");
+  lines.push("## 5. Pool");
   lines.push("");
   lines.push(
     "One pot. Money leaves it through exactly two doors: payouts a jury approves, and liquidation. There is no third exit.",
   );
   lines.push("");
-  lines.push("## 7. Payout requests");
+  lines.push("## 6. Payout requests");
   lines.push("");
   lines.push(
     `A ${words.requestNoun} files with ${def.proof.length} ${def.proof.length === 1 ? "proof" : "proofs"}, all required:`,
@@ -541,26 +528,26 @@ export function renderDefDoc(def: DefDoc, advanced: AdvancedConfig): string {
     `The request pre-pays an adjudication fee of ${dollars(advanced.minJurySize * advanced.feePerJurorUsdc)} (${advanced.minJurySize} jurors × ${dollars(advanced.feePerJurorUsdc)}). Jurors review for ${advanced.reviewHours} hours, commit for ${advanced.commitHours}, reveal for ${advanced.revealHours}. A ruling can be appealed within ${advanced.appealHours} hours, up to ${advanced.maxAppeals} ${advanced.maxAppeals === 1 ? "appeal" : "appeals"}. A denied request forfeits the fee; a failed adjudication returns it.`,
   );
   lines.push("");
-  lines.push("## 8. End");
+  lines.push("## 7. End");
   lines.push("");
   lines.push(
     `When the claims window closes and approved payouts settle, everything left returns to ${words.memberNoun} pro-rata and the pool dissolves. No funds remain.`,
   );
   lines.push("");
-  lines.push("## 9. Economic principle");
+  lines.push("## 8. Economic principle");
   lines.push("");
   lines.push(
     "The pool never pays more than it holds: if approved claims exceed the pot, payouts are reduced proportionally.",
   );
   lines.push("");
-  lines.push("## 10. Example");
+  lines.push("## 9. Example");
   lines.push("");
   const first = def.tiers[0];
   lines.push(
     `A ${first.name} ${def.kind === "mutual" ? "member" : "participant"} pays ${dollars(first.fee)} entry; an approved ${words.requestNoun} pays up to ${dollars(first.cap)}.`,
   );
   lines.push("");
-  lines.push("## 11. Promise");
+  lines.push("## 10. Promise");
   lines.push("");
   lines.push(
     "These terms are the pool's whole promise — no other document governs. Payouts are at the jury's discretion; the chain enforces the caps.",

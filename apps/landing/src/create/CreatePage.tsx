@@ -36,6 +36,7 @@ import { useEffect, useRef, useState } from "react";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
 import { domainRefHex, sha256Hex } from "../pool/domainRef";
+import { useClusterEvidenceOperator } from "../pool/evidenceServer";
 import { useClusterRpc } from "../shared/rpc";
 import type { Deployed } from "./deploy";
 import {
@@ -52,6 +53,7 @@ import {
   validateDef,
 } from "./doc";
 import { type CreateDraft, clearDraft, emptyDraft, loadDraft, saveDraft } from "./draft";
+import { MarketingPreview } from "./MarketingPreview";
 import { DeployStep, PublishStep, VerifyStep } from "./steps";
 
 /** The wizard machine: author → preview → deploy → publish → verify. */
@@ -139,6 +141,8 @@ export function CreatePage() {
     <>
       <SiteNav inApp />
       <main>
+        {/* the hero owns this page's HexBackdrop — the lattice is never
+            scaled across the form below (founder call 2026-10-16) */}
         <div className="relative">
           <HexBackdrop className="pointer-events-none absolute inset-0 z-0 size-full" />
           <SectionBand
@@ -146,9 +150,38 @@ export function CreatePage() {
             tone="ground"
             className="relative z-10 bg-transparent pt-(--riprap-space-section)"
           >
-            <CreateWizard />
+            <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)">
+              <Settle>
+                <h1 className="tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-md)] sm:[font:var(--riprap-display-xl)]">
+                  Create a pool
+                </h1>
+              </Settle>
+              <Settle delay={60}>
+                <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
+                  Riprap is a platform for pooled cover: a group writes the terms before anyone
+                  joins, members chip in, and claims are settled by drawn peers — on-chain.
+                </p>
+              </Settle>
+              <Settle delay={120}>
+                <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
+                  Write the terms. The wizard builds the pool, its jurors, and its terms document —
+                  you sign once.
+                </p>
+              </Settle>
+              <Settle delay={180}>
+                <p
+                  data-num
+                  className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]"
+                >
+                  Author → Preview → Deploy → Publish → Verify
+                </p>
+              </Settle>
+            </div>
           </SectionBand>
         </div>
+        <SectionBand tone="ground" className="pt-(--riprap-space-lg)">
+          <CreateWizard />
+        </SectionBand>
       </main>
     </>
   );
@@ -215,28 +248,10 @@ function CreateWizard() {
   const patchAdvanced = (changes: Partial<CreateDraft["advanced"]>) =>
     setDraft((current) => ({ ...current, advanced: { ...current.advanced, ...changes } }));
 
+  // The author step owns its width (the marketing preview rides beside a
+  // 48rem form); every later step is the plain reading column.
   return (
-    <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" data-slot="create-wizard">
-      <Settle>
-        <h1 className="tracking-(--riprap-tracking-mega) text-ink [font:var(--riprap-display-md)]">
-          Create a pool
-        </h1>
-      </Settle>
-      <Settle delay={60}>
-        <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-          Write the terms. The wizard builds the pool, its jurors, and its terms document — you sign
-          once.
-        </p>
-      </Settle>
-      <Settle delay={120}>
-        <p
-          data-num
-          className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]"
-        >
-          Author → Preview → Deploy → Publish → Verify
-        </p>
-      </Settle>
-
+    <div className="w-full" data-slot="create-wizard">
       {step === "author" ? (
         <AuthorStep
           draft={draft}
@@ -261,66 +276,70 @@ function CreateWizard() {
           }}
           onContinue={() => setStep("preview")}
         />
-      ) : step === "preview" ? (
-        <PreviewStep
-          doc={anchors?.doc ?? ""}
-          hash={anchors?.hash ?? ""}
-          ref={anchors?.ref ?? ""}
-          seed={seed}
-          seedFreedom={seedFreedom}
-          slug={draft.def.slug}
-          onBack={() => setStep("author")}
-          onDeploy={() => setStep("deploy")}
-        />
-      ) : step === "deploy" && deployed === null ? (
-        <DeployStep
-          walletConnected={walletConnected}
-          walletAddress={walletAccount}
-          draft={draft}
-          advancedRejections={advancedRejections}
-          doc={anchors?.doc ?? ""}
-          hash={anchors?.hash ?? ""}
-          ref={anchors?.ref ?? ""}
-          seed={seed}
-          onBack={() => setStep("preview")}
-          onDeployed={(result) => {
-            // The deploy confirms: the draft's job is done (copy doc —
-            // cleared the moment the deploy confirms), and the frozen
-            // record carries every later step.
-            clearDraft();
-            setDeployed(result);
-            setStep("publish");
-          }}
-        />
-      ) : step === "publish" && deployed !== null ? (
-        <PublishStep
-          deployed={deployed}
-          onPublished={() => setStep("verify")}
-          onSkipped={() => setStep("verify")}
-        />
-      ) : step === "verify" && deployed !== null ? (
-        <VerifyStep
-          deployed={deployed}
-          onDone={() => {
-            // A new policy is a new pool — reset the machine, fresh draft.
-            setDeployed(null);
-            setDraft(emptyDraft());
-            setSlugAuto(true);
-            setSeed(randomSeed());
-            setStep("author");
-          }}
-        />
       ) : (
-        <PreviewStep
-          doc={anchors?.doc ?? ""}
-          hash={anchors?.hash ?? ""}
-          ref={anchors?.ref ?? ""}
-          seed={seed}
-          seedFreedom={seedFreedom}
-          slug={draft.def.slug}
-          onBack={() => setStep("author")}
-          onDeploy={() => setStep("deploy")}
-        />
+        <div className="flex w-full max-w-3xl flex-col gap-(--riprap-space-lg)">
+          {step === "preview" ? (
+            <PreviewStep
+              doc={anchors?.doc ?? ""}
+              hash={anchors?.hash ?? ""}
+              ref={anchors?.ref ?? ""}
+              seed={seed}
+              seedFreedom={seedFreedom}
+              slug={draft.def.slug}
+              onBack={() => setStep("author")}
+              onDeploy={() => setStep("deploy")}
+            />
+          ) : step === "deploy" && deployed === null ? (
+            <DeployStep
+              walletConnected={walletConnected}
+              walletAddress={walletAccount}
+              draft={draft}
+              advancedRejections={advancedRejections}
+              doc={anchors?.doc ?? ""}
+              hash={anchors?.hash ?? ""}
+              ref={anchors?.ref ?? ""}
+              seed={seed}
+              onBack={() => setStep("preview")}
+              onDeployed={(result) => {
+                // The deploy confirms: the draft's job is done (copy doc —
+                // cleared the moment the deploy confirms), and the frozen
+                // record carries every later step.
+                clearDraft();
+                setDeployed(result);
+                setStep("publish");
+              }}
+            />
+          ) : step === "publish" && deployed !== null ? (
+            <PublishStep
+              deployed={deployed}
+              onPublished={() => setStep("verify")}
+              onSkipped={() => setStep("verify")}
+            />
+          ) : step === "verify" && deployed !== null ? (
+            <VerifyStep
+              deployed={deployed}
+              onDone={() => {
+                // A new policy is a new pool — reset the machine, fresh draft.
+                setDeployed(null);
+                setDraft(emptyDraft());
+                setSlugAuto(true);
+                setSeed(randomSeed());
+                setStep("author");
+              }}
+            />
+          ) : (
+            <PreviewStep
+              doc={anchors?.doc ?? ""}
+              hash={anchors?.hash ?? ""}
+              ref={anchors?.ref ?? ""}
+              seed={seed}
+              seedFreedom={seedFreedom}
+              slug={draft.def.slug}
+              onBack={() => setStep("author")}
+              onDeploy={() => setStep("deploy")}
+            />
+          )}
+        </div>
       )}
     </div>
   );
@@ -394,340 +413,354 @@ function AuthorStep({
     });
 
   return (
-    <Settle className="flex w-full flex-col gap-(--riprap-space-lg)" delay={180}>
-      <Band label="The pool">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="def-name" label="Name" rejections={errorsFor("name")}>
-            {(props) => (
-              <Input
-                {...props}
-                value={def.name}
-                onChange={(e) => onNameChange(e.target.value)}
-                placeholder="The pool's name"
-              />
-            )}
-          </Field>
-          <Field id="def-slug" label="Slug" rejections={errorsFor("slug")}>
-            {(props) => (
-              <Input
-                {...props}
-                value={def.slug}
-                onChange={(e) => onSlugEdited(e.target.value)}
-                placeholder={slugAuto ? slugify(def.name) || "pool-route-id" : "pool-route-id"}
-              />
-            )}
-          </Field>
-        </div>
-        <div className="flex max-w-md flex-col gap-2">
-          <Label htmlFor="def-kind">Kind</Label>
-          <Select value={def.kind} onValueChange={(kind) => onPatchDef({ kind: kind as DefKind })}>
-            <SelectTrigger id="def-kind" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="mutual">Mutual — members chip in against one peril</SelectItem>
-              <SelectItem value="bounty">Bounty — the pool pays for verified acts</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </Band>
-
-      <Band label="The terms">
-        <Field
-          id="def-definition"
-          label={def.kind === "mutual" ? "What this pool covers" : "What this pool pays for"}
-          rejections={errorsFor("definition")}
-        >
-          {(props) => (
-            <Textarea
-              {...props}
-              rows={4}
-              value={def.definition}
-              onChange={(e) => onPatchDef({ definition: e.target.value })}
-              placeholder={
-                def.kind === "mutual"
-                  ? "The peril, named plainly — one narrowly defined incident."
-                  : "The act the pool pays for — what must be verified."
-              }
-            />
-          )}
-        </Field>
-        <Field
-          id="def-exclusions"
-          label={def.kind === "mutual" ? "Exclusions — not covered" : "Exclusions — not paid"}
-          rejections={errorsFor("exclusions")}
-        >
-          {(props) => (
-            <Textarea
-              {...props}
-              rows={3}
-              value={def.exclusions.join("\n")}
-              onChange={(e) => onPatchDef({ exclusions: e.target.value.split("\n") })}
-              placeholder={"One per line.\nNo pool covers everything."}
-            />
-          )}
-        </Field>
-        {def.kind === "bounty" ? (
-          <Field id="def-roster" label="Roster — who or what qualifies">
-            {(props) => (
-              <Textarea
-                {...props}
-                rows={2}
-                value={def.roster ?? ""}
-                onChange={(e) => onPatchDef({ roster: e.target.value })}
-                placeholder="The named people or acts the bounty pays for."
-              />
-            )}
-          </Field>
-        ) : null}
-      </Band>
-
-      <Band label="Tiers">
-        {def.tiers.map((tier, index) => (
-          <div
-            key={index}
-            className="grid gap-4 sm:grid-cols-[1fr_7rem_8rem_auto] sm:items-start"
-            data-slot={`tier-row-${index}`}
-          >
-            <Field
-              id={`tier-${index}-name`}
-              label="Name"
-              rejections={errorsFor(`tiers.${index}.name`)}
-            >
-              {(props) => (
-                <Input
-                  {...props}
-                  value={tier.name}
-                  onChange={(e) => setTier(index, { name: e.target.value })}
-                />
-              )}
-            </Field>
-            <Field
-              id={`tier-${index}-fee`}
-              label="Entry (USDC)"
-              rejections={errorsFor(`tiers.${index}.fee`)}
-            >
-              {(props) => (
-                <Input
-                  {...props}
-                  data-num
-                  inputMode="numeric"
-                  className="font-mono"
-                  value={Number.isFinite(tier.fee) ? String(tier.fee) : ""}
-                  onChange={(e) => setTier(index, { fee: Number(e.target.value) })}
-                />
-              )}
-            </Field>
-            <Field
-              id={`tier-${index}-cap`}
-              label="Max payout (USDC)"
-              rejections={errorsFor(`tiers.${index}.cap`)}
-            >
-              {(props) => (
-                <Input
-                  {...props}
-                  data-num
-                  inputMode="numeric"
-                  className="font-mono"
-                  value={Number.isFinite(tier.cap) ? String(tier.cap) : ""}
-                  onChange={(e) => setTier(index, { cap: Number(e.target.value) })}
-                />
-              )}
-            </Field>
-            <div className="flex h-10 items-end">
-              {def.tiers.length > 1 ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onPatchDef({ tiers: def.tiers.filter((_, i) => i !== index) })}
-                >
-                  Remove
-                </Button>
-              ) : null}
+    <Settle className="w-full" delay={180}>
+      {/* the form keeps its 48rem column; the marketing preview rides
+          beside it (same width law as the reading column — never wider) */}
+      <div
+        className={
+          draft.marketingOpen
+            ? "grid w-full items-start gap-(--riprap-space-xl) xl:grid-cols-[minmax(0,48rem)_minmax(24rem,1fr)]"
+            : "flex w-full flex-col gap-(--riprap-space-lg)"
+        }
+      >
+        <div className="flex w-full max-w-3xl flex-col gap-(--riprap-space-lg)">
+          <Band label="The pool">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field id="def-name" label="Name" rejections={errorsFor("name")}>
+                {(props) => (
+                  <Input
+                    {...props}
+                    value={def.name}
+                    onChange={(e) => onNameChange(e.target.value)}
+                    placeholder="The pool's name"
+                  />
+                )}
+              </Field>
+              <Field id="def-slug" label="Slug" rejections={errorsFor("slug")}>
+                {(props) => (
+                  <Input
+                    {...props}
+                    value={def.slug}
+                    onChange={(e) => onSlugEdited(e.target.value)}
+                    placeholder={slugAuto ? slugify(def.name) || "pool-route-id" : "pool-route-id"}
+                  />
+                )}
+              </Field>
             </div>
-          </div>
-        ))}
-        <div className="flex flex-wrap items-center gap-4">
-          {def.tiers.length < 3 ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPatchDef({ tiers: [...def.tiers, { name: "", fee: 0, cap: 0 }] })}
-            >
-              Add a tier
-            </Button>
-          ) : null}
-          <FieldNote rejections={errorsFor("tiers")} />
-        </div>
-      </Band>
-
-      <Band label="Window">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Field
-            id="period-start"
-            label="Doors open"
-            note="Join closes when the doors open."
-            rejections={errorsFor("period.start")}
-          >
-            {(props) => (
-              <Input
-                {...props}
-                data-num
-                className="font-mono"
-                type="date"
-                value={def.period.start}
-                onChange={(e) => onPatchDef({ period: { ...def.period, start: e.target.value } })}
-              />
-            )}
-          </Field>
-          <Field id="period-end" label="Coverage ends" rejections={errorsFor("period.end")}>
-            {(props) => (
-              <Input
-                {...props}
-                data-num
-                className="font-mono"
-                type="date"
-                value={def.period.end}
-                onChange={(e) => onPatchDef({ period: { ...def.period, end: e.target.value } })}
-              />
-            )}
-          </Field>
-          <Field
-            id="period-claims"
-            label="Claims close"
-            rejections={errorsFor("period.claimsClose")}
-          >
-            {(props) => (
-              <Input
-                {...props}
-                data-num
-                className="font-mono"
-                type="date"
-                value={def.period.claimsClose}
-                onChange={(e) =>
-                  onPatchDef({ period: { ...def.period, claimsClose: e.target.value } })
-                }
-              />
-            )}
-          </Field>
-        </div>
-        <Field id="period-venue" label="Venue (optional)" rejections={errorsFor("period")}>
-          {(props) => (
-            <Input
-              {...props}
-              value={def.period.venue ?? ""}
-              onChange={(e) => onPatchDef({ period: { ...def.period, venue: e.target.value } })}
-              placeholder="Where the window runs, if it runs somewhere."
-            />
-          )}
-        </Field>
-      </Band>
-
-      <Band label="Proof">
-        {def.proof.map((slot, index) => (
-          <div
-            key={index}
-            className="grid gap-4 border border-hairline bg-card p-4 sm:grid-cols-[1fr_8rem_1fr]"
-            data-slot={`proof-row-${index}`}
-          >
-            <Field id={`proof-${index}-label`} label="Label" rejections={errorsFor("proof")}>
-              {(props) => (
-                <Input
-                  {...props}
-                  value={slot.label}
-                  onChange={(e) => setSlot(index, { label: e.target.value })}
-                  placeholder="The member-facing name"
-                />
-              )}
-            </Field>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`proof-${index}-kind`}>Kind</Label>
+            <div className="flex max-w-md flex-col gap-2">
+              <Label htmlFor="def-kind">Kind</Label>
               <Select
-                value={slot.kind}
-                onValueChange={(kind) => setSlot(index, { kind: kind as "file" | "url" })}
+                value={def.kind}
+                onValueChange={(kind) => onPatchDef({ kind: kind as DefKind })}
               >
-                <SelectTrigger id={`proof-${index}-kind`} className="w-full">
+                <SelectTrigger id="def-kind" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="file">File</SelectItem>
-                  <SelectItem value="url">Link</SelectItem>
+                  <SelectItem value="mutual">Mutual — members chip in against one peril</SelectItem>
+                  <SelectItem value="bounty">Bounty — the pool pays for verified acts</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <Field id={`proof-${index}-verify`} label="Jurors verify (optional)">
+          </Band>
+
+          <Band label="The terms">
+            <Field
+              id="def-definition"
+              label={def.kind === "mutual" ? "What this pool covers" : "What this pool pays for"}
+              rejections={errorsFor("definition")}
+              note="The whole policy rides in this field — name the incident or act narrowly, draw its boundaries, and say what is not covered. The jury reads these terms verbatim."
+            >
               {(props) => (
-                <Input
+                <Textarea
                   {...props}
-                  value={slot.verify ?? ""}
-                  onChange={(e) => setSlot(index, { verify: e.target.value })}
-                  placeholder="What the jury checks here"
+                  rows={8}
+                  value={def.definition}
+                  onChange={(e) => onPatchDef({ definition: e.target.value })}
+                  placeholder={
+                    def.kind === "mutual"
+                      ? "The peril, named plainly — one narrowly defined incident, where and when it counts, and what is not covered."
+                      : "The act the pool pays for — what must be verified, and what is not paid."
+                  }
                 />
               )}
             </Field>
-            <p
-              data-num
-              className="break-all font-mono text-xs text-muted-foreground sm:col-span-3"
-              data-slot={`slot-path-${index}`}
-            >
-              {slot.slot}
+            {def.kind === "bounty" ? (
+              <Field id="def-roster" label="Roster — who or what qualifies">
+                {(props) => (
+                  <Textarea
+                    {...props}
+                    rows={2}
+                    value={def.roster ?? ""}
+                    onChange={(e) => onPatchDef({ roster: e.target.value })}
+                    placeholder="The named people or acts the bounty pays for."
+                  />
+                )}
+              </Field>
+            ) : null}
+          </Band>
+
+          <Band label="Tiers">
+            {def.tiers.map((tier, index) => (
+              <div
+                key={index}
+                className="grid gap-4 sm:grid-cols-[1fr_7rem_8rem_auto] sm:items-start"
+                data-slot={`tier-row-${index}`}
+              >
+                <Field
+                  id={`tier-${index}-name`}
+                  label="Name"
+                  rejections={errorsFor(`tiers.${index}.name`)}
+                >
+                  {(props) => (
+                    <Input
+                      {...props}
+                      value={tier.name}
+                      onChange={(e) => setTier(index, { name: e.target.value })}
+                    />
+                  )}
+                </Field>
+                <Field
+                  id={`tier-${index}-fee`}
+                  label="Entry (USDC)"
+                  rejections={errorsFor(`tiers.${index}.fee`)}
+                >
+                  {(props) => (
+                    <Input
+                      {...props}
+                      data-num
+                      inputMode="numeric"
+                      className="font-mono"
+                      value={Number.isFinite(tier.fee) ? String(tier.fee) : ""}
+                      onChange={(e) => setTier(index, { fee: Number(e.target.value) })}
+                    />
+                  )}
+                </Field>
+                <Field
+                  id={`tier-${index}-cap`}
+                  label="Max payout (USDC)"
+                  rejections={errorsFor(`tiers.${index}.cap`)}
+                >
+                  {(props) => (
+                    <Input
+                      {...props}
+                      data-num
+                      inputMode="numeric"
+                      className="font-mono"
+                      value={Number.isFinite(tier.cap) ? String(tier.cap) : ""}
+                      onChange={(e) => setTier(index, { cap: Number(e.target.value) })}
+                    />
+                  )}
+                </Field>
+                <div className="flex h-10 items-end">
+                  {def.tiers.length > 1 ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onPatchDef({ tiers: def.tiers.filter((_, i) => i !== index) })}
+                    >
+                      Remove
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+            <div className="flex flex-wrap items-center gap-4">
+              {def.tiers.length < 3 ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    onPatchDef({ tiers: [...def.tiers, { name: "", fee: 0, cap: 0 }] })
+                  }
+                >
+                  Add a tier
+                </Button>
+              ) : null}
+              <FieldNote rejections={errorsFor("tiers")} />
+            </div>
+          </Band>
+
+          <Band label="Window">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field
+                id="period-start"
+                label="Doors open"
+                note="Join closes when the doors open."
+                rejections={errorsFor("period.start")}
+              >
+                {(props) => (
+                  <Input
+                    {...props}
+                    data-num
+                    className="font-mono"
+                    type="date"
+                    value={def.period.start}
+                    onChange={(e) =>
+                      onPatchDef({ period: { ...def.period, start: e.target.value } })
+                    }
+                  />
+                )}
+              </Field>
+              <Field id="period-end" label="Coverage ends" rejections={errorsFor("period.end")}>
+                {(props) => (
+                  <Input
+                    {...props}
+                    data-num
+                    className="font-mono"
+                    type="date"
+                    value={def.period.end}
+                    onChange={(e) => onPatchDef({ period: { ...def.period, end: e.target.value } })}
+                  />
+                )}
+              </Field>
+              <Field
+                id="period-claims"
+                label="Claims close"
+                rejections={errorsFor("period.claimsClose")}
+              >
+                {(props) => (
+                  <Input
+                    {...props}
+                    data-num
+                    className="font-mono"
+                    type="date"
+                    value={def.period.claimsClose}
+                    onChange={(e) =>
+                      onPatchDef({ period: { ...def.period, claimsClose: e.target.value } })
+                    }
+                  />
+                )}
+              </Field>
+            </div>
+            <Field id="period-venue" label="Venue (optional)" rejections={errorsFor("period")}>
+              {(props) => (
+                <Input
+                  {...props}
+                  value={def.period.venue ?? ""}
+                  onChange={(e) => onPatchDef({ period: { ...def.period, venue: e.target.value } })}
+                  placeholder="Where the window runs, if it runs somewhere."
+                />
+              )}
+            </Field>
+          </Band>
+
+          <Band label="Proof">
+            {def.proof.map((slot, index) => (
+              <div
+                key={index}
+                className="grid gap-4 border border-hairline bg-card p-4 sm:grid-cols-[1fr_8rem_1fr]"
+                data-slot={`proof-row-${index}`}
+              >
+                <Field id={`proof-${index}-label`} label="Label" rejections={errorsFor("proof")}>
+                  {(props) => (
+                    <Input
+                      {...props}
+                      value={slot.label}
+                      onChange={(e) => setSlot(index, { label: e.target.value })}
+                      placeholder="The member-facing name"
+                    />
+                  )}
+                </Field>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`proof-${index}-kind`}>Kind</Label>
+                  <Select
+                    value={slot.kind}
+                    onValueChange={(kind) => setSlot(index, { kind: kind as "file" | "url" })}
+                  >
+                    <SelectTrigger id={`proof-${index}-kind`} className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="file">File</SelectItem>
+                      <SelectItem value="url">Link</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Field id={`proof-${index}-verify`} label="Jurors verify (optional)">
+                  {(props) => (
+                    <Input
+                      {...props}
+                      value={slot.verify ?? ""}
+                      onChange={(e) => setSlot(index, { verify: e.target.value })}
+                      placeholder="What the jury checks here"
+                    />
+                  )}
+                </Field>
+                <p
+                  data-num
+                  className="break-all font-mono text-xs text-muted-foreground sm:col-span-3"
+                  data-slot={`slot-path-${index}`}
+                >
+                  {slot.slot}
+                </p>
+              </div>
+            ))}
+            <div className="flex flex-wrap items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  onPatchDef({
+                    proof: [
+                      ...def.proof,
+                      {
+                        slot: slotPath(def.proof.length, "", "file"),
+                        kind: "file",
+                        label: "",
+                        verify: "",
+                      },
+                    ],
+                  })
+                }
+              >
+                Add a proof slot
+              </Button>
+              <FieldNote rejections={errorsFor("proof")} />
+            </div>
+          </Band>
+
+          <Band label="Marketing">
+            {draft.marketingOpen ? (
+              <MarketingFields
+                draft={draft}
+                defRejections={defRejections}
+                onPatchDef={onPatchDef}
+              />
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPatchDraft({ marketingOpen: true })}
+              >
+                <ChevronDownIcon className="size-3.5" /> Add marketing copy
+              </Button>
+            )}
+          </Band>
+
+          <Band label="Advanced">
+            <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
+              Every remaining chain input — the mint, the evidence operator, the jury economics —
+              pre-filled with the pilot preset, behind one drawer.
             </p>
+            <AdvancedDrawer
+              draft={draft}
+              advancedRejections={advancedRejections}
+              anchors={anchors}
+              seed={seed}
+              seedFreedom={seedFreedom}
+              onPatchAdvanced={onPatchAdvanced}
+            />
+          </Band>
+
+          <div className="flex items-center gap-3">
+            <Button disabled={defRejections.length > 0} onClick={onContinue} data-participate>
+              Continue
+            </Button>
+            <FieldNote rejections={defRejections} />
           </div>
-        ))}
-        <div className="flex flex-wrap items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              onPatchDef({
-                proof: [
-                  ...def.proof,
-                  {
-                    slot: slotPath(def.proof.length, "", "file"),
-                    kind: "file",
-                    label: "",
-                    verify: "",
-                  },
-                ],
-              })
-            }
-          >
-            Add a proof slot
-          </Button>
-          <FieldNote rejections={errorsFor("proof")} />
         </div>
-      </Band>
-
-      <Band label="Marketing">
-        {draft.marketingOpen ? (
-          <MarketingFields draft={draft} defRejections={defRejections} onPatchDef={onPatchDef} />
-        ) : (
-          <Button variant="outline" size="sm" onClick={() => onPatchDraft({ marketingOpen: true })}>
-            <ChevronDownIcon className="size-3.5" /> Add marketing copy
-          </Button>
-        )}
-      </Band>
-
-      <Band label="Advanced">
-        <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
-          Every remaining chain input — the mint, the evidence operator, the jury economics —
-          pre-filled with the pilot preset, behind one drawer.
-        </p>
-        <AdvancedDrawer
-          draft={draft}
-          advancedRejections={advancedRejections}
-          anchors={anchors}
-          seed={seed}
-          seedFreedom={seedFreedom}
-          onPatchAdvanced={onPatchAdvanced}
-        />
-      </Band>
-
-      <div className="flex items-center gap-3">
-        <Button disabled={defRejections.length > 0} onClick={onContinue} data-participate>
-          Continue
-        </Button>
-        <FieldNote rejections={defRejections} />
+        {draft.marketingOpen ? <MarketingPreview def={def} /> : null}
       </div>
     </Settle>
   );
@@ -781,14 +814,14 @@ function MarketingFields({
           />
         )}
       </Field>
-      <Field id="marketing-odds" label="Odds — one per line">
+      <Field id="marketing-logo" label="Logo — image link" rejections={errorsFor("marketing.logo")}>
         {(props) => (
-          <Textarea
+          <Input
             {...props}
-            rows={2}
-            value={(marketing.odds ?? []).join("\n")}
-            onChange={(e) => patchMarketing({ odds: e.target.value.split("\n") })}
-            placeholder={"What the pool pays, in its own words.\nOne row per line."}
+            inputMode="url"
+            value={marketing.logo ?? ""}
+            onChange={(e) => patchMarketing({ logo: e.target.value.trim() })}
+            placeholder="https://… — the pool page's own image."
           />
         )}
       </Field>
@@ -841,6 +874,12 @@ function AdvancedDrawer({
   seedFreedom: SeedFreedom;
   onPatchAdvanced: (changes: Partial<CreateDraft["advanced"]>) => void;
 }) {
+  const clusterOperator = useClusterEvidenceOperator();
+  const { account } = useWallet();
+  /** The cluster's configured operator, else the creator's wallet — the
+   * author never customizes it (founder call 2026-10-16). */
+  const evidenceOperator =
+    clusterOperator !== "" ? clusterOperator : (account ?? "the creator's wallet");
   const advanced = draft.advanced;
   const advErrorsFor = (field: string) =>
     advancedRejections.filter((r) => r.field === `advanced.${field}`);
@@ -876,8 +915,11 @@ function AdvancedDrawer({
           <ChevronDownIcon className="size-3.5" /> Advanced pool settings
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="flex w-full flex-col gap-6 overflow-y-auto sm:max-w-md">
-        <SheetHeader>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-6 overflow-y-auto px-6 pb-6 pt-6 sm:max-w-md"
+      >
+        <SheetHeader className="p-0">
           <SheetTitle>Advanced pool settings</SheetTitle>
           <SheetDescription>
             Every remaining chain input, pre-filled with the pilot preset. These mirror the
@@ -889,7 +931,7 @@ function AdvancedDrawer({
           <Field
             id="adv-mint"
             label="Contribution + fee mint"
-            note="One mint for entries, payouts, and juror fees. Classic SPL Token only — no Token-2022."
+            note="One mint for entries, payouts, and juror fees — prefilled with USDC. Classic SPL Token only — no Token-2022."
             rejections={advErrorsFor("mint")}
           >
             {(props) => (
@@ -899,22 +941,6 @@ function AdvancedDrawer({
                 value={advanced.mint}
                 onChange={(e) => onPatchAdvanced({ mint: e.target.value.trim() })}
                 placeholder="USDC mint pubkey"
-              />
-            )}
-          </Field>
-          <Field
-            id="adv-operator"
-            label="Evidence operator"
-            note="Leave empty and this wallet is the evidence operator."
-            rejections={advErrorsFor("evidenceOperator")}
-          >
-            {(props) => (
-              <Input
-                {...props}
-                className="font-mono"
-                value={advanced.evidenceOperator}
-                onChange={(e) => onPatchAdvanced({ evidenceOperator: e.target.value.trim() })}
-                placeholder="Optional pubkey"
               />
             )}
           </Field>
@@ -960,6 +986,7 @@ function AdvancedDrawer({
           </p>
           <AnchorRow label="policy hash" value={anchors?.hash ?? "…"} />
           <AnchorRow label="seed" value={seed.toString()} />
+          <AnchorRow label="evidence operator" value={evidenceOperator} />
           <p data-num className="break-all font-mono text-sm text-ink">
             deposits close {defTimestamp(draft, "start")} · claims close{" "}
             {defTimestamp(draft, "claimsClose")} (unix)

@@ -53,9 +53,7 @@ proof:
 marketing:
   headline: "Bring the drink. Get paid."
   blurb: "Bring the named person a hot drink they asked for — hand to hand, still hot, confirmed by them."
-  odds:
-  - [ "You read the terms before joining", "the safest bet here" ]
-  - [ "Someone pulls it off", "almost certain" ]
+  logo: "https://riprap.xyz/pools/caffeine-supercycle/logo.svg"
   share: "I'm on drink duty at {event}.\\n{cap} for one confirmed hand-off.\\nI'm in. @riprapxyz"
   event: "Breakpoint"
   smallestPayout: 50
@@ -110,7 +108,7 @@ describe("the bounty worked vector — parse + listing", () => {
   });
 
   it("falls back to a §3 excerpt for the tagline when blurb is absent", () => {
-    const noBlurb = parseDefDoc(CAFFEINE_DEF.replace(/  blurb: .*\n/, "")) as RiprapDef;
+    const noBlurb = parseDefDoc(CAFFEINE_DEF.replace(/ {2}blurb: .*\n/, "")) as RiprapDef;
     const listing = listingFromDef(noBlurb, ADDR);
     // first sentence of §3's prose — the qualifying act, named
     expect(listing.tagline).toContain("Qualifying Delivery");

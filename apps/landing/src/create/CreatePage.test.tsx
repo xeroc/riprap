@@ -53,6 +53,7 @@ vi.mock("../shared/transaction", () => ({
   describeError: (err: unknown) => (err instanceof Error ? err.message : "send failed"),
 }));
 vi.mock("../pool/evidenceServer", () => ({
+  useClusterEvidenceOperator: () => "",
   useEvidenceDaemonUrl: () => "https://daemon.test",
 }));
 
@@ -114,11 +115,10 @@ describe("#/create author → preview", () => {
     renderPage();
     fill("def-name", "Chairmageddon");
     await waitFor(() => expect(inputValue("def-slug")).toBe("chairmageddon"));
-    // still incomplete: definition, exclusions, tier numbers, window, proof label
+    // still incomplete: definition, tier numbers, window, proof label
     expect(continueDisabled()).toBe(true);
 
     fill("def-definition", "Bodily injury from standing through the opening ceremony.");
-    fill("def-exclusions", "injuries you caused yourself");
     fill("tier-0-fee", "10");
     fill("tier-0-cap", "40");
     fill("period-start", "2027-03-01");
@@ -128,11 +128,41 @@ describe("#/create author → preview", () => {
     await waitFor(() => expect(continueDisabled()).toBe(false));
   });
 
+  it("the marketing band rides with a scaled pool-page preview", async () => {
+    renderPage();
+    // collapsed: no preview panel beside the form
+    expect(document.querySelector('[data-slot="marketing-preview"]')).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Add marketing copy/ }));
+    const panel = await waitFor(() => {
+      const node = document.querySelector<HTMLElement>('[data-slot="marketing-preview"]');
+      if (node === null) throw new Error("preview not mounted");
+      return node;
+    });
+    expect(panel.textContent).toContain("The pool page — preview at 70%");
+    // kind default fills the headline until the author writes one
+    expect(
+      screen.getByRole("heading", { level: 2, name: "One peril. One pool. It ends." }),
+    ).toBeTruthy();
+    fill("marketing-headline", "Standing room only.");
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { level: 2, name: "Standing room only." })).toBeTruthy(),
+    );
+    // the logo field drives the preview's framed image
+    fill("marketing-logo", "https://riprap.xyz/pools/chairmageddon/logo.svg");
+    const logo = await waitFor(() => {
+      const img = panel.querySelector('[data-slot="pool-logo"]');
+      if (img === null) throw new Error("logo not in preview yet");
+      return img;
+    });
+    expect(logo.getAttribute("src")).toBe("https://riprap.xyz/pools/chairmageddon/logo.svg");
+    // the join column is a stand-in — the join machine needs a deployed pool
+    expect(panel.textContent).toContain("The join controls land here when the pool deploys.");
+  });
+
   it("preview shows the exact bytes and their anchors (mono), then Back returns", async () => {
     renderPage();
     fill("def-name", "Chairmageddon");
     fill("def-definition", "Bodily injury from standing through the opening ceremony.");
-    fill("def-exclusions", "injuries you caused yourself");
     fill("tier-0-fee", "10");
     fill("tier-0-cap", "40");
     fill("period-start", "2027-03-01");
@@ -198,7 +228,6 @@ describe("#/create deploy → publish → verify", () => {
     renderPage();
     fill("def-name", "Chairmageddon");
     fill("def-definition", "Bodily injury from standing through the opening ceremony.");
-    fill("def-exclusions", "injuries you caused yourself");
     fill("tier-0-fee", "10");
     fill("tier-0-cap", "40");
     fill("period-start", "2027-03-01");
@@ -245,11 +274,20 @@ describe("#/create deploy → publish → verify", () => {
     await screen.findByText(/The pool is live/);
   }
 
-  it("blocks deploy on the mirrored drawer gates (mint missing → the gate line)", async () => {
+  it("prefills USDC and blocks deploy only when the mint is cleared", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
     stubFaithfulDaemon();
     await fillValidForm();
+    // the drawer opens with USDC prefilled — clear it to trip the gate
+    fireEvent.click(screen.getByRole("button", { name: /Advanced pool settings/ }));
+    const mint = await waitFor(() => {
+      const input = document.getElementById("adv-mint") as HTMLInputElement | null;
+      if (input === null) throw new Error("drawer not open yet");
+      return input;
+    });
+    fireEvent.change(mint, { target: { value: "" } });
+    fireEvent.keyDown(document.activeElement ?? document, { key: "Escape" });
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     await continueToDeploy();
     expect(
@@ -374,8 +412,12 @@ describe("#/create gate + state matrix", () => {
     expect(await screen.findByText("At least 1 hour.")).toBeTruthy();
     await setAdvanced("adv-draws", "11");
     expect(await screen.findByText("1–10.")).toBeTruthy();
-    await setAdvanced("adv-operator", "not-a-key");
-    expect(await screen.findByText("An operator pubkey, or leave empty.")).toBeTruthy();
+    // the evidence operator field is gone — the cluster's configured
+    // operator (else the creator) rides the derived rows instead
+    expect(document.getElementById("adv-operator")).toBeNull();
+    expect(
+      await screen.findByText(/evidence operator (the creator's wallet|\S{32,44})/),
+    ).toBeTruthy();
   });
 
   it("publish states: 400 rejected, 404 mutual-not-visible — each its deadpan line", async () => {
@@ -396,7 +438,6 @@ describe("#/create gate + state matrix", () => {
       renderPage();
       fill("def-name", "Chairmageddon");
       fill("def-definition", "Bodily injury from standing through the opening ceremony.");
-      fill("def-exclusions", "injuries you caused yourself");
       fill("tier-0-fee", "10");
       fill("tier-0-cap", "40");
       fill("period-start", "2027-03-01");
@@ -430,7 +471,6 @@ describe("#/create gate + state matrix", () => {
     await waitFor(() => expect(seedMock.mock.calls.length).toBeGreaterThanOrEqual(2));
     fill("def-name", "Chairmageddon");
     fill("def-definition", "Bodily injury from standing.");
-    fill("def-exclusions", "injuries you caused yourself");
     fill("tier-0-fee", "10");
     fill("tier-0-cap", "40");
     fill("period-start", "2027-03-01");

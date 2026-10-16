@@ -44,9 +44,7 @@ proof:
 marketing:
   headline: "Every seat taken. You stood."
   blurb: "Every seat taken at the opening ceremony — and you stood the whole thing."
-  odds:
-  - [ "You get there early", "wasted caution" ]
-  - [ "Every seat fills", "near cert" ]
+  logo: "https://riprap.xyz/pools/chairmageddon/logo.svg"
   share: "I stood through it at {event}.\\nUp to {cap} if it lands.\\nI'm in. @riprapxyz"
   event: "Breakpoint"
   smallestPayout: 40
@@ -250,12 +248,14 @@ function renderPage(Page: () => React.JSX.Element) {
 }
 
 describe("GenericPoolHero", () => {
-  it("renders the marketing block's headline and the odds rail", () => {
+  it("renders the marketing block's headline and the pool's own logo", () => {
     const { container } = renderPage(() => <GenericPoolHero listing={LISTING} def={DEF} />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
       "Every seat taken. You stood.",
     );
-    expect(container.textContent).toContain("You get there early");
+    const logo = container.querySelector('[data-slot="pool-logo"]');
+    if (logo === null) throw new Error("logo not rendered");
+    expect(logo.getAttribute("src")).toBe("https://riprap.xyz/pools/chairmageddon/logo.svg");
     // figures are chain reads — PARAM or an honest chain state, never faked
     expect(container.textContent).toMatch(
       /\{\{PARAM\}\}|Reading the pool|Couldn't reach the cluster|isn't deployed/,

@@ -48,11 +48,11 @@ function chairmageddon(): DefDoc {
     ],
     marketing: {
       blurb: "Every seat taken at the opening ceremony — and you stood the whole thing.",
+      logo: "https://riprap.xyz/pools/chairmageddon/logo.svg",
     },
     language: "en",
     definition:
       "Bodily injury from standing through the opening ceremony after every seat was taken.\n\nThe cover needs the whole ceremony stood, start to finish.",
-    exclusions: ["injuries you caused yourself", "seats given up voluntarily"],
     roster: "",
   };
 }
@@ -72,7 +72,6 @@ function supercycle(): DefDoc {
     language: "en",
     definition:
       "Bring someone on the roster a hot drink they asked for — hand to hand, still hot, confirmed by them.",
-    exclusions: ["drinks no longer hot at handover", "deliveries to people off the roster"],
     roster: 'Lily Liu, Anatoly "Toly" Yakovenko, Raj Gokal',
   };
 }
@@ -106,36 +105,41 @@ describe("renderDefDoc", () => {
     expect(front.indexOf("tiers:")).toBeLessThan(front.indexOf("proof:"));
     expect(front).toContain('claims_close: "2026-11-24"');
     expect(front).toContain('venue: "Olympia Convention Centre, London"');
+    expect(front).toContain('logo: "https://riprap.xyz/pools/chairmageddon/logo.svg"');
     expect(front).not.toContain("language:"); // "en" is the default — omitted
   });
 
-  it("§3 header and exclusions lead follow the kind word-map", () => {
+  it("§3 header follows the kind word-map", () => {
     const mutualDoc = renderDefDoc(chairmageddon(), defaultAdvanced());
     const bountyDoc = renderDefDoc(supercycle(), defaultAdvanced());
     expect(mutualDoc).toContain("## 3. Covered event");
-    expect(mutualDoc).toContain("Not covered:");
     expect(bountyDoc).toContain("## 3. Paid act");
-    expect(bountyDoc).toContain("Not paid:");
     expect(bountyDoc).toContain("Roster:");
   });
 
-  it("§5 tier table is verbatim from the doc's tiers", () => {
+  it("§4 tier table is verbatim from the doc's tiers", () => {
     const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
     expect(doc).toContain("| Tier | Entry | Max payout |");
     expect(doc).toContain("| Flat | $10 | $40 |");
   });
 
-  it("§7 prose embeds the chosen economics once (§12 preset: 3 × $5 = $15)", () => {
+  it("§6 prose embeds the chosen economics once (§12 preset: 3 × $5 = $15)", () => {
     const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
     expect(doc).toContain("pre-pays an adjudication fee of $15 (3 jurors × $5)");
     expect(doc).toContain("review for 48 hours, commit for 12, reveal for 12");
     expect(doc).toContain("up to 2 appeals");
   });
 
-  it("every doc carries the 11 fixed § headers", () => {
+  it("exclusions ride in §3's prose — no separate §, sections stay continuous", () => {
+    const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
+    expect(doc).not.toContain("## 4. Exclusions");
+    expect(doc).toContain("## 4. Tiers");
+  });
+
+  it("every doc carries the 10 fixed § headers", () => {
     for (const def of [chairmageddon(), supercycle()]) {
       const doc = renderDefDoc(def, defaultAdvanced());
-      for (let section = 1; section <= 11; section++) {
+      for (let section = 1; section <= 10; section++) {
         expect(doc).toMatch(new RegExp(`^## ${section}\\. `, "m"));
       }
     }
@@ -160,7 +164,7 @@ describe("anchors", () => {
     const ref = await domainRefHex(7n, hashBytes);
     expect(ref).toMatch(/^[0-9a-f]{64}$/);
     // pinned vector — any renderer change that moves the bytes moves this
-    expect(hash).toBe("ecc55d68f2e4cbc3a4ba366d3b2d390dc3bfc9babe71a0a70f63439dc79d2cb2");
+    expect(hash).toBe("06bb9bb5ede797540cb77559820b333264e481a6cf0de800b4cbfba424305bbf");
   });
 });
 
@@ -192,13 +196,21 @@ describe("validateDef", () => {
     expect(rejections(def)).toContainEqual("period.claimsClose: Claims close after coverage ends.");
   });
 
-  it("rejects an empty definition and an exclusion-free pool", () => {
+  it("rejects an empty definition — the terms are the whole policy", () => {
     const def = chairmageddon();
     def.definition = "  ";
-    def.exclusions = ["", " "];
-    const lines = rejections(def);
-    expect(lines).toContainEqual("definition: What does this pool cover?");
-    expect(lines).toContainEqual("exclusions: At least one exclusion — no pool covers everything.");
+    expect(rejections(def)).toContainEqual(
+      "definition: The terms are the pool's whole policy — write them.",
+    );
+  });
+
+  it("rejects a logo that is not an http(s) link", () => {
+    const def = chairmageddon();
+    if (def.marketing === undefined) throw new Error("fixture carries marketing");
+    def.marketing.logo = "ipfs://not-here";
+    expect(rejections(def)).toContainEqual(
+      "marketing.logo: The logo is an image link — http(s) only.",
+    );
   });
 
   it("rejects duplicate tier names and a proof-free pool", () => {

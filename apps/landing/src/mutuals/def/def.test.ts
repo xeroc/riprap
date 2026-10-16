@@ -49,10 +49,7 @@ const chairmageddon: DefInput = {
   marketing: {
     event: "Breakpoint 2026",
     blurb: "Every seat taken at the opening ceremony — and you stood the whole thing.",
-    odds: [
-      ["They schedule enough seats", "unlikely"],
-      ["You stood the whole ceremony", "worth $40"],
-    ],
+    logo: "https://riprap.xyz/pools/chairmageddon/logo.svg",
     share: "Standing through the opening ceremony at Breakpoint — worth $40.",
     smallestPayout: 40, // data.ts §5: the flat $40 payout is the only success payment
   },
@@ -205,9 +202,7 @@ describe("riprap-def/v1 — worked vectors", () => {
           label: "Standing evidence"
       marketing:
         blurb: "Every seat taken at the opening ceremony — and you stood the whole thing."
-        odds:
-        - [ "They schedule enough seats", "unlikely" ]
-        - [ "You stood the whole ceremony", "worth $40" ]
+        logo: "https://riprap.xyz/pools/chairmageddon/logo.svg"
         share: "Standing through the opening ceremony at Breakpoint — worth $40."
         event: "Breakpoint 2026"
         smallestPayout: 40
@@ -690,15 +685,17 @@ describe("riprap-def/v1 — validation matrix (HANDOFF §3/§6)", () => {
     ).toContainEqual({ code: "bad-slot", slot: "01-ticket.pdf", reason: "empty-optional" });
   });
 
-  it("marketing fields are non-empty, odds rows are pairs, smallestPayout > 0", () => {
+  it("marketing fields are non-empty, logo is an http(s) link, smallestPayout > 0", () => {
     expect(validateFrontmatter({ ...baseDef(), marketing: { blurb: " " } })).toContainEqual({
       code: "bad-marketing",
       field: "blurb",
       reason: "empty",
     });
-    expect(validateFrontmatter({ ...baseDef(), marketing: { odds: [["x", " "]] } })).toContainEqual(
-      { code: "bad-marketing", field: "odds[0]", reason: "bad-odds-row" },
-    );
+    expect(validateFrontmatter({ ...baseDef(), marketing: { logo: "not-a-url" } })).toContainEqual({
+      code: "bad-marketing",
+      field: "logo",
+      reason: "bad-url",
+    });
     expect(validateFrontmatter({ ...baseDef(), marketing: { smallestPayout: 0 } })).toContainEqual({
       code: "bad-marketing",
       field: "smallestPayout",

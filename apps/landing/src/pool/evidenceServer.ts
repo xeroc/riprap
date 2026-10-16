@@ -52,3 +52,30 @@ export function useEvidenceDaemonUrl(): string {
     evidenceDaemonUrlsFromEnv(import.meta.env as unknown as EvidenceDaemonEnv),
   );
 }
+
+// ---------------------------------------------------------------------------
+// Evidence operator (2026-10-16 founder call): the wizard no longer lets an
+// author customize the operator — it resolves per cluster like the daemon
+// URL. No operator is published yet, so every cluster defaults to unset ("" =
+// the creator's wallet, EVENT-MUTUAL §7 v1); the moment the daemon publishes
+// its operator key, pin it here or via env per cluster.
+// ---------------------------------------------------------------------------
+
+/** The active cluster's configured evidence operator pubkey, "" when the
+ * cluster has none (the deploy falls back to the creator's wallet). */
+export function evidenceOperatorForCluster(
+  clusterId: string | null | undefined,
+  env: EvidenceDaemonEnv,
+): string {
+  if (clusterId === "solana:mainnet" || clusterId === "solana:mainnet-beta") {
+    return env.VITE_EVIDENCE_OPERATOR_MAINNET ?? "";
+  }
+  if (clusterId === "solana:localnet") return env.VITE_EVIDENCE_OPERATOR_LOCALNET ?? "";
+  return env.VITE_EVIDENCE_OPERATOR_DEVNET ?? "";
+}
+
+/** The connected cluster's evidence operator ("" = the creator's wallet). */
+export function useClusterEvidenceOperator(): string {
+  const { cluster } = useCluster();
+  return evidenceOperatorForCluster(cluster?.id, import.meta.env as EvidenceDaemonEnv);
+}
