@@ -1,11 +1,11 @@
 ---
 # riprap-9bh4
 title: 'User-defined mutuals: browser wizard + def-driven dynamic mutuals'
-status: todo
+status: completed
 type: milestone
 priority: high
 created_at: 2026-10-15T07:59:12Z
-updated_at: 2026-10-15T07:59:12Z
+updated_at: 2026-10-15T13:50:06Z
 ---
 
 Anyone authors and deploys a mutual from the browser; no app code per mutual.
