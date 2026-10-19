@@ -183,29 +183,6 @@ export function PoolPageShell({
           </Settle>
         </SectionBand>
 
-        {/* not covered — §4, the characterful lines */}
-        <SectionBand
-          id="exclusions"
-          label={bounty ? "doesn't qualify" : "not covered"}
-          tone="ground"
-        >
-          <Settle className="flex flex-col gap-(--riprap-space-xl)">
-            <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
-              {bounty ? "Doesn't qualify." : "Not covered."}
-            </h2>
-            <ul className="flex max-w-3xl flex-col">
-              {c.exclusions.map((line) => (
-                <li
-                  key={line}
-                  className="border-t border-hairline py-3 leading-relaxed text-body last:border-b last:border-hairline [font:var(--riprap-body-sm)]"
-                >
-                  {line}
-                </li>
-              ))}
-            </ul>
-          </Settle>
-        </SectionBand>
-
         {/* claims — §7 proof list, fee, jury */}
         <SectionBand id="claims" label="claims" tone="soft">
           <Settle className="flex flex-col gap-(--riprap-space-xl)">
@@ -235,23 +212,26 @@ export function PoolPageShell({
         </SectionBand>
 
         {/* the math — §10 as a receipt */}
-        <SectionBand id="math" label="the math" tone="ground">
-          <Settle className="flex flex-col gap-(--riprap-space-xl)">
-            <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
-              The math, on the doc's example.
-            </h2>
-            <div className="max-w-md">
-              <WorkedExampleReceipt
-                label="worked example"
-                lines={c.example.lines}
-                total={c.example.total}
-              />
-            </div>
-            <p className="max-w-3xl leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-              {c.example.note}
-            </p>
-          </Settle>
-        </SectionBand>
+        {c.example.lines.length > 0 && (
+          <SectionBand id="math" label="the math" tone="ground">
+            <p>{JSON.stringify(c.example)}</p>
+            <Settle className="flex flex-col gap-(--riprap-space-xl)">
+              <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
+                The math, on the doc's example.
+              </h2>
+              <div className="max-w-md">
+                <WorkedExampleReceipt
+                  label="worked example"
+                  lines={c.example.lines}
+                  total={c.example.total}
+                />
+              </div>
+              <p className="max-w-3xl leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
+                {c.example.note}
+              </p>
+            </Settle>
+          </SectionBand>
+        )}
 
         {/* the end — §8/§9 + the draft caveat */}
         <SectionBand id="end" label="the end" tone="soft">

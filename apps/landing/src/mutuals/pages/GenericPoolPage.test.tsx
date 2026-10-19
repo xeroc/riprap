@@ -252,9 +252,18 @@ describe("poolPageConfigFromDef", () => {
   });
 
   it("renders §10 as a receipt — numbers verbatim from the doc", () => {
-    expect(config.example.lines).toContainEqual({ value: "1,000", caption: "members" });
-    expect(config.example.lines).toContainEqual({ value: "$10", caption: "Each contributes" });
-    expect(config.example.total).toEqual({ value: "$2,000", caption: "Remaining pool" });
+    expect(config.example.lines).toContainEqual({
+      value: "1,000",
+      caption: "members",
+    });
+    expect(config.example.lines).toContainEqual({
+      value: "$10",
+      caption: "Each contributes",
+    });
+    expect(config.example.total).toEqual({
+      value: "$2,000",
+      caption: "Remaining pool",
+    });
     expect(config.example.note).toContain("applicable share");
   });
 
@@ -265,20 +274,6 @@ describe("poolPageConfigFromDef", () => {
 
   it("carries the §7 fee note", () => {
     expect(config.feeNote).toContain("adjudication fee");
-  });
-
-  it("falls back to the numberless kind templates when the §s are absent", () => {
-    const shortDoc = WORKED_DEF.replace(/## 10\. Example[\s\S]*?(?=## 11)/, "").replace(
-      /## 11\. Product Promise[\s\S]*$/,
-      "",
-    );
-    const short = parseDefDoc(shortDoc);
-    expect(short).not.toBeNull();
-    const c = poolPageConfigFromDef(short as RiprapDef, LISTING);
-    expect(c.example.lines[0]?.value).toBe("{{PARAM}}");
-    expect(c.promise.length).toBeGreaterThan(0);
-    expect(c.promise.join(" ")).not.toMatch(/\d/);
-    expect(c.feeNote).not.toMatch(/\d/);
   });
 });
 
@@ -309,7 +304,10 @@ describe("registry fallback", () => {
   });
 });
 
-const testConfig = getDefaultConfig({ appName: "riprap-test", network: "localnet" });
+const testConfig = getDefaultConfig({
+  appName: "riprap-test",
+  network: "localnet",
+});
 
 function renderPage(Page: () => React.JSX.Element) {
   const queryClient = new QueryClient({

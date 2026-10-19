@@ -27,8 +27,6 @@ import type { MutualListing } from "../types";
 import { GenericPoolHero } from "./GenericPoolHero";
 import { type PoolPageConfig, PoolPageShell } from "./PoolPageShell";
 
-const PARAM = "{{PARAM}}";
-
 /** §11 promise defaults — kind-templated, numberless (zero-numbers law). */
 const KIND_PROMISE: Record<RiprapDef["kind"], string[]> = {
   mutual: [
@@ -71,12 +69,18 @@ function receiptPairs(body: string): { value: string; caption: string }[] {
     }
     const colon = bold.lastIndexOf(": ");
     if (colon !== -1) {
-      pairs.push({ value: bold.slice(colon + 2), caption: bold.slice(0, colon) });
+      pairs.push({
+        value: bold.slice(colon + 2),
+        caption: bold.slice(0, colon),
+      });
       continue;
     }
     const lead = /^([\d,$.\s×–—/-]+?)\s+(.+)$/.exec(bold);
     if (lead !== null) {
-      pairs.push({ value: (lead[1] ?? "").trim(), caption: (lead[2] ?? "").trim() });
+      pairs.push({
+        value: (lead[1] ?? "").trim(),
+        caption: (lead[2] ?? "").trim(),
+      });
     }
   }
   return pairs;
@@ -146,9 +150,9 @@ export function poolPageConfigFromDef(def: RiprapDef, listing: MutualListing): P
     proof: def.proof.map((p) => p.label ?? p.slot),
     feeNote,
     example: example ?? {
-      lines: [{ value: PARAM, caption: "the doc's example" }],
-      total: { value: PARAM, caption: "outcome" },
-      note: "The worked example renders from the terms doc.",
+      lines: [],
+      total: { value: undefined, caption: undefined },
+      note: "",
     },
     endNote: (end !== null ? paragraphs(end.body)[0] : undefined) ?? kindEndNote(def.kind),
     caveat: "Terms are the doc's, verbatim — the on-chain policy hash pins them.",
