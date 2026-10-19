@@ -3,7 +3,6 @@
 // modules in src/pool/ and src/app/); this route stays Solana-free forever.
 
 import { SiteNav } from "./components/SiteNav";
-import { Compare } from "./sections/Compare";
 import { Faq } from "./sections/Faq";
 import { FinalCta } from "./sections/FinalCta";
 import { Footer } from "./sections/Footer";
@@ -23,7 +22,6 @@ export function App() {
         <Mutuals />
         <OnChain />
         <Mechanism />
-        <Compare />
         <Heritage />
         <Faq />
         <Supporters />

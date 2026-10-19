@@ -25,7 +25,6 @@ export const HEADLINES = [
   "Pooled cover",
   "Mutuals on Solana",
   "Payout pools",
-  "On-chain insurance",
   "P2P purpose pools",
 ] as const;
 

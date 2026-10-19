@@ -10,7 +10,7 @@ import { Settle } from "../components/Settle";
 const FAQS = [
   {
     q: "Is this insurance?",
-    a: "It's a mutual — the original form of insurance: members' money in, members' claims out, peers deciding. What it isn't is a policy from a company: no underwriting desk, no reserves, no company keeping the difference. The pool never pays more than it holds. If you need regulated insurance — licensed, with a guarantee fund behind it — buy insurance. This is a different thing with a written, narrow shape.",
+    a: "It's a purpose pool, much more similar to a Mutual — the original form of insurance: members' money in, members' claims out, peers deciding. What it isn't is a policy from a company: no underwriting desk, no reserves, no company keeping the difference. The pool never pays more than it holds. If you need regulated insurance — licensed, with a guarantee fund behind it — buy insurance. This is a different thing with a written, narrow shape.",
   },
   {
     q: "Who holds the money, and can the Riprap team move it?",
