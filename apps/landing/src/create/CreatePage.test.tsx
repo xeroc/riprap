@@ -10,9 +10,11 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sendInstruction } from "../shared/transaction";
 import { CreatePage } from "./CreatePage";
+import { emptyDraft, saveDraft } from "./draft";
 
-const { walletState } = vi.hoisted(() => ({
+const { walletState, clusterState } = vi.hoisted(() => ({
   walletState: { isConnected: false, account: null as string | null },
+  clusterState: { cluster: null as { id: string } | null },
 }));
 
 vi.mock("@riprap/hanse", async (importOriginal) => {
@@ -29,7 +31,7 @@ vi.mock("@solana/connector", async (importOriginal) => {
     ...actual,
     useWallet: () => walletState,
     useKitTransactionSigner: () => ({ signer: null }),
-    useCluster: () => ({ clusters: [], cluster: null, setCluster: vi.fn() }),
+    useCluster: () => ({ clusters: [], cluster: clusterState.cluster, setCluster: vi.fn() }),
     useWalletConnectors: () => [],
     useConnectWallet: () => ({ connect: vi.fn() }),
     useDisconnectWallet: () => ({ disconnect: vi.fn() }),
@@ -131,6 +133,7 @@ beforeEach(() => {
   sendMock.mockClear();
   walletState.isConnected = false;
   walletState.account = null;
+  clusterState.cluster = null;
   localStorage.clear();
   vi.unstubAllGlobals();
 });
@@ -341,6 +344,19 @@ describe("#/create author → preview", () => {
     );
     expect(document.getElementById("proof-0-label")).toBeTruthy();
     expect(document.getElementById("def-name")).toBeNull();
+  });
+
+  it("the mint prefill follows the connected cluster — a mainnet draft resumed on devnet gets devnet USDC", async () => {
+    // Devnet USDC (SETUP.BLADE-POOL.md §4.2 example) — the deploy simulates
+    // AccountOwnedByWrongProgram on deposit_mint with the mainnet prefill.
+    const DEVNET_USDC = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+    clusterState.cluster = { id: "solana:devnet" };
+    const saved = emptyDraft();
+    saved.advanced.mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"; // the mainnet prefill
+    saveDraft(saved);
+    renderPage();
+    await walkValidForm();
+    await waitFor(() => expect(inputValue("adv-mint")).toBe(DEVNET_USDC));
   });
 });
 

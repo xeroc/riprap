@@ -122,7 +122,8 @@ export interface AdvancedConfig {
   maxDrawAttempts: number;
 }
 
-/** Mainnet USDC (the CLI README's example mint) — the wizard's default. */
+/** Mainnet USDC (the CLI README's example mint) — the mainnet prefill;
+ * mint.ts resolves the wizard's default per connected cluster. */
 export const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
 export function defaultAdvanced(): AdvancedConfig {

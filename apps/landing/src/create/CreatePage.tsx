@@ -47,6 +47,7 @@ import {
 } from "./doc";
 import { type CreateDraft, clearDraft, emptyDraft, loadDraft, saveDraft } from "./draft";
 import { MarketingPreview } from "./MarketingPreview";
+import { alignDepositMint, useClusterDepositMint } from "./mint";
 import { DeployStep, PublishStep, VerifyStep } from "./steps";
 
 /** The wizard machine: six guided authoring screens (one question each),
@@ -362,6 +363,19 @@ function CreateWizard() {
   const { isConnected, account } = useWallet();
   const walletConnected = isConnected && account !== null;
   const walletAccount = walletConnected ? account : null;
+  const clusterMint = useClusterDepositMint();
+
+  // The mint prefill follows the connected cluster (mint.ts): a blank or a
+  // stale other-cluster USDC in a resumed draft moves to this cluster's mint;
+  // a mint the author set is never touched.
+  useEffect(() => {
+    setDraft((current) => {
+      const mint = alignDepositMint(current.advanced.mint, clusterMint);
+      return mint === current.advanced.mint
+        ? current
+        : { ...current, advanced: { ...current.advanced, mint } };
+    });
+  }, [clusterMint]);
 
   // Fields-only persistence (copy doc § /create draft persistence).
   useEffect(() => {
@@ -531,7 +545,9 @@ function CreateWizard() {
               onDone={() => {
                 // A new policy is a new pool — reset the machine, fresh draft.
                 setDeployed(null);
-                setDraft(emptyDraft());
+                const fresh = emptyDraft();
+                if (clusterMint !== null) fresh.advanced.mint = clusterMint;
+                setDraft(fresh);
                 setSlugAuto(true);
                 setSeed(randomSeed());
                 setStep("identity");
