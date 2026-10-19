@@ -67,7 +67,7 @@ const AUTHOR_PHASES: readonly AuthorPhaseDef[] = [
   { id: "identity", label: "Identity", gate: ["name", "slug"] },
   { id: "coverage", label: "Coverage", gate: ["tiers"] },
   { id: "window", label: "Window", gate: ["period"] },
-  { id: "claims", label: "Claims", gate: ["definition", "roster", "proof"] },
+  { id: "claims", label: "Claims", gate: ["proof"] },
   { id: "marketing", label: "Marketing", gate: ["marketing"] },
   { id: "advanced", label: "Advanced", gate: ["advanced"] },
 ];
@@ -388,7 +388,7 @@ function CreateWizard() {
     let cancelled = false;
     void (async () => {
       try {
-        const doc = renderDefDoc(draft.def, draft.advanced);
+        const doc = renderDefDoc(draft.def);
         const hash = await sha256Hex(new TextEncoder().encode(doc));
         const hashBytes = Uint8Array.from({ length: 32 }, (_, i) =>
           Number.parseInt(hash.slice(i * 2, i * 2 + 2), 16),
@@ -907,40 +907,26 @@ function AuthorStep({
                   What a member shows to get paid.
                 </p>
                 <Field
-                  id="def-definition"
+                  id="def-body"
                   label={
                     def.kind === "mutual" ? "What this pool covers" : "What this pool pays for"
                   }
-                  rejections={errorsFor("definition")}
-                  note="The whole policy rides in this field — name the incident or act narrowly, draw its boundaries, and say what is not covered. The jury reads these terms verbatim."
+                  note="The whole policy body. Markdown is allowed. The fields above become the frontmatter; this body is everything after it — nothing is injected and nothing is required. The jury reads it verbatim."
                 >
                   {(props) => (
                     <Textarea
                       {...props}
-                      rows={8}
-                      value={def.definition}
-                      onChange={(e) => onPatchDef({ definition: e.target.value })}
+                      rows={14}
+                      value={def.body}
+                      onChange={(e) => onPatchDef({ body: e.target.value })}
                       placeholder={
                         def.kind === "mutual"
-                          ? "The peril, named plainly — one narrowly defined incident, where and when it counts, and what is not covered."
-                          : "The act the pool pays for — what must be verified, and what is not paid."
+                          ? "## What this pool covers\n\nThe peril, named plainly — one narrowly defined incident, where and when it counts.\n\n## Exclusions\n\nWhat is not covered."
+                          : "## What this pool pays for\n\nThe act, what must be verified, and what is not paid."
                       }
                     />
                   )}
                 </Field>
-                {def.kind === "bounty" ? (
-                  <Field id="def-roster" label="Roster — who or what qualifies">
-                    {(props) => (
-                      <Textarea
-                        {...props}
-                        rows={2}
-                        value={def.roster ?? ""}
-                        onChange={(e) => onPatchDef({ roster: e.target.value })}
-                        placeholder="The named people or acts the bounty pays for."
-                      />
-                    )}
-                  </Field>
-                ) : null}
               </Band>
               <Band label="Proof">
                 {def.proof.map((slot, index) => (

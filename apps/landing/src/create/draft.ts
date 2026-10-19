@@ -14,9 +14,9 @@ export interface CreateDraft {
   advanced: AdvancedConfig;
 }
 
-/** The blank author form: one tier, one proof slot, the §12 preset, and
- *  no numbers of our own — the author prices their pool (validation gates
- *  until they do). */
+/** The blank author form: one tier, one proof slot, the §12 preset, no
+ *  numbers of our own, and an empty policy body (the author writes it;
+ *  nothing about it is required). */
 export function emptyDraft(): CreateDraft {
   return {
     def: {
@@ -27,8 +27,7 @@ export function emptyDraft(): CreateDraft {
       tiers: [{ name: "Basic", fee: 0, cap: 0 }],
       proof: [{ slot: "01-proof.pdf", kind: "file", label: "", verify: "" }],
       language: "en",
-      definition: "",
-      roster: "",
+      body: "",
     },
     advanced: defaultAdvanced(),
   };
@@ -37,10 +36,34 @@ export function emptyDraft(): CreateDraft {
 /** One wizard, one browser — no key parameter. */
 const DRAFT_KEY = "riprap:create";
 
+type LegacyDef = Partial<DefDoc> & { definition?: unknown; roster?: unknown };
+
+/** Pre-body drafts carried `definition` + an optional `roster`; fold both
+ *  into the one body and drop the old keys. Everything else is a spread. */
+function migrateDef(raw: LegacyDef | undefined, fallback: DefDoc): DefDoc {
+  if (raw === undefined) return fallback;
+  const { definition, roster, body: rawBody, ...rest } = raw;
+  const body =
+    typeof rawBody === "string" && rawBody !== ""
+      ? rawBody
+      : typeof definition === "string"
+        ? definition
+        : "";
+  const rosterText = typeof roster === "string" ? roster.trim() : "";
+  return {
+    ...fallback,
+    ...rest,
+    body:
+      rosterText === ""
+        ? body
+        : `${body}${body.trim() === "" ? "" : "\n\n"}Roster:\n\n${rosterText}`,
+  };
+}
+
 /** The draft with unknown-shape fields dropped — a corrupt or
- * foreign-version draft must never crash the wizard. A blank saved mint
- * is a pre-USDC-default draft's never-authored blank, not a choice: the
- * default fills it (the gate still catches anything the author breaks). */
+ *  foreign-version draft must never crash the wizard. A blank saved mint
+ *  is a pre-USDC-default draft's never-authored blank, not a choice: the
+ *  default fills it (the gate still catches anything the author breaks). */
 export function loadDraft(): CreateDraft {
   const base = emptyDraft();
   try {
@@ -49,8 +72,10 @@ export function loadDraft(): CreateDraft {
     const parsed = JSON.parse(raw) as Partial<CreateDraft>;
     const advanced = { ...base.advanced, ...parsed.advanced };
     if (advanced.mint === "") advanced.mint = base.advanced.mint;
+    const legacyDef =
+      typeof parsed.def === "object" && parsed.def !== null ? (parsed.def as LegacyDef) : undefined;
     return {
-      def: { ...base.def, ...parsed.def },
+      def: migrateDef(legacyDef, base.def),
       advanced,
     };
   } catch {

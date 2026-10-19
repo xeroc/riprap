@@ -1,7 +1,7 @@
 // doc.test.ts — the #/create doc core: canonical render determinism, the
-// kind word-maps, the §5 tier table and §7 economics provenance, the def
-// validation matrix, and the client-side mirrors of every on-chain gate
-// (initialize_mutual.rs — its own test vectors re-used where they exist).
+// free-form body, the frontmatter machine block, the def validation matrix,
+// and the client-side mirrors of every on-chain gate (initialize_mutual.rs —
+// its own test vectors re-used where they exist).
 
 import { describe, expect, it } from "vitest";
 
@@ -55,9 +55,13 @@ function chairmageddon(): DefDoc {
       logo: "https://riprap.xyz/pools/chairmageddon/logo.svg",
     },
     language: "en",
-    definition:
-      "Bodily injury from standing through the opening ceremony after every seat was taken.\n\nThe cover needs the whole ceremony stood, start to finish.",
-    roster: "",
+    body: [
+      "## What this pool covers",
+      "",
+      "Bodily injury from standing through the opening ceremony after every seat was taken.",
+      "",
+      "The cover needs the whole ceremony stood, start to finish.",
+    ].join("\n"),
   };
 }
 
@@ -86,9 +90,13 @@ function supercycle(): DefDoc {
       },
     ],
     language: "en",
-    definition:
+    body: [
+      "## What this pool pays for",
+      "",
       "Bring someone on the roster a hot drink they asked for — hand to hand, still hot, confirmed by them.",
-    roster: 'Lily Liu, Anatoly "Toly" Yakovenko, Raj Gokal',
+      "",
+      'Roster: Lily Liu, Anatoly "Toly" Yakovenko, Raj Gokal',
+    ].join("\n"),
   };
 }
 
@@ -100,19 +108,22 @@ function rejections(def: DefDoc, advanced = defaultAdvanced()): string[] {
   );
 }
 
+/** The body bytes after the closing frontmatter delimiter. */
+function bodyOf(doc: string): string {
+  return doc.slice(doc.indexOf("---\n\n") + 5);
+}
+
 // ─── render ─────────────────────────────────────────────────────────────────
 
 describe("renderDefDoc", () => {
   it("renders byte-identical output for the same input (mutual + bounty)", () => {
     for (const def of [chairmageddon(), supercycle()]) {
-      expect(renderDefDoc(def, defaultAdvanced())).toBe(
-        renderDefDoc(structuredClone(def), defaultAdvanced()),
-      );
+      expect(renderDefDoc(def)).toBe(renderDefDoc(structuredClone(def)));
     }
   });
 
   it("emits the exact frontmatter machine block (milestone HANDOFF §2)", () => {
-    const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
+    const doc = renderDefDoc(chairmageddon());
     const front = doc.split("---\n")[1] ?? "";
     expect(front).toContain('schema: "riprap-def/v1"');
     expect(front).toContain('kind: "mutual"');
@@ -125,52 +136,40 @@ describe("renderDefDoc", () => {
     expect(front).toContain('language: "en"'); // canonical renderer always stamps it
   });
 
-  it("§3 header follows the kind word-map", () => {
-    const mutualDoc = renderDefDoc(chairmageddon(), defaultAdvanced());
-    const bountyDoc = renderDefDoc(supercycle(), defaultAdvanced());
-    expect(mutualDoc).toContain("## 3. Covered Event");
-    expect(bountyDoc).toContain("## 3. Qualifying Delivery");
-    expect(bountyDoc).toContain("Roster:");
-  });
-
-  it("§5 tier table is verbatim from the doc's tiers", () => {
-    const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
-    expect(doc).toContain("## 5. Coverage and Price");
-    expect(doc).toContain("| Flat |");
-    expect(doc).toContain("up to $40");
-  });
-
-  it("§7 prose embeds the chosen economics once (§12 preset: 3 × $5 = $15)", () => {
-    const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
-    expect(doc).toContain("pre-paying an adjudication fee of **$15 USDC**");
-    expect(doc).toContain("A denied or invalid payout request forfeits the fee");
-  });
-
-  it("§4 names the exclusions the wizard folds into §3", () => {
-    const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
-    expect(doc).toContain("## 4. Exclusions");
-    expect(doc).toContain("- anything not named in §3");
-  });
-
-  it("every doc carries the 11 fixed § headers", () => {
+  it("renders the author's body verbatim after the frontmatter — no injected §s", () => {
     for (const def of [chairmageddon(), supercycle()]) {
-      const doc = renderDefDoc(def, defaultAdvanced());
-      for (let section = 1; section <= 11; section++) {
-        expect(doc).toMatch(new RegExp(`^## ${section}\\. `, "m"));
-      }
+      const doc = renderDefDoc(def);
+      expect(bodyOf(doc)).toBe(`${def.body}\n`);
+      expect(doc).not.toMatch(/^## \d+\. /m);
     }
   });
 
-  it("escapes double quotes in YAML scalars (roster with a nickname)", () => {
-    const doc = renderDefDoc(supercycle(), defaultAdvanced());
-    expect(doc).toContain("Roster:"); // body prose carries the roster verbatim
-    expect(doc).not.toContain('""Toly""'); // no unescaped quote pairs anywhere
+  it("accepts an empty body — the frontmatter is the whole document", () => {
+    const def = chairmageddon();
+    def.body = "";
+    const doc = renderDefDoc(def);
+    expect(bodyOf(doc)).toBe("");
+    expect(doc.endsWith("---\n\n")).toBe(true);
+  });
+
+  it("normalizes CRLF and trims edge whitespace in the body only", () => {
+    const def = chairmageddon();
+    def.body = "  first\r\n\r\nsecond  \n";
+    expect(bodyOf(renderDefDoc(def))).toBe("first\n\nsecond\n");
+  });
+
+  it("carries quotes in the body and in YAML scalars without corruption", () => {
+    const def = chairmageddon();
+    def.body = 'A "quoted" policy line.';
+    expect(bodyOf(renderDefDoc(def))).toBe('A "quoted" policy line.\n');
+    const front = renderDefDoc(def).split("---\n")[1] ?? "";
+    expect(front).not.toContain('""Toly""');
   });
 });
 
 describe("anchors", () => {
   it("policy_hash = sha256(utf8(doc)); domain_ref = the subaccord derivation", async () => {
-    const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
+    const doc = renderDefDoc(chairmageddon());
     const bytes = new TextEncoder().encode(doc);
     const hash = await sha256Hex(bytes);
     expect(hash).toMatch(/^[0-9a-f]{64}$/);
@@ -180,7 +179,19 @@ describe("anchors", () => {
     const ref = await domainRefHex(7n, hashBytes);
     expect(ref).toMatch(/^[0-9a-f]{64}$/);
     // pinned vector — any renderer change that moves the bytes moves this
-    expect(hash).toBe("dcb6b1d8c3201d14e618bd4f56e149ba05e5824b29edcbb33e7d9477142b725e");
+    expect(hash).toBe("87a907b4ff1633a2720a558c744c6ef819898bbdce26d04a74ea169c788733db");
+  });
+
+  it("hashes the whole document — frontmatter and body both move the hash", async () => {
+    const def = chairmageddon();
+    const base = await sha256Hex(new TextEncoder().encode(renderDefDoc(def)));
+    def.body = "different body";
+    const bodyMoved = await sha256Hex(new TextEncoder().encode(renderDefDoc(def)));
+    const renamed = chairmageddon();
+    renamed.name = "Chairmageddon II";
+    const frontMoved = await sha256Hex(new TextEncoder().encode(renderDefDoc(renamed)));
+    expect(bodyMoved).not.toBe(base);
+    expect(frontMoved).not.toBe(base);
   });
 });
 
@@ -192,6 +203,14 @@ describe("validateDef", () => {
     // (validateAdvanced carries it) — the worked vectors check the def alone.
     expect(validateDef(chairmageddon())).toEqual([]);
     expect(validateDef(supercycle())).toEqual([]);
+  });
+
+  it("never validates the body — empty and non-markdown bodies pass", () => {
+    const def = chairmageddon();
+    def.body = "  ";
+    expect(rejections(def)).toEqual([]);
+    def.body = "<script>alert(1)</script>";
+    expect(rejections(def)).toEqual([]);
   });
 
   it("rejects a tier whose cap is below its fee, naming the tier", () => {
@@ -210,14 +229,6 @@ describe("validateDef", () => {
     const def = chairmageddon();
     def.period.claimsClose = "2026-11-17";
     expect(rejections(def)).toContainEqual("period.claimsClose: Claims close after coverage ends.");
-  });
-
-  it("rejects an empty definition — the terms are the whole policy", () => {
-    const def = chairmageddon();
-    def.definition = "  ";
-    expect(rejections(def)).toContainEqual(
-      "definition: The terms are the pool's whole policy — write them.",
-    );
   });
 
   it("rejects a logo that is not an http(s) link", () => {

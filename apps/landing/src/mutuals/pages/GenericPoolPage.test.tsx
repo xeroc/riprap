@@ -1,8 +1,9 @@
 // The generic def-driven pool surface (epic riprap-hs4r): registry fallback,
-// the def → PoolPageConfig projection (doc bands from the § body, numbers
-// verbatim from the doc bytes), the derived listing, the kind-templated hero
-// defaults, and the honest terminal states. Structural + data-binding only —
-// copy is the def's and the kind templates'.
+// the def → PoolPageConfig projection (legacy numbered §s and the free-form
+// body, numbers verbatim from the doc bytes), the derived listing, the
+// platform-wide promise/end note, the kind-templated hero defaults, and the
+// honest terminal states. Structural + data-binding only — copy is the def's
+// and the kind templates'.
 import { AppProvider, getDefaultConfig } from "@solana/connector";
 import type { Address } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -83,7 +84,7 @@ Filing requires the member's own wallet. The adjudication fee is pre-paid from t
 
 ## 8. Pool Dissolution
 
-After the claim window closes, the remaining balance returns to eligible members and the mutual is dissolved.
+Old winding-up words that the platform note must ignore.
 
 ## 10. Example
 
@@ -100,12 +101,45 @@ A member who contributed $10 therefore receives their applicable share of the un
 
 ## 11. Product Promise
 
-**Join a temporary community mutual.**
-**Pay a fixed amount.**
+**Old promise line.**
 `;
 
 /** The marketing-less variant — kind templates fill every absent field. */
 const NO_MARKETING_DEF = WORKED_DEF.replace(/marketing:\n(?: {2}.*\n)+/, "");
+
+/** A free-form body: no numbered §s, its own `## Exclusions`, and a tagline
+ *  fallback that starts at the first prose paragraph. */
+const FREE_FORM_DEF = `---
+schema: "riprap-def/v1"
+kind: "mutual"
+slug: "free-form"
+name: "Free Form"
+period:
+  start: "2026-11-15"
+  end: "2026-11-17"
+  claims_close: "2026-11-24"
+tiers:
+  - name: "Flat"
+    fee: 10
+    cap: 40
+proof:
+  - slot: "01-ticket.pdf"
+    kind: "file"
+    label: "Ticket"
+---
+## Covered event
+
+A free-form peril, stated plainly. A second sentence that must not be the tagline.
+
+## Exclusions
+
+- Excluded one.
+- Excluded two.
+
+## Anything else
+
+The body rides whole.
+`;
 
 /** A pre-canonical #/create doc: bare enum tokens, `smallest_payout`, and
  * the old 10-§ body (exclusions folded into §3). */
@@ -175,6 +209,7 @@ These terms govern.
 const ADDR = "5Yo1BKU8Vy9mRRwXqrjJhtw4CFmfkZiZoW7VSTj5huEq" as Address;
 const DEF = parseDefDoc(WORKED_DEF) as RiprapDef;
 const NO_MKT_DEF = parseDefDoc(NO_MARKETING_DEF) as RiprapDef;
+const FREE_FORM = parseDefDoc(FREE_FORM_DEF) as RiprapDef;
 const LISTING = listingFromDef(DEF, ADDR);
 
 describe("parseDefDoc", () => {
@@ -224,6 +259,13 @@ describe("listingFromDef", () => {
     expect(listing.tagline).not.toContain("means:");
     expect(listing.smallestPayout).toBe(40); // the flat tier's cap
   });
+
+  it("falls back to the body's first prose paragraph for a free-form def", () => {
+    const listing = listingFromDef(FREE_FORM, ADDR);
+    expect(listing.tagline).toBe("A free-form peril, stated plainly.");
+    expect(listing.tagline).not.toContain("second sentence");
+    expect(listing.smallestPayout).toBe(40);
+  });
 });
 
 describe("poolPageConfigFromDef", () => {
@@ -252,24 +294,39 @@ describe("poolPageConfigFromDef", () => {
   });
 
   it("renders §10 as a receipt — numbers verbatim from the doc", () => {
-    expect(config.example.lines).toContainEqual({
+    const example = config.example;
+    if (example === undefined) throw new Error("the legacy §10 carries figures");
+    expect(example.lines).toContainEqual({
       value: "1,000",
       caption: "members",
     });
-    expect(config.example.lines).toContainEqual({
+    expect(example.lines).toContainEqual({
       value: "$10",
       caption: "Each contributes",
     });
-    expect(config.example.total).toEqual({
+    expect(example.total).toEqual({
       value: "$2,000",
       caption: "Remaining pool",
     });
-    expect(config.example.note).toContain("applicable share");
+    expect(example.note).toContain("applicable share");
   });
 
-  it("renders §11 bold lines as the promise and §8 as the end note", () => {
-    expect(config.promise).toEqual(["Join a temporary community mutual.", "Pay a fixed amount."]);
-    expect(config.endNote).toContain("remaining balance returns to eligible members");
+  it("uses the platform promise and end note, never the doc's §11/§8", () => {
+    expect(config.promise).toContain("Join a temporary community pool.");
+    expect(config.promise.join("\n")).not.toContain("Old promise line");
+    expect(config.endNote).toContain("the remaining balance returns to eligible members");
+    expect(config.endNote).not.toContain("Old winding-up words");
+  });
+
+  it("renders a free-form body whole as markdown, with title-based exclusions", () => {
+    const free = poolPageConfigFromDef(FREE_FORM, listingFromDef(FREE_FORM, ADDR));
+    expect(free.terms).toBe(true);
+    expect(free.definition.trim()).toBe(FREE_FORM.body.trim());
+    expect(free.definition).toContain("## Anything else");
+    expect(free.definitionNotes).toEqual([]);
+    expect(free.exclusions).toEqual(["Excluded one.", "Excluded two."]);
+    expect(free.example).toBeUndefined();
+    expect(free.promise).toContain("Join a temporary community pool.");
   });
 
   it("carries the §7 fee note", () => {

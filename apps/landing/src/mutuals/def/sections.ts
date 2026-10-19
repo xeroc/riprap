@@ -1,49 +1,10 @@
-// riprap-def/v1 — the §-section layer: the fixed 11-§ header map (the
-// kind word-maps, milestone D2) and the inverse §-parser (body markdown
-// → § blocks) that feeds the def-resolution surfaces' doc bands. The
-// header inventory mirrors the first-party terms docs (Micro Mutual /
-// Micro Bounty, §1–§11); only the kind-varying titles swap:
-// Coverage Period/Bounty Period, Covered Event/Qualifying Delivery,
-// Coverage and Price/Bounty and Price, Pool/The Pot, Payout
-// Requests/Claims, Pool Dissolution/Winding Up.
+// riprap-def/v1 — the markdown heading layer. New defs are free-form: the
+// body is the author's whole policy, and only two lookups are ever made —
+// the legacy numbered `## N. Title` blocks (first-party 11-§ docs and
+// pre-canonical wizard drafts) and a title-matched `## Exclusions` block.
+// Everything else is rendered as the body.
 //
 // Pure module: no UI, no chain, no daemon calls.
-
-import type { PoolKind } from "../types";
-
-/** The terms body's fixed section count (§1–§11). */
-export const SECTION_COUNT = 11;
-
-/** The 11 section titles in § order, for one kind. */
-export function sectionTitles(kind: PoolKind): string[] {
-  return kind === "mutual"
-    ? [
-        "Product",
-        "Coverage Period",
-        "Covered Event",
-        "Exclusions",
-        "Coverage and Price",
-        "Pool",
-        "Payout Requests",
-        "Pool Dissolution",
-        "Economic Principle",
-        "Example",
-        "Product Promise",
-      ]
-    : [
-        "Product",
-        "Bounty Period",
-        "Qualifying Delivery",
-        "Exclusions",
-        "Bounty and Price",
-        "The Pot",
-        "Claims",
-        "Winding Up",
-        "Economic Principle",
-        "Example",
-        "Product Promise",
-      ];
-}
 
 /** One `## N. Title` block; `body` is the section's markdown with edge
  * whitespace and the canonical `---` separator stripped (whitespace inside
@@ -55,9 +16,8 @@ export interface DefSection {
 }
 
 /** Parse a §-body (splitDefDocument's `body`) into its § blocks, in
- * document order. Mechanical and total: no headers → []; header numbers
- * and titles are returned as found — structural expectations (11 §s,
- * kind-matching titles) are validate.ts's job, not this parser's.
+ * document order. Legacy shape only: the first-party 11-§ docs and
+ * pre-canonical wizard drafts. Mechanical and total: no headers → [].
  */
 const SECTION_HEADER = /^## (\d{1,2})\. (.*)$/;
 
@@ -80,21 +40,73 @@ export function parseSections(body: string): DefSection[] {
 
 /** Trim trailing blanks and the canonical `---` section separator off a
  * section's collected lines. */
+function finishLines(lines: string[]): string {
+  const out = [...lines];
+  while (out.length > 0 && out[out.length - 1].trim() === "") out.pop();
+  if (out.length > 0 && out[out.length - 1].trim() === "---") out.pop();
+  while (out.length > 0 && out[out.length - 1].trim() === "") out.pop();
+  return out.join("\n").trim();
+}
+
 function finish(section: { number: number; title: string; lines: string[] }): DefSection {
-  const lines = [...section.lines];
-  while (lines.length > 0 && lines[lines.length - 1].trim() === "") lines.pop();
-  if (lines.length > 0 && lines[lines.length - 1].trim() === "---") lines.pop();
-  while (lines.length > 0 && lines[lines.length - 1].trim() === "") lines.pop();
-  return { number: section.number, title: section.title, body: lines.join("\n").trim() };
+  return {
+    number: section.number,
+    title: section.title,
+    body: finishLines(section.lines),
+  };
+}
+
+/** One `## Heading` block — the free-form body's section shape. `title`
+ *  keeps any ordinal the author wrote (`4. Exclusions`), so a caller
+ *  matching a title must not care about the number. */
+export interface HeadingSection {
+  title: string;
+  body: string;
+}
+
+const HEADING = /^##\s+(.+?)\s*$/;
+const FENCE = /^\s*(?:```|~~~)/;
+
+/** Parse a markdown body into its `##` blocks, in document order. Headings
+ *  inside fenced code blocks are content, not sections. `body` is trimmed
+ *  with the canonical `---` separator stripped, same as parseSections. */
+export function parseHeadings(body: string): HeadingSection[] {
+  const sections: HeadingSection[] = [];
+  let current: { title: string; lines: string[] } | null = null;
+  let fenced = false;
+
+  for (const line of body.split("\n")) {
+    if (FENCE.test(line)) {
+      fenced = !fenced;
+      current?.lines.push(line);
+      continue;
+    }
+    const match = fenced ? null : HEADING.exec(line);
+    if (match !== null) {
+      if (current !== null) sections.push(finishHeading(current));
+      current = { title: (match[1] ?? "").replace(/\s+#+\s*$/, ""), lines: [] };
+    } else if (current !== null) {
+      current.lines.push(line);
+    }
+  }
+  if (current !== null) sections.push(finishHeading(current));
+  return sections;
+}
+
+function finishHeading(section: { title: string; lines: string[] }): HeadingSection {
+  return { title: section.title, body: finishLines(section.lines) };
+}
+
+/** The first `##` block whose title matches `pattern`, or null. */
+export function sectionByHeading(body: string, pattern: RegExp): HeadingSection | null {
+  return parseHeadings(body).find((section) => pattern.test(section.title)) ?? null;
 }
 
 // ---------------------------------------------------------------------------
-// §-access helpers (epic riprap-hs4r) — the doc-band reads: § lookup by
-// number and the markdown extractions (paragraphs, list items, quote
-// lines, bold lines) the generic page, the listing, and the packs derive
-// from. Sections are keyed by number, never title: the two kind word-maps
-// name the same § differently, so consumers cite §3/§4/§5/§7/§8/§10/§11
-// by number, per the first-party docs' shared skeleton.
+// Access helpers — the legacy doc-band reads: § lookup by number and the
+// markdown extractions (paragraphs, list items, quote lines) the generic
+// page, the listing, and the packs derive from. New defs are free-form;
+// these reads only find content when the author kept the old § shape.
 // ---------------------------------------------------------------------------
 
 /** The § block by number (null when the doc doesn't carry it). */
@@ -122,7 +134,7 @@ export function paragraphs(body: string): string[] {
 }
 
 /** List items (`- …` or `1. …`) of a § body, in order, markdown stripped —
- *  the §3 definition notes, the §4 exclusions, the §11 promise lines. */
+ *  the legacy §3 definition notes and §4 exclusions. */
 export function listItems(body: string): string[] {
   const items: string[] = [];
   for (const line of body.split("\n")) {
@@ -143,14 +155,4 @@ export function quoteLines(body: string): string[] {
     .filter((line) => line.startsWith(">"))
     .map((line) => stripMd(line))
     .filter((line) => line.length > 0);
-}
-
-/** Lines that are exactly one bold span (`**…**`) — the §11 promise lines
- *  and the §10 example figures. */
-export function boldLines(body: string): string[] {
-  return body
-    .split("\n")
-    .map((line) => /^\*\*(.+)\*\*$/.exec(line.trim()))
-    .filter((m): m is RegExpExecArray => m !== null)
-    .map((m) => (m[1] ?? "").trim());
 }

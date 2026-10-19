@@ -15,11 +15,11 @@ import { Footer } from "../../sections/Footer";
 import { listingFromDef } from "../def/listing";
 import type { RiprapDef } from "../def/schema";
 import {
-  boldLines,
   listItems,
   paragraphs,
   parseSections,
   quoteLines,
+  sectionByHeading,
   sectionByNo,
 } from "../def/sections";
 import { usePoolDef } from "../def/usePoolDef";
@@ -27,7 +27,8 @@ import type { MutualListing } from "../types";
 import { GenericPoolHero } from "./GenericPoolHero";
 import { type PoolPageConfig, PoolPageShell } from "./PoolPageShell";
 
-/** §11 promise defaults — kind-templated, numberless (zero-numbers law). */
+/** Platform-wide promise lines — hard-coded, numberless (zero-numbers law),
+ *  never synthesized from the doc. */
 const KIND_PROMISE: Record<RiprapDef["kind"], string[]> = {
   mutual: [
     "Join a temporary community pool.",
@@ -45,8 +46,8 @@ const KIND_PROMISE: Record<RiprapDef["kind"], string[]> = {
   ],
 };
 
-/** §8 winding-up default — same shape as the hand-written pages' endNotes,
- *  numberless. */
+/** Platform-wide winding-up note — same shape as the hand-written pages'
+ *  endNotes, numberless, never synthesized from the doc. */
 function kindEndNote(kind: RiprapDef["kind"]): string {
   return kind === "bounty"
     ? "After the event, the claim window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently."
@@ -87,9 +88,9 @@ function receiptPairs(body: string): { value: string; caption: string }[] {
 }
 
 /** The §10 worked example — receipt lines, the "remaining" figure as the
- *  total, the closing prose as the note. Null when the § carries no figures;
- *  the caller renders the {{PARAM}} receipt instead. */
-function exampleFromDef(def: RiprapDef): PoolPageConfig["example"] | null {
+ *  total, the closing prose as the note. Null when the legacy § is absent
+ *  or carries no figures; a free-form doc gets no receipt. */
+function exampleFromDef(def: RiprapDef): NonNullable<PoolPageConfig["example"]> | null {
   const section = sectionByNo(parseSections(def.body), 10);
   if (section === null) return null;
   const pairs = receiptPairs(section.body);
@@ -99,15 +100,22 @@ function exampleFromDef(def: RiprapDef): PoolPageConfig["example"] | null {
   return { lines: pairs, total, note };
 }
 
-/** §3 → the verbatim definition (its blockquote, else the first paragraph)
- *  plus the definition notes (list items + the remaining paragraphs; the
- *  `**X** means:` intro drops when the quote carried the definition). */
+/** Legacy §3 → the verbatim definition (its blockquote, else the first
+ *  paragraph) plus the definition notes. A free-form body has no §3: the
+ *  whole body is the terms, rendered as markdown (`terms: true`). */
 function definitionFromDef(def: RiprapDef): {
   definition: string;
   definitionNotes: string[];
+  terms: boolean;
 } {
   const section = sectionByNo(parseSections(def.body), 3);
-  if (section === null) return { definition: def.name, definitionNotes: [] };
+  if (section === null) {
+    return {
+      definition: def.body.trim() !== "" ? def.body : def.name,
+      definitionNotes: [],
+      terms: true,
+    };
+  }
   const quote = quoteLines(section.body)[0] ?? null;
   const paras = paragraphs(section.body);
   const lead = /means:$/.test(paras[0] ?? "");
@@ -116,21 +124,27 @@ function definitionFromDef(def: RiprapDef): {
   return {
     definition,
     definitionNotes: [...listItems(section.body), ...paras.slice(drop)],
+    terms: false,
   };
 }
 
+/** The doc's `## Exclusions` block (numbered or not), list order unless the
+ *  author wrote prose. */
+function exclusionsFromDef(def: RiprapDef): string[] {
+  const section = sectionByHeading(def.body, /exclusions?/i);
+  if (section === null) return [];
+  const items = listItems(section.body);
+  return items.length > 0 ? items : paragraphs(section.body);
+}
+
 /** The def → PoolPageConfig projection. Doc bands carry the doc's own numbers
- *  (terms, not UI); every kind-templated default is numberless. */
+ *  (terms, not UI); the promise and end note are platform-wide, never
+ *  synthesized from the doc. */
 export function poolPageConfigFromDef(def: RiprapDef, listing: MutualListing): PoolPageConfig {
   const sections = parseSections(def.body);
   const covered = definitionFromDef(def);
-  const exclusions = sectionByNo(sections, 4);
   const claims = sectionByNo(sections, 7);
-  const end = sectionByNo(sections, 8);
   const example = exampleFromDef(def);
-  const promise11 = sectionByNo(sections, 11);
-  const promiseLines = promise11 !== null ? boldLines(promise11.body) : [];
-  const promise = promiseLines.length > 0 ? promiseLines : KIND_PROMISE[def.kind];
   const feeNote =
     (claims !== null
       ? paragraphs(claims.body).find((p) => /adjudication fee/i.test(p))
@@ -141,20 +155,17 @@ export function poolPageConfigFromDef(def: RiprapDef, listing: MutualListing): P
     event: def.marketing?.event ?? "Community",
     kind: def.kind,
     tagline: listing.tagline,
-    promise,
+    promise: KIND_PROMISE[def.kind],
     tiers: def.tiers.map((t) => ({ name: t.name, fee: t.fee, cap: t.cap })),
     slug: def.slug,
     definition: covered.definition,
     definitionNotes: covered.definitionNotes,
-    exclusions: exclusions !== null ? listItems(exclusions.body) : [],
+    terms: covered.terms,
+    exclusions: exclusionsFromDef(def),
     proof: def.proof.map((p) => p.label ?? p.slot),
     feeNote,
-    example: example ?? {
-      lines: [],
-      total: { value: undefined, caption: undefined },
-      note: "",
-    },
-    endNote: (end !== null ? paragraphs(end.body)[0] : undefined) ?? kindEndNote(def.kind),
+    example: example ?? undefined,
+    endNote: kindEndNote(def.kind),
     caveat: "Terms are the doc's, verbatim — the on-chain policy hash pins them.",
   };
 }

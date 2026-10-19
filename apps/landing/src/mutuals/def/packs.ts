@@ -13,15 +13,16 @@
 import type { AdjudicationPolicy, PolicyDocumentSlot } from "../../adjudicate/policy";
 import type { ClaimFlow, DocSlot } from "../../app/file-claim/flow";
 import type { RiprapDef } from "./schema";
-import { listItems, parseSections, sectionByNo } from "./sections";
+import { listItems, paragraphs, sectionByHeading } from "./sections";
 
-/** §7 proof slots, doc order — the one list both packs derive from: the
+/** Def proof slots, doc order — the one list both packs derive from: the
  *  claimant's wizard files it, the juror's session verifies it, and the
  *  manifest's canonical paths are its paths (slot parity by construction). */
 function docSlots(def: RiprapDef): DocSlot[] {
   return def.proof.map((p) => ({
     path: p.slot,
     label: p.label ?? p.slot,
+    ...(p.verify !== undefined && p.verify.trim() !== "" ? { verify: p.verify } : {}),
     // url slots mark presence — the raw value is unused (flow.ts DocSlot)
     url: p.kind === "url" ? "url" : undefined,
   }));
@@ -37,11 +38,14 @@ function jurorSlots(def: RiprapDef): PolicyDocumentSlot[] {
   }));
 }
 
-/** The doc's §4 exclusions, list order — the step-1 summary and the juror
- *  checklist read the same lines. */
+/** The doc's `## Exclusions` block (numbered or not), list order unless
+ *  the author wrote prose — the step-1 summary and the juror checklist
+ *  read the same lines. */
 function exclusionLines(def: RiprapDef): string[] {
-  const section = sectionByNo(parseSections(def.body), 4);
-  return section === null ? [] : listItems(section.body);
+  const section = sectionByHeading(def.body, /exclusions?/i);
+  if (section === null) return [];
+  const items = listItems(section.body);
+  return items.length > 0 ? items : paragraphs(section.body);
 }
 
 /** Spelled counts keep the packs' voice; anything past nine reads "All". */
@@ -62,13 +66,19 @@ export function buildClaimFlow(def: RiprapDef): ClaimFlow {
       "The proofs that name a person must all name you — the person on this membership.",
     screenChecks: bounty
       ? [
-          { key: "act", label: "I performed the qualifying act, as the terms define it" },
+          {
+            key: "act",
+            label: "I performed the qualifying act, as the terms define it",
+          },
           { key: "window", label: "It happened inside the covered period" },
           { key: "area", label: "It happened inside the covered area" },
           { key: "member", label: "I was an active member when it happened" },
         ]
       : [
-          { key: "event", label: "The covered event happened to me, as the terms define it" },
+          {
+            key: "event",
+            label: "The covered event happened to me, as the terms define it",
+          },
           { key: "window", label: "It happened inside the covered period" },
           { key: "area", label: "It happened inside the covered area" },
           { key: "member", label: "I was an active member when it happened" },

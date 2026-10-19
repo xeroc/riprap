@@ -34,6 +34,40 @@ describe("create draft", () => {
     expect(loadDraft().def.name).toBe("Chairmageddon");
   });
 
+  it("migrates a pre-body draft's definition + roster into the body and drops old keys", () => {
+    localStorage.setItem(
+      "riprap:create",
+      JSON.stringify({
+        def: {
+          ...emptyDraft().def,
+          body: undefined,
+          definition: "A peril, stated plainly.",
+          roster: "Lily Liu, Anatoly Yakovenko",
+        },
+      }),
+    );
+    const loaded = loadDraft();
+    expect(loaded.def.body).toBe(
+      "A peril, stated plainly.\n\nRoster:\n\nLily Liu, Anatoly Yakovenko",
+    );
+    expect("definition" in loaded.def).toBe(false);
+    expect("roster" in loaded.def).toBe(false);
+  });
+
+  it("keeps an authored body over the legacy definition", () => {
+    localStorage.setItem(
+      "riprap:create",
+      JSON.stringify({
+        def: {
+          ...emptyDraft().def,
+          body: "## Authored body",
+          definition: "The old field.",
+        },
+      }),
+    );
+    expect(loadDraft().def.body).toBe("## Authored body");
+  });
+
   it("never crashes on corrupt or foreign drafts (file-claim precedent: loose spread)", () => {
     localStorage.setItem("riprap:create", "{not json");
     localStorage.setItem("riprap:create", JSON.stringify({ def: { name: 7 }, nope: true }));

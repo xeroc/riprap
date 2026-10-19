@@ -11,13 +11,19 @@ import { claimFlowFor } from "../../app/file-claim/flows/index";
 import { buildAdjudicationPolicy, buildClaimFlow } from "./packs";
 import type { RiprapDef } from "./schema";
 
-/** A mutual def with §4 exclusions and per-slot verify lines in the body. */
+/** A mutual def with an `## Exclusions` block and per-slot verify lines in
+ *  the body. */
 const MUTUAL_DEF: RiprapDef = {
   schema: "riprap-def/v1",
   kind: "mutual",
   slug: "chairmageddon",
   name: "Chairmageddon",
-  period: { start: "2026-11-15", end: "2026-11-17", claims_close: "2026-11-24", venue: "Olympia" },
+  period: {
+    start: "2026-11-15",
+    end: "2026-11-17",
+    claims_close: "2026-11-24",
+    venue: "Olympia",
+  },
   tiers: [{ name: "Flat", fee: 10, cap: 40 }],
   proof: [
     {
@@ -31,7 +37,7 @@ const MUTUAL_DEF: RiprapDef = {
   ],
   language: "en",
   body: [
-    "## 4. Exclusions",
+    "## Exclusions",
     "",
     "The following are not covered:",
     "",
@@ -54,7 +60,12 @@ describe("buildClaimFlow", () => {
 
   it("derives the document slots from the def's proof list — url kind marks the url slot", () => {
     expect(flow.documentSlots).toEqual([
-      { path: "01-ticket.pdf", label: "your event ticket", url: undefined },
+      {
+        path: "01-ticket.pdf",
+        label: "your event ticket",
+        verify: "a ticket in your own name",
+        url: undefined,
+      },
       { path: "02-id.jpg", label: "government photo ID", url: undefined },
       { path: "03-post.url", label: "the public post about it", url: "url" },
     ]);
@@ -72,7 +83,7 @@ describe("buildClaimFlow", () => {
     expect(bounty.manifestTitle("2026-11-15")).toBe("Bounty claim — Hot Drink, 2026-11-15");
   });
 
-  it("reads the exclusions line off the doc's §4", () => {
+  it("reads the exclusions line off the doc's Exclusions heading (number optional)", () => {
     expect(flow.exclusionsLine).toBe(
       "Not covered: Seats available when the member arrived., Members who sat at any point during the ceremony..",
     );

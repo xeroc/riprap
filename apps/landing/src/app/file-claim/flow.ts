@@ -18,6 +18,9 @@ export interface DocSlot {
   path: string;
   /** The member-facing plain name (wizard step 3 row label). */
   label: string;
+  /** What the jury checks in this slot — the def's optional per-slot
+   *  `verify` line. Omitted by the first-party packs. */
+  verify?: string;
   /** URL intake: the member pastes a link instead of attaching a file.
    *  PRESENCE marks the slot a url slot — the field's value is unused.
    *  The manifest serializes it as a URL-path entry, `path: "<raw link>"`

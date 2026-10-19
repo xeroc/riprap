@@ -167,7 +167,9 @@ export function StepIncident({
               id={`screen-${field.key}`}
               checked={draft.screen[field.key]}
               onChange={(e) =>
-                onChange({ screen: { ...draft.screen, [field.key]: e.target.checked } })
+                onChange({
+                  screen: { ...draft.screen, [field.key]: e.target.checked },
+                })
               }
             />
             <span>{field.label}</span>
@@ -333,6 +335,11 @@ export function StepEvidence({
                   </label>
                 )}
               </span>
+              {slot.verify ? (
+                <p className="w-full text-stone [font:var(--riprap-body-sm)]">
+                  Jurors verify: <Prose text={slot.verify} />
+                </p>
+              ) : null}
               {intake?.error ? (
                 <p className="w-full text-sm text-error [font:var(--riprap-body-sm)]">
                   {intake.error}

@@ -121,8 +121,8 @@ async function walkValidForm(stopAt?: "marketing") {
   fill("period-end", "2027-03-03");
   fill("period-claims", "2027-03-10");
   stepContinue();
-  await atStep("def-definition");
-  fill("def-definition", "Bodily injury from standing through the opening ceremony.");
+  await atStep("def-body");
+  fill("def-body", "Bodily injury from standing through the opening ceremony.");
   fill("proof-0-label", "your event ticket");
   stepContinue();
   await atStep("marketing-headline");
@@ -169,7 +169,7 @@ describe("#/create author → preview", () => {
     );
     expect(document.getElementById("def-name")).toBeTruthy();
     // one question per screen: the claims prose waits on its own screen
-    expect(document.getElementById("def-definition")).toBeNull();
+    expect(document.getElementById("def-body")).toBeNull();
     // every authoring screen is a form with a footer that sticks to the
     // viewport bottom while the screen scrolls
     expect(document.querySelector('[data-slot="author-form"]')).toBeTruthy();
@@ -212,8 +212,8 @@ describe("#/create author → preview", () => {
     fill("period-end", "2027-03-03");
     fill("period-claims", "2027-03-10");
     stepContinue();
-    await atStep("def-definition");
-    fill("def-definition", "Bodily injury from standing through the opening ceremony.");
+    await atStep("def-body");
+    fill("def-body", "Bodily injury from standing through the opening ceremony.");
     fill("proof-0-label", "your event ticket");
     stepContinue();
     await atStep("marketing-headline");
@@ -225,7 +225,7 @@ describe("#/create author → preview", () => {
   it("the strip jumps to any author screen and the preview — never to deploy", async () => {
     renderPage();
     stop("Step 4 of 10: Claims").click();
-    await atStep("def-definition");
+    await atStep("def-body");
     expect(document.getElementById("def-name")).toBeNull();
     // back home through the same control, and the draft walks with it
     stop("Step 1 of 10: Identity").click();
@@ -332,8 +332,8 @@ describe("#/create author → preview", () => {
     fill("period-end", "2027-03-03");
     fill("period-claims", "2027-03-10");
     stepContinue();
-    await atStep("def-definition");
-    fill("def-definition", "Bodily injury from standing through the opening ceremony.");
+    await atStep("def-body");
+    fill("def-body", "Bodily injury from standing through the opening ceremony.");
     await waitFor(() =>
       expect(JSON.parse(localStorage.getItem("riprap:create") ?? "{}").def.name).toBe(
         "Chairmageddon",
@@ -342,8 +342,8 @@ describe("#/create author → preview", () => {
     cleanup();
     renderPage();
     // the proof slot is the remaining work — the wizard reopens on CLAIMS
-    await atStep("def-definition");
-    expect(inputValue("def-definition")).toBe(
+    await atStep("def-body");
+    expect(inputValue("def-body")).toBe(
       "Bodily injury from standing through the opening ceremony.",
     );
     expect(document.getElementById("proof-0-label")).toBeTruthy();

@@ -1,9 +1,9 @@
 // riprap-def/v1 — the artifact's machine block (milestone riprap-9bh4
 // HANDOFF §2, decisions D1/D2): one markdown file = YAML frontmatter +
-// the 11-§ terms body; `sha256(utf8(whole file))` is the `policy_hash`
-// anchored on-chain via the existing domainRefHex path. This module owns
-// the envelope and the frontmatter contract: a strict parser for exactly
-// the grammar render.ts emits — unknown keys, wrong value types, and
+// the author's free-form body; `sha256(utf8(whole file))` is the
+// `policy_hash` anchored on-chain via the existing domainRefHex path. This
+// module owns the envelope and the frontmatter contract: a strict parser for
+// exactly the grammar render.ts emits — unknown keys, wrong value types, and
 // foreign YAML are rejected outright (DefFormatError). Value semantics
 // (enums, ranges, ordering, slot grammar) live one file over, in
 // validate.ts.
@@ -28,9 +28,9 @@ export class DefFormatError extends Error {
 export type DefTier = MutualTier;
 export type DefProofKind = "file" | "url";
 
-/** One proof requirement (§7). `slot` is the riprap-claim/v1 manifest path
+/** One proof requirement. `slot` is the riprap-claim/v1 manifest path
  * (`NN-slug.ext`, ordinals unique); `label` is the member-facing name the
- * §7 list and the claim wizard share; `verify` is optional §7 prose on
+ * claim wizard and the juror session share; `verify` is optional prose on
  * how the jury checks it. */
 export interface DefProofSlot {
   slot: string;
@@ -85,7 +85,7 @@ export interface DefFrontmatter {
 // Envelope
 // ---------------------------------------------------------------------------
 
-/** Split `---` fences: the frontmatter block and the §-body (render.ts's
+/** Split `---` fences: the frontmatter block and the body (render.ts's
  * output, sections.ts's input). Throws DefFormatError on a missing or
  * unterminated fence. */
 export function splitDefDocument(doc: string): {
@@ -438,8 +438,8 @@ export function parseFrontmatter(fm: string): DefFrontmatter {
 /** `kind` — a copy-selector enum only; nothing mechanical differs (D8). */
 export type DefKind = PoolKind;
 
-/** A parsed riprap-def/v1 doc: the machine block plus the § body markdown
- * (sections.ts parses it). */
+/** A parsed riprap-def/v1 doc: the machine block plus the free-form body
+ * markdown (sections.ts reads headings out of it). */
 export interface RiprapDef extends DefFrontmatter {
   body: string;
 }

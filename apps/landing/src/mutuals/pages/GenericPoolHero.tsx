@@ -113,11 +113,11 @@ export function PoolHeroOffer({
     def.marketing?.blurb !== undefined && def.marketing.blurb.length > 0
       ? def.marketing.blurb
       : fillTemplate(copy.subline, {
-        name: def.name,
-        event: event ?? "",
-        fee,
-        cap,
-      });
+          name: def.name,
+          event: event ?? "",
+          fee,
+          cap,
+        });
   const when =
     def.period.venue !== undefined
       ? `${def.period.venue} · ${def.period.start}–${def.period.end}`
@@ -242,8 +242,9 @@ export function GenericPoolHero({ listing, def }: { listing: MutualListing; def:
                             <span
                               key={t.name}
                               data-num
-                              className={`font-mono text-sm transition-colors duration-[160ms] ease-out ${i === shownIndex ? "text-ink" : "text-muted-soft"
-                                }`}
+                              className={`font-mono text-sm transition-colors duration-[160ms] ease-out ${
+                                i === shownIndex ? "text-ink" : "text-muted-soft"
+                              }`}
                             >
                               {usd(t.fee)}
                             </span>

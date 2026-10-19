@@ -3,10 +3,10 @@
 // `riprap-def/v1` renderer, and the client-side mirrors of every on-chain
 // gate. Pure module — no React, no chain, no env.
 //
-// The wizard keeps the founder's 2026-10-16 shape — one raw-policy field,
-// no separate exclusions input. The canonical renderer still wants a §1/§11
-// peril phrase and a §4 exclusion list, so the adapter names both as
-// pointers into §3: the terms document's own words carry the facts.
+// The body is one free-form markdown field: the whole user-authored policy,
+// frontmatter excluded. Nothing is injected into it and nothing about it is
+// validated — the renderer hashes the frontmatter and the author's bytes as
+// written. The frontmatter is machine data, assembled from the form fields.
 //
 // Number law: doc BYTES may carry numbers (they are the pool's terms —
 // entries, caps, windows); the wizard's UI packs carry none beyond inputs,
@@ -72,12 +72,9 @@ export interface DefDoc {
   proof: DefProofSlot[];
   marketing?: DefMarketing;
   language: string;
-  /** §3 body prose — the raw policy: the covered act, its boundaries, and
-   * its exclusions (founder call 2026-10-16: one prose field, not a forced
-   * exclusions machine field). */
-  definition: string;
-  /** Bounty only: the named people or acts the bounty pays for. */
-  roster?: string;
+  /** The whole user-authored policy, frontmatter excluded. Markdown, any
+   * shape, any length — the form never validates it. */
+  body: string;
 }
 
 // ─── Advanced init inputs (InitializeMutualConfig + SubaccordConfig) ───────
@@ -284,12 +281,6 @@ export function validateDef(def: DefDoc): Rejection[] {
     }
     ordinals.add(ordinal);
   }
-  if (def.definition.trim() === "") {
-    rejections.push({
-      field: "definition",
-      line: "The terms are the pool's whole policy — write them.",
-    });
-  }
   if (def.marketing?.logo !== undefined && !/^https?:\/\/\S+$/.test(def.marketing.logo)) {
     rejections.push({
       field: "marketing.logo",
@@ -392,17 +383,16 @@ function marketingFor(marketing: DefMarketing | undefined): DefInput["marketing"
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-/** The wizard's one raw-policy field → the canonical body. The peril (§1/
- * §11) and the exclusions (§4) are named as pointers into §3: the founder's
- * single prose field carries those facts, and the document says where. */
-function defInput(def: DefDoc, advanced: AdvancedConfig): DefInput {
-  const blocks = def.definition
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter((p) => p !== "");
+/**
+ * The canonical `riprap-def/v1` document for the wizard's state. The
+ * canonical renderer at `mutuals/def/render.ts` is the one byte source —
+ * deterministic, quoted YAML, then the author's free-form body verbatim.
+ * The previewed bytes are what gets hashed into `policy_hash` and
+ * published to the CAS.
+ */
+export function renderDefDoc(def: DefDoc): string {
   const marketing = marketingFor(def.marketing);
-  const filingFeeUsdc = advanced.minJurySize * advanced.feePerJurorUsdc;
-  return {
+  return renderDef({
     kind: def.kind,
     slug: def.slug,
     name: def.name,
@@ -423,34 +413,8 @@ function defInput(def: DefDoc, advanced: AdvancedConfig): DefInput {
     })),
     ...(marketing !== undefined ? { marketing } : {}),
     language: def.language,
-    peril: def.kind === "mutual" ? "the event defined in §3" : "the act defined in §3",
-    definition: [
-      ...(blocks.length > 0 ? blocks : ["{{PARAM}}"]),
-      // the canonical format has no roster field — it is §3 prose
-      ...(def.kind === "bounty" && def.roster !== undefined && def.roster.trim() !== ""
-        ? [`Roster:\n\n${def.roster.trim()}`]
-        : []),
-    ],
-    exclusions: [
-      def.kind === "mutual"
-        ? "anything not named in §3"
-        : "anything not named in §3 as a qualifying delivery",
-    ],
-    ...(Number.isSafeInteger(filingFeeUsdc) && filingFeeUsdc > 0
-      ? { economics: { filingFeeUsdc } }
-      : {}),
-  };
-}
-
-/**
- * The canonical `riprap-def/v1` document for the wizard's state. The
- * canonical renderer at `mutuals/def/render.ts` is the one byte source —
- * deterministic, quoted YAML, 11 §s; the previewed bytes are what gets
- * hashed into `policy_hash` and published to the CAS. The §7 prose embeds
- * the chosen economics once (wizard-time instruction args).
- */
-export function renderDefDoc(def: DefDoc, advanced: AdvancedConfig): string {
-  return renderDef(defInput(def, advanced));
+    body: def.body,
+  });
 }
 
 // ─── Deploy-time derivations (the deploy step consumes these) ──────────────

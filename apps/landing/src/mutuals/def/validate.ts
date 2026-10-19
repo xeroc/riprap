@@ -11,9 +11,7 @@
 //
 // Pure module: no UI, no chain, no daemon calls.
 
-import type { DefInput } from "./render";
 import { DEF_SCHEMA, type DefFrontmatter, parseFrontmatter, splitDefDocument } from "./schema";
-import { parseSections, SECTION_COUNT, sectionTitles } from "./sections";
 
 /** One validation failure. `code` is the matrix row; the payload names the
  * offender (milestone §6: "the rejection names the tier"). */
@@ -23,9 +21,17 @@ export type DefRejection =
   | { code: "bad-kind"; found: string }
   | { code: "bad-slug"; found: string }
   | { code: "bad-name" }
-  | { code: "bad-period"; reason: "not-iso" | "not-a-date" | "order" | "empty"; field?: string }
+  | {
+      code: "bad-period";
+      reason: "not-iso" | "not-a-date" | "order" | "empty";
+      field?: string;
+    }
   | { code: "bad-tier-count"; found: number }
-  | { code: "bad-tier"; tier: string; reason: "name-empty" | "fee-not-positive" | "cap-below-fee" }
+  | {
+      code: "bad-tier";
+      tier: string;
+      reason: "name-empty" | "fee-not-positive" | "cap-below-fee";
+    }
   | { code: "proof-empty" }
   | {
       code: "bad-slot";
@@ -33,14 +39,12 @@ export type DefRejection =
       reason: "grammar" | "ordinal-duplicate" | "bad-kind" | "kind-mismatch" | "empty-optional";
       detail?: string;
     }
-  | { code: "bad-marketing"; field: string; reason: "empty" | "bad-url" | "not-positive" }
-  | { code: "bad-language"; found: string }
-  | { code: "bad-prose"; field: "peril" | "definition" | "exclusions" | "economics" }
   | {
-      code: "bad-body";
-      reason: "section-count" | "section-number" | "section-title";
-      section?: number;
-    };
+      code: "bad-marketing";
+      field: string;
+      reason: "empty" | "bad-url" | "not-positive";
+    }
+  | { code: "bad-language"; found: string };
 
 const KINDS = ["mutual", "bounty"] as const;
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -104,13 +108,25 @@ export function validateFrontmatter(def: DefFrontmatter): DefRejection[] {
   }
   for (const tier of def.tiers) {
     if (tier.name.trim() === "") {
-      rejections.push({ code: "bad-tier", tier: tier.name, reason: "name-empty" });
+      rejections.push({
+        code: "bad-tier",
+        tier: tier.name,
+        reason: "name-empty",
+      });
     }
     if (tier.fee <= 0) {
-      rejections.push({ code: "bad-tier", tier: tier.name, reason: "fee-not-positive" });
+      rejections.push({
+        code: "bad-tier",
+        tier: tier.name,
+        reason: "fee-not-positive",
+      });
     }
     if (tier.cap < tier.fee) {
-      rejections.push({ code: "bad-tier", tier: tier.name, reason: "cap-below-fee" });
+      rejections.push({
+        code: "bad-tier",
+        tier: tier.name,
+        reason: "cap-below-fee",
+      });
     }
   }
 
@@ -127,24 +143,40 @@ export function validateFrontmatter(def: DefFrontmatter): DefRejection[] {
     const ordinal = m[1];
     const ext = m[3];
     if (ordinals.has(ordinal)) {
-      rejections.push({ code: "bad-slot", slot: slot.slot, reason: "ordinal-duplicate" });
+      rejections.push({
+        code: "bad-slot",
+        slot: slot.slot,
+        reason: "ordinal-duplicate",
+      });
     }
     ordinals.add(ordinal);
     if (slot.kind !== "file" && slot.kind !== "url") {
-      rejections.push({ code: "bad-slot", slot: slot.slot, reason: "bad-kind" });
+      rejections.push({
+        code: "bad-slot",
+        slot: slot.slot,
+        reason: "bad-kind",
+      });
     } else {
       // kind and extension must agree: url slots ride .url, file slots
       // the global jpeg/png/pdf set
       const extOk = slot.kind === "url" ? ext === "url" : FILE_EXTENSIONS.includes(ext);
       if (!extOk) {
-        rejections.push({ code: "bad-slot", slot: slot.slot, reason: "kind-mismatch" });
+        rejections.push({
+          code: "bad-slot",
+          slot: slot.slot,
+          reason: "kind-mismatch",
+        });
       }
     }
     if (
       (slot.label !== undefined && slot.label.trim() === "") ||
       (slot.verify !== undefined && slot.verify.trim() === "")
     ) {
-      rejections.push({ code: "bad-slot", slot: slot.slot, reason: "empty-optional" });
+      rejections.push({
+        code: "bad-slot",
+        slot: slot.slot,
+        reason: "empty-optional",
+      });
     }
   }
 
@@ -157,13 +189,21 @@ export function validateFrontmatter(def: DefFrontmatter): DefRejection[] {
       }
     }
     if (marketing.logo !== undefined && !/^https?:\/\/\S+$/.test(marketing.logo)) {
-      rejections.push({ code: "bad-marketing", field: "logo", reason: "bad-url" });
+      rejections.push({
+        code: "bad-marketing",
+        field: "logo",
+        reason: "bad-url",
+      });
     }
     if (
       marketing.smallestPayout !== undefined &&
       (!Number.isInteger(marketing.smallestPayout) || marketing.smallestPayout <= 0)
     ) {
-      rejections.push({ code: "bad-marketing", field: "smallestPayout", reason: "not-positive" });
+      rejections.push({
+        code: "bad-marketing",
+        field: "smallestPayout",
+        reason: "not-positive",
+      });
     }
   }
 
@@ -174,67 +214,16 @@ export function validateFrontmatter(def: DefFrontmatter): DefRejection[] {
   return rejections;
 }
 
-/** The authoring-input matrix: the frontmatter rules against the input's
- * machine block, plus the body-prose presence rules (§1/§3/§4/§7 carry no
- * blanks). The wizard runs this before rendering; renderDef throws on the
- * same prose fields. */
-export function validateDefInput(input: DefInput): DefRejection[] {
-  const def: DefFrontmatter = {
-    ...input,
-    schema: DEF_SCHEMA,
-    language: input.language ?? "en",
-  };
-  const rejections = validateFrontmatter(def);
-  if (input.peril.trim() === "") {
-    rejections.push({ code: "bad-prose", field: "peril" });
-  }
-  if (input.definition.length === 0 || input.definition.some((b) => b.trim() === "")) {
-    rejections.push({ code: "bad-prose", field: "definition" });
-  }
-  if (input.exclusions.length === 0 || input.exclusions.some((l) => l.trim() === "")) {
-    rejections.push({ code: "bad-prose", field: "exclusions" });
-  }
-  if (
-    input.economics !== undefined &&
-    (!Number.isInteger(input.economics.filingFeeUsdc) || input.economics.filingFeeUsdc <= 0)
-  ) {
-    rejections.push({ code: "bad-prose", field: "economics" });
-  }
-  return rejections;
-}
-
-/** The whole-artifact matrix the store runs on CAS bytes: parse (grammar
- * + unknown keys → `malformed`), the machine-block rules, and the body
- * structure (exactly the 11 §s, numbered 1–11, kind-matching titles —
- * only a canonical artifact is a listable def). */
+/** The whole-artifact matrix the store can run on CAS bytes: parse
+ *  (grammar + unknown keys → `malformed`) and the machine-block rules.
+ *  The body is the author's free-form markdown — never validated. */
 export function validateDefArtifact(doc: string): DefRejection[] {
   let def: DefFrontmatter;
-  let body: string;
   try {
-    const split = splitDefDocument(doc);
-    def = parseFrontmatter(split.frontmatter);
-    body = split.body;
+    def = parseFrontmatter(splitDefDocument(doc).frontmatter);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return [{ code: "malformed", detail }];
   }
-
-  const rejections = validateFrontmatter(def);
-
-  const sections = parseSections(body);
-  if (sections.length !== SECTION_COUNT) {
-    rejections.push({ code: "bad-body", reason: "section-count" });
-    return rejections;
-  }
-  const titles = sectionTitles(def.kind);
-  sections.forEach((section, n) => {
-    if (section.number !== n + 1) {
-      rejections.push({ code: "bad-body", reason: "section-number", section: n + 1 });
-    }
-    if (section.title !== titles[n]) {
-      rejections.push({ code: "bad-body", reason: "section-title", section: n + 1 });
-    }
-  });
-
-  return rejections;
+  return validateFrontmatter(def);
 }

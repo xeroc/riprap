@@ -1,7 +1,6 @@
 // The shared skeleton for a pool's detail page (`#/m/<pubkey-or-slug>`).
 // The hero (the offer + the join flow, passed by the page) rides above the
-// doc bands: what's covered → not covered → claims → the math → the end →
-// the policy, content extracted from the pool's policy/terms markdown. The
+// doc bands: what's covered → claims → the math → the end → the policy. The
 // §5 tier table stays under the hero as the doc-priced reference while the
 // chain can't answer; every number on it is the doc's, final. The closing
 // #policy band is blade-pool parity (2026-10-09): the collapsed disclosure
@@ -10,6 +9,7 @@
 import { SectionBand, type WorkedExampleLine, WorkedExampleReceipt } from "@riprap/ui";
 import type { Address } from "@solana/kit";
 import type { ReactNode } from "react";
+import { PolicyBody } from "../../components/PolicyBody";
 import { Settle } from "../../components/Settle";
 import { SiteNav } from "../../components/SiteNav";
 import { RawPolicyTerms } from "../../pool/sections/RawPolicyTerms";
@@ -32,18 +32,27 @@ export interface PoolPageConfig {
   slug: string;
   /** §5 severity grades — the grade → payment schedule, for graded pools */
   grades?: { grade: string; label: string; finding: string; pays: string }[];
-  /** §3 definition, verbatim quote */
+  /** the legacy §3 definition quote, or the whole free-form body when
+   * `terms` is set */
   definition: string;
   /** §3 definitions/grades/conditions, line per line */
   definitionNotes: string[];
-  /** §4 exclusions, the characterful lines, compressed */
+  /** render `definition` as markdown (the free-form body) instead of the
+   * legacy blockquote */
+  terms?: boolean;
+  /** legacy §4 exclusions — the body carries them now; kept for the
+   * first-party page configs */
   exclusions: string[];
   /** §7 required proof, short labels, in order */
   proof: string[];
   /** the §7 adjudication-fee note (final per the docs) */
   feeNote: string;
   /** §10 worked example — receipt lines + closing figure + the honest note */
-  example: { lines: WorkedExampleLine[]; total: WorkedExampleLine; note: string };
+  example?: {
+    lines: WorkedExampleLine[];
+    total: WorkedExampleLine;
+    note: string;
+  };
   /** §8 winding-up, compressed */
   endNote: string;
   /** overrides the end-note's default caveat (pool-specific TODO state) */
@@ -67,6 +76,7 @@ export function PoolPageShell({
   const bounty = c.kind === "bounty";
   const fees = c.tiers.map((t) => `$${t.fee}`);
   const caps = c.tiers.map((t) => `$${t.cap.toLocaleString("en-US")}`);
+  const example = c.example;
 
   return (
     <>
@@ -120,9 +130,13 @@ export function PoolPageShell({
             <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
               {bounty ? "What pays." : "What's covered."}
             </h2>
-            <blockquote className="max-w-3xl border-l-2 border-accent pl-(--riprap-space-md) leading-relaxed text-body [font:var(--riprap-body-md)]">
-              {c.definition}
-            </blockquote>
+            {c.terms ? (
+              <PolicyBody markdown={c.definition} />
+            ) : (
+              <blockquote className="max-w-3xl border-l-2 border-accent pl-(--riprap-space-md) leading-relaxed text-body [font:var(--riprap-body-md)]">
+                {c.definition}
+              </blockquote>
+            )}
             {c.grades ? (
               <div className="max-w-3xl">
                 <table className="w-full border-collapse font-mono text-sm">
@@ -204,17 +218,15 @@ export function PoolPageShell({
             </ol>
             <p className="max-w-3xl leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
               {c.feeNote} Claims are adjudicated by a randomly drawn jury of staked members
-              (Accord); all payments are discretionary — no member has an enforceable right to one.
-              If approved claims exceed the pot, payments scale down proportionally; it never pays
-              more than it holds.
+              (Accord). If approved claims exceed the pot, payments scale down proportionally; it
+              never pays more than it holds.
             </p>
           </Settle>
         </SectionBand>
 
         {/* the math — §10 as a receipt */}
-        {c.example.lines.length > 0 && (
+        {example !== undefined && example.lines.length > 0 && (
           <SectionBand id="math" label="the math" tone="ground">
-            <p>{JSON.stringify(c.example)}</p>
             <Settle className="flex flex-col gap-(--riprap-space-xl)">
               <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
                 The math, on the doc's example.
@@ -222,18 +234,18 @@ export function PoolPageShell({
               <div className="max-w-md">
                 <WorkedExampleReceipt
                   label="worked example"
-                  lines={c.example.lines}
-                  total={c.example.total}
+                  lines={example.lines}
+                  total={example.total}
                 />
               </div>
               <p className="max-w-3xl leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-                {c.example.note}
+                {example.note}
               </p>
             </Settle>
           </SectionBand>
         )}
 
-        {/* the end — §8/§9 + the draft caveat */}
+        {/* the end — the platform promise + the draft caveat */}
         <SectionBand id="end" label="the end" tone="soft">
           <Settle className="flex flex-col gap-(--riprap-space-xl)">
             <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
