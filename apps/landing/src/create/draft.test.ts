@@ -17,7 +17,6 @@ describe("create draft", () => {
     draft.def.slug = "chairmageddon";
     draft.def.tiers.push({ name: "Standard", fee: 20, cap: 80 });
     draft.advanced.mint = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-    draft.marketingOpen = true;
     saveDraft(draft);
     expect(loadDraft()).toEqual(draft);
   });
@@ -40,7 +39,6 @@ describe("create draft", () => {
     localStorage.setItem("riprap:create", JSON.stringify({ def: { name: 7 }, nope: true }));
     const loaded = loadDraft();
     expect(loaded.def.kind).toBe("mutual"); // base shape survives
-    expect(loaded.marketingOpen).toBe(false);
     expect(loaded.advanced.minJurySize).toBe(3); // §12 preset survives
   });
 

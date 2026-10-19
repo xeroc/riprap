@@ -36,7 +36,6 @@ import {
   verifyDocument,
   windowArgs,
 } from "./deploy";
-import type { Rejection } from "./doc";
 import type { CreateDraft } from "./draft";
 
 type DeployPhase = "review" | "building" | "wallet-signing" | "confirming";
@@ -99,24 +98,25 @@ export function DeployStep({
   walletConnected,
   walletAddress,
   draft,
-  advancedRejections,
+  blocking,
   doc,
   hash,
   ref,
   seed,
-  onBack,
+  onFix,
   onDeployed,
 }: {
   walletConnected: boolean;
   walletAddress: string | null;
   draft: CreateDraft;
-  advancedRejections: Rejection[];
+  /** The first gate that still rejects, with the screen that owns it. */
+  blocking: { label: string; line: string } | null;
   /** The exact previewed bytes — frozen into the deployed record. */
   doc: string;
   hash: string;
   ref: string;
   seed: bigint;
-  onBack: () => void;
+  onFix: () => void;
   onDeployed: (deployed: Deployed) => void;
 }) {
   const hanseEnv = useHanseEnv();
@@ -124,21 +124,18 @@ export function DeployStep({
   const [phase, setPhase] = useState<DeployPhase>("review");
   const [error, setError] = useState<string | null>(null);
 
-  // The invalid-drawer state: the first mirrored gate line (copy doc — the
-  // chain fails with the same words, so the wizard shows them first).
-  if (advancedRejections.length > 0) {
+  // The invalid state: the first blocking gate line (copy doc — the chain
+  // fails with the same words, so the wizard shows them first).
+  if (blocking !== null) {
     return (
       <Settle className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" delay={180}>
-        <h2>
+        <h2 tabIndex={-1} className="focus:outline-none">
           <BadgeStamp>Deploy</BadgeStamp>
         </h2>
-        <div className="flex max-w-xl flex-col gap-2" data-slot="deploy-blocked">
-          <p className="text-ink [font:var(--riprap-body-md)]">{advancedRejections[0]?.line}</p>
-          <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-            Fix it in the advanced drawer.
-          </p>
-          <Button variant="outline" className="w-24" onClick={onBack}>
-            Back
+        <div className="flex max-w-xl flex-col items-start gap-2" data-slot="deploy-blocked">
+          <p className="text-ink [font:var(--riprap-body-md)]">{blocking.line}</p>
+          <Button variant="outline" onClick={onFix}>
+            Fix it in the {blocking.label.toLowerCase()} step.
           </Button>
         </div>
       </Settle>
@@ -148,7 +145,7 @@ export function DeployStep({
   if (!walletConnected || walletAddress === null) {
     return (
       <Settle className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" delay={180}>
-        <h2>
+        <h2 tabIndex={-1} className="focus:outline-none">
           <BadgeStamp>Deploy</BadgeStamp>
         </h2>
         <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
@@ -218,7 +215,7 @@ export function DeployStep({
 
   return (
     <Settle className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" delay={180}>
-      <h2>
+      <h2 tabIndex={-1} className="focus:outline-none">
         <BadgeStamp>Deploy</BadgeStamp>
       </h2>
       <DeployAnchors hash={hash} ref={ref} seed={seed} />
@@ -227,14 +224,9 @@ export function DeployStep({
         and confirms the exact cost before signing.
       </p>
       {phase === "review" ? (
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={onBack}>
-            Back
-          </Button>
-          <Button data-participate onClick={() => void deploy()}>
-            Deploy the pool
-          </Button>
-        </div>
+        <Button data-participate onClick={() => void deploy()}>
+          Deploy the pool
+        </Button>
       ) : (
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]" data-slot="deploy-phase">
           {phase === "building"
@@ -291,7 +283,7 @@ export function PublishStep({
 
   return (
     <Settle className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" delay={180}>
-      <h2>
+      <h2 tabIndex={-1} className="focus:outline-none">
         <BadgeStamp>Publish</BadgeStamp>
       </h2>
       <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
@@ -369,7 +361,7 @@ export function VerifyStep({ deployed, onDone }: { deployed: Deployed; onDone: (
 
   return (
     <Settle className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" delay={180}>
-      <h2>
+      <h2 tabIndex={-1} className="focus:outline-none">
         <BadgeStamp>Verify</BadgeStamp>
       </h2>
       {state === "reading" ? (

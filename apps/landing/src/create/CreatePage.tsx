@@ -21,18 +21,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
   Textarea,
 } from "@riprap/ui";
 import { useWallet } from "@solana/connector";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDownIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
 import { domainRefHex, sha256Hex } from "../pool/domainRef";
@@ -56,17 +49,189 @@ import { type CreateDraft, clearDraft, emptyDraft, loadDraft, saveDraft } from "
 import { MarketingPreview } from "./MarketingPreview";
 import { DeployStep, PublishStep, VerifyStep } from "./steps";
 
-/** The wizard machine: author → preview → deploy → publish → verify. */
-type Step = "author" | "preview" | "deploy" | "publish" | "verify";
+/** The wizard machine: six guided authoring screens (one question each),
+ * then preview → deploy → publish → verify. */
+type AuthorPhase = "identity" | "coverage" | "window" | "claims" | "marketing" | "advanced";
+type Step = AuthorPhase | "preview" | "deploy" | "publish" | "verify";
 
+/** One authoring screen: its rail label and the rejection-field gates its
+ * Continue owns (a gate owns its dotted children — `tiers` owns `tiers.0.fee`). */
+interface AuthorPhaseDef {
+  id: AuthorPhase;
+  label: string;
+  gate: string[];
+}
+
+const AUTHOR_PHASES: readonly AuthorPhaseDef[] = [
+  { id: "identity", label: "Identity", gate: ["name", "slug"] },
+  { id: "coverage", label: "Coverage", gate: ["tiers"] },
+  { id: "window", label: "Window", gate: ["period"] },
+  { id: "claims", label: "Claims", gate: ["definition", "roster", "proof"] },
+  { id: "marketing", label: "Marketing", gate: ["marketing"] },
+  { id: "advanced", label: "Advanced", gate: ["advanced"] },
+];
+
+const PHASE_BY_ID = Object.fromEntries(AUTHOR_PHASES.map((p) => [p.id, p])) as Record<
+  AuthorPhase,
+  AuthorPhaseDef
+>;
+
+function isAuthorPhase(step: Step): step is AuthorPhase {
+  return step !== "preview" && step !== "deploy" && step !== "publish" && step !== "verify";
+}
+
+/** The rejections one screen owns (advanced owns the mirrored chain gates;
+ * every other screen owns its def fields). */
+function phaseRejections(
+  phase: AuthorPhaseDef,
+  defRejections: Rejection[],
+  advancedRejections: Rejection[],
+): Rejection[] {
+  const all = phase.id === "advanced" ? advancedRejections : defRejections;
+  return all.filter((r) => phase.gate.some((g) => r.field === g || r.field.startsWith(`${g}.`)));
+}
+
+/** Where a resumed draft lands: the first screen whose gate still rejects,
+ * else the last — the author never re-walks finished work. */
+function initialPhase(draft: CreateDraft): Step {
+  const def = validateDef(draft.def);
+  const advanced = validateAdvanced(draft.advanced, draft.def, Math.floor(Date.now() / 1000));
+  for (const phase of AUTHOR_PHASES) {
+    if (phaseRejections(phase, def, advanced).length > 0) return phase.id;
+  }
+  return "advanced";
+}
+
+/** The first screen that still rejects, with its first rejection — the
+ * blocking gate the preview and the deploy step carry. */
+function firstBlocking(
+  defRejections: Rejection[],
+  advancedRejections: Rejection[],
+): { phase: AuthorPhaseDef; rejection: Rejection } | null {
+  for (const phase of AUTHOR_PHASES) {
+    const [rejection] = phaseRejections(phase, defRejections, advancedRejections);
+    if (rejection !== undefined) return { phase, rejection };
+  }
+  return null;
+}
+
+/** The five top-level phases — the old hero rail, now live. */
+const JOURNEY_PHASES = [
+  { id: "author", label: "Author" },
+  { id: "preview", label: "Preview" },
+  { id: "deploy", label: "Deploy" },
+  { id: "publish", label: "Publish" },
+  { id: "verify", label: "Verify" },
+] as const;
+
+type JourneyPhase = (typeof JOURNEY_PHASES)[number]["id"];
+
+/** The whole journey is ten stops: the six authoring screens, then the
+ * four chain phases. The strip's track is the navigable one — one button
+ * per stop, every stop the author can reach from here jumps. */
+const STOPS: readonly { step: Step; label: string }[] = [
+  ...AUTHOR_PHASES.map((phase) => ({ step: phase.id, label: phase.label })),
+  { step: "preview", label: "Preview" },
+  { step: "deploy", label: "Deploy" },
+  { step: "publish", label: "Publish" },
+  { step: "verify", label: "Verify" },
+];
+
+/** One live progress display for the whole wizard (copy doc § /create
+ * Progress strip): the phase row, the mono counter, the ten-segment
+ * hairline track — the track carries the navigation. Sticky under the
+ * navbar so the path stays visible down the long forms; fills settle, and
+ * the token collapses under prefers-reduced-motion. */
+function WizardProgress({
+  step,
+  onStep,
+  canJump,
+}: {
+  step: Step;
+  onStep: (step: Step) => void;
+  canJump: (step: Step) => boolean;
+}) {
+  const current = STOPS.findIndex((s) => s.step === step);
+  const currentPhase: JourneyPhase = isAuthorPhase(step) ? "author" : step;
+  const phaseIndex = JOURNEY_PHASES.findIndex((p) => p.id === currentPhase);
+  return (
+    <div
+      data-slot="wizard-progress"
+      className="sticky top-[calc(var(--riprap-nav-h)+1px)] z-20 -mb-px flex w-full max-w-3xl flex-col gap-2 border-b border-hairline bg-ground py-3"
+    >
+      <div className="flex items-baseline justify-between gap-4">
+        <ol
+          aria-label="Wizard phases"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 uppercase tracking-(--riprap-tracking-stamp) [font:var(--riprap-mono-label)]"
+        >
+          {JOURNEY_PHASES.map((p, i) => (
+            <Fragment key={p.id}>
+              {i > 0 ? (
+                <li aria-hidden className="text-muted">
+                  →
+                </li>
+              ) : null}
+              <li
+                aria-current={i === phaseIndex ? "step" : undefined}
+                className={[
+                  "[transition:color_var(--riprap-settle)]",
+                  i === phaseIndex ? "text-ink" : i < phaseIndex ? "text-body" : "text-muted",
+                ].join(" ")}
+              >
+                {p.label}
+              </li>
+            </Fragment>
+          ))}
+        </ol>
+        <p data-num aria-hidden className="font-mono text-xs text-muted">
+          {String(current + 1).padStart(2, "0")}/{STOPS.length}
+        </p>
+      </div>
+      <p aria-live="polite" className="sr-only">
+        Step {current + 1} of {STOPS.length}: {STOPS[current]?.label}
+      </p>
+      <ol aria-label="Wizard steps" className="flex w-full items-center gap-1">
+        {STOPS.map((stop, i) => (
+          <li
+            key={stop.step}
+            className={stop.step === "preview" ? "flex flex-1 items-center gap-1" : "flex flex-1"}
+          >
+            {stop.step === "preview" ? (
+              <span aria-hidden className="h-2.5 w-px bg-hairline-strong" />
+            ) : null}
+            <button
+              type="button"
+              aria-label={`Step ${i + 1} of ${STOPS.length}: ${stop.label}`}
+              aria-current={i === current ? "step" : undefined}
+              disabled={!canJump(stop.step)}
+              onClick={() => onStep(stop.step)}
+              className="flex-1 py-2.5 outline-none focus-visible:ring-3 focus-visible:ring-ring enabled:cursor-pointer enabled:hover:bg-strong"
+            >
+              <span
+                className={[
+                  "block h-1 w-full [transition:background-color_var(--riprap-settle)]",
+                  i < current ? "bg-body" : i === current ? "bg-ink" : "bg-hairline",
+                ].join(" ")}
+              />
+            </button>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
 // ─── shared bits ────────────────────────────────────────────────────────────
 
 /** One form band: mono uppercase label (the copy doc's `THE POOL` etc.),
- * content below, settled in. */
+ * content below, settled in. The heading is the focus target of a step
+ * change (tabIndex −1, never tabbable). */
 function Band({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <Settle className="flex w-full flex-col gap-4" delay={40}>
-      <h2 className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
+      <h2
+        tabIndex={-1}
+        className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground focus:outline-none [font:var(--riprap-mono-label)]"
+      >
         {label}
       </h2>
       {children}
@@ -97,7 +262,7 @@ function Field({
   id: string;
   label: string;
   rejections?: Rejection[];
-  /** Always-on gate note (advanced drawer) — shown when no rejection is. */
+  /** Always-on gate note (advanced screen) — shown when no rejection is. */
   note?: string;
   children: (props: { id: string; "aria-invalid": true | undefined }) => React.ReactNode;
 }) {
@@ -168,14 +333,6 @@ export function CreatePage() {
                   you sign once.
                 </p>
               </Settle>
-              <Settle delay={180}>
-                <p
-                  data-num
-                  className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]"
-                >
-                  Author → Preview → Deploy → Publish → Verify
-                </p>
-              </Settle>
             </div>
           </SectionBand>
         </div>
@@ -188,12 +345,17 @@ export function CreatePage() {
 }
 
 function CreateWizard() {
-  const [step, setStep] = useState<Step>("author");
   const [draft, setDraft] = useState<CreateDraft>(() => loadDraft());
+  /** A resumed draft picks up at the first screen with work left. */
+  const [step, setStep] = useState<Step>(() => initialPhase(draft));
   /** The slug derives from the name until the author edits it directly. */
   const [slugAuto, setSlugAuto] = useState(draft.def.slug === "");
   const [seed, setSeed] = useState<bigint>(() => randomSeed());
-  const [anchors, setAnchors] = useState<{ doc: string; hash: string; ref: string } | null>(null);
+  const [anchors, setAnchors] = useState<{
+    doc: string;
+    hash: string;
+    ref: string;
+  } | null>(null);
   /** Frozen at deploy confirm — the exact deployed artifacts (the live
    * draft clears; publish/verify render only from this record). */
   const [deployed, setDeployed] = useState<Deployed | null>(null);
@@ -207,7 +369,7 @@ function CreateWizard() {
   }, [draft]);
 
   // Live anchors: the doc renders synchronously; its hash and the derived
-  // domain_ref follow — every edit moves them (preview + drawer read these).
+  // domain_ref follow — every edit moves them (preview + advanced read these).
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -243,17 +405,60 @@ function CreateWizard() {
     Math.floor(Date.now() / 1000),
   );
 
-  const patchDef = (changes: Partial<CreateDraft["def"]>) =>
-    setDraft((current) => ({ ...current, def: { ...current.def, ...changes } }));
-  const patchAdvanced = (changes: Partial<CreateDraft["advanced"]>) =>
-    setDraft((current) => ({ ...current, advanced: { ...current.advanced, ...changes } }));
+  /** The first gate that still rejects, with the screen that owns it — the
+   * preview and the deploy step refuse on it (the chain would fail with the
+   * same words). */
+  const blocking = firstBlocking(defRejections, advancedRejections);
+  const blockingProp =
+    blocking === null ? null : { label: blocking.phase.label, line: blocking.rejection.line };
+  /** Jump to the screen that owns the blocking gate. */
+  const fixBlocking = () => {
+    if (blocking !== null) setStep(blocking.phase.id);
+  };
 
-  // The author step owns its width (the marketing preview rides beside a
-  // 48rem form); every later step is the plain reading column.
+  /** Where the strip may jump: the six author screens and the preview while
+   * the draft is live, publish/verify once the record is frozen. Never the
+   * deploy stop — it is the one terminal action. */
+  const canJump = (target: Step): boolean => {
+    if (target === "deploy") return false;
+    return deployed === null
+      ? isAuthorPhase(target) || target === "preview"
+      : target === "publish" || target === "verify";
+  };
+
+  // A step change starts the author at the top of the new screen: the strip
+  // scrolls back into view and the screen's heading takes focus (the move is
+  // announced in the strip's polite region). Never on mount — a resumed
+  // draft keeps its own place.
+  const wizard = useRef<HTMLDivElement>(null);
+  const lastStep = useRef(step);
+  useEffect(() => {
+    if (lastStep.current === step) return;
+    lastStep.current = step;
+    const container = wizard.current;
+    container?.querySelector('[data-slot="wizard-progress"]')?.scrollIntoView?.({ block: "start" });
+    container?.querySelector<HTMLElement>("h2")?.focus();
+  }, [step]);
+
+  const patchDef = (changes: Partial<CreateDraft["def"]>) =>
+    setDraft((current) => ({
+      ...current,
+      def: { ...current.def, ...changes },
+    }));
+  const patchAdvanced = (changes: Partial<CreateDraft["advanced"]>) =>
+    setDraft((current) => ({
+      ...current,
+      advanced: { ...current.advanced, ...changes },
+    }));
+
+  // The author screens own their width (the marketing preview rides beside
+  // a 48rem form); every later step is the plain reading column.
   return (
-    <div className="w-full" data-slot="create-wizard">
-      {step === "author" ? (
+    <div className="w-full" data-slot="create-wizard" ref={wizard}>
+      <WizardProgress step={step} onStep={setStep} canJump={canJump} />
+      {isAuthorPhase(step) ? (
         <AuthorStep
+          phase={step}
           draft={draft}
           slugAuto={slugAuto}
           defRejections={defRejections}
@@ -263,18 +468,21 @@ function CreateWizard() {
           seedFreedom={seedFreedom}
           onPatchDef={patchDef}
           onPatchAdvanced={patchAdvanced}
-          onPatchDraft={(changes) => setDraft((current) => ({ ...current, ...changes }))}
           onNameChange={(name) => {
             setDraft((current) => ({
               ...current,
-              def: { ...current.def, name, slug: slugAuto ? slugify(name) : current.def.slug },
+              def: {
+                ...current.def,
+                name,
+                slug: slugAuto ? slugify(name) : current.def.slug,
+              },
             }));
           }}
           onSlugEdited={(slug) => {
             setSlugAuto(false);
             patchDef({ slug });
           }}
-          onContinue={() => setStep("preview")}
+          onPhase={setStep}
         />
       ) : (
         <div className="flex w-full max-w-3xl flex-col gap-(--riprap-space-lg)">
@@ -286,7 +494,9 @@ function CreateWizard() {
               seed={seed}
               seedFreedom={seedFreedom}
               slug={draft.def.slug}
-              onBack={() => setStep("author")}
+              blocking={blockingProp}
+              onFix={fixBlocking}
+              onBack={() => setStep("advanced")}
               onDeploy={() => setStep("deploy")}
             />
           ) : step === "deploy" && deployed === null ? (
@@ -294,12 +504,12 @@ function CreateWizard() {
               walletConnected={walletConnected}
               walletAddress={walletAccount}
               draft={draft}
-              advancedRejections={advancedRejections}
+              blocking={blockingProp}
               doc={anchors?.doc ?? ""}
               hash={anchors?.hash ?? ""}
               ref={anchors?.ref ?? ""}
               seed={seed}
-              onBack={() => setStep("preview")}
+              onFix={fixBlocking}
               onDeployed={(result) => {
                 // The deploy confirms: the draft's job is done (copy doc —
                 // cleared the moment the deploy confirms), and the frozen
@@ -324,7 +534,7 @@ function CreateWizard() {
                 setDraft(emptyDraft());
                 setSlugAuto(true);
                 setSeed(randomSeed());
-                setStep("author");
+                setStep("identity");
               }}
             />
           ) : (
@@ -335,7 +545,9 @@ function CreateWizard() {
               seed={seed}
               seedFreedom={seedFreedom}
               slug={draft.def.slug}
-              onBack={() => setStep("author")}
+              blocking={blockingProp}
+              onFix={fixBlocking}
+              onBack={() => setStep("advanced")}
               onDeploy={() => setStep("deploy")}
             />
           )}
@@ -366,6 +578,7 @@ function useSeedFreedom(seed: bigint): SeedFreedom {
 // ─── AUTHOR ─────────────────────────────────────────────────────────────────
 
 function AuthorStep({
+  phase,
   draft,
   slugAuto,
   defRejections,
@@ -375,11 +588,11 @@ function AuthorStep({
   seedFreedom,
   onPatchDef,
   onPatchAdvanced,
-  onPatchDraft,
   onNameChange,
   onSlugEdited,
-  onContinue,
+  onPhase,
 }: {
+  phase: AuthorPhase;
   draft: CreateDraft;
   slugAuto: boolean;
   defRejections: Rejection[];
@@ -389,10 +602,9 @@ function AuthorStep({
   seedFreedom: SeedFreedom;
   onPatchDef: (changes: Partial<CreateDraft["def"]>) => void;
   onPatchAdvanced: (changes: Partial<CreateDraft["advanced"]>) => void;
-  onPatchDraft: (changes: Partial<CreateDraft>) => void;
   onNameChange: (name: string) => void;
   onSlugEdited: (slug: string) => void;
-  onContinue: () => void;
+  onPhase: (phase: AuthorPhase | "preview") => void;
 }) {
   const def = draft.def;
   const errorsFor = (field: string) => defRejections.filter((r) => r.field === field);
@@ -412,338 +624,396 @@ function AuthorStep({
       }),
     });
 
+  const index = AUTHOR_PHASES.findIndex((p) => p.id === phase);
+  const gate = phaseRejections(PHASE_BY_ID[phase], defRejections, advancedRejections);
+  const prev = index > 0 ? AUTHOR_PHASES[index - 1]?.id : undefined;
+  const next = index < AUTHOR_PHASES.length - 1 ? AUTHOR_PHASES[index + 1]?.id : "preview";
+
+  /** The screen is a form: Enter submits it. A blocked screen refuses the
+   * submit and puts focus on the first field carrying a gate line — a dead
+   * button would explain nothing. */
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (gate.length > 0) {
+      const form = event.currentTarget;
+      (
+        form.querySelector<HTMLElement>('[aria-invalid="true"]') ??
+        form.querySelector<HTMLElement>("input, textarea")
+      )?.focus();
+      return;
+    }
+    onPhase(next);
+  };
+
   return (
     <Settle className="w-full" delay={180}>
-      {/* the form keeps its 48rem column; the marketing preview rides
-          beside it (same width law as the reading column — never wider) */}
+      {/* the marketing screen rides its preview beside the form (same width
+          law as the reading column — never wider); every other screen is
+          the plain form column */}
       <div
         className={
-          draft.marketingOpen
+          phase === "marketing"
             ? "grid w-full items-start gap-(--riprap-space-xl) xl:grid-cols-[minmax(0,48rem)_minmax(24rem,1fr)]"
             : "flex w-full flex-col gap-(--riprap-space-lg)"
         }
       >
-        <div className="flex w-full max-w-3xl flex-col gap-(--riprap-space-lg)">
-          <Band label="The pool">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field id="def-name" label="Name" rejections={errorsFor("name")}>
-                {(props) => (
-                  <Input
-                    {...props}
-                    value={def.name}
-                    onChange={(e) => onNameChange(e.target.value)}
-                    placeholder="The pool's name"
-                  />
-                )}
-              </Field>
-              <Field id="def-slug" label="Slug" rejections={errorsFor("slug")}>
-                {(props) => (
-                  <Input
-                    {...props}
-                    value={def.slug}
-                    onChange={(e) => onSlugEdited(e.target.value)}
-                    placeholder={slugAuto ? slugify(def.name) || "pool-route-id" : "pool-route-id"}
-                  />
-                )}
-              </Field>
-            </div>
-            <div className="flex max-w-md flex-col gap-2">
-              <Label htmlFor="def-kind">Kind</Label>
-              <Select
-                value={def.kind}
-                onValueChange={(kind) => onPatchDef({ kind: kind as DefKind })}
-              >
-                <SelectTrigger id="def-kind" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="mutual">Mutual — members chip in against one peril</SelectItem>
-                  <SelectItem value="bounty">Bounty — the pool pays for verified acts</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </Band>
-
-          <Band label="The terms">
-            <Field
-              id="def-definition"
-              label={def.kind === "mutual" ? "What this pool covers" : "What this pool pays for"}
-              rejections={errorsFor("definition")}
-              note="The whole policy rides in this field — name the incident or act narrowly, draw its boundaries, and say what is not covered. The jury reads these terms verbatim."
-            >
-              {(props) => (
-                <Textarea
-                  {...props}
-                  rows={8}
-                  value={def.definition}
-                  onChange={(e) => onPatchDef({ definition: e.target.value })}
-                  placeholder={
-                    def.kind === "mutual"
-                      ? "The peril, named plainly — one narrowly defined incident, where and when it counts, and what is not covered."
-                      : "The act the pool pays for — what must be verified, and what is not paid."
-                  }
-                />
-              )}
-            </Field>
-            {def.kind === "bounty" ? (
-              <Field id="def-roster" label="Roster — who or what qualifies">
-                {(props) => (
-                  <Textarea
-                    {...props}
-                    rows={2}
-                    value={def.roster ?? ""}
-                    onChange={(e) => onPatchDef({ roster: e.target.value })}
-                    placeholder="The named people or acts the bounty pays for."
-                  />
-                )}
-              </Field>
-            ) : null}
-          </Band>
-
-          <Band label="Tiers">
-            {def.tiers.map((tier, index) => (
-              <div
-                key={index}
-                className="grid gap-4 sm:grid-cols-[1fr_7rem_8rem_auto] sm:items-start"
-                data-slot={`tier-row-${index}`}
-              >
-                <Field
-                  id={`tier-${index}-name`}
-                  label="Name"
-                  rejections={errorsFor(`tiers.${index}.name`)}
-                >
+        <form
+          noValidate
+          data-slot="author-form"
+          onSubmit={handleSubmit}
+          className="flex w-full max-w-3xl flex-col gap-(--riprap-space-lg)"
+        >
+          {phase === "identity" ? (
+            <Band label="The pool">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field id="def-name" label="Name" rejections={errorsFor("name")}>
                   {(props) => (
                     <Input
                       {...props}
-                      value={tier.name}
-                      onChange={(e) => setTier(index, { name: e.target.value })}
+                      value={def.name}
+                      onChange={(e) => onNameChange(e.target.value)}
+                      placeholder="The pool's name"
                     />
                   )}
                 </Field>
-                <Field
-                  id={`tier-${index}-fee`}
-                  label="Entry (USDC)"
-                  rejections={errorsFor(`tiers.${index}.fee`)}
-                >
+                <Field id="def-slug" label="Slug" rejections={errorsFor("slug")}>
                   {(props) => (
                     <Input
                       {...props}
-                      data-num
-                      inputMode="numeric"
-                      className="font-mono"
-                      value={Number.isFinite(tier.fee) ? String(tier.fee) : ""}
-                      onChange={(e) => setTier(index, { fee: Number(e.target.value) })}
+                      value={def.slug}
+                      onChange={(e) => onSlugEdited(e.target.value)}
+                      placeholder={
+                        slugAuto ? slugify(def.name) || "pool-route-id" : "pool-route-id"
+                      }
                     />
                   )}
                 </Field>
-                <Field
-                  id={`tier-${index}-cap`}
-                  label="Max payout (USDC)"
-                  rejections={errorsFor(`tiers.${index}.cap`)}
-                >
-                  {(props) => (
-                    <Input
-                      {...props}
-                      data-num
-                      inputMode="numeric"
-                      className="font-mono"
-                      value={Number.isFinite(tier.cap) ? String(tier.cap) : ""}
-                      onChange={(e) => setTier(index, { cap: Number(e.target.value) })}
-                    />
-                  )}
-                </Field>
-                <div className="flex h-10 items-end">
-                  {def.tiers.length > 1 ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onPatchDef({ tiers: def.tiers.filter((_, i) => i !== index) })}
-                    >
-                      Remove
-                    </Button>
-                  ) : null}
-                </div>
               </div>
-            ))}
-            <div className="flex flex-wrap items-center gap-4">
-              {def.tiers.length < 3 ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    onPatchDef({ tiers: [...def.tiers, { name: "", fee: 0, cap: 0 }] })
-                  }
+              <div className="flex max-w-md flex-col gap-2">
+                <Label htmlFor="def-kind">Kind</Label>
+                <Select
+                  value={def.kind}
+                  onValueChange={(kind) => onPatchDef({ kind: kind as DefKind })}
                 >
-                  Add a tier
-                </Button>
-              ) : null}
-              <FieldNote rejections={errorsFor("tiers")} />
-            </div>
-          </Band>
-
-          <Band label="Window">
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Field
-                id="period-start"
-                label="Doors open"
-                note="Join closes when the doors open."
-                rejections={errorsFor("period.start")}
-              >
-                {(props) => (
-                  <Input
-                    {...props}
-                    data-num
-                    className="font-mono"
-                    type="date"
-                    value={def.period.start}
-                    onChange={(e) =>
-                      onPatchDef({ period: { ...def.period, start: e.target.value } })
-                    }
-                  />
-                )}
-              </Field>
-              <Field id="period-end" label="Coverage ends" rejections={errorsFor("period.end")}>
-                {(props) => (
-                  <Input
-                    {...props}
-                    data-num
-                    className="font-mono"
-                    type="date"
-                    value={def.period.end}
-                    onChange={(e) => onPatchDef({ period: { ...def.period, end: e.target.value } })}
-                  />
-                )}
-              </Field>
-              <Field
-                id="period-claims"
-                label="Claims close"
-                rejections={errorsFor("period.claimsClose")}
-              >
-                {(props) => (
-                  <Input
-                    {...props}
-                    data-num
-                    className="font-mono"
-                    type="date"
-                    value={def.period.claimsClose}
-                    onChange={(e) =>
-                      onPatchDef({ period: { ...def.period, claimsClose: e.target.value } })
-                    }
-                  />
-                )}
-              </Field>
-            </div>
-            <Field id="period-venue" label="Venue (optional)" rejections={errorsFor("period")}>
-              {(props) => (
-                <Input
-                  {...props}
-                  value={def.period.venue ?? ""}
-                  onChange={(e) => onPatchDef({ period: { ...def.period, venue: e.target.value } })}
-                  placeholder="Where the window runs, if it runs somewhere."
-                />
-              )}
-            </Field>
-          </Band>
-
-          <Band label="Proof">
-            {def.proof.map((slot, index) => (
-              <div
-                key={index}
-                className="grid gap-4 border border-hairline bg-card p-4 sm:grid-cols-[1fr_8rem_1fr]"
-                data-slot={`proof-row-${index}`}
-              >
-                <Field id={`proof-${index}-label`} label="Label" rejections={errorsFor("proof")}>
-                  {(props) => (
-                    <Input
-                      {...props}
-                      value={slot.label}
-                      onChange={(e) => setSlot(index, { label: e.target.value })}
-                      placeholder="The member-facing name"
-                    />
-                  )}
-                </Field>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor={`proof-${index}-kind`}>Kind</Label>
-                  <Select
-                    value={slot.kind}
-                    onValueChange={(kind) => setSlot(index, { kind: kind as "file" | "url" })}
+                  <SelectTrigger id="def-kind" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mutual">
+                      Mutual — members chip in against one peril
+                    </SelectItem>
+                    <SelectItem value="bounty">Bounty — the pool pays for verified acts</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </Band>
+          ) : phase === "coverage" ? (
+            <Band label="Tiers">
+              <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
+                Members chip in at these prices; a claim pays out at most the cap.
+              </p>
+              {def.tiers.map((tier, index) => (
+                <div
+                  key={index}
+                  className="grid gap-4 sm:grid-cols-[1fr_7rem_8rem_auto] sm:items-start"
+                  data-slot={`tier-row-${index}`}
+                >
+                  <Field
+                    id={`tier-${index}-name`}
+                    label="Name"
+                    rejections={errorsFor(`tiers.${index}.name`)}
                   >
-                    <SelectTrigger id={`proof-${index}-kind`} className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="file">File</SelectItem>
-                      <SelectItem value="url">Link</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    {(props) => (
+                      <Input
+                        {...props}
+                        value={tier.name}
+                        onChange={(e) => setTier(index, { name: e.target.value })}
+                      />
+                    )}
+                  </Field>
+                  <Field
+                    id={`tier-${index}-fee`}
+                    label="Entry (USDC)"
+                    rejections={errorsFor(`tiers.${index}.fee`)}
+                  >
+                    {(props) => (
+                      <Input
+                        {...props}
+                        data-num
+                        inputMode="numeric"
+                        className="font-mono"
+                        value={Number.isFinite(tier.fee) ? String(tier.fee) : ""}
+                        onChange={(e) => setTier(index, { fee: Number(e.target.value) })}
+                      />
+                    )}
+                  </Field>
+                  <Field
+                    id={`tier-${index}-cap`}
+                    label="Max payout (USDC)"
+                    rejections={errorsFor(`tiers.${index}.cap`)}
+                  >
+                    {(props) => (
+                      <Input
+                        {...props}
+                        data-num
+                        inputMode="numeric"
+                        className="font-mono"
+                        value={Number.isFinite(tier.cap) ? String(tier.cap) : ""}
+                        onChange={(e) => setTier(index, { cap: Number(e.target.value) })}
+                      />
+                    )}
+                  </Field>
+                  <div className="flex h-10 items-end">
+                    {def.tiers.length > 1 ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          onPatchDef({
+                            tiers: def.tiers.filter((_, i) => i !== index),
+                          })
+                        }
+                      >
+                        Remove
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
-                <Field id={`proof-${index}-verify`} label="Jurors verify (optional)">
+              ))}
+              <div className="flex flex-wrap items-center gap-4">
+                {def.tiers.length < 3 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      onPatchDef({
+                        tiers: [...def.tiers, { name: "", fee: 0, cap: 0 }],
+                      })
+                    }
+                  >
+                    Add a tier
+                  </Button>
+                ) : null}
+                <FieldNote rejections={errorsFor("tiers")} />
+              </div>
+            </Band>
+          ) : phase === "window" ? (
+            <Band label="Window">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field
+                  id="period-start"
+                  label="Doors open"
+                  note="Join closes when the doors open."
+                  rejections={errorsFor("period.start")}
+                >
                   {(props) => (
                     <Input
                       {...props}
-                      value={slot.verify ?? ""}
-                      onChange={(e) => setSlot(index, { verify: e.target.value })}
-                      placeholder="What the jury checks here"
+                      data-num
+                      className="font-mono"
+                      type="date"
+                      value={def.period.start}
+                      onChange={(e) =>
+                        onPatchDef({
+                          period: { ...def.period, start: e.target.value },
+                        })
+                      }
                     />
                   )}
                 </Field>
-                <p
-                  data-num
-                  className="break-all font-mono text-xs text-muted-foreground sm:col-span-3"
-                  data-slot={`slot-path-${index}`}
+                <Field id="period-end" label="Coverage ends" rejections={errorsFor("period.end")}>
+                  {(props) => (
+                    <Input
+                      {...props}
+                      data-num
+                      className="font-mono"
+                      type="date"
+                      value={def.period.end}
+                      onChange={(e) =>
+                        onPatchDef({
+                          period: { ...def.period, end: e.target.value },
+                        })
+                      }
+                    />
+                  )}
+                </Field>
+                <Field
+                  id="period-claims"
+                  label="Claims close"
+                  rejections={errorsFor("period.claimsClose")}
                 >
-                  {slot.slot}
-                </p>
+                  {(props) => (
+                    <Input
+                      {...props}
+                      data-num
+                      className="font-mono"
+                      type="date"
+                      value={def.period.claimsClose}
+                      onChange={(e) =>
+                        onPatchDef({
+                          period: {
+                            ...def.period,
+                            claimsClose: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  )}
+                </Field>
               </div>
-            ))}
-            <div className="flex flex-wrap items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  onPatchDef({
-                    proof: [
-                      ...def.proof,
-                      {
-                        slot: slotPath(def.proof.length, "", "file"),
-                        kind: "file",
-                        label: "",
-                        verify: "",
-                      },
-                    ],
-                  })
-                }
-              >
-                Add a proof slot
-              </Button>
-              <FieldNote rejections={errorsFor("proof")} />
-            </div>
-          </Band>
-
-          <Band label="Marketing">
-            {draft.marketingOpen ? (
+              <Field id="period-venue" label="Venue (optional)" rejections={errorsFor("period")}>
+                {(props) => (
+                  <Input
+                    {...props}
+                    value={def.period.venue ?? ""}
+                    onChange={(e) =>
+                      onPatchDef({
+                        period: { ...def.period, venue: e.target.value },
+                      })
+                    }
+                    placeholder="Where the window runs, if it runs somewhere."
+                  />
+                )}
+              </Field>
+            </Band>
+          ) : phase === "claims" ? (
+            <>
+              <Band label="The terms">
+                <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
+                  What a member shows to get paid.
+                </p>
+                <Field
+                  id="def-definition"
+                  label={
+                    def.kind === "mutual" ? "What this pool covers" : "What this pool pays for"
+                  }
+                  rejections={errorsFor("definition")}
+                  note="The whole policy rides in this field — name the incident or act narrowly, draw its boundaries, and say what is not covered. The jury reads these terms verbatim."
+                >
+                  {(props) => (
+                    <Textarea
+                      {...props}
+                      rows={8}
+                      value={def.definition}
+                      onChange={(e) => onPatchDef({ definition: e.target.value })}
+                      placeholder={
+                        def.kind === "mutual"
+                          ? "The peril, named plainly — one narrowly defined incident, where and when it counts, and what is not covered."
+                          : "The act the pool pays for — what must be verified, and what is not paid."
+                      }
+                    />
+                  )}
+                </Field>
+                {def.kind === "bounty" ? (
+                  <Field id="def-roster" label="Roster — who or what qualifies">
+                    {(props) => (
+                      <Textarea
+                        {...props}
+                        rows={2}
+                        value={def.roster ?? ""}
+                        onChange={(e) => onPatchDef({ roster: e.target.value })}
+                        placeholder="The named people or acts the bounty pays for."
+                      />
+                    )}
+                  </Field>
+                ) : null}
+              </Band>
+              <Band label="Proof">
+                {def.proof.map((slot, index) => (
+                  <div
+                    key={index}
+                    className="grid gap-4 border border-hairline bg-card p-4 sm:grid-cols-[1fr_8rem_1fr]"
+                    data-slot={`proof-row-${index}`}
+                  >
+                    <Field
+                      id={`proof-${index}-label`}
+                      label="Label"
+                      rejections={errorsFor("proof")}
+                    >
+                      {(props) => (
+                        <Input
+                          {...props}
+                          value={slot.label}
+                          onChange={(e) => setSlot(index, { label: e.target.value })}
+                          placeholder="The member-facing name"
+                        />
+                      )}
+                    </Field>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor={`proof-${index}-kind`}>Kind</Label>
+                      <Select
+                        value={slot.kind}
+                        onValueChange={(kind) => setSlot(index, { kind: kind as "file" | "url" })}
+                      >
+                        <SelectTrigger id={`proof-${index}-kind`} className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="file">File</SelectItem>
+                          <SelectItem value="url">Link</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Field id={`proof-${index}-verify`} label="Jurors verify (optional)">
+                      {(props) => (
+                        <Input
+                          {...props}
+                          value={slot.verify ?? ""}
+                          onChange={(e) => setSlot(index, { verify: e.target.value })}
+                          placeholder="What the jury checks here"
+                        />
+                      )}
+                    </Field>
+                    <p
+                      data-num
+                      className="break-all font-mono text-xs text-muted-foreground sm:col-span-3"
+                      data-slot={`slot-path-${index}`}
+                    >
+                      {slot.slot}
+                    </p>
+                  </div>
+                ))}
+                <div className="flex flex-wrap items-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      onPatchDef({
+                        proof: [
+                          ...def.proof,
+                          {
+                            slot: slotPath(def.proof.length, "", "file"),
+                            kind: "file",
+                            label: "",
+                            verify: "",
+                          },
+                        ],
+                      })
+                    }
+                  >
+                    Add a proof slot
+                  </Button>
+                  <FieldNote rejections={errorsFor("proof")} />
+                </div>
+              </Band>
+            </>
+          ) : phase === "marketing" ? (
+            <Band label="Marketing">
+              <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
+                Optional — nothing here is required. Absent fields fall back to the kind's templates
+                on the pool page.
+              </p>
               <MarketingFields
                 draft={draft}
                 defRejections={defRejections}
                 onPatchDef={onPatchDef}
               />
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onPatchDraft({ marketingOpen: true })}
-              >
-                <ChevronDownIcon className="size-3.5" /> Add marketing copy
-              </Button>
-            )}
-          </Band>
-
-          <Band label="Advanced">
-            <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
-              Every remaining chain input — the mint, the evidence operator, the jury economics —
-              pre-filled with the pilot preset, behind one drawer.
-            </p>
-            <AdvancedDrawer
+            </Band>
+          ) : (
+            <AdvancedPhase
               draft={draft}
               advancedRejections={advancedRejections}
               anchors={anchors}
@@ -751,16 +1021,25 @@ function AuthorStep({
               seedFreedom={seedFreedom}
               onPatchAdvanced={onPatchAdvanced}
             />
-          </Band>
+          )}
 
-          <div className="flex items-center gap-3">
-            <Button disabled={defRejections.length > 0} onClick={onContinue} data-participate>
+          {/* the footer sticks to the viewport bottom: Continue stays
+              reachable down the longest screen */}
+          <div
+            data-slot="author-nav"
+            className="sticky bottom-0 z-10 flex items-center gap-3 border-t border-hairline bg-ground py-3"
+          >
+            {prev !== undefined ? (
+              <Button type="button" variant="outline" onClick={() => onPhase(prev)}>
+                Back
+              </Button>
+            ) : null}
+            <Button type="submit" data-participate>
               Continue
             </Button>
-            <FieldNote rejections={defRejections} />
           </div>
-        </div>
-        {draft.marketingOpen ? <MarketingPreview def={def} /> : null}
+        </form>
+        {phase === "marketing" ? <MarketingPreview def={def} /> : null}
       </div>
     </Settle>
   );
@@ -857,9 +1136,9 @@ function MarketingFields({
   );
 }
 
-// ─── the advanced drawer ────────────────────────────────────────────────────
+// ─── the advanced screen — every remaining chain input, inline ──────────────
 
-function AdvancedDrawer({
+function AdvancedPhase({
   draft,
   advancedRejections,
   anchors,
@@ -909,96 +1188,70 @@ function AdvancedDrawer({
   );
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline">
-          <ChevronDownIcon className="size-3.5" /> Advanced pool settings
-        </Button>
-      </SheetTrigger>
-      <SheetContent
-        side="right"
-        className="flex w-full flex-col gap-6 overflow-y-auto px-6 pb-6 pt-6 sm:max-w-md"
-      >
-        <SheetHeader className="p-0">
-          <SheetTitle>Advanced pool settings</SheetTitle>
-          <SheetDescription>
-            Every remaining chain input, pre-filled with the pilot preset. These mirror the
-            chain&apos;s own checks — the deploy fails with the same words if one is wrong.
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="flex flex-col gap-4">
-          <Field
-            id="adv-mint"
-            label="Contribution + fee mint"
-            note="One mint for entries, payouts, and juror fees — prefilled with USDC. Classic SPL Token only — no Token-2022."
-            rejections={advErrorsFor("mint")}
-          >
-            {(props) => (
-              <Input
-                {...props}
-                className="font-mono"
-                value={advanced.mint}
-                onChange={(e) => onPatchAdvanced({ mint: e.target.value.trim() })}
-                placeholder="USDC mint pubkey"
-              />
-            )}
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          {numberField(
-            "adv-min-stake",
-            "Min juror stake (USDC)",
-            "minStakeUsdc",
-            "Must be above zero.",
+    <Band label="Advanced">
+      <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
+        Every remaining chain input, pre-filled with the pilot preset. These mirror the chain&apos;s
+        own checks — the deploy fails with the same words if one is wrong.
+      </p>
+      <div className="flex w-full max-w-xl flex-col gap-4">
+        <Field
+          id="adv-mint"
+          label="Contribution + fee mint"
+          note="One mint for entries, payouts, and juror fees — prefilled with USDC. Classic SPL Token only — no Token-2022."
+          rejections={advErrorsFor("mint")}
+        >
+          {(props) => (
+            <Input
+              {...props}
+              className="font-mono"
+              value={advanced.mint}
+              onChange={(e) => onPatchAdvanced({ mint: e.target.value.trim() })}
+              placeholder="USDC mint pubkey"
+            />
           )}
-          {numberField(
-            "adv-fee-juror",
-            "Juror fee (USDC)",
-            "feePerJurorUsdc",
-            "Must be above zero.",
-          )}
-          {numberField("adv-jury", "Min jury size", "minJurySize", "Must be odd.")}
-          {numberField(
-            "adv-appeals",
-            "Max appeals",
-            "maxAppeals",
-            "The appeal ladder must fit 31 jurors.",
-          )}
-          {numberField("adv-alpha", "Alpha (bps)", "alphaBps", "0–10000.")}
-          {numberField(
-            "adv-reveal-bps",
-            "Reveal threshold (bps)",
-            "revealThresholdBps",
-            "0–10000.",
-          )}
-          {numberField("adv-review", "Review window (hours)", "reviewHours", "Must be above zero.")}
-          {numberField("adv-commit", "Commit window (hours)", "commitHours", "Must be above zero.")}
-          {numberField("adv-reveal", "Reveal window (hours)", "revealHours", "Must be above zero.")}
-          {numberField("adv-appeal", "Appeal window (hours)", "appealHours", "At least 1 hour.")}
-          {numberField("adv-draws", "Max draw attempts", "maxDrawAttempts", "1–10.")}
-        </div>
-
-        <div className="flex flex-col gap-2 border-t border-hairline pt-4">
-          <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
-            Derived
+        </Field>
+      </div>
+      <div className="grid w-full max-w-3xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {numberField(
+          "adv-min-stake",
+          "Min juror stake (USDC)",
+          "minStakeUsdc",
+          "Must be above zero.",
+        )}
+        {numberField("adv-fee-juror", "Juror fee (USDC)", "feePerJurorUsdc", "Must be above zero.")}
+        {numberField("adv-jury", "Min jury size", "minJurySize", "Must be odd.")}
+        {numberField(
+          "adv-appeals",
+          "Max appeals",
+          "maxAppeals",
+          "The appeal ladder must fit 31 jurors.",
+        )}
+        {numberField("adv-alpha", "Alpha (bps)", "alphaBps", "0–10000.")}
+        {numberField("adv-reveal-bps", "Reveal threshold (bps)", "revealThresholdBps", "0–10000.")}
+        {numberField("adv-review", "Review window (hours)", "reviewHours", "Must be above zero.")}
+        {numberField("adv-commit", "Commit window (hours)", "commitHours", "Must be above zero.")}
+        {numberField("adv-reveal", "Reveal window (hours)", "revealHours", "Must be above zero.")}
+        {numberField("adv-appeal", "Appeal window (hours)", "appealHours", "At least 1 hour.")}
+        {numberField("adv-draws", "Max draw attempts", "maxDrawAttempts", "1–10.")}
+      </div>
+      <div className="flex w-full max-w-3xl flex-col gap-2 border-t border-hairline pt-4">
+        <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
+          Derived
+        </p>
+        <AnchorRow label="policy hash" value={anchors?.hash ?? "…"} />
+        <AnchorRow label="seed" value={seed.toString()} />
+        <AnchorRow label="evidence operator" value={evidenceOperator} />
+        <p data-num className="break-all font-mono text-sm text-ink">
+          deposits close {defTimestamp(draft, "start")} · claims close{" "}
+          {defTimestamp(draft, "claimsClose")} (unix)
+        </p>
+        {seedFreedom === "taken" ? (
+          <p className="text-xs text-muted-foreground">
+            This seed&apos;s address is taken — the wizard re-picks until it finds a free one.
           </p>
-          <AnchorRow label="policy hash" value={anchors?.hash ?? "…"} />
-          <AnchorRow label="seed" value={seed.toString()} />
-          <AnchorRow label="evidence operator" value={evidenceOperator} />
-          <p data-num className="break-all font-mono text-sm text-ink">
-            deposits close {defTimestamp(draft, "start")} · claims close{" "}
-            {defTimestamp(draft, "claimsClose")} (unix)
-          </p>
-          {seedFreedom === "taken" ? (
-            <p className="text-xs text-muted-foreground">
-              This seed&apos;s address is taken — the wizard re-picks until it finds a free one.
-            </p>
-          ) : null}
-        </div>
-      </SheetContent>
-    </Sheet>
+        ) : null}
+      </div>
+    </Band>
   );
 }
 
@@ -1016,6 +1269,8 @@ function PreviewStep({
   seed,
   seedFreedom,
   slug,
+  blocking,
+  onFix,
   onBack,
   onDeploy,
 }: {
@@ -1025,13 +1280,16 @@ function PreviewStep({
   seed: bigint;
   seedFreedom: SeedFreedom;
   slug: string;
+  /** The first gate that still rejects, with the screen that owns it. */
+  blocking: { label: string; line: string } | null;
+  onFix: () => void;
   onBack: () => void;
   onDeploy: () => void;
 }) {
   return (
     <Settle className="flex w-full flex-col gap-(--riprap-space-lg)" delay={180}>
       <div>
-        <h2>
+        <h2 tabIndex={-1} className="focus:outline-none">
           <BadgeStamp>Preview</BadgeStamp>
         </h2>
         <p className="mt-3 max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
@@ -1058,6 +1316,14 @@ function PreviewStep({
           ? " This seed's address is taken — go back and the wizard re-picks."
           : ""}
       </p>
+      {blocking !== null ? (
+        <div className="flex max-w-xl flex-col items-start gap-2" data-slot="preview-blocked">
+          <p className="text-ink [font:var(--riprap-body-md)]">{blocking.line}</p>
+          <Button variant="outline" onClick={onFix}>
+            Fix it in the {blocking.label.toLowerCase()} step.
+          </Button>
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="outline" onClick={onBack}>
           Back
@@ -1068,7 +1334,7 @@ function PreviewStep({
         >
           Download terms document
         </Button>
-        <Button data-participate disabled={hash === ""} onClick={onDeploy}>
+        <Button data-participate disabled={hash === "" || blocking !== null} onClick={onDeploy}>
           Continue to deploy
         </Button>
       </div>

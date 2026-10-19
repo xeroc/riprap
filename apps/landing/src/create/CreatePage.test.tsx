@@ -1,8 +1,8 @@
-// CreatePage — the #/create wizard's author+preview smoke lane and the
+// CreatePage — the #/create wizard's six-screen author walk and the
 // deploy/publish/verify machine (the exhaustive state matrix is the test
-// bean's; here: the mount, the field bindings, the Continue gate, the
-// preview anchors, the draft resume, and the deploy-half states). Copy
-// verbatim from meta/marketing/03-website-copy/landing-page.md § /create.
+// bean's; here: the mount, the per-screen gates, the strip's jumps, the
+// preview anchors, the draft resume landing, and the deploy-half states).
+// Copy verbatim from meta/marketing/03-website-copy/landing-page.md § /create.
 
 import { fetchMaybeMutualBySeed, getInitializeMutualInstructionAsync } from "@riprap/hanse";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -80,6 +80,51 @@ function fill(id: string, value: string) {
   fireEvent.change(input, { target: { value } });
 }
 
+/** The authoring screen's own form — submitting it is the Enter path. */
+function authorForm() {
+  const form = document.querySelector('[data-slot="author-form"]');
+  if (!(form instanceof HTMLFormElement)) throw new Error("no author-form");
+  return form;
+}
+
+/** Submit the current authoring screen (the Continue button is a submit). */
+function stepContinue() {
+  fireEvent.submit(authorForm());
+}
+
+/** Wait until an authoring screen shows one of its inputs. */
+async function atStep(id: string) {
+  await waitFor(() => {
+    if (document.getElementById(id) === null) throw new Error(`#${id} not on screen`);
+  });
+}
+
+/** Fill the valid form across the authoring screens — one question per
+ * screen — ending on ADVANCED (the mint sits there, prefilled with USDC).
+ * `stopAt: "marketing"` ends one screen earlier, on the preview-riding
+ * marketing screen. */
+async function walkValidForm(stopAt?: "marketing") {
+  fill("def-name", "Chairmageddon");
+  stepContinue();
+  await atStep("tier-0-fee");
+  fill("tier-0-fee", "10");
+  fill("tier-0-cap", "40");
+  stepContinue();
+  await atStep("period-start");
+  fill("period-start", "2027-03-01");
+  fill("period-end", "2027-03-03");
+  fill("period-claims", "2027-03-10");
+  stepContinue();
+  await atStep("def-definition");
+  fill("def-definition", "Bodily injury from standing through the opening ceremony.");
+  fill("proof-0-label", "your event ticket");
+  stepContinue();
+  await atStep("marketing-headline");
+  if (stopAt === "marketing") return;
+  stepContinue();
+  await atStep("adv-mint");
+}
+
 beforeEach(() => {
   seedMock.mockClear();
   initMock.mockClear();
@@ -97,42 +142,125 @@ afterEach(() => {
 });
 
 describe("#/create author → preview", () => {
-  /** The Continue button's disabled flag (no jest-dom in the house style). */
-  const continueDisabled = () =>
-    (screen.getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled;
   const inputValue = (id: string) => (document.getElementById(id) as HTMLInputElement).value;
+  const currentStep = () =>
+    document.querySelector('[data-slot="wizard-progress"] [aria-current="step"]')?.textContent;
+  const stop = (name: string) => screen.getByRole("button", { name }) as HTMLButtonElement;
 
-  it("mounts on the author step with the copy-doc frame", async () => {
+  it("mounts on the identity screen as a form with the copy-doc frame", async () => {
     renderPage();
     expect(await screen.findByRole("heading", { name: "Create a pool" })).toBeTruthy();
-    expect(screen.getByText("Author → Preview → Deploy → Publish → Verify")).toBeTruthy();
+    // one live progress display: phase row, counter, track (copy doc §
+    // /create Progress strip — the hero rail and author rail are retired)
+    expect(document.querySelector('[data-slot="wizard-progress"]')).toBeTruthy();
+    expect(screen.getByText("01/10")).toBeTruthy();
+    expect(currentStep()).toContain("Author");
+    // the step change is announced in an sr-only polite region; the visible
+    // counter is decoration
+    expect(document.querySelector('[aria-live="polite"]')?.textContent).toBe(
+      "Step 1 of 10: Identity",
+    );
     expect(document.getElementById("def-name")).toBeTruthy();
-    expect(document.getElementById("def-definition")).toBeTruthy();
-    expect(continueDisabled()).toBe(true);
+    // one question per screen: the claims prose waits on its own screen
+    expect(document.getElementById("def-definition")).toBeNull();
+    // every authoring screen is a form with a footer that sticks to the
+    // viewport bottom while the screen scrolls
+    expect(document.querySelector('[data-slot="author-form"]')).toBeTruthy();
+    expect(document.querySelector('[data-slot="author-nav"]')?.className).toContain("sticky");
+    // Continue is never disabled — a blocked submit refuses and moves focus
+    // instead (a dead button explains nothing)
+    expect(stop("Continue").disabled).toBe(false);
   });
 
-  it("derives the slug from the name and gates Continue until the form passes", async () => {
+  it("refuses a blocked submit on the spot, focusing the gate-carrying field", async () => {
+    renderPage();
+    // nothing typed: the submit stays put and puts focus on the field whose
+    // own gate line already sits under it
+    stepContinue();
+    expect(document.getElementById("def-name")).toBeTruthy();
+    expect(document.activeElement?.id).toBe("def-name");
+    expect(screen.getByText("The pool needs a name.")).toBeTruthy();
+    // the same refusal on the next screen, on that screen's own field
+    fill("def-name", "Chairmageddon");
+    stepContinue();
+    await atStep("tier-0-fee");
+    stepContinue();
+    expect(document.getElementById("tier-0-fee")).toBeTruthy();
+    expect(document.activeElement?.id).toBe("tier-0-fee");
+  });
+
+  it("walks the six screens one question at a time, deriving the slug on the way", async () => {
     renderPage();
     fill("def-name", "Chairmageddon");
     await waitFor(() => expect(inputValue("def-slug")).toBe("chairmageddon"));
-    // still incomplete: definition, tier numbers, window, proof label
-    expect(continueDisabled()).toBe(true);
-
-    fill("def-definition", "Bodily injury from standing through the opening ceremony.");
+    stepContinue();
+    await atStep("tier-0-fee");
+    // a fresh screen takes focus at its heading
+    expect(document.activeElement?.textContent).toContain("Tiers");
     fill("tier-0-fee", "10");
     fill("tier-0-cap", "40");
+    stepContinue();
+    await atStep("period-start");
     fill("period-start", "2027-03-01");
     fill("period-end", "2027-03-03");
     fill("period-claims", "2027-03-10");
+    stepContinue();
+    await atStep("def-definition");
+    fill("def-definition", "Bodily injury from standing through the opening ceremony.");
     fill("proof-0-label", "your event ticket");
-    await waitFor(() => expect(continueDisabled()).toBe(false));
+    stepContinue();
+    await atStep("marketing-headline");
+    stepContinue(); // nothing required here — straight through
+    await atStep("adv-mint");
+    expect(screen.getByText("06/10")).toBeTruthy(); // the strip counts author screens
   });
 
-  it("the marketing band rides with a scaled pool-page preview", async () => {
+  it("the strip jumps to any author screen and the preview — never to deploy", async () => {
     renderPage();
-    // collapsed: no preview panel beside the form
-    expect(document.querySelector('[data-slot="marketing-preview"]')).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /Add marketing copy/ }));
+    stop("Step 4 of 10: Claims").click();
+    await atStep("def-definition");
+    expect(document.getElementById("def-name")).toBeNull();
+    // back home through the same control, and the draft walks with it
+    stop("Step 1 of 10: Identity").click();
+    await atStep("def-name");
+    expect(inputValue("def-name")).toBe("");
+    fill("def-name", "Chairmageddon");
+    stop("Step 7 of 10: Preview").click();
+    await screen.findByText(/One document is the pool's law/);
+    expect(currentStep()).toContain("Preview");
+    // the chain phases cannot be jumped into: deploy never, publish/verify
+    // not before the record is frozen — author screens stay walkable
+    expect(stop("Step 8 of 10: Deploy").disabled).toBe(true);
+    expect(stop("Step 9 of 10: Publish").disabled).toBe(true);
+    expect(stop("Step 10 of 10: Verify").disabled).toBe(true);
+    expect(stop("Step 5 of 10: Marketing").disabled).toBe(false);
+  });
+
+  it("the preview refuses an unfinished draft with the blocking line and its fix", async () => {
+    renderPage();
+    stop("Step 7 of 10: Preview").click();
+    await screen.findByText(/One document is the pool's law/);
+    // the first screen that still rejects names itself
+    expect(screen.getByText("The pool needs a name.")).toBeTruthy();
+    expect(stop("Continue to deploy").disabled).toBe(true);
+    // the fix button is the jump — same as the strip, one click to the screen
+    stop("Fix it in the identity step.").click();
+    await atStep("def-name");
+  });
+
+  it("opens the deploy gate once every screen's gates pass", async () => {
+    renderPage();
+    await walkValidForm();
+    stepContinue();
+    await screen.findByText(/One document is the pool's law/);
+    // no blocking line, deploy open
+    expect(document.querySelector('[data-slot="preview-blocked"]')).toBeNull();
+    expect(stop("Continue to deploy").disabled).toBe(false);
+  });
+
+  it("the marketing screen rides a scaled pool-page preview", async () => {
+    renderPage();
+    await walkValidForm("marketing");
     const panel = await waitFor(() => {
       const node = document.querySelector<HTMLElement>('[data-slot="marketing-preview"]');
       if (node === null) throw new Error("preview not mounted");
@@ -141,7 +269,10 @@ describe("#/create author → preview", () => {
     expect(panel.textContent).toContain("The pool page — preview at 70%");
     // kind default fills the headline until the author writes one
     expect(
-      screen.getByRole("heading", { level: 2, name: "One peril. One pool. It ends." }),
+      screen.getByRole("heading", {
+        level: 2,
+        name: "One peril. One pool. It ends.",
+      }),
     ).toBeTruthy();
     fill("marketing-headline", "Standing room only.");
     await waitFor(() =>
@@ -159,31 +290,42 @@ describe("#/create author → preview", () => {
     expect(panel.textContent).toContain("The join controls land here when the pool deploys.");
   });
 
-  it("preview shows the exact bytes and their anchors (mono), then Back returns", async () => {
+  it("preview shows the exact bytes and their anchors (mono), then Back walks home", async () => {
     renderPage();
-    fill("def-name", "Chairmageddon");
-    fill("def-definition", "Bodily injury from standing through the opening ceremony.");
-    fill("tier-0-fee", "10");
-    fill("tier-0-cap", "40");
-    fill("period-start", "2027-03-01");
-    fill("period-end", "2027-03-03");
-    fill("period-claims", "2027-03-10");
-    fill("proof-0-label", "your event ticket");
-    fireEvent.click(await screen.findByRole("button", { name: "Continue" }));
-
+    await walkValidForm();
+    stepContinue(); // advanced → preview
     expect(await screen.findByText(/One document is the pool's law/)).toBeTruthy();
+    expect(screen.getByText("07/10")).toBeTruthy(); // the strip crosses into the chain phases
+    expect(currentStep()).toContain("Preview");
     // the exact bytes, mono: the frontmatter head renders verbatim
     expect(screen.getAllByText(/schema: riprap-def\/v1/).length).toBeGreaterThan(0);
     expect(screen.getByText(/^sha256 [0-9a-f]{64}$/)).toBeTruthy();
     expect(screen.getByText(/^domain ref [0-9a-f]{64}$/)).toBeTruthy();
     expect(screen.getByText(/^seed \d+$/)).toBeTruthy();
+    // Back returns to the last authoring screen, then walks home with the draft
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
-    await waitFor(() => expect(inputValue("def-name")).toBe("Chairmageddon"));
+    await atStep("adv-mint");
+    for (let i = 0; i < 5; i += 1) {
+      fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    }
+    await atStep("def-name");
+    expect(inputValue("def-name")).toBe("Chairmageddon");
   });
 
-  it("the draft resumes across a reload (localStorage fields only)", async () => {
+  it("the draft resumes across a reload, at the first screen with work left", async () => {
     renderPage();
     fill("def-name", "Chairmageddon");
+    stepContinue();
+    await atStep("tier-0-fee");
+    fill("tier-0-fee", "10");
+    fill("tier-0-cap", "40");
+    stepContinue();
+    await atStep("period-start");
+    fill("period-start", "2027-03-01");
+    fill("period-end", "2027-03-03");
+    fill("period-claims", "2027-03-10");
+    stepContinue();
+    await atStep("def-definition");
     fill("def-definition", "Bodily injury from standing through the opening ceremony.");
     await waitFor(() =>
       expect(JSON.parse(localStorage.getItem("riprap:create") ?? "{}").def.name).toBe(
@@ -192,10 +334,13 @@ describe("#/create author → preview", () => {
     );
     cleanup();
     renderPage();
-    await waitFor(() => expect(inputValue("def-name")).toBe("Chairmageddon"));
+    // the proof slot is the remaining work — the wizard reopens on CLAIMS
+    await atStep("def-definition");
     expect(inputValue("def-definition")).toBe(
       "Bodily injury from standing through the opening ceremony.",
     );
+    expect(document.getElementById("proof-0-label")).toBeTruthy();
+    expect(document.getElementById("def-name")).toBeNull();
   });
 });
 
@@ -203,7 +348,8 @@ describe("#/create author → preview", () => {
 
 describe("#/create deploy → publish → verify", () => {
   const WALLET = "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe"; // 44-char valid Address (PDA derivations assert it)
-  const MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+  const MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"; // also the USDC default the screen prefills
+  const inputValue = (id: string) => (document.getElementById(id) as HTMLInputElement).value;
 
   /** A faithful daemon: PUT 200s (capturing the body); GET returns the
    * captured bytes — the round-trip the verify step asserts. */
@@ -223,89 +369,63 @@ describe("#/create deploy → publish → verify", () => {
     return state;
   }
 
-  /** Fill the valid author form (wallet connected, daemon stubbed first). */
-  async function fillValidForm() {
-    renderPage();
-    fill("def-name", "Chairmageddon");
-    fill("def-definition", "Bodily injury from standing through the opening ceremony.");
-    fill("tier-0-fee", "10");
-    fill("tier-0-cap", "40");
-    fill("period-start", "2027-03-01");
-    fill("period-end", "2027-03-03");
-    fill("period-claims", "2027-03-10");
-    fill("proof-0-label", "your event ticket");
-  }
-
-  /** The drawer path: open it, set the mint, close it — the mint is the
-   * one advanced value the walk must author through the UI. */
-  async function setMintThroughDrawer() {
-    fireEvent.click(screen.getByRole("button", { name: /Advanced pool settings/ }));
-    const mint = await waitFor(() => {
-      const input = document.getElementById("adv-mint") as HTMLInputElement | null;
-      if (input === null) throw new Error("drawer not open yet");
-      return input;
-    });
-    fireEvent.change(mint, { target: { value: MINT } });
-    // close the sheet — its modal hides the author form from a11y queries
-    fireEvent.keyDown(document.activeElement ?? document, { key: "Escape" });
-  }
-
   /** Preview → deploy, waiting for the async anchors to unblock the button. */
   async function continueToDeploy() {
-    const deployButton = await screen.findByRole("button", { name: "Continue to deploy" });
+    const deployButton = await screen.findByRole("button", {
+      name: "Continue to deploy",
+    });
     await waitFor(() => {
       if ((deployButton as HTMLButtonElement).disabled) throw new Error("anchors not landed");
     });
     fireEvent.click(deployButton);
   }
 
-  /** Walk to the publish step: valid form → mint via drawer → preview →
-   * deploy → confirmed. */
+  /** Walk to the publish step: valid form across the six screens → mint on
+   * the advanced screen → preview → deploy → confirmed. */
   async function walkToPublish(daemon: () => unknown = stubFaithfulDaemon) {
     walletState.isConnected = true;
     walletState.account = WALLET;
     daemon();
-    await fillValidForm();
-    await setMintThroughDrawer();
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    renderPage();
+    await walkValidForm();
+    fill("adv-mint", MINT);
+    stepContinue();
     await continueToDeploy();
     await screen.findByText(/Your wallet pays the rent/);
     fireEvent.click(screen.getByRole("button", { name: "Deploy the pool" }));
     await screen.findByText(/The pool is live/);
   }
 
-  it("prefills USDC and blocks deploy only when the mint is cleared", async () => {
+  it("prefills USDC and gates the advanced screen when the mint is cleared", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
     stubFaithfulDaemon();
-    await fillValidForm();
-    // the drawer opens with USDC prefilled — clear it to trip the gate
-    fireEvent.click(screen.getByRole("button", { name: /Advanced pool settings/ }));
-    const mint = await waitFor(() => {
-      const input = document.getElementById("adv-mint") as HTMLInputElement | null;
-      if (input === null) throw new Error("drawer not open yet");
-      return input;
-    });
-    fireEvent.change(mint, { target: { value: "" } });
-    fireEvent.keyDown(document.activeElement ?? document, { key: "Escape" });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-    await continueToDeploy();
+    renderPage();
+    await walkValidForm();
+    expect(inputValue("adv-mint")).toBe(MINT);
+    // clear the prefilled USDC to trip the gate on its own screen
+    fill("adv-mint", "");
+    stepContinue();
+    expect(document.getElementById("adv-mint")).toBeTruthy();
+    expect(document.activeElement?.id).toBe("adv-mint");
     expect(
       await screen.findByText("A mint pubkey — classic SPL Token, no Token-2022."),
     ).toBeTruthy();
-    expect(screen.getByText("Fix it in the advanced drawer.")).toBeTruthy();
   });
 
   it("gates on the wallet: no wallet, no deploy", async () => {
     stubFaithfulDaemon();
-    await fillValidForm();
-    // mint through the draft (the drawer path is covered above)
+    renderPage();
+    await walkValidForm();
+    // mint through the draft (the advanced-screen path is covered above)
     const draft = JSON.parse(localStorage.getItem("riprap:create") ?? "{}");
     draft.advanced.mint = MINT;
     localStorage.setItem("riprap:create", JSON.stringify(draft));
     cleanup();
     renderPage();
-    fireEvent.click(await screen.findByRole("button", { name: "Continue" }));
+    // every gate clean — the resumed draft lands on the advanced screen
+    await atStep("adv-mint");
+    stepContinue();
     await continueToDeploy();
     expect(
       await screen.findByText(
@@ -375,21 +495,15 @@ describe("#/create gate + state matrix", () => {
   const MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
   const WALLET = "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe";
 
-  /** The drawer's input by id — opens the drawer only if it isn't already. */
-  async function openDrawer(id: string): Promise<HTMLInputElement> {
-    if (document.getElementById(id) === null) {
-      fireEvent.click(screen.getByRole("button", { name: /Advanced pool settings/ }));
-    }
-    return waitFor(() => {
-      const input = document.getElementById(id) as HTMLInputElement | null;
-      if (input === null) throw new Error("drawer not open yet");
-      return input;
-    });
-  }
-
-  /** Fill one drawer field with a value. */
+  /** Fill one advanced field with a value (the advanced screen must be
+   * current — walk there first). */
   async function setAdvanced(id: string, value: string) {
-    fireEvent.change(await openDrawer(id), { target: { value } });
+    const input = await waitFor(() => {
+      const node = document.getElementById(id) as HTMLInputElement | null;
+      if (node === null) throw new Error(`#${id} not on screen`);
+      return node;
+    });
+    fireEvent.change(input, { target: { value } });
   }
 
   it("maps every advanced gate to its one line, under its own field", async () => {
@@ -398,6 +512,7 @@ describe("#/create gate + state matrix", () => {
       vi.fn(async () => new Response(null, { status: 200 })),
     );
     renderPage();
+    await walkValidForm();
     await setAdvanced("adv-jury", "4"); // even → odd gate
     expect(await screen.findByText("Must be odd.")).toBeTruthy();
     await setAdvanced("adv-appeals", "4"); // above the accord bound → ladder
@@ -425,6 +540,7 @@ describe("#/create gate + state matrix", () => {
       [400, "The daemon rejected the document."],
       [404, "The daemon can't see the mutual yet. Try again in a moment."],
     ] as const) {
+      cleanup(); // one tree per iteration
       walletState.isConnected = true;
       walletState.account = WALLET;
       vi.stubGlobal(
@@ -436,26 +552,24 @@ describe("#/create gate + state matrix", () => {
         ),
       );
       renderPage();
-      fill("def-name", "Chairmageddon");
-      fill("def-definition", "Bodily injury from standing through the opening ceremony.");
-      fill("tier-0-fee", "10");
-      fill("tier-0-cap", "40");
-      fill("period-start", "2027-03-01");
-      fill("period-end", "2027-03-03");
-      fill("period-claims", "2027-03-10");
-      fill("proof-0-label", "your event ticket");
-      fireEvent.change(await openDrawer("adv-mint"), { target: { value: MINT } });
-      fireEvent.keyDown(document.activeElement ?? document, { key: "Escape" });
-      fireEvent.click(screen.getByRole("button", { name: "Continue" }));
-      const deployButton = await screen.findByRole("button", { name: "Continue to deploy" });
+      await walkValidForm();
+      fill("adv-mint", MINT);
+      stepContinue();
+      const deployButton = await screen.findByRole("button", {
+        name: "Continue to deploy",
+      });
       await waitFor(() => {
         if ((deployButton as HTMLButtonElement).disabled) throw new Error("anchors pending");
       });
       fireEvent.click(deployButton);
       fireEvent.click(await screen.findByRole("button", { name: "Deploy the pool" }));
-      fireEvent.click(await screen.findByRole("button", { name: "Publish the document" }));
+      const publish = await screen.findByRole(
+        "button",
+        { name: "Publish the document" },
+        { timeout: 5000 },
+      );
+      fireEvent.click(publish);
       expect(await screen.findByText(line)).toBeTruthy();
-      cleanup();
       localStorage.clear();
     }
   });
@@ -463,21 +577,16 @@ describe("#/create gate + state matrix", () => {
   it("re-picks the seed while its mutual address is taken, and says so on the preview", async () => {
     // an existing mutual answers every seed query — cast to the SDK shape
     // (content irrelevant: the wizard only checks existence)
-    const taken = { exists: true, address: "A".repeat(32), data: {} } as unknown as Parameters<
-      typeof seedMock.mockResolvedValue
-    >[0];
+    const taken = {
+      exists: true,
+      address: "A".repeat(32),
+      data: {},
+    } as unknown as Parameters<typeof seedMock.mockResolvedValue>[0];
     seedMock.mockResolvedValue(taken);
     renderPage();
     await waitFor(() => expect(seedMock.mock.calls.length).toBeGreaterThanOrEqual(2));
-    fill("def-name", "Chairmageddon");
-    fill("def-definition", "Bodily injury from standing.");
-    fill("tier-0-fee", "10");
-    fill("tier-0-cap", "40");
-    fill("period-start", "2027-03-01");
-    fill("period-end", "2027-03-03");
-    fill("period-claims", "2027-03-10");
-    fill("proof-0-label", "your event ticket");
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await walkValidForm();
+    stepContinue();
     expect(
       await screen.findByText(/This seed's address is taken — go back and the wizard re-picks/),
     ).toBeTruthy();

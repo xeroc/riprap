@@ -12,8 +12,6 @@ import { type AdvancedConfig, type DefDoc, defaultAdvanced } from "./doc";
 export interface CreateDraft {
   def: DefDoc;
   advanced: AdvancedConfig;
-  /** The marketing band starts collapsed; opened stays opened. */
-  marketingOpen: boolean;
 }
 
 /** The blank author form: one tier, one proof slot, the §12 preset, and
@@ -33,7 +31,6 @@ export function emptyDraft(): CreateDraft {
       roster: "",
     },
     advanced: defaultAdvanced(),
-    marketingOpen: false,
   };
 }
 
@@ -55,7 +52,6 @@ export function loadDraft(): CreateDraft {
     return {
       def: { ...base.def, ...parsed.def },
       advanced,
-      marketingOpen: parsed.marketingOpen ?? false,
     };
   } catch {
     return base;
