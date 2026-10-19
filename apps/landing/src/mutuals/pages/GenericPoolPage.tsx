@@ -98,15 +98,21 @@ function exampleFromDef(def: RiprapDef): PoolPageConfig["example"] | null {
 /** §3 → the verbatim definition (its blockquote, else the first paragraph)
  *  plus the definition notes (list items + the remaining paragraphs; the
  *  `**X** means:` intro drops when the quote carried the definition). */
-function definitionFromDef(def: RiprapDef): { definition: string; definitionNotes: string[] } {
+function definitionFromDef(def: RiprapDef): {
+  definition: string;
+  definitionNotes: string[];
+} {
   const section = sectionByNo(parseSections(def.body), 3);
   if (section === null) return { definition: def.name, definitionNotes: [] };
   const quote = quoteLines(section.body)[0] ?? null;
   const paras = paragraphs(section.body);
-  const definition = quote ?? paras[0] ?? def.name;
-  const introDrops = quote !== null && /means:$/.test(paras[0] ?? "");
-  const rest = paras.slice(introDrops ? 1 : quote !== null ? 0 : 1);
-  return { definition, definitionNotes: [...listItems(section.body), ...rest] };
+  const lead = /means:$/.test(paras[0] ?? "");
+  const definition = quote ?? (lead ? paras[1] : paras[0]) ?? def.name;
+  const drop = quote === null ? (lead ? 2 : 1) : lead ? 1 : 0;
+  return {
+    definition,
+    definitionNotes: [...listItems(section.body), ...paras.slice(drop)],
+  };
 }
 
 /** The def → PoolPageConfig projection. Doc bands carry the doc's own numbers

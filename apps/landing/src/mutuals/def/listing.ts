@@ -14,7 +14,9 @@ import { paragraphs, parseSections, sectionByNo } from "./sections";
  *  sentence of the §3 prose (the covered event / qualifying act, named). */
 function section3Excerpt(def: RiprapDef): string {
   const section = sectionByNo(parseSections(def.body), 3);
-  const first = section === null ? null : (paragraphs(section.body)[0] ?? null);
+  const paras = section === null ? [] : paragraphs(section.body);
+  // the canonical §3 opens with `**Name** means:` — the excerpt starts after
+  const first = (/means:$/.test(paras[0] ?? "") ? paras[1] : paras[0]) ?? null;
   if (first === null) return def.name;
   const sentence = /^.*?[.!?](?=\s|$)/.exec(first);
   return sentence !== null ? (sentence[0] ?? def.name) : first;

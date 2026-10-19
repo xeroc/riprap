@@ -44,7 +44,11 @@ function chairmageddon(): DefDoc {
         label: "your event ticket",
         verify: "in your own name",
       },
-      { slot: "02-declaration.pdf", kind: "file", label: "your statutory declaration" },
+      {
+        slot: "02-declaration.pdf",
+        kind: "file",
+        label: "your statutory declaration",
+      },
     ],
     marketing: {
       blurb: "Every seat taken at the opening ceremony — and you stood the whole thing.",
@@ -63,11 +67,23 @@ function supercycle(): DefDoc {
     kind: "bounty",
     slug: "caffeine-supercycle",
     name: "Caffeine Supercycle",
-    period: { start: "2026-11-15", end: "2026-11-17", claimsClose: "2026-11-24" },
+    period: {
+      start: "2026-11-15",
+      end: "2026-11-17",
+      claimsClose: "2026-11-24",
+    },
     tiers: [{ name: "Flat", fee: 5, cap: 50 }],
     proof: [
-      { slot: "01-recipient-post.url", kind: "url", label: "the recipient's confirmation post" },
-      { slot: "02-photo.jpg", kind: "file", label: "the handover, hand to hand" },
+      {
+        slot: "01-recipient-post.url",
+        kind: "url",
+        label: "the recipient's confirmation post",
+      },
+      {
+        slot: "02-photo.jpg",
+        kind: "file",
+        label: "the handover, hand to hand",
+      },
     ],
     language: "en",
     definition:
@@ -98,48 +114,48 @@ describe("renderDefDoc", () => {
   it("emits the exact frontmatter machine block (milestone HANDOFF §2)", () => {
     const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
     const front = doc.split("---\n")[1] ?? "";
-    expect(front).toContain("schema: riprap-def/v1");
-    expect(front).toContain("kind: mutual");
+    expect(front).toContain('schema: "riprap-def/v1"');
+    expect(front).toContain('kind: "mutual"');
     expect(front.indexOf("slug:")).toBeLessThan(front.indexOf("name:"));
     expect(front.indexOf("period:")).toBeLessThan(front.indexOf("tiers:"));
     expect(front.indexOf("tiers:")).toBeLessThan(front.indexOf("proof:"));
     expect(front).toContain('claims_close: "2026-11-24"');
     expect(front).toContain('venue: "Olympia Convention Centre, London"');
     expect(front).toContain('logo: "https://riprap.xyz/pools/chairmageddon/logo.svg"');
-    expect(front).not.toContain("language:"); // "en" is the default — omitted
+    expect(front).toContain('language: "en"'); // canonical renderer always stamps it
   });
 
   it("§3 header follows the kind word-map", () => {
     const mutualDoc = renderDefDoc(chairmageddon(), defaultAdvanced());
     const bountyDoc = renderDefDoc(supercycle(), defaultAdvanced());
-    expect(mutualDoc).toContain("## 3. Covered event");
-    expect(bountyDoc).toContain("## 3. Paid act");
+    expect(mutualDoc).toContain("## 3. Covered Event");
+    expect(bountyDoc).toContain("## 3. Qualifying Delivery");
     expect(bountyDoc).toContain("Roster:");
   });
 
-  it("§4 tier table is verbatim from the doc's tiers", () => {
+  it("§5 tier table is verbatim from the doc's tiers", () => {
     const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
-    expect(doc).toContain("| Tier | Entry | Max payout |");
-    expect(doc).toContain("| Flat | $10 | $40 |");
+    expect(doc).toContain("## 5. Coverage and Price");
+    expect(doc).toContain("| Flat |");
+    expect(doc).toContain("up to $40");
   });
 
-  it("§6 prose embeds the chosen economics once (§12 preset: 3 × $5 = $15)", () => {
+  it("§7 prose embeds the chosen economics once (§12 preset: 3 × $5 = $15)", () => {
     const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
-    expect(doc).toContain("pre-pays an adjudication fee of $15 (3 jurors × $5)");
-    expect(doc).toContain("review for 48 hours, commit for 12, reveal for 12");
-    expect(doc).toContain("up to 2 appeals");
+    expect(doc).toContain("pre-paying an adjudication fee of **$15 USDC**");
+    expect(doc).toContain("A denied or invalid payout request forfeits the fee");
   });
 
-  it("exclusions ride in §3's prose — no separate §, sections stay continuous", () => {
+  it("§4 names the exclusions the wizard folds into §3", () => {
     const doc = renderDefDoc(chairmageddon(), defaultAdvanced());
-    expect(doc).not.toContain("## 4. Exclusions");
-    expect(doc).toContain("## 4. Tiers");
+    expect(doc).toContain("## 4. Exclusions");
+    expect(doc).toContain("- anything not named in §3");
   });
 
-  it("every doc carries the 10 fixed § headers", () => {
+  it("every doc carries the 11 fixed § headers", () => {
     for (const def of [chairmageddon(), supercycle()]) {
       const doc = renderDefDoc(def, defaultAdvanced());
-      for (let section = 1; section <= 10; section++) {
+      for (let section = 1; section <= 11; section++) {
         expect(doc).toMatch(new RegExp(`^## ${section}\\. `, "m"));
       }
     }
@@ -164,7 +180,7 @@ describe("anchors", () => {
     const ref = await domainRefHex(7n, hashBytes);
     expect(ref).toMatch(/^[0-9a-f]{64}$/);
     // pinned vector — any renderer change that moves the bytes moves this
-    expect(hash).toBe("06bb9bb5ede797540cb77559820b333264e481a6cf0de800b4cbfba424305bbf");
+    expect(hash).toBe("dcb6b1d8c3201d14e618bd4f56e149ba05e5824b29edcbb33e7d9477142b725e");
   });
 });
 

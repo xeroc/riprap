@@ -107,6 +107,71 @@ A member who contributed $10 therefore receives their applicable share of the un
 /** The marketing-less variant — kind templates fill every absent field. */
 const NO_MARKETING_DEF = WORKED_DEF.replace(/marketing:\n(?: {2}.*\n)+/, "");
 
+/** A pre-canonical #/create doc: bare enum tokens, `smallest_payout`, and
+ * the old 10-§ body (exclusions folded into §3). */
+const LEGACY_DEF = `---
+schema: riprap-def/v1
+kind: mutual
+slug: "legacy"
+name: "Legacy"
+period:
+  start: "2026-11-15"
+  end: "2026-11-17"
+  claims_close: "2026-11-24"
+tiers:
+  - name: "Flat"
+    fee: 10
+    cap: 40
+proof:
+  - slot: "01-ticket.pdf"
+    kind: file
+    label: "Ticket"
+marketing:
+  smallest_payout: 0
+---
+# Legacy — terms
+
+## 1. Product
+
+Legacy is a mutual.
+
+## 2. Window
+
+Coverage runs 2026-11-15 to 2026-11-17.
+
+## 3. Covered event
+
+A fall.
+
+## 4. Tiers
+
+| Flat | $10 | $40 |
+
+## 5. Pool
+
+One pot.
+
+## 6. Payout requests
+
+- \`01-ticket.pdf\` — Ticket
+
+## 7. End
+
+The pool dissolves.
+
+## 8. Economic principle
+
+Proportional.
+
+## 9. Example
+
+A member pays $10.
+
+## 10. Promise
+
+These terms govern.
+`;
+
 const ADDR = "5Yo1BKU8Vy9mRRwXqrjJhtw4CFmfkZiZoW7VSTj5huEq" as Address;
 const DEF = parseDefDoc(WORKED_DEF) as RiprapDef;
 const NO_MKT_DEF = parseDefDoc(NO_MARKETING_DEF) as RiprapDef;
@@ -131,6 +196,17 @@ describe("parseDefDoc", () => {
     expect(NO_MKT_DEF.marketing).toBeUndefined();
     expect(NO_MKT_DEF.name).toBe("Chairmageddon");
   });
+
+  it("reads pre-canonical wizard docs: bare tokens, smallest_payout, 10 §s", () => {
+    const legacy = parseDefDoc(LEGACY_DEF) as RiprapDef;
+    expect(legacy).not.toBeNull();
+    expect(legacy.marketing?.smallestPayout).toBe(0);
+    // the old §6/§7/§10 land on the § numbers the page and packs read
+    expect(legacy.body).toContain("## 4. Exclusions");
+    expect(legacy.body).toContain("## 7. Payout requests");
+    expect(legacy.body).toContain("## 8. End");
+    expect(legacy.body).toContain("## 11. Promise");
+  });
 });
 
 describe("listingFromDef", () => {
@@ -144,7 +220,8 @@ describe("listingFromDef", () => {
   it("falls back to a §3 excerpt for the tagline when blurb is absent", () => {
     const listing = listingFromDef(NO_MKT_DEF, ADDR);
     // first sentence of §3's prose — the covered event, named
-    expect(listing.tagline.length).toBeGreaterThan(0);
+    expect(listing.tagline).toContain("every seat");
+    expect(listing.tagline).not.toContain("means:");
     expect(listing.smallestPayout).toBe(40); // the flat tier's cap
   });
 });

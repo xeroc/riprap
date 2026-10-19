@@ -387,13 +387,19 @@ function CreateWizard() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const doc = renderDefDoc(draft.def, draft.advanced);
-      const hash = await sha256Hex(new TextEncoder().encode(doc));
-      const hashBytes = Uint8Array.from({ length: 32 }, (_, i) =>
-        Number.parseInt(hash.slice(i * 2, i * 2 + 2), 16),
-      );
-      const ref = await domainRefHex(seed, hashBytes);
-      if (!cancelled) setAnchors({ doc, hash, ref });
+      try {
+        const doc = renderDefDoc(draft.def, draft.advanced);
+        const hash = await sha256Hex(new TextEncoder().encode(doc));
+        const hashBytes = Uint8Array.from({ length: 32 }, (_, i) =>
+          Number.parseInt(hash.slice(i * 2, i * 2 + 2), 16),
+        );
+        const ref = await domainRefHex(seed, hashBytes);
+        if (!cancelled) setAnchors({ doc, hash, ref });
+      } catch {
+        // a mid-edit form can be momentarily unrenderable (non-integer
+        // tier amounts); validation gates the step, the anchors show none
+        if (!cancelled) setAnchors(null);
+      }
     })();
     return () => {
       cancelled = true;
@@ -1143,7 +1149,11 @@ function MarketingFields({
               inputMode="numeric"
               className="font-mono"
               value={marketing.smallestPayout !== undefined ? String(marketing.smallestPayout) : ""}
-              onChange={(e) => patchMarketing({ smallestPayout: Number(e.target.value) })}
+              onChange={(e) =>
+                patchMarketing({
+                  smallestPayout: e.target.value === "" ? undefined : Number(e.target.value),
+                })
+              }
             />
           )}
         </Field>

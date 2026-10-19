@@ -88,7 +88,10 @@ export interface DefFrontmatter {
 /** Split `---` fences: the frontmatter block and the §-body (render.ts's
  * output, sections.ts's input). Throws DefFormatError on a missing or
  * unterminated fence. */
-export function splitDefDocument(doc: string): { frontmatter: string; body: string } {
+export function splitDefDocument(doc: string): {
+  frontmatter: string;
+  body: string;
+} {
   const lines = doc.split("\n");
   if (lines[0] !== "---") {
     throw new DefFormatError("def must open with a '---' frontmatter fence");
@@ -97,7 +100,10 @@ export function splitDefDocument(doc: string): { frontmatter: string; body: stri
   if (end === -1) {
     throw new DefFormatError("unterminated frontmatter — missing closing '---'");
   }
-  return { frontmatter: lines.slice(1, end).join("\n"), body: lines.slice(end + 1).join("\n") };
+  return {
+    frontmatter: lines.slice(1, end).join("\n"),
+    body: lines.slice(end + 1).join("\n"),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -170,6 +176,9 @@ function parseScalar(raw: string, at: string): string | number {
     }
     return n;
   }
+  // legacy tolerance: the pre-canonical wizard emitted bare enum tokens
+  // (schema, kind, proof.kind) instead of quoting them
+  if (/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(v)) return v;
   throw new DefFormatError(
     `${at}: unsupported value '${v}' — the grammar has quoted strings and bare integers only`,
   );
@@ -315,7 +324,15 @@ function rejectUnknown(
 const PERIOD_KEYS = ["start", "end", "claims_close", "venue"] as const;
 const TIER_KEYS = ["name", "fee", "cap"] as const;
 const PROOF_KEYS = ["slot", "kind", "label", "verify"] as const;
-const MARKETING_KEYS = ["headline", "blurb", "logo", "share", "event", "smallestPayout"] as const;
+const MARKETING_KEYS = [
+  "headline",
+  "blurb",
+  "logo",
+  "share",
+  "event",
+  "smallestPayout",
+  "smallest_payout", // legacy wizard spelling
+] as const;
 const TOP_KEYS = [
   "schema",
   "kind",
@@ -390,8 +407,9 @@ export function parseFrontmatter(fm: string): DefFrontmatter {
         marketing[key] = asString(mTree[key], `marketing.${key}`);
       }
     }
-    if (mTree.smallestPayout !== undefined) {
-      marketing.smallestPayout = asInt(mTree.smallestPayout, "marketing.smallestPayout");
+    const smallest = mTree.smallestPayout ?? mTree.smallest_payout;
+    if (smallest !== undefined) {
+      marketing.smallestPayout = asInt(smallest, "marketing.smallestPayout");
     }
   }
 
@@ -426,6 +444,16 @@ export interface RiprapDef extends DefFrontmatter {
   body: string;
 }
 
+/** Legacy wizard docs carried 10 §s (exclusions in §3): renumber them onto
+ *  the canonical 11-§ skeleton with an empty §4 so §-number reads line up.
+ *  Hash-anchored bytes never change — only the parsed view. */
+function canonicalizeLegacyBody(body: string): string {
+  if ((body.match(/^## \d+\. /gm) ?? []).length !== 10) return body;
+  return body
+    .replace(/^## (10|[4-9])\. /gm, (_, n: string) => `## ${Number(n) + 1}. `)
+    .replace(/^## 5\. /m, "## 4. Exclusions\n\n## 5. ");
+}
+
 /** CAS bytes → a def, or null when the bytes are not canonical
  * riprap-def/v1 (grammar, schema tag, kind enum, or the shape-level pool
  * facts: 1–3 positive tiers, at least one proof slot). */
@@ -435,7 +463,7 @@ export function parseDefDoc(doc: string): RiprapDef | null {
   try {
     const split = splitDefDocument(doc);
     fm = parseFrontmatter(split.frontmatter);
-    body = split.body;
+    body = canonicalizeLegacyBody(split.body);
   } catch {
     return null;
   }

@@ -122,7 +122,10 @@ describe("raw policy tab — GET by derived domain_ref (HANSE §4 vector)", () =
     renderRawTab();
     const docEl = await screen.findByText(/Pilot v1 mutual cover terms/);
     expect(
-      screen.getByRole("heading", { level: 3, name: "The immutable terms of this mutual." }),
+      screen.getByRole("heading", {
+        level: 3,
+        name: "The immutable terms of this mutual.",
+      }),
     ).toBeTruthy();
     expect(screen.getByLabelText("copy policy hash").textContent).toContain("d575…72b4");
     expect(screen.getByLabelText("copy domain ref").textContent).toContain("f76a…686e");
@@ -136,11 +139,23 @@ describe("raw policy tab — GET by derived domain_ref (HANSE §4 vector)", () =
     fetchStub.mockResolvedValueOnce(response(200, DOC_TEXT));
     renderRawTab();
     await screen.findByText(/Pilot v1 mutual cover terms/);
-    const copyButton = screen.getByRole("button", { name: "copy the cover terms" });
+    const copyButton = screen.getByRole("button", {
+      name: "copy the cover terms",
+    });
     expect(copyButton.querySelector(".lucide-copy")).toBeTruthy(); // icon, not the word
     fireEvent.click(copyButton);
     await waitFor(() => expect(copyButton.querySelector(".lucide-check")).toBeTruthy());
     expect(writeText).toHaveBeenCalledWith(DOC_TEXT);
+  });
+
+  it("hides the frontmatter in the panel but copies the full anchored bytes", async () => {
+    const withFrontmatter = `---\nschema: riprap-def/v1\nkind: mutual\n---\n${DOC_TEXT}`;
+    fetchStub.mockResolvedValueOnce(response(200, withFrontmatter));
+    renderRawTab();
+    const docEl = await screen.findByText(/Pilot v1 mutual cover terms/);
+    expect(docEl.textContent).not.toContain("riprap-def/v1");
+    fireEvent.click(screen.getByRole("button", { name: "copy the cover terms" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(withFrontmatter));
   });
 
   it("404 renders the upload remedy (copy doc § anchored terms)", async () => {
@@ -182,7 +197,11 @@ describe("raw policy tab — proof-mode PUT (HANSE §2)", () => {
     fetchStub.mockResolvedValueOnce(response(404));
     renderRawTab();
     await screen.findByText("Not published yet.");
-    pickFile(new File(["not the anchored bytes"], "wrong.md", { type: "text/markdown" }));
+    pickFile(
+      new File(["not the anchored bytes"], "wrong.md", {
+        type: "text/markdown",
+      }),
+    );
     expect(
       await screen.findByText(
         "This file's hash doesn't match the mutual's policy hash. Nothing was uploaded.",

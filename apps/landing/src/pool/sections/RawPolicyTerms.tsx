@@ -18,6 +18,12 @@ import { usePolicyDoc } from "../usePolicyDoc";
 // Kit data law: unknown values render as mono {{PARAM}} placeholders.
 const PARAM = "{{PARAM}}";
 
+/** The YAML machine block is not prose: the panel shows the § body. The
+ *  copy button still takes the full anchored bytes. */
+function displayBody(text: string): string {
+  return text.replace(/^---\r?\n[\s\S]*?\r?\n---[ \t]*\r?\n?/, "");
+}
+
 /** PUT failure → one deadpan line (copy doc). */
 function putFailureLine(status: number): string {
   if (status === 404) return "The evidence server can't see the mutual yet. Try again in a moment.";
@@ -206,7 +212,7 @@ export function RawPolicyTerms({ mutual }: { mutual: Mutual | null }) {
                 </Button>
               </div>
               <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap p-3 font-mono text-xs leading-relaxed text-ink">
-                {doc.text}
+                {displayBody(doc.text)}
               </pre>
             </div>
           </div>

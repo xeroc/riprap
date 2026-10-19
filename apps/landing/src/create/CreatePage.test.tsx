@@ -31,7 +31,11 @@ vi.mock("@solana/connector", async (importOriginal) => {
     ...actual,
     useWallet: () => walletState,
     useKitTransactionSigner: () => ({ signer: null }),
-    useCluster: () => ({ clusters: [], cluster: clusterState.cluster, setCluster: vi.fn() }),
+    useCluster: () => ({
+      clusters: [],
+      cluster: clusterState.cluster,
+      setCluster: vi.fn(),
+    }),
     useWalletConnectors: () => [],
     useConnectWallet: () => ({ connect: vi.fn() }),
     useDisconnectWallet: () => ({ disconnect: vi.fn() }),
@@ -301,7 +305,7 @@ describe("#/create author → preview", () => {
     expect(screen.getByText("07/10")).toBeTruthy(); // the strip crosses into the chain phases
     expect(currentStep()).toContain("Preview");
     // the exact bytes, mono: the frontmatter head renders verbatim
-    expect(screen.getAllByText(/schema: riprap-def\/v1/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/schema: "riprap-def\/v1"/).length).toBeGreaterThan(0);
     expect(screen.getByText(/^sha256 [0-9a-f]{64}$/)).toBeTruthy();
     expect(screen.getByText(/^domain ref [0-9a-f]{64}$/)).toBeTruthy();
     expect(screen.getByText(/^seed \d+$/)).toBeTruthy();
