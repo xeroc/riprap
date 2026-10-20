@@ -6,6 +6,7 @@ import { Backstop } from "./Backstop";
 import { Claim } from "./Claim";
 import { ClaimApproval } from "./ClaimApproval";
 import { ExpansionStrip } from "./ExpansionStrip";
+import { Filed } from "./Filed";
 import { Found } from "./Found";
 import { FundingPool } from "./FundingPool";
 import { Gather } from "./Gather";
@@ -17,6 +18,7 @@ import { OnePool } from "./OnePool";
 import { Renew } from "./Renew";
 import { Return } from "./Return";
 import { Rule } from "./Rule";
+import { Sign } from "./Sign";
 import { Stack } from "./Stack";
 
 // controllable reduced-motion flag — same pattern as chrome.test.tsx
@@ -48,6 +50,8 @@ const GLYPHS = [
   ["claim", Claim],
   ["rule", Rule],
   ["return", Return],
+  ["sign", Sign],
+  ["filed", Filed],
   ["pool", OnePool],
   ["found", Found],
   ["renew", Renew],
@@ -164,8 +168,40 @@ describe("glyphs — one concept each, sharp geometry, token colors", () => {
     // two levels + the passing block
     expect(container.querySelectorAll('rect[fill="var(--riprap-funds)"]').length).toBe(3);
   });
-});
 
+  it("sign: the terms card with ruled rows; the signature lands in accent, last", () => {
+    const { container } = render(<Sign />);
+    // one outline rect — the terms card; no fills anywhere
+    expect(container.querySelectorAll("rect").length).toBe(1);
+    const rect = container.querySelector("rect");
+    expect(rect?.getAttribute("stroke")).toBe("var(--riprap-diagram-line)");
+    // three ruled rows + the signature baseline
+    const lines = [...container.querySelectorAll("line")];
+    expect(lines.length).toBe(4);
+    for (const l of lines) {
+      expect(l.getAttribute("stroke")).toBe("var(--riprap-diagram-line)");
+    }
+    // exactly one path — the signature, in the accent (crest law: arrives last)
+    const paths = [...container.querySelectorAll("path")];
+    expect(paths.length).toBe(1);
+    expect(paths[0].getAttribute("stroke")).toBe("var(--riprap-accent)");
+  });
+
+  it("filed: the request paper, the pool with its level, one funds arrow between", () => {
+    const { container } = render(<Filed />);
+    // 3 vessel walls + 3 paper rows + the arrow shaft
+    const lines = [...container.querySelectorAll("line")];
+    expect(lines.length).toBe(7);
+    expect(lines.filter((l) => l.getAttribute("stroke") === "var(--riprap-funds)")).toHaveLength(1);
+    // the pool's money (funds level) + the request paper (outline)
+    expect(container.querySelectorAll('rect[fill="var(--riprap-funds)"]').length).toBe(1);
+    expect(container.querySelectorAll("rect").length).toBe(2);
+    // exactly one path — the arrowhead, funds: the claim on the money
+    const paths = [...container.querySelectorAll("path")];
+    expect(paths.length).toBe(1);
+    expect(paths[0].getAttribute("stroke")).toBe("var(--riprap-funds)");
+  });
+});
 describe("GlyphTile — concept on a registered plate", () => {
   it("stamps ordinal + plain-word label in mono; carries plate ticks", () => {
     const { container } = render(
