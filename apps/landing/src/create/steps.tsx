@@ -292,7 +292,7 @@ export function PublishStep({
       </p>
       <div className="flex flex-wrap items-center gap-4">
         <TextLink href={`#/m/${deployed.mutual}`} className="font-mono text-xs">
-          Mutual {deployed.mutual}
+          Pool {deployed.mutual}
         </TextLink>
         <span data-num className="font-mono text-xs text-muted-foreground">
           tx {deployed.signature}

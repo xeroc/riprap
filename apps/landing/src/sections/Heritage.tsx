@@ -54,8 +54,8 @@ export function Heritage() {
           The mutual is old. The Solana primitive is new.
         </h2>
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
-          At first, we offer Mutuals, the oldest form of risk protection on earth. The pre-stage to
-          insurance.
+          The first pools run the oldest form — mutuals. The rails aren't limited to it: any group
+          can set any purpose, fixed at creation.
         </p>
 
         <ol className="border-y border-hairline">

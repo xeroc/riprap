@@ -3,9 +3,9 @@ import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes, useLocation, useParams } from "react-router";
 import "./index.css";
 import App from "./App.tsx";
+import { poolPageFor } from "./pools/registry.ts";
 // The pool registry maps every `#/m/<id>` detail route (pubkey once pinned,
-// else slug) to its page component (mutuals/registry.ts).
-import { poolPageFor } from "./mutuals/registry.ts";
+// else slug) to its page component (pools/registry.ts).
 // One provider stack for every route (ADR-0007): a wallet connected on any
 // surface stays connected on all of them. Pages stay lazy so route code
 // keeps its own chunks.
@@ -21,8 +21,8 @@ const FileClaimRoute = lazy(() =>
 const AdjudicateRoute = lazy(() =>
   import("./adjudicate/AdjudicatePage.tsx").then((m) => ({ default: m.AdjudicatePage })),
 );
-const MutualsRoute = lazy(() =>
-  import("./mutuals/MutualsPage.tsx").then((m) => ({ default: m.MutualsPage })),
+const PoolsRoute = lazy(() =>
+  import("./pools/PoolsPage.tsx").then((m) => ({ default: m.PoolsPage })),
 );
 const CreateRoute = lazy(() =>
   import("./create/CreatePage.tsx").then((m) => ({ default: m.CreatePage })),
@@ -71,8 +71,10 @@ function PoolSurface() {
  * entry and on every hashchange back. */
 const ROUTE_TITLES: Record<string, string> = {
   "/create": "Riprap: Create a pool",
+  "/pools": "Riprap: Pools",
+  "/mutuals": "Riprap: Pools", // the legacy alias renders the same page — same title
 };
-const PLATFORM_TITLE = "Riprap — pooled cover on Solana";
+const PLATFORM_TITLE = "Riprap — purpose pools on Solana";
 
 function RouteTitle() {
   const { pathname } = useLocation();
@@ -109,7 +111,11 @@ export function Router() {
         <Routes>
           <Route path="/" element={<PlatformSurface />} />
           <Route path="/2026-breakpoint-blade-pool" element={<PoolRoute />} />
-          <Route path="/mutuals" element={<MutualsRoute />} />
+          <Route path="/pools" element={<PoolsRoute />} />
+          {/* legacy alias — the 2026-10-20 purpose-pool pass renamed #/mutuals
+              to #/pools; the old hash keeps resolving to the same page (the
+              Blade Pool dual-route pattern one route up) */}
+          <Route path="/mutuals" element={<PoolsRoute />} />
           <Route path="/m/:id" element={<PoolSurface />} />
           <Route path="/blurb" element={<BlurbRoute />} />
           <Route path="/create" element={<CreateRoute />} />

@@ -8,12 +8,12 @@
 // chain) and RAW POLICY (the anchored cover terms, folded in from the retired
 // band 2026-09-27, states unchanged — the exact pinned bytes off the evidence
 // daemon's CAS; 404 → upload remedy per HANSE_DOMAIN_SPEC_UPLOAD §2; the
-// panel is the shared RawPolicyTerms, also every mutuals page's raw band).
+// panel is the shared RawPolicyTerms, also every pool page's raw band).
 import { Card, SectionBand, shortenAddress, TextLink, usd } from "@riprap/ui";
 import type { Address } from "@solana/kit";
 import { type ReactNode, useState } from "react";
-import { type PoolTier, poolTiers, TIER_NAMES } from "../mutual";
-import { useMutual } from "../useMutual";
+import { type PoolTier, poolTiers, TIER_NAMES } from "../pool";
+import { usePool } from "../usePool";
 import { RawPolicyTerms } from "./RawPolicyTerms";
 
 // Kit data law: unknown values render as mono {{PARAM}} placeholders.
@@ -348,7 +348,7 @@ const TABS = [
 type Tab = (typeof TABS)[number]["id"];
 
 export function PolicyDetails() {
-  const mutualQuery = useMutual();
+  const mutualQuery = usePool();
   const mutual = mutualQuery.state === "ready" ? mutualQuery.mutual : null;
   const tiers = mutual === null ? null : poolTiers(mutual);
   const subaccord = mutual === null ? null : mutual.subaccord;

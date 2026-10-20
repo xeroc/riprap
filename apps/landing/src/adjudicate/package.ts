@@ -328,13 +328,13 @@ export async function fetchJurorPackage(params: {
   if (manifest.subaccord !== params.subaccord) {
     return {
       state: "failed",
-      reason: `cross-check failed: manifest subaccord ${manifest.subaccord} != mutual subaccord ${params.subaccord}`,
+      reason: `cross-check failed: manifest subaccord ${manifest.subaccord} != pool subaccord ${params.subaccord}`,
     };
   }
   if (manifest.filer !== params.mutual) {
     return {
       state: "failed",
-      reason: `cross-check failed: manifest filer ${manifest.filer} != mutual PDA ${params.mutual}`,
+      reason: `cross-check failed: manifest filer ${manifest.filer} != pool PDA ${params.mutual}`,
     };
   }
   return { state: "verified", bytes, manifest, files: entry.files ?? [] };

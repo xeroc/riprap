@@ -9,8 +9,9 @@ import { Footer } from "./sections/Footer";
 import { Heritage } from "./sections/Heritage";
 import { Hero } from "./sections/Hero";
 import { Mechanism } from "./sections/Mechanism";
-import { Mutuals } from "./sections/Mutuals";
 import { OnChain } from "./sections/OnChain";
+import { Pools } from "./sections/Pools";
+import { Purpose } from "./sections/Purpose";
 import { Supporters } from "./sections/Supporters";
 
 export function App() {
@@ -19,7 +20,8 @@ export function App() {
       <SiteNav />
       <main>
         <Hero />
-        <Mutuals />
+        <Pools />
+        <Purpose />
         <OnChain />
         <Mechanism />
         <Heritage />

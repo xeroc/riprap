@@ -19,7 +19,7 @@ import {
 import { Loader2Icon } from "lucide-react";
 import { Prose } from "../../components/Prose";
 import { Settle } from "../../components/Settle";
-import { microToUsd } from "../../pool/mutual";
+import { microToUsd } from "../../pool/pool";
 import type { ClaimDraft } from "./draft";
 import type { DocSlot, EmergencySpec, ScreenCheck } from "./flow";
 

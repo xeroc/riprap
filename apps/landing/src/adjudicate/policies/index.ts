@@ -1,14 +1,14 @@
 // The adjudication-pack registry — resolves a pool's policy pack: a
-// directory listing's `adjudicationPolicy` field (mutuals/data.ts) to its
+// directory listing's `adjudicationPolicy` field (pools/data.ts) to its
 // hand-written pack, or — for def-driven community pools — the pool's
-// anchored riprap-def/v1 doc to a built pack (mutuals/def/packs.ts; epic
+// anchored riprap-def/v1 doc to a built pack (pools/def/packs.ts; epic
 // riprap-hs4r) (ADJUDICATION-DASHBOARD §7). Add a first-party pool: a pack
 // file under ./policies + one line here + the `adjudicationPolicy` field on
 // its data.ts entry. Community pools never touch this table.
 
-import { buildAdjudicationPolicy } from "../../mutuals/def/packs";
-import type { RiprapDef } from "../../mutuals/def/schema";
-import type { MutualListing } from "../../mutuals/types";
+import { buildAdjudicationPolicy } from "../../pools/def/packs";
+import type { RiprapDef } from "../../pools/def/schema";
+import type { PoolListing } from "../../pools/types";
 import type { AdjudicationPolicy } from "../policy";
 import { BLADE_POOL_POLICY } from "./blade-pool";
 
@@ -22,7 +22,7 @@ const POLICIES: Record<string, AdjudicationPolicy> = {
  *  no-policy honest state; the index test pins every listed id to a
  *  registered pack). */
 export function adjudicationPolicyFor(
-  listing: MutualListing | undefined,
+  listing: PoolListing | undefined,
   def?: RiprapDef,
 ): AdjudicationPolicy | null {
   if (def !== undefined) return buildAdjudicationPolicy(def);

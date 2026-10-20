@@ -7,14 +7,14 @@
 import { LifecycleStrip, SectionBand, usd } from "@riprap/ui";
 
 import { Settle } from "../../components/Settle";
-import { poolTiers } from "../mutual";
-import { useMutual } from "../useMutual";
+import { poolTiers } from "../pool";
+import { usePool } from "../usePool";
 
 // Kit data law: unknown values render as mono {{PARAM}} placeholders.
 const PARAM = "{{PARAM}}";
 
 export function PoolMechanism() {
-  const mutualQuery = useMutual();
+  const mutualQuery = usePool();
   const tiers = mutualQuery.state === "ready" ? poolTiers(mutualQuery.mutual) : null;
   // policy §5 — the outer bounds of the three on-chain tiers
   const range =

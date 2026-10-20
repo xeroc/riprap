@@ -5,7 +5,7 @@ import { Card } from "../ui/card";
 import { BadgeStamp } from "./BadgeStamp";
 
 /**
- * `PoolCard` — one mutual on the platform register (category surface:
+ * `PoolCard` — one pool on the platform register (category surface:
  * numberless by AGENTS.md category-vs-instance law). The risk word is the
  * stamp, the group's name is the display line — no prices, no caps, no
  * dates; those are instance terms this card never carries.

@@ -172,7 +172,7 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 
 **`cta-band`** — Pre-footer. Background `{colors.canvas-soft}`, centered display headline in `{typography.display-lg}`, single warm-white CTA. 80px padding, hairline rules above and below.
 
-**`footer`** — Background `{colors.canvas}`, text `{colors.muted}`. 4-column link list, wordmark + "Event mutuals on Solana." line, and the closing fact in mono: `dead on schedule`. 64×48px padding.
+**`footer`** — Background `{colors.canvas}`, text `{colors.muted}`. 4-column link list, wordmark + "Purpose pools on Solana." line (2026-10-20 purpose-pool pass — was "Event mutuals on Solana."; matches the landing footer descriptor), and the closing fact in mono: `dead on schedule`. 64×48px padding.
 
 **`dissolution-band`** — Post-pool end-state only. Background `{colors.canvas-deep}`, the mark in scattered state, `{typography.mono-number}` `$0 remaining`, dissolution line in `{typography.body-sm}`. Used on dead-pool pages — the brand's signature moment; never on evergreen pages.
 

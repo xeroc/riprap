@@ -14,7 +14,7 @@ import type { Address } from "@solana/kit";
 import { fetchDispute, fetchSubaccordMaybe } from "@useaccord/sdk";
 import { useEffect, useRef, useState } from "react";
 import { parseClaimManifest } from "../../adjudicate/package";
-import { microToUsd } from "../../pool/mutual";
+import { microToUsd } from "../../pool/pool";
 import type { ClusterRpc } from "../../shared/rpc";
 import { intakeDocument, sha256Hex } from "./documents";
 import { fetchManifest, operatorPubFromKey, postManifest, putDocument } from "./evidence";

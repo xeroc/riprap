@@ -558,7 +558,7 @@ describe("#/create gate + state matrix", () => {
   it("publish states: 400 rejected, 404 mutual-not-visible — each its deadpan line", async () => {
     for (const [status, line] of [
       [400, "The daemon rejected the document."],
-      [404, "The daemon can't see the mutual yet. Try again in a moment."],
+      [404, "The daemon can't see the pool yet. Try again in a moment."],
     ] as const) {
       cleanup(); // one tree per iteration
       walletState.isConnected = true;

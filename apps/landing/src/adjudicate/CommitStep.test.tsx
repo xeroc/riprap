@@ -10,7 +10,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { Accord } from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
-import { formatUtc } from "../pool/mutual";
+import { formatUtc } from "../pool/pool";
 import { CommitStep } from "./CommitStep";
 import { loadStoredVote, saltBridgeKey } from "./vote";
 

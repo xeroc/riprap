@@ -25,18 +25,18 @@ import { Navigate } from "react-router";
 import { toast } from "sonner";
 import { Settle } from "../../components/Settle";
 import { SiteNav } from "../../components/SiteNav";
-import { poolByRouteId, poolRoute } from "../../mutuals/data";
-import { listingFromDef } from "../../mutuals/def/listing";
-import { usePoolDef } from "../../mutuals/def/usePoolDef";
-import type { MutualListing } from "../../mutuals/types";
 import {
   formatUtc,
   microToUsd,
   poolTiers,
-  resolvePoolAddress,
+  resolveListingAddress,
   TIER_NAMES,
-} from "../../pool/mutual";
-import { useMutual } from "../../pool/useMutual";
+} from "../../pool/pool";
+import { usePool } from "../../pool/usePool";
+import { poolByRouteId, poolRoute } from "../../pools/data";
+import { listingFromDef } from "../../pools/def/listing";
+import { usePoolDef } from "../../pools/def/usePoolDef";
+import type { PoolListing } from "../../pools/types";
 import { useClusterRpc, useHanseEnv } from "../../shared/rpc";
 import { describeError, sendInstruction } from "../../shared/transaction";
 import { ClusterSwitch, ConnectWalletButton } from "../controls";
@@ -266,7 +266,7 @@ function BlockedState({ block, poolHref }: { block: PreflightBlock; poolHref: st
  *  published def fall back to the app surface (the joined-pools table). */
 function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   const clusters = useCluster();
-  const staticListing: MutualListing | undefined =
+  const staticListing: PoolListing | undefined =
     pool !== undefined ? poolByRouteId(pool) : undefined;
   // a route id the directory doesn't know is a community pool's on-chain
   // pubkey — resolve its def (honest loading state; refusals are invalid)
@@ -282,11 +282,11 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   const flow: ClaimFlow | null = claimFlowFor(listing, def);
   const resolving =
     communityAddress !== null &&
-    (resolution.state === "mutual-loading" || resolution.state === "doc-loading");
+    (resolution.state === "pool-loading" || resolution.state === "doc-loading");
   const invalidPool = listing === undefined || flow === null;
   // undefined ⇒ the static map — harmless when invalid: we navigate away at
   // render, before any step shows.
-  const mutualAddress = invalidPool ? undefined : resolvePoolAddress(listing, clusters);
+  const mutualAddress = invalidPool ? undefined : resolveListingAddress(listing, clusters);
   const tierNames = listing !== undefined ? listing.tiers.map((t) => t.name) : TIER_NAMES;
   const docPaths = flow !== null ? flow.documentSlots.map((s) => s.path) : [];
   /** File slots only — url slots have no document to PUT; the manifest
@@ -851,11 +851,11 @@ function RestoreSurface({ pool, nonce }: { pool?: string; nonce?: string }) {
   const flow = claimFlowFor(listing, def);
   const resolving =
     communityAddress !== null &&
-    (resolution.state === "mutual-loading" || resolution.state === "doc-loading");
+    (resolution.state === "pool-loading" || resolution.state === "doc-loading");
   const invalid =
     listing === undefined || flow === null || nonce === undefined || !/^\d+$/.test(nonce);
-  const mutualAddress = invalid ? null : resolvePoolAddress(listing, clusters);
-  const mutualQuery = useMutual(mutualAddress);
+  const mutualAddress = invalid ? null : resolveListingAddress(listing, clusters);
+  const mutualQuery = usePool(mutualAddress);
   const disputePda = useQuery({
     queryKey: ["dispute-pda", clusterRpc?.endpoint, mutualAddress, nonce],
     queryFn: () =>

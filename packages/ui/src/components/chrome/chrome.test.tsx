@@ -485,13 +485,13 @@ describe("FooterBand", () => {
           { heading: "docs", links: [{ href: "#c", label: "Policy" }] },
           { heading: "contact", links: [{ href: "#d", label: "Email" }] },
         ]}
-        tagline="Event mutuals on Solana."
+        tagline="Purpose pools on Solana."
       />,
     );
     expect(screen.getAllByRole("navigation").length).toBe(4);
     const closing = screen.getByText("dead on schedule");
     expect(closing.className).toContain("font-mono");
-    expect(screen.getByText("Event mutuals on Solana.")).toBeTruthy();
+    expect(screen.getByText("Purpose pools on Solana.")).toBeTruthy();
   });
 });
 

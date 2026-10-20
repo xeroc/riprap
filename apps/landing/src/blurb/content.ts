@@ -23,20 +23,20 @@ export const INTRO =
 /** Status line — the ask without numbers (pre-round law). */
 export const STATUS = "raising a pre-seed now · terms and deck on request";
 
-/** One-liner for chats — pooled-cover line (payout-pool pass,
- * 2026-10-06) + domain. */
-export const ONE_LINE = "riprap — Insurance, Finally Programmable. On Solana. riprap.xyz";
+/** One-liner for chats — purpose-pool line (purpose-pool pass,
+ * 2026-10-20) + domain. */
+export const ONE_LINE = "riprap — purpose pools on Solana, settled by peers. riprap.xyz";
 
 /** Short blurb — cost/yield pass (2026-10-11, founder call): the two
  * numbers (25% cost load, 18% privileged-LP yield — founder-supplied,
  * deck sources) + mutual-lineage mechanism + DeFi-both-directions +
  * motto close. First batch = bound facts (Breakpoint, November, London;
- * nine pools = mutuals/data.ts MUTUALS) + founder. */
+ * nine pools = pools/data.ts POOLS) + founder. */
 export const SHORT_BLURB = `Over 25% of every insurance dollar vanishes before a claim is paid; meanwhile, only privileged LPs earn up to 18% yield.
 
 riprap solves this, makes insurances permissionless, transparent and more competitive by putting the insurances business logic into a smart contract on solana.
 
-Today, it runs the original insurance — mutual risk pools — on-chain: peers chip in, peers settle claims.
+Today it runs purpose pools on Solana: any group can start one — chip in under a purpose you set, drawn peers decide every payout against it, the money stays the group's. The first market is the original insurance — mutual risk pools.
 
 Insurance, Finally Programmable.
 
@@ -55,7 +55,7 @@ export const STANDARD_BLURB = `Over 25% of every insurance dollar vanishes befor
 
 riprap solves this, makes insurances permissionless, transparent and more competitive by putting the insurances business logic into a smart contract on solana.
 
-We start with the original insurance: mutual risk pools — humanity's oldest protection — put on-chain. Peers chip in, peers settle claims. That changes what they can do.
+riprap is purpose pools on Solana: any group can start one — chip in under a purpose you set, drawn peers decide every payout against it, the money stays the group's. The purpose never changes; a new purpose is a new pool. The first market is the original insurance — mutual risk pools, humanity's oldest protection.
 
 How it works:
 
@@ -339,7 +339,7 @@ export const EXPLAINERS: ExplainerTweet[] = [
     // x.com/xer0c/status/2092072543876440364 — pinned; HANSE 30s explainer
     kicker: "01 · the mutual",
     note: "What pooled protection is, how much of the world already runs on it, and why on-chain mutuals cover the wrong risk.",
-    text: "Mutuals are the oldest form of pooled protection on earth.\n\nA quarter of the world's cover ($1.6T across 4,700+ societies, ICMIF24) runs on this structure\n\nOn-chain, the sector holds ~$104M. Why? Because they cover the wrong thing: web3 losses\n\nWE are building HANSE to fix this.",
+    text: "Pools are the oldest form of pooled protection on earth.\n\nA quarter of the world's cover ($1.6T across 4,700+ societies, ICMIF24) runs on this structure\n\nOn-chain, the sector holds ~$104M. Why? Because they cover the wrong thing: web3 losses\n\nWE are building HANSE to fix this.",
     date: "Aug 25, 2026",
     meta: "1,046 views · 13 likes",
     media: "/blurb/hanse-mutuals.jpg",

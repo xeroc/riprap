@@ -23,7 +23,7 @@ const RAMP: { token: string; sample: string; note: string }[] = [
     sample: "Entry is a fee, not a premium.",
     note: "emphasized body — 16/1.55 @ 500",
   },
-  { token: "body-sm", sample: "Event mutuals on Solana.", note: "footer body — 15/1.5" },
+  { token: "body-sm", sample: "Purpose pools on Solana.", note: "footer body — 15/1.5" },
   {
     token: "mono-label",
     sample: ": BLADE POOL @ BREAKPOINT",

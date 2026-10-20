@@ -6,9 +6,9 @@
 // note — the join machine needs a deployed pool.
 import { usd } from "@riprap/ui";
 
-import type { RiprapDef } from "../mutuals/def/schema";
-import { PoolHeroOffer } from "../mutuals/pages/GenericPoolHero";
-import { defaultTierIndex } from "../mutuals/pages/usePoolJoin";
+import type { RiprapDef } from "../pools/def/schema";
+import { PoolHeroOffer } from "../pools/pages/GenericPoolHero";
+import { defaultTierIndex } from "../pools/pages/usePoolJoin";
 import type { DefDoc } from "./doc";
 
 const PARAM = "{{PARAM}}";

@@ -9,8 +9,8 @@ import type { ReactNode } from "react";
 
 import { Prose } from "../../components/Prose";
 import { Settle } from "../../components/Settle";
-import { type PoolTier, poolTiers } from "../mutual";
-import { useMutual } from "../useMutual";
+import { type PoolTier, poolTiers } from "../pool";
+import { usePool } from "../usePool";
 
 // Kit data law: unknown values render as mono {{PARAM}} placeholders.
 const PARAM = "{{PARAM}}";
@@ -109,7 +109,7 @@ function buildFaqs(tiers: PoolTier[] | null): { q: string; a: ReactNode }[] {
 }
 
 export function PoolFaq() {
-  const mutualQuery = useMutual();
+  const mutualQuery = usePool();
   const tiers = mutualQuery.state === "ready" ? poolTiers(mutualQuery.mutual) : null;
   return (
     <SectionBand id="faq" label="questions" tone="soft">

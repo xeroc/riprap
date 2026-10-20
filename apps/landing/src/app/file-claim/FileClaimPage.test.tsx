@@ -21,7 +21,7 @@ import { ed25519PublicKeyFromSeed } from "@useaccord/sdk/evidence";
 import { MemoryRouter, Route, Routes, useParams } from "react-router";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fakeMutual } from "../../pool/fixtures";
+import { fakePool } from "../../pool/fixtures";
 import { sha256Hex } from "./documents";
 import { FileClaimPage } from "./FileClaimPage";
 
@@ -162,7 +162,7 @@ const testConfig = getDefaultConfig({ appName: "riprap-test", network: "localnet
 let lastQueryClient: QueryClient;
 
 function renderWizard(mutualAddress = MUTUAL_ADDR) {
-  vi.stubEnv("VITE_LOCALNET_MUTUAL", mutualAddress);
+  vi.stubEnv("VITE_LOCALNET_POOL", mutualAddress);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
   });
@@ -237,7 +237,7 @@ beforeEach(() => {
   mutualMock.mockResolvedValue({
     exists: true,
     address: MUTUAL_ADDR,
-    data: fakeMutual() as Mutual,
+    data: fakePool() as Mutual,
   } as unknown as MaybeAccount<Mutual>);
   memberMock.mockResolvedValue(memberAccount());
   feeBalanceMock.mockResolvedValue(20n * 1_000_000n);
@@ -563,7 +563,7 @@ describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", (
     mutualMock.mockResolvedValue({
       exists: true,
       address: MUTUAL_ADDR,
-      data: fakeMutual({ claimNonce: 1n }) as Mutual,
+      data: fakePool({ claimNonce: 1n }) as Mutual,
     } as unknown as MaybeAccount<Mutual>);
 
     fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
@@ -710,7 +710,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     mutualMock.mockResolvedValue({
       exists: true,
       address: MUTUAL_ADDR,
-      data: fakeMutual({ claimsCloseAt: 1_788_134_399n }) as Mutual,
+      data: fakePool({ claimsCloseAt: 1_788_134_399n }) as Mutual,
     } as unknown as MaybeAccount<Mutual>);
     renderWizard();
     await waitFor(() => {
@@ -960,9 +960,9 @@ describe("#/app/file-claim/:pool — the pool-scoped wizard", () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
     // the blade-pool listing's route id is its pinned pubkey; on localnet
-    // resolvePoolAddress reads the same stubbed env address, so the reads
+    // resolveListingAddress reads the same stubbed env address, so the reads
     // answer and the blade flow pack drives step 1 (its screen checks).
-    vi.stubEnv("VITE_LOCALNET_MUTUAL", MUTUAL_ADDR);
+    vi.stubEnv("VITE_LOCALNET_POOL", MUTUAL_ADDR);
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
     });
@@ -979,7 +979,7 @@ describe("#/app/file-claim/:pool — the pool-scoped wizard", () => {
   it("the Toly flow walks incident → evidence (URL slot) → manifest with the URL's hash", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    vi.stubEnv("VITE_LOCALNET_MUTUAL", MUTUAL_ADDR);
+    vi.stubEnv("VITE_LOCALNET_POOL", MUTUAL_ADDR);
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
     });

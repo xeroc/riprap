@@ -16,7 +16,7 @@ export type DaemonBase = string;
 /** One deadpan line per non-2xx PUT (copy doc § /create PUBLISH states). */
 export function publishFailureLine(status: number): string {
   if (status === 400) return "The daemon rejected the document.";
-  if (status === 404) return "The daemon can't see the mutual yet. Try again in a moment.";
+  if (status === 404) return "The daemon can't see the pool yet. Try again in a moment.";
   if (status === 409) {
     return "Different bytes are already stored at this address — nothing was overwritten.";
   }

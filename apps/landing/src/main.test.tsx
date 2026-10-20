@@ -11,7 +11,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Router } from "./main";
-import { MUTUALS } from "./mutuals/data";
+import { POOLS } from "./pools/data";
 
 // The platform route's navbar carries the wallet controls (§0, 2026-09-29) —
 // stub the connector hooks; route-matching tests don't need the real stack.
@@ -49,8 +49,8 @@ vi.mock("./adjudicate/AdjudicatePage", () => ({
     />
   ),
 }));
-vi.mock("./mutuals/MutualsPage", () => ({
-  MutualsPage: () => <div data-testid="mutuals-route" />,
+vi.mock("./pools/PoolsPage", () => ({
+  PoolsPage: () => <div data-testid="pools-route" />,
 }));
 vi.mock("./create/CreatePage", () => ({
   CreatePage: () => <div data-testid="create-route" />,
@@ -64,13 +64,13 @@ function expectPlatformRoute() {
     "app-route",
     "file-claim-route",
     "adjudicate-route",
-    "mutuals-route",
+    "pools-route",
   ]) {
     expect(screen.queryByTestId(testid)).toBeNull();
   }
 }
 
-// The platform route's mutuals band reads live member counts (useQuery) —
+// The platform route's pools band reads live member counts (useQuery) —
 // give the bare Router test renders a throwaway client.
 function renderRouter() {
   const queryClient = new QueryClient({
@@ -149,11 +149,20 @@ describe("hash router", () => {
     });
   });
 
-  it("renders the mutuals directory route on #/mutuals", async () => {
+  it("renders the pools directory route on #/pools, with the <title> swap", async () => {
+    window.location.hash = "#/pools";
+    renderRouter();
+    expect(await screen.findByTestId("pools-route")).toBeTruthy();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    await waitFor(() => expect(document.title).toBe("Riprap: Pools"));
+  });
+
+  it("keeps the legacy #/mutuals hash as an alias of #/pools (2026-10-20 pass)", async () => {
     window.location.hash = "#/mutuals";
     renderRouter();
-    expect(await screen.findByTestId("mutuals-route")).toBeTruthy();
+    expect(await screen.findByTestId("pools-route")).toBeTruthy();
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    await waitFor(() => expect(document.title).toBe("Riprap: Pools"));
   });
 
   it("renders the create wizard on #/create and swaps the <title> both ways", async () => {
@@ -168,12 +177,12 @@ describe("hash router", () => {
     expect(llms).toContain("[Create a pool]");
     goHash("#/");
     await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeTruthy());
-    expect(document.title).toBe("Riprap — pooled cover on Solana");
+    expect(document.title).toBe("Riprap — purpose pools on Solana");
   });
 
   it("renders the Blade Pool page on its #/m pubkey route id too (legacy route kept)", async () => {
     // Blade pins per cluster (devnet + mainnet) — the route id is the pubkey now
-    const blade = MUTUALS.find((m) => m.slug === "blade-pool");
+    const blade = POOLS.find((m) => m.slug === "blade-pool");
     if (!blade?.pubkey) throw new Error("blade-pool listing has no pinned pubkey");
     window.location.hash = `#/m/${blade.pubkey}`;
     renderRouter();

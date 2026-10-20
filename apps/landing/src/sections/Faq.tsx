@@ -1,4 +1,4 @@
-// §5.5 — FAQ: the ten questions a first-time visitor asks, platform register.
+// §5.5 — FAQ: the twelve questions a first-time visitor asks, platform register.
 // Numberless, instance-free (page laws — tiers, dates, and the peril live on
 // instance surfaces; the deep FAQ is meta/marketing/03-website-copy/faq-content.md).
 // Native <details> disclosure: keyboard-accessible, no JS, answers in the DOM.
@@ -10,7 +10,7 @@ import { Settle } from "../components/Settle";
 const FAQS = [
   {
     q: "Is this insurance?",
-    a: "It's a purpose pool, much more similar to a Mutual — the original form of insurance: members' money in, members' claims out, peers deciding. What it isn't is a policy from a company: no underwriting desk, no reserves, no company keeping the difference. The pool never pays more than it holds. If you need regulated insurance — licensed, with a guarantee fund behind it — buy insurance. This is a different thing with a written, narrow shape.",
+    a: "The first pools are mutuals — the original form of insurance: members' money in, members' claims out, peers deciding. A pool can carry any purpose; cover is the first. What it isn't is a policy from a company: no underwriting desk, no reserves, no company keeping the difference. The pool never pays more than it holds. If you need regulated insurance — licensed, with a guarantee fund behind it — buy insurance. This is a different thing with a written, narrow shape.",
   },
   {
     q: "Who holds the money, and can the Riprap team move it?",
@@ -47,6 +47,14 @@ const FAQS = [
   {
     q: "Is this legal?",
     a: "Pool by pool and place by place, before entry opens anywhere. The product is structured as a pool that ends, not as insurance; we won't open a pool in a jurisdiction where that distinction hasn't been reviewed. Until terms are published where you are, treat it as unavailable. This page is not legal advice.",
+  },
+  {
+    q: "Can anyone create a pool?",
+    a: "Yes. Creating a pool is a transaction, not a company formation — the #/create wizard walks the terms as a form: the purpose, the prices, the window, what a payout request must show. Whatever purpose the group wants, within the law of wherever its members are. The rails are the platform's; the purpose is the founder's.",
+  },
+  {
+    q: "Can a pool's purpose change later?",
+    a: "No. The purpose is fixed when the pool is created: the terms document is hashed and pinned on-chain, and a hash can't be edited. Members join knowing exactly what their money is for; a group that wants a different purpose creates a different pool. Adjudication rules can be tuned — juror counts, windows, fees — the purpose cannot.",
   },
 ];
 

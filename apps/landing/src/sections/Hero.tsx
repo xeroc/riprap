@@ -19,12 +19,14 @@ import { Waitlist } from "../components/Waitlist";
 
 /** The rotating one-liners — 2–3 words each, from the marketing material.
  * The first is the founder-locked campaign H1 (copy doc §1, 2026-10-06);
- * it stays alone under reduced motion and is what loads without JS. */
+ * it stays alone under reduced motion and is what loads without JS. The
+ * rest are purpose-pool pass vocabulary (2026-10-20): the platform word,
+ * the chain, the any-purpose law (§1.3/§5, footer descriptor). */
 export const HEADLINES = [
   "Self-governing money",
-  "Pooled cover",
-  "Mutuals on Solana",
-  "Payout pools",
+  "Purpose pools",
+  "Pools on Solana",
+  "Any purpose",
   "P2P purpose pools",
 ] as const;
 
@@ -89,7 +91,7 @@ export function Hero() {
           <div className="flex flex-col gap-(--riprap-space-lg)">
             <Settle>
               <p className="uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
-                Pooled cover on Solana
+                Purpose pools on Solana
               </p>
             </Settle>
             <Settle delay={60}>
@@ -99,16 +101,17 @@ export function Hero() {
             </Settle>
             <Settle delay={120}>
               <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                Each pool runs on its own terms, written before anyone joins. Accept them when you
-                join, and you can claim from the pool. Claims are reviewed and approved by other
-                pool members — transparent and on-chain. Build bounties, mutuals or insurances.
+                A pool exists for one purpose, set at creation and fixed forever. Members chip in;
+                every payout is decided by drawn peers, with the pool's purpose as the measure —
+                cover when it goes wrong, bounties when it goes right, or a purpose of your own.
+                Whatever the pool doesn't pay stays the group's.
               </p>
             </Settle>
             {/* primary: browse the pools — the waitlist rides below, secondary */}
             <Settle delay={180} className="flex flex-col gap-5 pt-(--riprap-space-sm)">
               <div className="flex flex-wrap items-center gap-4">
                 <Button asChild>
-                  <a href="#mutuals">Browse the pools</a>
+                  <a href="#pools">Browse the pools</a>
                 </Button>
                 <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
                   First batch: Breakpoint 2026, London.

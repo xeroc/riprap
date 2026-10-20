@@ -8,7 +8,7 @@
 //
 // Founder call 2026-10-07: heroes are per-pool components — this file is
 // the Blade Pool's; the draft pools carry their own under
-// mutuals/pages/*Hero.tsx. The join machine is shared (usePoolJoin); the
+// pools/pages/*Hero.tsx. The join machine is shared (usePoolJoin); the
 // copy and layout are not.
 import {
   BadgeStamp,
@@ -26,10 +26,10 @@ import { useState } from "react";
 
 import { Prose } from "../../components/Prose";
 import { Settle } from "../../components/Settle";
-import { MUTUAL_EVENT, poolBySlug, poolRouteId } from "../../mutuals/data";
-import { ConnectWalletCta, HeroClusterSwitch } from "../../mutuals/pages/heroChrome";
-import { defaultTierIndex, joinPrecheck, usePoolJoin } from "../../mutuals/pages/usePoolJoin";
-import type { MutualListing } from "../../mutuals/types";
+import { BATCH_EVENT, poolBySlug, poolRouteId } from "../../pools/data";
+import { ConnectWalletCta, HeroClusterSwitch } from "../../pools/pages/heroChrome";
+import { defaultTierIndex, joinPrecheck, usePoolJoin } from "../../pools/pages/usePoolJoin";
+import type { PoolListing } from "../../pools/types";
 import { SUPPORTERS, SupporterDiscs } from "../../sections/Supporters";
 import { JoinPrecheck } from "./JoinPrecheck";
 import { PolicyAcceptNote } from "./PolicyAcceptNote";
@@ -71,7 +71,7 @@ const PHASE_LABELS: Record<"building" | "wallet-signing" | "confirming", string>
   confirming: "Confirming…",
 };
 
-export function BladeHero({ listing = BLADE }: { listing?: MutualListing }) {
+export function BladeHero({ listing = BLADE }: { listing?: PoolListing }) {
   const { isConnected } = useWallet();
   const [tierIndex, setTierIndex] = useState(defaultTierIndex(listing.tiers.length));
   const join = usePoolJoin(listing);
@@ -110,9 +110,9 @@ export function BladeHero({ listing = BLADE }: { listing?: MutualListing }) {
           <div className="flex flex-col gap-(--riprap-space-lg)">
             <Settle>
               <div className="flex flex-wrap items-center gap-3">
-                <StampBadge pool={listing.name} event={MUTUAL_EVENT.event.split(" ")[0]} />
+                <StampBadge pool={listing.name} event={BATCH_EVENT.event.split(" ")[0]} />
                 <p className="text-muted-foreground [font:var(--riprap-mono-label)]">
-                  {MUTUAL_EVENT.venue} · {MUTUAL_EVENT.window}
+                  {BATCH_EVENT.venue} · {BATCH_EVENT.window}
                 </p>
               </div>
             </Settle>

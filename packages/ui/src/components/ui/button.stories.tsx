@@ -23,7 +23,7 @@ export const Ghost: StoryObj<typeof meta> = {
 };
 
 export const Link: StoryObj<typeof meta> = {
-  args: { variant: "link", children: "What is a mutual?" },
+  args: { variant: "link", children: "What is a pool?" },
 };
 
 export const Disabled: StoryObj<typeof meta> = {

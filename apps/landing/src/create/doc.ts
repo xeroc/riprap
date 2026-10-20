@@ -16,7 +16,7 @@
 // mirrored here (31 jurors, 3 appeals, 3600s appeal floor, 10 draw attempts)
 // are restated from initialize_mutual.rs and pinned by tests.
 
-import { type DefInput, renderDef } from "../mutuals/def/render";
+import { type DefInput, renderDef } from "../pools/def/render";
 
 // ─── The def model (milestone HANDOFF §2 frontmatter + body prose) ─────────
 
@@ -385,7 +385,7 @@ function marketingFor(marketing: DefMarketing | undefined): DefInput["marketing"
 
 /**
  * The canonical `riprap-def/v1` document for the wizard's state. The
- * canonical renderer at `mutuals/def/render.ts` is the one byte source —
+ * canonical renderer at `pools/def/render.ts` is the one byte source —
  * deterministic, quoted YAML, then the author's free-form body verbatim.
  * The previewed bytes are what gets hashed into `policy_hash` and
  * published to the CAS.

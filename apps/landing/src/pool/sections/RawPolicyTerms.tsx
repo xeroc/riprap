@@ -26,7 +26,7 @@ function displayBody(text: string): string {
 
 /** PUT failure → one deadpan line (copy doc). */
 function putFailureLine(status: number): string {
-  if (status === 404) return "The evidence server can't see the mutual yet. Try again in a moment.";
+  if (status === 404) return "The evidence server can't see the pool yet. Try again in a moment.";
   if (status === 400) {
     return "The evidence server rejected the proof — these bytes don't match the on-chain anchor.";
   }
@@ -44,7 +44,7 @@ async function uploadTerms(
   if ((await sha256Hex(bytes)) !== toHex(mutual.policyHash)) {
     return {
       ok: false,
-      line: "This file's hash doesn't match the mutual's policy hash. Nothing was uploaded.",
+      line: "This file's hash doesn't match the pool's policy hash. Nothing was uploaded.",
     };
   }
   const ref = await domainRefHex(mutual.seed, mutual.policyHash);
@@ -126,7 +126,7 @@ export function RawPolicyTerms({ mutual }: { mutual: Mutual | null }) {
   return (
     <div className="flex max-w-[42rem] flex-col gap-(--riprap-space-lg)" data-slot="terms">
       <h3 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
-        The immutable terms of this mutual.
+        The immutable terms of this pool.
       </h3>
       <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
         Fixed when the pool was created: the on-chain policy hash pins these exact bytes, so they
@@ -158,7 +158,7 @@ export function RawPolicyTerms({ mutual }: { mutual: Mutual | null }) {
           <div className="flex flex-col gap-3">
             <p className="text-muted-foreground [font:var(--riprap-body-sm)]">Not published yet.</p>
             <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-              The cover terms aren't on the evidence server. Upload the file whose hash the mutual
+              The cover terms aren't on the evidence server. Upload the file whose hash the pool
               pins.
             </p>
             <input

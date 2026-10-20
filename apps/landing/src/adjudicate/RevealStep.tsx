@@ -16,7 +16,7 @@ import { Accord, type Round } from "@useaccord/sdk";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Settle } from "../components/Settle";
-import { formatUtc } from "../pool/mutual";
+import { formatUtc } from "../pool/pool";
 import { useHanseEnv } from "../shared/rpc";
 import { describeError, sendInstruction } from "../shared/transaction";
 import { loadStoredVote, parseRevealCode, revealOpen, saltBridgeKey } from "./vote";

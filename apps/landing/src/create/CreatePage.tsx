@@ -324,8 +324,9 @@ export function CreatePage() {
               </Settle>
               <Settle delay={60}>
                 <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                  Riprap is a platform for pooled cover: a group writes the terms before anyone
-                  joins, members chip in, and claims are settled by drawn peers — on-chain.
+                  Riprap is a platform for purpose pools: a group writes the terms before anyone
+                  joins — one purpose, fixed at creation — members chip in, and payouts are settled
+                  by drawn peers — on-chain.
                 </p>
               </Settle>
               <Settle delay={120}>

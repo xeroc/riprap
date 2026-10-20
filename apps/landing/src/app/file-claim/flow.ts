@@ -1,7 +1,7 @@
 // ClaimFlow — the typed filing pack the payout-request wizard consumes
 // (CLAIM-WIZARD §4, mirrored on adjudicate/policy.ts). One pack per pool:
 // every pool-specific string and slot the wizard renders lives here, keyed
-// by the pool's `claimFlow` field in mutuals/data.ts — the wizard engine
+// by the pool's `claimFlow` field in pools/data.ts — the wizard engine
 // imports this module and never a concrete pack. The pack source is always
 // the pool's policy doc (§3 checks, §4 exclusions line, §7 proof set) and
 // the copy doc § /app/file-claim — never authored in code.

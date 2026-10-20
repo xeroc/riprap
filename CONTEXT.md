@@ -1,6 +1,6 @@
 # Riprap
 
-Event-scoped mutual protection pools on Solana. This glossary is the domain language; the pool program (`programs/pool`) implements the pool layer. Implementation details live in code and ADRs, never here.
+Purpose pools on Solana — member money bound to one purpose, fixed at creation (repositioned 2026-10-20; was "event-scoped mutual protection pools"). This glossary is the domain language; the pool program (`programs/pool`) implements the pool layer. Implementation details live in code and ADRs, never here.
 
 ## Pool layer (this program)
 
