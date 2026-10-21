@@ -18,7 +18,7 @@ describe("Mechanism — the lane cards band", () => {
     expect(tabs.map((t) => t.textContent)).toEqual([
       "Founding the poolthe founder",
       "Joining the poolthe member",
-      "Drawing on the poolthe claimant",
+      "Drawing on the poolthe requester",
     ]);
     expect(screen.getAllByRole("tablist").length).toBe(1);
     expect(screen.getAllByRole("tabpanel").length).toBeGreaterThanOrEqual(1);

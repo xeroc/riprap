@@ -24,18 +24,18 @@ export function ChairmageddonPage() {
         ],
         tiers: [{ name: "Flat", fee: 10, cap: 40 }],
         definition:
-          "At the opening ceremony of the covered event, every seat in the ceremony venue was occupied, and the member stood — on their feet, without a seat — for the entire opening ceremony, from its published start to its published end.",
+          "At the opening ceremony of the qualifying event, every seat in the ceremony venue was occupied, and the member stood — on their feet, without a seat — for the entire opening ceremony, from its published start to its published end.",
         definitionNotes: [
           "Seat — a thing designed to be sat on, provided by the venue, and occupied by somebody else. Stairs are not seats. The floor is not a seat. Another person is not a seat.",
           "Standing — remaining on one's feet, without a seat, for the entire ceremony. Leaning is permitted. The jury will know it when it sees it.",
-          "A member who found a seat at any point was not standing for the entire ceremony. A member who stood by choice, while seats were available, did not experience the covered event — the seats must have run out first.",
+          "A member who found a seat at any point was not standing for the entire ceremony. A member who stood by choice, while seats were available, did not experience the qualifying event — the seats must have run out first.",
         ],
         exclusions: [
           "Seats available when the member arrived. Elective standing is a lifestyle, not a peril.",
           "Members who sat at any point during the ceremony — on a seat, on the floor, on steps, or on another person.",
           "Members who arrived after the published start or left before the published end.",
           "Standing performed in the course of event duties — staff, volunteers, speakers, press.",
-          "Members who held a reserved seat and gave it away. Generosity is not a covered peril.",
+          "Members who held a reserved seat and gave it away. Generosity is not a qualifying peril.",
         ],
         proof: [
           "Event ticket in your own name",
@@ -57,7 +57,7 @@ export function ChairmageddonPage() {
           note: "Had 500 members stood, $20,000 would have been due against a $10,000 pool — each approved member would receive $20. The proportional clause binds either way.",
         },
         endNote:
-          "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the mutual dissolves permanently.",
+          "After the conference, the request window, and settlement, the remaining balance returns to eligible members and the mutual dissolves permanently.",
       }}
     />
   );

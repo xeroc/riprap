@@ -6,7 +6,7 @@
 
 Real insurance cannot sell small, new, or narrow protection. A three-day conference knife-assault policy, a protocol's exploit cover, a workshop covering its members' tools — each premium is smaller than an insurer's fixed costs — underwriting, reserves, a claims department, compliance — so nobody sells it. What exists instead: annual policies nobody buys for risks like these.
 
-Mutual aid is the oldest fix: peers pool money, qualifying losses get paid, whatever is left comes back. But a mutual of strangers needs two things the group doesn't have — a **treasurer everyone trusts**, and a **judge for subjective claims** ("was this actually a knife assault inside the covered area?"). Off-chain those roles mean an institution, which is exactly the fixed cost the premium can't carry.
+Mutual aid is the oldest fix: peers pool money, qualifying losses get paid, whatever is left comes back. But a mutual of strangers needs two things the group doesn't have — a **treasurer everyone trusts**, and a **judge for contested requests** ("was this actually a knife assault inside the event area?"). Off-chain those roles mean an institution, which is exactly the fixed cost the premium can't carry.
 
 On Solana, both blockers now have primitives:
 
@@ -22,7 +22,7 @@ With disputes solvable and custody programmatic, pooled money stops needing an i
 - **Anyone can create a pool** — a transaction, not a company formation; no permission to ask; whatever purpose the group chooses.
 - **Any purpose — fixed at creation** — cover a risk, pay for verified acts, fund the group's own rule: the protocol imposes no purpose. The terms hash pins the purpose on-chain when the pool is created, and it can never change — a different purpose is a different pool.
 - Members fund the pool (v1: a fixed entry fee; roadmap: recurring contributions that keep membership alive).
-- A qualifying event → a claim with evidence → **jurors drawn from an Accord Subaccord adjudicate it, with the pool's purpose as the measure**; approved claims are paid from the pool. If approved claims exceed the pool, payouts scale down proportionally — the pool can never pay more than it holds.
+- A qualifying event → a payout request with evidence → **jurors drawn from an Accord Subaccord adjudicate it, with the pool's purpose as the measure**; approved requests are paid from the pool. If approved requests exceed the pool, payouts scale down proportionally — the pool can never pay more than it holds.
 - **Lifecycle is a parameter, not a law** — a pool may be finite (a defined window, then settlement) or ongoing (members liquidate or withdraw when they choose).
 
 No insurer, no reserve, no retained profit. The pool holds only what members put in, and the money is theirs.
@@ -32,19 +32,19 @@ The name is the architecture: riprap is the armor on a breakwater's face — tho
 ### Core mechanism (the v1 event-mutual lifecycle — the pilot's shape)
 
 ```
-1. Sponsor founds a pool: the terms — purpose definition, covered area, coverage window,
-   tiers, claims window — written and hash-pinned at creation
+1. Sponsor founds a pool: the terms — purpose definition, event area, event window,
+   tiers, request window — written and hash-pinned at creation
 2. Members join: entry fee → pool; member's account tracks the deposit and
-   mints a rights stake (the right to claim)
-3. (optional) Members opt in as jurors: stake into the mutual's claims
+   mints a rights stake (the right to request)
+3. (optional) Members opt in as jurors: stake into the mutual's jury
    Subaccord (draw pool = opted-in members of this mutual only), earn juror
    fees, unstake anytime
-4. Incident: member files a claim + evidence, pre-pays the round-1 juror fees
+4. Incident: member files a payout request + evidence, pre-pays the round-1 juror fees
 5. Accord draws jurors → commit-reveal votes → ruling
 6. Approved → payout policy installed into the pool treasury (swig
-   TokenDestinationLimit); member claims the funds
-   Rejected → claim closed, nothing moves
-7. Claims window closes → a permissionless crank returns
+   TokenDestinationLimit); the funds go to the member
+   Rejected → request closed, nothing moves
+7. Request window closes → a permissionless crank returns
    user_stake / total_stake × treasury to each member
 8. Pool dissolves. Nothing survives.
 ```
@@ -53,12 +53,12 @@ The name is the architecture: riprap is the armor on a breakwater's face — tho
 
 - **Two doors out.** Money leaves a pool only via _spending_ (governed by the rights authority — adjudication) or _liquidation_ (governed by the ownership authority — e.g. a decision market). No third path, no discretionary signer (`meta/Pool Program.md`).
 - **Three-track pool primitive.** Every pool carries ownership / rights / yield stakes, each with its own authority PDA. A micro mutual (the cover template) zeroes ownership and yield and uses rights only — but the same primitive decomposes ICOs (ownership), liquid staking (yield), and insurance (rights + ownership). Micro mutuals are the first, narrowest instantiation.
-- **Claims are adjudicated, not judged.** The pool never decides anything; it files a dispute with Accord via CPI and enforces the ruling. Riprap is an Arbitrable — the same two-call interface (`create_dispute`, `get_ruling`) as Canon and Synod.
+- **Requests are adjudicated, not judged.** The pool never decides anything; it files a dispute with Accord via CPI and enforces the ruling. Riprap is an Arbitrable — the same two-call interface (`create_dispute`, `get_ruling`) as Canon and Synod.
 - **Fail-closed economics.** Payouts are capped twice — by tier and by pool balance — and shortfall scales every payout down proportionally. The pool cannot promise more than it holds, and holds nothing it wasn't paid.
-- **Guaranteed death (v1 shape).** Dissolution is permissionless after the claims window: a crank pays out `user_stake / total_stake × treasury` per member. No permanent treasury, no retained profit, nothing left to capture. Ongoing pools end differently — member-driven liquidation or withdrawal under the same custody guarantee, no scheduled death.
+- **Guaranteed death (v1 shape).** Dissolution is permissionless after the request window: a crank pays out `user_stake / total_stake × treasury` per member. No permanent treasury, no retained profit, nothing left to capture. Ongoing pools end differently — member-driven liquidation or withdrawal under the same custody guarantee, no scheduled death.
 
 ### First instance — Micro Mutual: Knife Assault
-The reference deployment: **Riprap: Blade Pool @ Breakpoint 2026** — a pool scoped to knife assault during the conference window (15–17 November 2026), in Olympia Convention Centre and its designated event area, London ([solana.com/breakpoint](https://solana.com/breakpoint)). Coverage opens with the conference and closes with the conference, per policy §2 (`meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md`).
+The reference deployment: **Riprap: Blade Pool @ Breakpoint 2026** — a pool scoped to knife assault during the conference window (15–17 November 2026), in Olympia Convention Centre and its designated event area, London ([solana.com/breakpoint](https://solana.com/breakpoint)). The window opens with the conference and closes with the conference, per policy §2 (`meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md`).
 
 | Tier | Entry fee | Max payout |
 | --- | --------: | ---------: |
@@ -66,7 +66,7 @@ The reference deployment: **Riprap: Blade Pool @ Breakpoint 2026** — a pool sc
 | Standard | $20 | $2,000 |
 | Premium | $40 | $4,000 |
 
-Worked example: 1,000 Standard members → $20,000 pool → 4 approved claims at $2,000 ($8,000 paid) → $12,000 returned pro-rata ($12 per member) → dissolved. A member's worst case is $20; the pool's worst case is empty.
+Worked example: 1,000 Standard members → $20,000 pool → 4 approved requests at $2,000 ($8,000 paid) → $12,000 returned pro-rata ($12 per member) → dissolved. A member's worst case is $20; the pool's worst case is empty.
 
 ### The claim — two layers: the protocol vs the Breakpoint pilot (rewritten 2026-09-15)
 
@@ -76,7 +76,7 @@ Launch copy runs on one portable claim in two layers that never blend. Layer 1 i
 
 > "Self-governing money."
 
-Hero law (2026-10-06 payout-pool pass; purpose-pool pass 2026-10-20 confirms the ordering): landing H1 "Self-governing money." — WHY-led and the one line true of every pool, any purpose. Cover-template member line: "Your group's got you covered." (cover surfaces only — cover is one purpose). Ecosystem destination line: "DeFi rebuilt finance. Insurance is next." (deck destination slide only). Still standing from 2026-09-15: "no company" stays retired — a company may one day take a rate (open question 7), the middleman can't come back.
+Hero law (2026-10-06 payout-pool pass; purpose-pool pass 2026-10-20 confirms the ordering): landing H1 "Self-governing money." — WHY-led and the one line true of every pool, any purpose. Cover-template member line: "Your group's got you." (cover surfaces only — cover is one purpose; 2026-10-21 request pass — was "Your group's got you covered.", the insurance idiom retires). Ecosystem destination line: "DeFi rebuilt finance. Insurance is next." (deck destination slide only). Still standing from 2026-09-15: "no company" stays retired — a company may one day take a rate (open question 7), the middleman can't come back.
 
 **Layer 2 — the event-specific pilot** (`Riprap: Blade Pool @ Breakpoint 2026`; instance surfaces and ads only — the platform hero stays numberless):
 
@@ -91,14 +91,14 @@ Every figure is the pilot's Standard tier (tier table above); the worked example
 | any policy content the group defines | knife assault, defined in the policy |
 | any scope, any lifetime | one event: Breakpoint 2026, 15–17 November, Olympia + designated area |
 | anyone may join | conference attendance required |
-| finite or ongoing — the members' choice | expires with the event; claims window, then permanent dissolution |
+| finite or ongoing — the members' choice | expires with the event; request window, then permanent dissolution |
 | recurring contributions to stay a member (roadmap) | one fixed entry fee |
 | member-driven liquidation or withdrawal | pro-rata refund of unused funds at dissolution |
 
 ### What this is NOT
 
 - Not an insurance company — no reserves, no underwriting beyond tier caps, no profit, no surviving entity.
-- Not Accord — adjudication is the sister protocol's job; Riprap owns pooling and the claim lifecycle.
+- Not Accord — adjudication is the sister protocol's job; Riprap owns pooling and the request lifecycle.
 - Not a permanent treasury or DAO — the money is the members'; v1 pools die on schedule, ongoing pools wind down by member choice.
 
 - Not an event platform — events are the pilot's scope; the protocol imposes no template (any purpose, any entry, any lifetime).
@@ -107,7 +107,7 @@ Every figure is the pilot's Standard tier (tier table above); the worked example
 
 | # | Question | Status |
 | --- | --- | --- |
-| 1 | First event | **resolved** — Breakpoint 2026, 15–17 November 2026, Olympia Convention Centre, London; coverage window = the conference (policy §2); conference-side daily hours follow the published event schedule |
+| 1 | First event | **resolved** — Breakpoint 2026, 15–17 November 2026, Olympia Convention Centre, London; event window = the conference (policy §2); conference-side daily hours follow the published event schedule |
 | 2 | Name | **resolved** — Riprap locked; Breakwater killed as runner-up. Domain: **riprap.xyz registered (primary)**; `riprap.io` not grabbed (optional). X: **@riprapxyz** (x.com/riprapxyz) (`meta/naming.md`) |
 | 3 | Juror pool | **resolved** — members only: the draw pool is this mutual's opted-in members ($10 stake, unstakeable); no outside jurors |
 | 4 | Copy register | **resolved** — deadpan-honest: state the peril plainly, never joke about it, never dramatize it; safety-engineering tone everywhere |

@@ -70,33 +70,33 @@ export function buildClaimFlow(def: RiprapDef): ClaimFlow {
             key: "act",
             label: "I performed the qualifying act, as the terms define it",
           },
-          { key: "window", label: "It happened inside the covered period" },
-          { key: "area", label: "It happened inside the covered area" },
+          { key: "window", label: "It happened inside the pool's window" },
+          { key: "area", label: "It happened inside the pool's area" },
           { key: "member", label: "I was an active member when it happened" },
         ]
       : [
           {
             key: "event",
-            label: "The covered event happened to me, as the terms define it",
+            label: "The qualifying event happened to me, as the terms define it",
           },
-          { key: "window", label: "It happened inside the covered period" },
-          { key: "area", label: "It happened inside the covered area" },
+          { key: "window", label: "It happened inside the pool's window" },
+          { key: "area", label: "It happened inside the pool's area" },
           { key: "member", label: "I was an active member when it happened" },
         ],
     exclusionsLine:
       exclusions.length > 0
-        ? `${bounty ? "Not paid" : "Not covered"}: ${exclusions.join(", ")}.`
+        ? `${bounty ? "Not paid" : "Excluded"}: ${exclusions.join(", ")}.`
         : bounty
           ? "Not paid: anything the terms exclude."
-          : "Not covered: anything the terms exclude.",
+          : "Excluded: anything the terms exclude.",
     wherePlaceholder:
       def.period.venue !== undefined
         ? `in and around ${def.period.venue}`
-        : "inside the covered area",
+        : "inside the pool's area",
     narrativePlaceholder: "free text — your account of what happened",
     manifestTitle: (incidentIsoDate) =>
       bounty
-        ? `Bounty claim — ${def.name}, ${incidentIsoDate}`
+        ? `Bounty request — ${def.name}, ${incidentIsoDate}`
         : `Payout request — ${def.name}, ${incidentIsoDate}`,
   };
 }
@@ -119,18 +119,18 @@ export function buildAdjudicationPolicy(def: RiprapDef): AdjudicationPolicy {
       def.kind === "bounty"
         ? [
             "The qualifying act was performed, as the terms define it",
-            "It happened during the covered period",
-            "It happened inside the covered area",
+            "It happened during the pool's window",
+            "It happened inside the pool's area",
             "The requester was an active member at the time",
           ]
         : [
-            "The covered event happened, as the terms define it",
-            "It happened during the coverage window",
-            "It happened inside the covered area",
+            "The qualifying event happened, as the terms define it",
+            "It happened during the pool's window",
+            "It happened inside the pool's area",
             "The requester was an active member at the time",
           ],
     exclusions:
-      exclusions.length > 0 ? exclusions : ["The claim falls under an exclusion in the terms"],
+      exclusions.length > 0 ? exclusions : ["The request falls under an exclusion in the terms"],
     verdictNote:
       "The amount is as filed. The chain clamps it to the tier's maximum — the cap is the chain's job, not your question. An overpriced request can be denied outright.",
   };

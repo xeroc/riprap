@@ -29,7 +29,7 @@ const lineage = [
     body: (
       <>
         A mutual of strangers needs a treasurer everyone trusts and a court for the subjective
-        claims. Off-chain, those two roles mean an institution: the fixed cost a small pooled
+        requests. Off-chain, those two roles mean an institution: the fixed cost a small pooled
         contribution can't carry.
       </>
     ),
@@ -39,7 +39,7 @@ const lineage = [
     name: "Two programs",
     body: (
       <>
-        Programmatic custody holds the Treasury; peer adjudication rules the claims. The treasurer
+        Programmatic custody holds the Treasury; peer adjudication rules the requests. The treasurer
         and the court are programs now — the fixed cost that made small cover unsellable is gone.
       </>
     ),

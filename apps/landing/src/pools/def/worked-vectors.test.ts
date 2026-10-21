@@ -148,7 +148,7 @@ describe("the bounty worked vector — packs", () => {
   it("bounty word-maps: Not paid, qualifying-act screens, bounty claim title", () => {
     expect(flow.exclusionsLine).toContain("Not paid: Deliveries made without a request");
     expect(flow.screenChecks[0]?.label).toContain("qualifying act");
-    expect(flow.manifestTitle("2026-11-16")).toBe("Bounty claim — Hot Drink Bounty, 2026-11-16");
+    expect(flow.manifestTitle("2026-11-16")).toBe("Bounty request — Hot Drink Bounty, 2026-11-16");
   });
 
   it("the marketing share template fills with real figures and drops unread ones", () => {

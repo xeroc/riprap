@@ -15,7 +15,7 @@ const RAMP: { token: string; sample: string; note: string }[] = [
   { token: "title-sm", sample: "List labels", note: "18/1.44 @ 500" },
   {
     token: "body-md",
-    sample: "Fees pile in as stones; claims drain through two governed doors.",
+    sample: "Fees pile in as stones; requests drain through two governed doors.",
     note: "default body — 16/1.55",
   },
   {

@@ -48,7 +48,7 @@ export function NgmiHairlinePage() {
           {
             grade: "IV",
             label: "basically Gandalf",
-            finding: "Comprehensive new graying of the covered hairline.",
+            finding: "Comprehensive new graying of the qualifying hairline.",
             pays: "$200 · 100%",
           },
         ],
@@ -56,13 +56,13 @@ export function NgmiHairlinePage() {
           "New gray hair on the member's scalp — a hair that is gray along its visible length, that was not visible in the member's baseline Hairline Snapshot, and that is visible at the time of the payout request.",
         definitionNotes: [
           "The mutual does not investigate when the hair lost its pigment, or why. It pays on the difference between the two snapshots.",
-          "The label is the severity. The grade is the payment — a percentage of the $200 maximum, and every payment is at most its grade: when claims exceed the pool, all payments scale down together.",
+          "The label is the severity. The grade is the payment — a percentage of the $200 maximum, and every payment is at most its grade: when requests exceed the pool, all payments scale down together.",
         ],
         exclusions: [
           "Gray hair visible in the baseline Hairline Snapshot.",
           "Hair colored gray by dye, spray, chalk, or any other means. Artificially gray hair is not gray hair.",
           "Hair lightened by sun, chlorine, bleach, or other products. Light hair is not gray hair.",
-          "Facial hair, eyebrow hair, and body hair. Scalp only — beard gray is a separate peril and is not covered.",
+          "Facial hair, eyebrow hair, and body hair. Scalp only — beard gray is a separate peril and is excluded.",
           "Hair loss and recession. A thinner hairline is not a grayer one.",
           "Images that are edited, filtered, staged, or generated.",
         ],
@@ -70,7 +70,7 @@ export function NgmiHairlinePage() {
           "Event ticket in your own name",
           "Government photo ID",
           "Baseline Hairline Snapshot — a dated, unedited photo of your hairline, committed when you joined",
-          "Claim Hairline Snapshot — same region, within the claim window, comparable length, framing, and lighting",
+          "Request Hairline Snapshot — same region, within the request window, comparable length, framing, and lighting",
           "Hairline Damage Report — the new grays catalogued (count, location) and the circumstances of their discovery",
         ],
         feeNote:
@@ -80,14 +80,14 @@ export function NgmiHairlinePage() {
             { value: "500", caption: "members" },
             { value: "$10", caption: "each — one flat membership" },
             { value: "$5,000", caption: "pool" },
-            { value: "120", caption: "approved claims (70×I, 35×II, 12×III, 3×IV)" },
+            { value: "120", caption: "approved requests (70×I, 35×II, 12×III, 3×IV)" },
             { value: "$5,300", caption: "due — more than the pool holds" },
           ],
           total: { value: "$5,000", caption: "paid out in full — nothing returns" },
-          note: "Gray hair at a conference is common and mild, so the approved claims exceed the pool: every payment and returned fee scales by the ratio 0.87 — a Grade I member receives ≈$17, a Grade IV member ≈$173. The jury grades what it sees, and the grade is the ceiling: $20/$60/$100/$200 on the $200 maximum.",
+          note: "Gray hair at a conference is common and mild, so the approved requests exceed the pool: every payment and returned fee scales by the ratio 0.87 — a Grade I member receives ≈$17, a Grade IV member ≈$173. The jury grades what it sees, and the grade is the ceiling: $20/$60/$100/$200 on the $200 maximum.",
         },
         endNote:
-          "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the mutual dissolves permanently.",
+          "After the conference, the request window, and settlement, the remaining balance returns to eligible members and the mutual dissolves permanently.",
       }}
     />
   );

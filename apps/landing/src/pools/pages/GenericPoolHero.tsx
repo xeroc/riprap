@@ -39,16 +39,16 @@ const KIND_COPY = {
   mutual: {
     headline: "One peril. One pool. It ends.",
     subline:
-      "{fee} buys a defined payout if the covered event happens to you during the event window — up to {cap} out, every cent back if nothing does, then the pool dissolves. This is not insurance.",
+      "{fee} buys a defined payout if the qualifying event happens to you during the event window — up to {cap} out, every cent back if nothing does, then the pool dissolves. This is not insurance.",
     share:
-      "I just entered {name} at {event}.\nUp to {cap} out if it lands. Unused funds come back.\nNo adjudicated claim, no payout.\nI'm in. @riprapxyz",
+      "I just entered {name} at {event}.\nUp to {cap} out if it lands. Unused funds come back.\nNo adjudicated request, no payout.\nI'm in. @riprapxyz",
   },
   bounty: {
     headline: "Do the thing. Get paid.",
     subline:
       "{fee} puts you on the roster: {cap} out for one confirmed qualifying act, adjudicated by a jury of members. No confirmed act, no payout; unused funds return when the event ends.",
     share:
-      "I just entered {name} at {event}.\n{cap} for one confirmed act. Unused funds come back.\nNo adjudicated claim, no payout.\nI'm in. @riprapxyz",
+      "I just entered {name} at {event}.\n{cap} for one confirmed act. Unused funds come back.\nNo adjudicated request, no payout.\nI'm in. @riprapxyz",
   },
 } as const;
 
@@ -231,7 +231,7 @@ export function GenericPoolHero({ listing, def }: { listing: PoolListing; def: R
                           min={0}
                           max={(tiers ?? []).length - 1}
                           step={1}
-                          aria-label="Coverage tier"
+                          aria-label="Tier"
                           onValueChange={(v) =>
                             setTierIndex(v[0] ?? defaultTierIndex(tiers?.length ?? 1))
                           }
@@ -257,9 +257,9 @@ export function GenericPoolHero({ listing, def }: { listing: PoolListing; def: R
                     </p>
                     {covered ? (
                       <div className="flex max-w-[36rem] flex-col gap-3" data-slot="covered">
-                        <BadgeStamp data-num>Covered — {tier.name}</BadgeStamp>
+                        <BadgeStamp data-num>Member — {tier.name}</BadgeStamp>
                         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                          This wallet is in the pool. Your membership and claims live in{" "}
+                          This wallet is in the pool. Your membership and requests live in{" "}
                           <TextLink href="#/app">the app</TextLink>.
                         </p>
                       </div>
@@ -290,7 +290,7 @@ export function GenericPoolHero({ listing, def }: { listing: PoolListing; def: R
                       <div className="flex max-w-[36rem] flex-col gap-2" data-slot="entry-closed">
                         <p className="text-ink [font:var(--riprap-body-md)]">Entry closed.</p>
                         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                          This pool stopped taking members. Claims, settlement, and dissolution
+                          This pool stopped taking members. Requests, settlement, and dissolution
                           follow the policy.
                         </p>
                       </div>
@@ -329,7 +329,7 @@ export function GenericPoolHero({ listing, def }: { listing: PoolListing; def: R
               <CoveredOverlay
                 open={join.coveredOverlay}
                 onDismiss={join.dismissCovered}
-                stamp={`Covered — ${tier !== null ? tier.name : PARAM}`}
+                stamp={`Member — ${tier !== null ? tier.name : PARAM}`}
                 headline="Welcome, friend!"
                 figures={[
                   <span key="fee">

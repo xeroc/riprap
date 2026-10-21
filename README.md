@@ -347,7 +347,7 @@ pnpm --filter @riprap/ui exec storybook dev -p 6007
 | `meta/PROJECT.md`  | The why and the what — read this first                                                                 |
 | `meta/primitives/` | The illustration spec this kit implements (atoms, composition grammar, data stories)                   |
 | `meta/marketing/`  | The approved marketing package; landing copy lives in `03-website-copy/landing-page.md`                |
-| `meta/Breakpoint/` | The Blade Pool policy document (tiers, exclusions, claims rules)                                       |
+| `meta/Breakpoint/` | The Blade Pool policy document (tiers, exclusions, payout-request rules)                                       |
 | `meta/specs/`      | Protocol specs — `EVENT-MUTUAL.md` is the contract `programs/hanse` implements                         |
 | `meta/naming.md`   | Naming decisions (Riprap locked, `riprap.xyz`, `@riprapxyz`)                                           |
 | `packages/ui/`     | The illustration primitive kit                                                                         |

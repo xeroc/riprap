@@ -292,7 +292,7 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
 
     // findAll — the inline stamp and the overlay stamp both say it (race on
     // which commits first); the dialog asserts follow either way
-    expect((await screen.findAllByText("Covered — Standard")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("Member — Standard")).length).toBeGreaterThan(0);
 
     // the covered overlay fires on confirmation — the join moment (copy doc
     // § Covered overlay): stamp, headline, the three figures (total last,
@@ -430,18 +430,18 @@ describe("covered — an existing member is a state, never an error toast", () =
     // session's first covered read (copy doc § Covered overlay). Dismiss it
     // first: an open dialog aria-hides the inline state.
     const dialog = await screen.findByRole("dialog");
-    expect(dialog.textContent).toContain("Covered — Basic");
+    expect(dialog.textContent).toContain("Member — Basic");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
-    expect(await screen.findByText("Covered — Basic")).toBeTruthy();
+    expect(await screen.findByText("Member — Basic")).toBeTruthy();
     const coveredSlot = screen
-      .getAllByText("Covered — Basic")
+      .getAllByText("Member — Basic")
       .map((el) => el.closest('[data-slot="covered"]'));
     expect(
       coveredSlot.some((slot) =>
         slot?.textContent?.includes(
-          "This wallet is in the pool. Your membership and claims live in the app.",
+          "This wallet is in the pool. Your membership and requests live in the app.",
         ),
       ),
     ).toBe(true);
@@ -449,7 +449,7 @@ describe("covered — an existing member is a state, never an error toast", () =
     // once covered there is nothing for sale: no slider, no picker label,
     // no by-slider explainer (copy doc § Covered, 2026-09-24)
     expect(screen.queryByRole("slider")).toBeNull();
-    expect(screen.queryByText("Choose your coverage")).toBeNull();
+    expect(screen.queryByText("Choose your tier")).toBeNull();
     expect(screen.queryByText(/buys you into the weirdest hedge/)).toBeNull();
     // their tier line stays — the member's own facts, from their member PDA
     expect(screen.getByText("Basic · $10 entry · up to $1,000 maximum payout")).toBeTruthy();
@@ -472,7 +472,7 @@ describe("covered — an existing member is a state, never an error toast", () =
 
     // same session, same wallet: the inline state only, no second moment
     renderPoolPage();
-    expect(await screen.findByText("Covered — Standard")).toBeTruthy();
+    expect(await screen.findByText("Member — Standard")).toBeTruthy();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
@@ -547,7 +547,7 @@ describe("deposits closed — entry-closed state from deposits_close_at", () => 
     expect(await screen.findByText("Entry closed.")).toBeTruthy();
     expect(
       screen.getByText(
-        "This pool stopped taking members. Claims, settlement, and dissolution follow the policy.",
+        "This pool stopped taking members. Requests, settlement, and dissolution follow the policy.",
       ),
     ).toBeTruthy();
     // tiers still render (real chain data), but there is nothing to chip into
@@ -578,7 +578,7 @@ it("covered: nothing left to accept — no line", async () => {
   renderPoolPage();
   fireEvent.click(await screen.findByRole("button", { name: "Continue" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  expect(await screen.findByText("Covered — Basic")).toBeTruthy();
+  expect(await screen.findByText("Member — Basic")).toBeTruthy();
   expect(document.querySelector('[data-slot="policy-accept"]')).toBeNull();
 });
 

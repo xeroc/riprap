@@ -13,7 +13,7 @@ The pool's single token account. All deposits land in it; both doors pay out of 
 _Avoid_: vault, escrow
 
 **Track**:
-One of three claim dimensions of a pool — ownership, rights, yield — each with its own stake rate and authority.
+One of three dimensions of a pool — ownership, rights, yield — each with its own stake rate and authority.
 _Avoid_: tranche, class
 
 **Stake**:
@@ -33,8 +33,8 @@ The controller of one track's powers: the rights authority governs spending, the
 _Avoid_: owner, admin, signer
 
 **Spending**:
-Exit door one — the rights authority moves treasury money out to a destination. In the full design this is how adjudicated claims get paid.
-_Avoid_: payout (claims-layer word), transfer, withdraw
+Exit door one — the rights authority moves treasury money out to a destination. In the full design this is how approved requests get paid.
+_Avoid_: payout (request-layer word), transfer, withdraw
 
 **Liquidation**:
 Exit door two — the ownership authority permanently ends the pool. After it, deposits are refused and only the liquidation crank can move money.
@@ -54,7 +54,7 @@ A depositor that has received its liquidation payout. A settled depositor cannot
 ## Mutual layer (not this program)
 
 **Member, Claim, Tier, Juror**:
-Policy-layer concepts owned by the mutual program and `meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md`. The pool knows none of them; entry fees, tier caps ($10/$20/$40 entry, $1,000/$2,000/$4,000 caps), claims windows, and juror staking live above the pool.
+Policy-layer concepts owned by the mutual program and `meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md`. The pool knows none of them; entry fees, tier caps ($10/$20/$40 entry, $1,000/$2,000/$4,000 caps), the request window, and juror staking live above the pool. Copy law (2026-10-21): customer-facing copy says request / requester / request window; the chain keeps `Claim`, `file_claim`, `claims_close_at`.
 
 ## Circle layer (the kitty program, planned)
 
@@ -76,7 +76,7 @@ _Avoid_: autopay, top-up
 
 **Request**:
 A member's ask for money from the circle — any amount, adjudicated with the purpose as the measure.
-_Avoid_: claim (mutual layer), ask, application
+_Avoid_: claim (banned in copy — request is the platform word), ask, application
 
 **Budget**:
 The most a circle may pay out in one epoch; consumed at filing, refreshed at the boundary.

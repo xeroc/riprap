@@ -148,7 +148,7 @@ export function BladeHero({ listing = BLADE }: { listing?: PoolListing }) {
               {!covered && (
                 <div className="flex flex-col gap-3" data-slot="tier-picker">
                   <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-soft [font:var(--riprap-mono-label)]">
-                    Choose your coverage
+                    Choose your tier
                   </p>
                   {mutualQuery.state === "ready" && tier !== null ? null : mutualQuery.state ===
                     "loading" ? (
@@ -162,7 +162,7 @@ export function BladeHero({ listing = BLADE }: { listing?: PoolListing }) {
                         min={0}
                         max={listing.tiers.length - 1}
                         step={1}
-                        aria-label="Coverage tier"
+                        aria-label="Tier"
                         className="max-w-[36rem]"
                       />
                       <div
@@ -216,7 +216,7 @@ export function BladeHero({ listing = BLADE }: { listing?: PoolListing }) {
                         min={0}
                         max={(tiers ?? []).length - 1}
                         step={1}
-                        aria-label="Coverage tier"
+                        aria-label="Tier"
                         onValueChange={(v) =>
                           setTierIndex(v[0] ?? defaultTierIndex(tiers?.length ?? 1))
                         }
@@ -242,9 +242,9 @@ export function BladeHero({ listing = BLADE }: { listing?: PoolListing }) {
                   </p>
                   {covered ? (
                     <div className="flex max-w-[36rem] flex-col gap-3" data-slot="covered">
-                      <BadgeStamp data-num>Covered — {tier.name}</BadgeStamp>
+                      <BadgeStamp data-num>Member — {tier.name}</BadgeStamp>
                       <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                        This wallet is in the pool. Your membership and claims live in{" "}
+                        This wallet is in the pool. Your membership and requests live in{" "}
                         <TextLink href="#/app">the app</TextLink>.
                       </p>
                     </div>
@@ -273,8 +273,8 @@ export function BladeHero({ listing = BLADE }: { listing?: PoolListing }) {
                     <div className="flex max-w-[36rem] flex-col gap-2" data-slot="entry-closed">
                       <p className="text-ink [font:var(--riprap-body-md)]">Entry closed.</p>
                       <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                        This pool stopped taking members. Claims, settlement, and dissolution follow
-                        the policy.
+                        This pool stopped taking members. Requests, settlement, and dissolution
+                        follow the policy.
                       </p>
                     </div>
                   )}
@@ -290,7 +290,7 @@ export function BladeHero({ listing = BLADE }: { listing?: PoolListing }) {
             <CoveredOverlay
               open={join.coveredOverlay}
               onDismiss={join.dismissCovered}
-              stamp={`Covered — ${tier !== null ? tier.name : PARAM}`}
+              stamp={`Member — ${tier !== null ? tier.name : PARAM}`}
               headline="Welcome, friend!"
               figures={[
                 <span key="fee">

@@ -24,13 +24,13 @@ export function CoffeeApocalypsePage() {
         ],
         tiers: [{ name: "Flat", fee: 10, cap: 25 }],
         definition:
-          "The complete exhaustion of the coffee available for dispensing at a coffee point in the covered area, occurring while the member was standing in the queue at that coffee point, with the result that the member left that queue without coffee.",
+          "The complete exhaustion of the coffee available for dispensing at a coffee point in the event area, occurring while the member was standing in the queue at that coffee point, with the result that the member left that queue without coffee.",
         definitionNotes: [
-          "Coffee point — a staffed station within the covered area dispensing coffee to attendees.",
+          "Coffee point — a staffed station within the event area dispensing coffee to attendees.",
           "Queue — an ordered line of persons waiting to be served, in which the member was physically present when the coffee was exhausted.",
           "A long queue is not a shortage. Slow service is not a shortage. Bad coffee is not a shortage. A coffee point that is closed is not a shortage — unless it closed because the coffee was exhausted, which is.",
           "Decaffeinated coffee is coffee. The mutual does not distinguish.",
-          "One claim per member — coverage ends with the first qualifying exhaustion.",
+          "One request per member — the right ends with the first qualifying exhaustion.",
         ],
         exclusions: [
           "Exhaustions caused or contributed to by the member — bulk purchasing, hoarding, sabotage, or any interference with the supply.",
@@ -57,10 +57,10 @@ export function CoffeeApocalypsePage() {
             { value: "210 × $25", caption: "approved" },
           ],
           total: { value: "$4,750", caption: "returned to members" },
-          note: "The payout is set at roughly the price of one conference coffee plus the indignity, itemized as one number. Exhaustions are shared events — one empty urn can produce many valid claims at once, and the proportional clause is expected to do real work.",
+          note: "The payout is set at roughly the price of one conference coffee plus the indignity, itemized as one number. Exhaustions are shared events — one empty urn can produce many valid requests at once, and the proportional clause is expected to do real work.",
         },
         endNote:
-          "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the mutual dissolves permanently.",
+          "After the conference, the request window, and settlement, the remaining balance returns to eligible members and the mutual dissolves permanently.",
       }}
     />
   );

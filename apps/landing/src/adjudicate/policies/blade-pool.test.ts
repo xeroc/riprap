@@ -69,8 +69,8 @@ describe("BLADE_POOL_POLICY checklist (policy §3/§4, copy doc step 2)", () => 
     expect(BLADE_POOL_POLICY.coverageCriteria).toEqual([
       "Another person used a knife or blade against the requester",
       "It caused bodily injury — including while escaping or defending",
-      "It happened during the coverage window",
-      "It happened inside the covered area",
+      "It happened during the event window",
+      "It happened inside the event area",
       "The requester was an active member at the time",
     ]);
   });
@@ -85,8 +85,8 @@ describe("BLADE_POOL_POLICY checklist (policy §3/§4, copy doc step 2)", () => 
       "The assault was staged with the requester's cooperation or an accomplice's",
       "The requester was the initial aggressor, or a willing participant in a mutual fight",
       "The injury was sustained while the requester was committing a criminal offence",
-      "It happened outside the coverage period",
-      "It happened outside the covered area",
+      "It happened outside the event window",
+      "It happened outside the event area",
       "The request is based on emotional distress without qualifying bodily injury",
     ]);
   });

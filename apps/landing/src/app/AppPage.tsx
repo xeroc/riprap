@@ -62,7 +62,7 @@ function statusLabel(status: ClaimStatus): string {
  * RESTORE); settled rows stay plain. */
 function ClaimsBlock({
   claims,
-  label = "Claims",
+  label = "Requests",
   routeId,
 }: {
   claims: ClaimsQuery;
@@ -80,7 +80,7 @@ function ClaimsBlock({
       <div data-slot="claims" className="flex max-w-[36rem] flex-col gap-2">
         {heading}
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          Reading your claims from the chain.
+          Reading your requests from the chain.
         </p>
       </div>
     );
@@ -89,7 +89,7 @@ function ClaimsBlock({
     return (
       <div data-slot="claims" className="flex max-w-[36rem] flex-col gap-2">
         {heading}
-        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't read your claims.</p>
+        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't read your requests.</p>
         <Button variant="outline" className="w-44" onClick={claims.retry}>
           Try again
         </Button>
@@ -103,7 +103,7 @@ function ClaimsBlock({
       {heading}
       {claims.claims.length === 0 ? (
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          No claims filed from this wallet.
+          No payout requests filed from this wallet.
         </p>
       ) : (
         <ul className="w-full">
@@ -168,7 +168,7 @@ function JoinedPoolRow({ pool, member }: { pool: LivePool; member: Member }) {
           {pool.listing.name}
         </a>
         <div className="mt-2">
-          <BadgeStamp data-num>Covered — {tier.name}</BadgeStamp>
+          <BadgeStamp data-num>Member — {tier.name}</BadgeStamp>
         </div>
       </th>
       <td className="hidden py-4 pr-4 text-body align-top sm:table-cell [font:var(--riprap-body-sm)]">
@@ -348,7 +348,7 @@ function MemberSurface({ wallet }: { wallet: Address }) {
           </tbody>
         </table>
       </SectionBand>
-      <SectionBand id="app-claims" label="claims" tone="ground">
+      <SectionBand id="app-claims" label="requests" tone="ground">
         <div className="flex w-full flex-col gap-(--riprap-space-xl)" data-slot="claims-list">
           {joined.map(({ pool }) => (
             <PoolClaims key={pool.address} pool={pool} wallet={wallet} />

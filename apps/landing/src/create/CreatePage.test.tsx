@@ -224,9 +224,46 @@ describe("#/create author → preview", () => {
     expect(screen.getByText("06/10")).toBeTruthy(); // the strip counts author screens
   });
 
+  it("each authoring screen opens with its event-mutual explainer (copy doc § /create)", async () => {
+    renderPage();
+    // identity: event-scoped, one payment, remainder returned
+    expect(
+      screen.getByText(/not a standing fund\. Members pay in once while joining is open/),
+    ).toBeTruthy();
+    fill("def-name", "Chairmageddon");
+    stepContinue();
+    await atStep("tier-0-fee");
+    // coverage: no recurring contributions, unused money never kept
+    expect(screen.getByText(/this pool takes no recurring contributions/)).toBeTruthy();
+    fill("tier-0-fee", "10");
+    fill("tier-0-cap", "40");
+    stepContinue();
+    await atStep("period-start");
+    // window: the dates are the clock, payouts inside them, remainder back
+    expect(screen.getByText(/These dates are the pool's clock, fixed at deploy/)).toBeTruthy();
+    fill("period-start", "2027-03-01");
+    fill("period-end", "2027-03-03");
+    fill("period-claims", "2027-03-10");
+    stepContinue();
+    await atStep("def-body");
+    // claims: adjudicated payouts, nothing moves outside the window
+    expect(screen.getByText(/the pool itself decides nothing/)).toBeTruthy();
+    expect(screen.getByText("What a member shows to get paid.")).toBeTruthy();
+    fill("def-body", "Bodily injury from standing through the opening ceremony.");
+    fill("proof-0-label", "your event ticket");
+    stepContinue();
+    await atStep("marketing-headline");
+    // marketing: surface only, kind-template fallback
+    expect(screen.getByText(/Everything on this screen is surface/)).toBeTruthy();
+    stepContinue();
+    await atStep("adv-mint");
+    // advanced: chain parameters, how claims are judged, fixed at deploy
+    expect(screen.getByText(/they are fixed at deploy/)).toBeTruthy();
+  });
+
   it("the strip jumps to any author screen and the preview — never to deploy", async () => {
     renderPage();
-    stop("Step 4 of 10: Claims").click();
+    stop("Step 4 of 10: Terms").click();
     await atStep("def-body");
     expect(document.getElementById("def-name")).toBeNull();
     // back home through the same control, and the draft walks with it

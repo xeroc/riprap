@@ -254,13 +254,13 @@ export function validateDef(def: DefDoc): Rejection[] {
     if (def.period.end < def.period.start) {
       rejections.push({
         field: "period.end",
-        line: "Coverage ends after it opens.",
+        line: "Window ends after it opens.",
       });
     }
     if (def.period.claimsClose <= def.period.end) {
       rejections.push({
         field: "period.claimsClose",
-        line: "Claims close after coverage ends.",
+        line: "Requests close after the window ends.",
       });
     }
   }
@@ -324,7 +324,7 @@ export function validateAdvanced(
   const depositsClose = dateToUnix(def.period.start);
   const claimsClose = dateToUnix(def.period.claimsClose);
   if (!(claimsClose > depositsClose && depositsClose > nowSecs)) {
-    sub("period.start", "Doors open in the future, claims close after them.");
+    sub("period.start", "Doors open in the future, requests close after them.");
   }
   // contribution > 0 && max_payout >= contribution — def-level too, but the
   // chain gate is the authority; mirrored for the drawer's tier rows.

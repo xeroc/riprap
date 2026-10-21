@@ -24,20 +24,20 @@ export function OnlyFriendsPage() {
         ],
         tiers: [{ name: "Flat", fee: 50, cap: 500 }],
         definition:
-          "The member (the connector) personally introduced another member (the seeker) to a listed VIP, within the covered area or through the event's official channels, during the bounty period, in a manner the listed VIP confirms receiving.",
+          "The member (the connector) personally introduced another member (the seeker) to a listed VIP, within the event area or through the event's official channels, during the bounty period, in a manner the listed VIP confirms receiving.",
         definitionNotes: [
           "Listed VIP — a founder, co-founder, or chief officer of a Sponsor, holding that role at the time of the introduction. Listed VIPs may not hold memberships.",
           "Sponsor — a company on the event's official sponsor page when joining opens (solana.com/breakpoint/sponsors, archived at that moment). Later page changes do not count.",
           "Introduction — the act of making two people known to each other who were not previously acquainted. You cannot introduce a person to someone they already know. Passing along a handle is not an introduction. A forwarded calendar invite is not an introduction. A wave across the room is not an introduction.",
           "Confirmation — a statement from the listed VIP that the introduction reached them, through a channel the jury can verify.",
           "A member introducing themselves to a listed VIP is not making an introduction; it is a conversation.",
-          "One confirmed introduction returns the entry fee exactly: $50 claimable against a $50 entry — even, not ahead. This is deliberate — a single staged introduction is worth nothing, and a second one doubles the collusion bill.",
+          "One confirmed introduction returns the entry fee exactly: up to $50 per request against a $50 entry — even, not ahead. This is deliberate — a single staged introduction is worth nothing, and a second one doubles the collusion bill.",
         ],
         exclusions: [
           "Introductions to a person who is not a Listed VIP.",
           "Introductions of a person who was not a member at the time.",
           "Introductions of two people already acquainted. Reconnection is not introduction.",
-          "Introductions outside the bounty period, or through channels other than the covered area and the event's official channels.",
+          "Introductions outside the bounty period, or through channels other than the event area and the event's official channels.",
           "Confirmations authored by the connector, the seeker, or anyone other than the listed VIP.",
           "Introductions beyond the tenth confirmed per member.",
         ],
@@ -46,7 +46,7 @@ export function OnlyFriendsPage() {
           "Government photo ID",
           "Introduction evidence — the message thread, photograph, or other record showing you personally making the introduction",
           "VIP eligibility evidence — the archived sponsor page showing the person's company, plus a public source showing their role at the time",
-          "Confirmation — a statement from the listed VIP, from an account the jury can verify. Without it, the claim fails. The confirmation is the proof.",
+          "Confirmation — a statement from the listed VIP, from an account the jury can verify. Without it, the request fails. The confirmation is the proof.",
         ],
         feeNote:
           "Filing pre-pays an adjudication fee of 4 USDC — denied forfeits it, approved returns it with the payment.",
@@ -62,7 +62,7 @@ export function OnlyFriendsPage() {
           note: "A member with two introductions is $50 ahead; ten makes $450. A member who introduced nobody receives their share of the unused pot back — connectors and seekers alike.",
         },
         endNote:
-          "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently.",
+          "After the conference, the request window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently.",
       }}
     />
   );

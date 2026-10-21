@@ -27,7 +27,7 @@ export const Grid: StoryObj<typeof meta> = {
         Entry is a fee, not a premium. Each member is one stone in the pile.
       </FeatureCard>
       <FeatureCard title="A jury of peers">
-        Claims are read by randomly drawn, stake-weighted jurors from this pool.
+        Requests are read by randomly drawn, stake-weighted jurors from this pool.
       </FeatureCard>
       <FeatureCard title="Dead on schedule">
         The event ends, the crank returns the remainder, the pool dereferences.

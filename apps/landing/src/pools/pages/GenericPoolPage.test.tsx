@@ -54,7 +54,7 @@ marketing:
 
 A joke with a payout schedule.
 
-## 3. Covered Event
+## 3. Qualifying Event
 
 **Chairmageddon** means:
 
@@ -67,7 +67,7 @@ A member who found a seat at any point was not standing for the entire ceremony.
 
 ## 4. Exclusions
 
-The following are not covered:
+The following are excluded:
 
 - Seats available when the member arrived. Elective standing is a lifestyle, not a peril.
 - Members who sat at any point during the ceremony.
@@ -80,7 +80,7 @@ The following are not covered:
 
 ## 7. Payout Requests
 
-Filing requires the member's own wallet. The adjudication fee is pre-paid from that wallet; a denied claim forfeits it, an approved one returns it with the payment.
+Filing requires the member's own wallet. The adjudication fee is pre-paid from that wallet; a denied request forfeits it, an approved one returns it with the payment.
 
 ## 8. Pool Dissolution
 
@@ -127,7 +127,7 @@ proof:
     kind: "file"
     label: "Ticket"
 ---
-## Covered event
+## Qualifying event
 
 A free-form peril, stated plainly. A second sentence that must not be the tagline.
 
@@ -173,7 +173,7 @@ Legacy is a mutual.
 
 Coverage runs 2026-11-15 to 2026-11-17.
 
-## 3. Covered event
+## 3. Qualifying event
 
 A fall.
 
@@ -219,7 +219,7 @@ describe("parseDefDoc", () => {
     expect(DEF.tiers).toEqual([{ name: "Flat", fee: 10, cap: 40 }]);
     expect(DEF.proof).toHaveLength(2);
     expect(DEF.marketing?.event).toBe("Breakpoint");
-    expect(DEF.body).toContain("## 3. Covered Event");
+    expect(DEF.body).toContain("## 3. Qualifying Event");
   });
 
   it("drops non-defs — a state, never a fallback", () => {
@@ -282,7 +282,7 @@ describe("poolPageConfigFromDef", () => {
   it("reads §4 exclusions as list items only", () => {
     expect(config.exclusions).toHaveLength(2);
     expect(config.exclusions[0]).toContain("Seats available when the member arrived");
-    expect(config.exclusions.join("\n")).not.toContain("not covered:");
+    expect(config.exclusions.join("\n")).not.toContain("excluded:");
   });
 
   it("single-sources the proof list and the tier table off the machine block", () => {

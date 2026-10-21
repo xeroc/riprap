@@ -187,7 +187,7 @@ function PreflightGate({
   // loading and the pass instant before onPass advances
   return (
     <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-      Checking your membership, the claims window, and the adjudication fee.
+      Checking your membership, the request window, and the adjudication fee.
     </p>
   );
 }
@@ -208,7 +208,7 @@ function BlockedState({ block, poolHref }: { block: PreflightBlock; poolHref: st
         <div className="flex max-w-3xl flex-col gap-2" data-slot="cap-exhausted">
           <p className="text-ink [font:var(--riprap-body-md)]">Your tier cap is used up.</p>
           <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-            This membership has already requested its maximum payout. Follow your claims on{" "}
+            This membership has already requested its maximum payout. Follow your requests on{" "}
             <TextLink href="#/app">the app surface</TextLink>.
           </p>
         </div>
@@ -217,7 +217,7 @@ function BlockedState({ block, poolHref }: { block: PreflightBlock; poolHref: st
       return (
         <div className="flex max-w-3xl flex-col gap-2" data-slot="window-closed">
           <p className="text-ink [font:var(--riprap-body-md)]">
-            The claims window closed{" "}
+            The request window closed{" "}
             <span data-num className="font-mono">
               {formatUtc(block.closedAt)}
             </span>

@@ -10,7 +10,7 @@ import { Settle } from "../components/Settle";
 const FAQS = [
   {
     q: "Is this insurance?",
-    a: "The first pools are mutuals — the original form of insurance: members' money in, members' claims out, peers deciding. A pool can carry any purpose; cover is the first. What it isn't is a policy from a company: no underwriting desk, no reserves, no company keeping the difference. The pool never pays more than it holds. If you need regulated insurance — licensed, with a guarantee fund behind it — buy insurance. This is a different thing with a written, narrow shape.",
+    a: "The first pools are mutuals — the original form of insurance: members' money in, members' requests out, peers deciding. A pool can carry any purpose; cover is the first. What it isn't is a policy from a company: no underwriting desk, no reserves, no company keeping the difference. The pool never pays more than it holds. If you need regulated insurance — licensed, with a guarantee fund behind it — buy insurance. This is a different thing with a written, narrow shape.",
   },
   {
     q: "Who holds the money, and can the Riprap team move it?",
@@ -21,16 +21,16 @@ const FAQS = [
     a: "The money you put in. Every amount is a published term of the pool, visible before you join, and a pool cannot reach into your wallet beyond those terms.",
   },
   {
-    q: "What if the pool can't pay every approved claim?",
-    a: "Payouts scale down proportionally: every approved claim is paid the same fraction of its approved amount. The pool is the whole balance sheet, so the shortfall is shared by formula, not by triage.",
+    q: "What if the pool can't pay every approved request?",
+    a: "Payouts scale down proportionally: every approved request is paid the same fraction of its approved amount. The pool is the whole balance sheet, so the shortfall is shared by formula, not by triage.",
   },
   {
     q: "What happens to the money if nothing happens?",
-    a: "It stays the members'. A pool's lifetime is written at founding: a finite pool settles its claims, returns what remains to the members, and ends; an ongoing pool runs until its members choose to end it. Either way nothing is kept. No retained profit, no surviving treasury, nothing left to capture.",
+    a: "It stays the members'. A pool's lifetime is written at founding: a finite pool settles its requests, returns what remains to the members, and ends; an ongoing pool runs until its members choose to end it. Either way nothing is kept. No retained profit, no surviving treasury, nothing left to capture.",
   },
   {
-    q: "Who decides whether a claim is paid?",
-    a: "Peers of the same pool — members who opted in as jurors by staking their own money, drawn at random when a claim needs them. Not Riprap, not the sponsor, not a hired judge. The pool itself decides nothing: it files the dispute with Accord, the adjudicator, and enforces whatever ruling comes back.",
+    q: "Who decides whether a request is paid?",
+    a: "Peers of the same pool — members who opted in as jurors by staking their own money, drawn at random when a request needs them. Not Riprap, not the sponsor, not a hired judge. The pool itself decides nothing: it files the dispute with Accord, the adjudicator, and enforces whatever ruling comes back.",
   },
   {
     q: "What keeps the jurors honest?",
@@ -38,7 +38,7 @@ const FAQS = [
   },
   {
     q: "What kinds of risk can a pool cover?",
-    a: "Any risk the group agrees to share. The terms are the founder's to write; the protocol imposes no template. What's covered, what it pays, and when it ends are all published before joining opens. Narrow risks work best: a question with evidence and a definable answer is one peers can rule on cleanly, where a vague peril dissolves into argument.",
+    a: "Any risk the group agrees to share. The terms are the founder's to write; the protocol imposes no template. What qualifies, what it pays, and when it ends are all published before joining opens. Narrow risks work best: a question with evidence and a definable answer is one peers can rule on cleanly, where a vague peril dissolves into argument.",
   },
   {
     q: "What does Riprap charge?",

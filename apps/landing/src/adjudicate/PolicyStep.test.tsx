@@ -83,7 +83,7 @@ describe("PolicyStep — checklist rendering (copy doc § step 2, policy §3/§4
     expect(
       screen.getByText("Answer every question. Yes, no, and unsure all count — blank doesn't."),
     ).toBeTruthy();
-    expect(screen.getByText("Coverage criteria")).toBeTruthy();
+    expect(screen.getByText("Qualifying criteria")).toBeTruthy();
     expect(screen.getByText("Exclusions")).toBeTruthy();
   });
 

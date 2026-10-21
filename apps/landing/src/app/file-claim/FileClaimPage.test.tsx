@@ -210,8 +210,8 @@ async function walkToReview() {
   });
   for (const label of [
     "Another person used a knife or blade against me",
-    "It happened during the coverage window",
-    "It happened inside the covered area",
+    "It happened during the event window",
+    "It happened inside the event area",
     "It caused bodily injury",
   ]) {
     fireEvent.click(screen.getByLabelText(label));
@@ -346,8 +346,8 @@ describe("#/app/file-claim — the walk (0→5)", () => {
     });
     for (const label of [
       "Another person used a knife or blade against me",
-      "It happened during the coverage window",
-      "It happened inside the covered area",
+      "It happened during the event window",
+      "It happened inside the event area",
       "It caused bodily injury",
     ]) {
       fireEvent.click(screen.getByLabelText(label));
@@ -449,8 +449,8 @@ describe("#/app/file-claim — the walk (0→5)", () => {
     fireEvent.change(screen.getByLabelText("What happened"), { target: { value: "assault" } });
     for (const label of [
       "Another person used a knife or blade against me",
-      "It happened during the coverage window",
-      "It happened inside the covered area",
+      "It happened during the event window",
+      "It happened inside the event area",
       "It caused bodily injury",
     ]) {
       fireEvent.click(screen.getByLabelText(label));
@@ -509,7 +509,7 @@ describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", (
     });
     releaseLast?.();
     await waitFor(() => {
-      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+      expect(screen.getByText(/Filed — request #0/)).toBeTruthy();
     });
 
     // exactly ONE signature — never re-sent after success
@@ -601,7 +601,7 @@ describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", (
     // release the signature → publish → filed under claim #1
     releaseSign("SIG");
     await waitFor(() => {
-      expect(screen.getByText(/Filed — claim #1/)).toBeTruthy();
+      expect(screen.getByText(/Filed — request #1/)).toBeTruthy();
     });
     expect(sendMock).toHaveBeenCalledTimes(2); // never a third after success
 
@@ -637,7 +637,7 @@ describe("#/app/file-claim — sign → publish → filed (bean riprap-yr3y)", (
       );
     });
     // hard stop — no filed screen
-    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
+    expect(screen.queryByText(/Filed — request #/)).toBeNull();
   });
 
   it("sign failure without a nonce move: one-line toast, back to review", async () => {
@@ -687,8 +687,8 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     });
     for (const label of [
       "Another person used a knife or blade against me",
-      "It happened during the coverage window",
-      "It happened inside the covered area",
+      "It happened during the event window",
+      "It happened inside the event area",
       "It caused bodily injury",
     ]) {
       fireEvent.click(screen.getByLabelText(label));
@@ -715,7 +715,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     renderWizard();
     await waitFor(() => {
       const slot = document.querySelector('[data-slot="window-closed"]');
-      expect(slot?.textContent).toContain("The claims window closed 2026-08-30 23:59 UTC.");
+      expect(slot?.textContent).toContain("The request window closed 2026-08-30 23:59 UTC.");
       expect(slot?.textContent).toContain("Payout requests are no longer accepted for this pool.");
     });
   });
@@ -766,7 +766,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     });
     release?.();
     await waitFor(() => {
-      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+      expect(screen.getByText(/Filed — request #0/)).toBeTruthy();
     });
     expect(sendMock).toHaveBeenCalledTimes(1);
   });
@@ -778,7 +778,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
 
     fireEvent.click(screen.getByRole("button", { name: "Sign and file" }));
     await waitFor(() => {
-      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+      expect(screen.getByText(/Filed — request #0/)).toBeTruthy();
     });
     expect(sendMock).toHaveBeenCalledTimes(1);
 
@@ -797,7 +797,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
 
     // settles once the refetch-driven re-render lands — the wizard stays
     await waitFor(() => {
-      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+      expect(screen.getByText(/Filed — request #0/)).toBeTruthy();
     });
     expect(document.querySelector('[data-slot="cap-exhausted"]')).toBeNull();
   });
@@ -827,13 +827,13 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
       expect(ticket?.textContent).toContain("failed");
       expect(ticket?.querySelector("button")?.textContent).toBe("Retry");
     });
-    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
+    expect(screen.queryByText(/Filed — request #/)).toBeNull();
 
     // the operator recovers → one click re-delivers; the wizard completes
     ticketDown = false;
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     await waitFor(() => {
-      expect(screen.getByText(/Filed — claim #0/)).toBeTruthy();
+      expect(screen.getByText(/Filed — request #0/)).toBeTruthy();
     });
     expect(sendMock).toHaveBeenCalledTimes(1); // delivery never re-signs
   });
@@ -880,7 +880,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     });
     expect(calls.filter((c) => c.method === "POST").length).toBe(2);
     // the other rows are still failed — no filed screen until each is retried
-    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
+    expect(screen.queryByText(/Filed — request #/)).toBeNull();
   });
 
   it("the manifest row's own Retry re-posts the manifest alone — files stay failed until their own retry", async () => {
@@ -925,7 +925,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
     });
     expect(calls.filter((c) => c.method === "POST").length).toBe(2);
     expect(calls.filter((c) => c.method === "PUT").length).toBe(0);
-    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
+    expect(screen.queryByText(/Filed — request #/)).toBeNull();
   });
 
   it("a POST 400 (unknown schema) is surfaced loudly — rows failed, no silent degrade", async () => {
@@ -942,7 +942,7 @@ describe("#/app/file-claim — gate matrix + delivery states (bean riprap-vahh)"
       expect(unreachable?.textContent).toContain("Couldn't reach the operator.");
       expect(document.querySelectorAll('[data-slot="publish-row"]').length).toBe(6);
     });
-    expect(screen.queryByText(/Filed — claim #/)).toBeNull();
+    expect(screen.queryByText(/Filed — request #/)).toBeNull();
   });
 
   // Recovery re-entry (manifest re-upload → sha256 == dispute.evidence_hashes[0]
@@ -1002,7 +1002,7 @@ describe("#/app/file-claim/:pool — the pool-scoped wizard", () => {
     for (const label of [
       "Toly asked for the hot drink — the request came from him, before the delivery",
       "I obtained the drink myself, after the request, at my own expense",
-      "I placed it, still hot, in Toly's hand — inside the covered area, during the bounty period",
+      "I placed it, still hot, in Toly's hand — inside the event area, during the bounty period",
       "Toly confirmed the request and the delivery",
     ]) {
       fireEvent.click(screen.getByLabelText(label));

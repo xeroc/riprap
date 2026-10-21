@@ -31,5 +31,5 @@ export const Disabled: StoryObj<typeof meta> = {
 };
 
 export const WithIcon: StoryObj<typeof meta> = {
-  args: { children: ["Claim", <SendIcon key="i" className="size-4" />] },
+  args: { children: ["Request", <SendIcon key="i" className="size-4" />] },
 };

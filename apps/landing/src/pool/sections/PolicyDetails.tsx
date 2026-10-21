@@ -44,22 +44,22 @@ function buildSections(tiers: PoolTier[] | null, subaccord: Address | null): Pol
         <p>
           Micro Mutual is a one-time mutual pool protecting members against a narrowly defined knife
           assault during a specific conference. Members contribute a fixed entry fee to a common
-          pool. A member who experiences a qualifying knife assault during the covered event may
-          request a discretionary payment, subject to adjudication, their coverage tier, and the
-          remaining funds — no member has an enforceable right to a payment. After the payout
-          request period closes, all remaining funds are distributed proportionally among members
-          and the mutual is dissolved.
+          pool. A member who experiences a qualifying knife assault during the qualifying event may
+          request a discretionary payment, subject to adjudication, their tier, and the remaining
+          funds — no member has an enforceable right to a payment. After the payout request period
+          closes, all remaining funds are distributed proportionally among members and the mutual is
+          dissolved.
         </p>
       ),
     },
     {
       n: "02",
-      title: "Coverage period",
+      title: "The window",
       body: (
         <div className="flex flex-col gap-3">
           <p>
-            Coverage begins at the start of the conference and ends at the end of the conference.
-            Only incidents during this period and within the covered area qualify.
+            The window opens with the conference and ends at the end of the conference. Only
+            incidents during this period and within the event area qualify.
           </p>
           <p data-num className="font-mono text-xs text-stone">
             BREAKPOINT 2026 · 15-17 NOVEMBER 2026 · OPENS/CLOSES WITH THE CONFERENCE (DAILY HOURS
@@ -71,7 +71,7 @@ function buildSections(tiers: PoolTier[] | null, subaccord: Address | null): Pol
     },
     {
       n: "03",
-      title: "Covered event",
+      title: "The qualifying event",
       body: (
         <div className="flex flex-col gap-3">
           <p>
@@ -79,8 +79,8 @@ function buildSections(tiers: PoolTier[] | null, subaccord: Address | null): Pol
             intentionally using a knife or other sharp-edged or bladed instrument against them.
           </p>
           <p>
-            The incident must occur during the coverage period, within the covered geographic area,
-            and while the requester is an active member.
+            The incident must occur during the event window, within the event area, and while the
+            requester is an active member.
           </p>
         </div>
       ),
@@ -116,13 +116,13 @@ function buildSections(tiers: PoolTier[] | null, subaccord: Address | null): Pol
     },
     {
       n: "05",
-      title: "Coverage tiers",
+      title: "The tiers",
       body: (
         <div className="flex flex-col gap-3">
           <p>
-            Members choose their coverage when joining. The maximum payout is the total amount a
-            member can receive for qualifying payout requests; a member cannot receive more than
-            their tier's maximum.
+            Members choose their tier when joining. The maximum payout is the total amount a member
+            can receive for qualifying payout requests; a member cannot receive more than their
+            tier's maximum.
           </p>
           {/* policy §5 — prices from mutual.tiers, {{PARAM}} until the chain answers */}
           <table className="w-full border-collapse">
@@ -189,14 +189,14 @@ function buildSections(tiers: PoolTier[] | null, subaccord: Address | null): Pol
         <div className="flex flex-col gap-3">
           <p>
             A member may submit a payout request for a qualifying knife assault occurring during the
-            coverage period. Filing requires access to the member's own wallet and pre-pays an
+            event window. Filing requires access to the member's own wallet and pre-pays an
             adjudication fee. All payments are discretionary: requests are adjudicated by a randomly
             drawn jury of staked members; no member has a contractual or enforceable right to any
             payment; the jury's determination is final. The maximum payment is set by the member's
-            coverage tier. If approved requests are less than the pool, the remaining funds are
-            returned to members. If the total due — approved payments and returned adjudication fees
-            — exceeds the pool, payments and returns are reduced proportionally so the mutual never
-            pays more than it holds.
+            tier. If approved requests are less than the pool, the remaining funds are returned to
+            members. If the total due — approved payments and returned adjudication fees — exceeds
+            the pool, payments and returns are reduced proportionally so the mutual never pays more
+            than it holds.
           </p>
           {/* §7 adjudication fee — policy-doc number (200 USDC), not a chain read */}
           <p data-num className="font-mono text-xs text-stone">
@@ -243,7 +243,7 @@ function buildSections(tiers: PoolTier[] | null, subaccord: Address | null): Pol
         <p>
           Members pool money to protect one another against a narrowly defined event. If the event
           costs less than expected, members recover the unused money. The entry fee is the member's
-          maximum contribution; the coverage tier sets the maximum potential payout.
+          maximum contribution; the tier sets the maximum potential payout.
         </p>
       ),
     },

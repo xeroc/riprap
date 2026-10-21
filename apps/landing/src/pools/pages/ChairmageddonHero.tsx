@@ -109,7 +109,7 @@ export function ChairmageddonHero() {
               <Settle delay={120}>
                 <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
                   <Prose
-                    text={`You bet the organisers didn't put enough seats in. ${fee} says you're right: if the opening ceremony fills up and you stand the whole thing, the pool pays up to ${cap}. Take a seat at any point and there's nothing to claim. Every unclaimed cent comes back, then the pool dissolves. This is not insurance. It's ${fee} and a stool fund.`}
+                    text={`You bet the organisers didn't put enough seats in. ${fee} says you're right: if the opening ceremony fills up and you stand the whole thing, the pool pays up to ${cap}. Take a seat at any point and there's nothing to request. Every unrequested cent comes back, then the pool dissolves. This is not insurance. It's ${fee} and a stool fund.`}
                   />
                 </p>
               </Settle>
@@ -133,9 +133,9 @@ export function ChairmageddonHero() {
                   </p>
                   {covered ? (
                     <div className="flex max-w-[36rem] flex-col gap-3" data-slot="covered">
-                      <BadgeStamp data-num>Covered — {shownTier.name}</BadgeStamp>
+                      <BadgeStamp data-num>Member — {shownTier.name}</BadgeStamp>
                       <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                        This wallet is in the pool. Your membership and claims live in{" "}
+                        This wallet is in the pool. Your membership and requests live in{" "}
                         <TextLink href="#/app">the app</TextLink>.
                       </p>
                     </div>
@@ -164,8 +164,8 @@ export function ChairmageddonHero() {
                     <div className="flex max-w-[36rem] flex-col gap-2" data-slot="entry-closed">
                       <p className="text-ink [font:var(--riprap-body-md)]">Entry closed.</p>
                       <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-                        This pool stopped taking members. Claims, settlement, and dissolution follow
-                        the policy.
+                        This pool stopped taking members. Requests, settlement, and dissolution
+                        follow the policy.
                       </p>
                     </div>
                   )}
@@ -201,7 +201,7 @@ export function ChairmageddonHero() {
             <CoveredOverlay
               open={join.coveredOverlay}
               onDismiss={join.dismissCovered}
-              stamp={`Covered — ${shownTier !== null ? shownTier.name : PARAM}`}
+              stamp={`Member — ${shownTier !== null ? shownTier.name : PARAM}`}
               headline="Welcome, friend!"
               figures={[
                 <span key="fee">

@@ -258,9 +258,9 @@ describe("/app — the joined-pools table (data-bound to the chain)", () => {
       ),
     ).toBeTruthy();
 
-    // the row: name links the pool's detail route, Covered — Standard stamp
+    // the row: name links the pool's detail route, Member — Standard stamp
     expect(await screen.findByRole("link", { name: "Blade Pool" })).toBeTruthy();
-    expect(screen.getByText("Covered — Standard")).toBeTruthy();
+    expect(screen.getByText("Member — Standard")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Blade Pool" }).getAttribute("href")).toBe(
       `#/m/${BLADE_DEVNET}`,
     );
@@ -296,7 +296,7 @@ describe("/app — the joined-pools table (data-bound to the chain)", () => {
     renderApp();
 
     // the band label + the pool-named block
-    expect(await screen.findByText("claims")).toBeTruthy();
+    expect(await screen.findByText("requests")).toBeTruthy();
     expect(await screen.findByText("#0 · $2,000 · PAID")).toBeTruthy();
     expect(screen.getAllByText("filed 2026-11-16 10:00 UTC").length).toBe(2);
     // the settled row is plain — no anchor
@@ -317,7 +317,7 @@ describe("/app — the joined-pools table (data-bound to the chain)", () => {
     scanMock.mockResolvedValue([{ address: BLADE_DEVNET, data: fakePool({ claimNonce: 1n }) }]);
     renderApp();
     expect(
-      await screen.findByText("Couldn't read your claims.", {}, { timeout: 5000 }),
+      await screen.findByText("Couldn't read your requests.", {}, { timeout: 5000 }),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
   });
@@ -332,7 +332,7 @@ describe("/app — payout-request entry action (copy doc § /app, CLAIM-WIZARD �
     renderApp();
 
     // claims (started with the money reads) settled — preflight evaluated
-    expect(await screen.findByText("No claims filed from this wallet.")).toBeTruthy();
+    expect(await screen.findByText("No payout requests filed from this wallet.")).toBeTruthy();
     await waitFor(() => expect(feeBalanceMock).toHaveBeenCalled());
     expect(screen.queryByRole("link", { name: "File a payout request" })).toBeNull();
     expect(screen.getByRole("link", { name: "Jury duty" }).getAttribute("href")).toBe(
@@ -356,7 +356,7 @@ describe("/app — multi-pool listing (every entered pool gets its row)", () => 
 
     // both rows render as entered (the stamps carry each pool's tier); each
     // pool also names its claims block in the claims band
-    await waitFor(() => expect(screen.getAllByText(/^Covered —/)).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByText(/^Member —/)).toHaveLength(2));
     expect(screen.getAllByText("Blade Pool")).toHaveLength(2);
     expect(screen.getAllByText("Chairmageddon Live")).toHaveLength(2);
 

@@ -33,7 +33,7 @@ const KIND_PROMISE: Record<RiprapDef["kind"], string[]> = {
   mutual: [
     "Join a temporary community pool.",
     "Pay a fixed amount.",
-    "Receive a defined payment if the covered event happens.",
+    "Receive a defined payment if the qualifying event happens.",
     "If payments don't consume the pool, the remaining money comes back to the members.",
     "When the event is over, the pool ends.",
   ],
@@ -50,8 +50,8 @@ const KIND_PROMISE: Record<RiprapDef["kind"], string[]> = {
  *  endNotes, numberless, never synthesized from the doc. */
 function kindEndNote(kind: RiprapDef["kind"]): string {
   return kind === "bounty"
-    ? "After the event, the claim window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently."
-    : "After the event, the claim window, and settlement, the remaining balance returns to eligible members and the pool dissolves permanently.";
+    ? "After the event, the request window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently."
+    : "After the event, the request window, and settlement, the remaining balance returns to eligible members and the pool dissolves permanently.";
 }
 
 /** §10's example figures → receipt lines: `Label: **$X**` pairs, bold-only
@@ -149,7 +149,7 @@ export function poolPageConfigFromDef(def: RiprapDef, listing: PoolListing): Poo
     (claims !== null
       ? paragraphs(claims.body).find((p) => /adjudication fee/i.test(p))
       : undefined) ??
-    "Filing pre-pays an adjudication fee; a denied claim forfeits it, an approved one returns it with the payment.";
+    "Filing pre-pays an adjudication fee; a denied request forfeits it, an approved one returns it with the payment.";
   return {
     name: def.name,
     event: def.marketing?.event ?? "Community",

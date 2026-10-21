@@ -51,7 +51,7 @@ export const JoinStory: StoryObj = {
 };
 
 export const ClaimStory: StoryObj = {
-  name: "claim — a claim is paid",
+  name: "claim — a request is paid",
   render: () => (
     <Frame>
       <Claim />

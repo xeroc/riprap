@@ -44,7 +44,7 @@ export function CaffeineSupercyclePage() {
           "Event ticket in your own name",
           "Government photo ID",
           "Delivery evidence — a timestamped photo or video of the handover, showing you, the named person, and the drink",
-          "Confirmation — a statement from the named person, from an account or in a form the jury can verify. Without it, the claim fails. The confirmation is the proof.",
+          "Confirmation — a statement from the named person, from an account or in a form the jury can verify. Without it, the request fails. The confirmation is the proof.",
         ],
         feeNote:
           "Filing pre-pays an adjudication fee of 8 USDC — denied forfeits it, approved returns it with the payment.",
@@ -57,10 +57,10 @@ export function CaffeineSupercyclePage() {
             { value: "$500", caption: "bounties paid" },
           ],
           total: { value: "$1,500", caption: "returned to members" },
-          note: "The pot pays at most 10 Qualifying Deliveries in total — across the whole roster, not per named person — in the order their claims are approved. A member who delivered once is up to $45 ahead.",
+          note: "The pot pays at most 10 Qualifying Deliveries in total — across the whole roster, not per named person — in the order their requests are approved. A member who delivered once is up to $45 ahead.",
         },
         endNote:
-          "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently.",
+          "After the conference, the request window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently.",
       }}
     />
   );

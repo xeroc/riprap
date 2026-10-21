@@ -32,7 +32,7 @@ export const ONE_LINE = "riprap — purpose pools on Solana, settled by peers. r
  * deck sources) + mutual-lineage mechanism + DeFi-both-directions +
  * motto close. First batch = bound facts (Breakpoint, November, London;
  * nine pools = pools/data.ts POOLS) + founder. */
-export const SHORT_BLURB = `Over 25% of every insurance dollar vanishes before a claim is paid; meanwhile, only privileged LPs earn up to 18% yield.
+export const SHORT_BLURB = `Over 25% of every insurance dollar vanishes before a request is paid; meanwhile, only privileged LPs earn up to 18% yield.
 
 riprap solves this, makes insurances permissionless, transparent and more competitive by putting the insurances business logic into a smart contract on solana.
 
@@ -51,7 +51,7 @@ riprap.xyz`;
  * + mutual-lineage mechanism + how-it-works + bounty clause (payout-pool
  * pass, 2026-10-06) + DeFi-both-directions roadmap (modal: can —
  * composability law) + motto close + team + first batch. */
-export const STANDARD_BLURB = `Over 25% of every insurance dollar vanishes before a single claim is paid. Meanwhile, privileged LPs earn up to 18% on the same risk — insurance is expensive for the people who buy it and closed to the people who would fund it.
+export const STANDARD_BLURB = `Over 25% of every insurance dollar vanishes before a single request is paid. Meanwhile, privileged LPs earn up to 18% on the same risk — insurance is expensive for the people who buy it and closed to the people who would fund it.
 
 riprap solves this, makes insurances permissionless, transparent and more competitive by putting the insurances business logic into a smart contract on solana.
 
@@ -62,7 +62,7 @@ How it works:
  - Members pay a fixed fee into a pool.
  - Incidents are judged by jurors staked from the pool itself.
  - Verdicts run on Accord, a Schelling-point arbitration protocol.
- - Approved claims pay out of the pool.
+ - Approved requests pay out of the pool.
 
 Insurance, Finally Programmable.
 
@@ -83,14 +83,14 @@ export const EMAIL_BODY = `Hi [name],
 
 Meet Fabian. He's building riprap — Insurance, Finally Programmable.
 
-Two numbers: over 25% of every insurance dollar vanishes before a single claim is paid, while privileged LPs earn up to 18% yield. Insurance is expensive for the people who buy it and closed to the people who would fund it.
+Two numbers: over 25% of every insurance dollar vanishes before a single request is paid, while privileged LPs earn up to 18% yield. Insurance is expensive for the people who buy it and closed to the people who would fund it.
 
-riprap to open both sides. At first we provide the original insurance — mutual risk pools, humanity's oldest protection — put on-chain: peers chip in, drawn peers settle claims. First market: the risks insurers can't sell — too small, too new, too narrow.
+riprap to open both sides. At first we provide the original insurance — mutual risk pools, humanity's oldest protection — put on-chain: peers chip in, drawn peers settle requests. First market: the risks insurers can't sell — too small, too new, too narrow.
 
 They already built the rails this runs on:
 
  - Pull payments for recurring premiums — tributary.so
- - On-chain claims adjudication — useaccord.xyz
+ - On-chain request adjudication — useaccord.xyz
 
 Later, they will allow risk capital in and connect DeFi for investors to earn a yield. Permissionlessly, Transparent, Fair. Not just privileged LPs. And pools themselves can use DeFi primitives.
 
@@ -350,7 +350,7 @@ export const EXPLAINERS: ExplainerTweet[] = [
   {
     // x.com/xer0c/status/2092273036791816595 — ACCORD 30s explainer
     kicker: "02 · the verdict layer",
-    note: "How a claim gets decided: Schelling points instead of a multisig or arbitrators.",
+    note: "How a request gets decided: Schelling points instead of a multisig or arbitrator.",
     text: "30 seconds on ACCORD.\n\nIt's a dispute resolution system built on Schelling points.\n\nNo Multisig. No arbitrators. Just aligned incentives that nudge everyone toward the obvious fair outcome.\n\nWhat becomes possible? Watch till the end.\n\nExplainer 🎥👇",
     date: "Aug 25, 2026",
     meta: "210 views · 5 likes",

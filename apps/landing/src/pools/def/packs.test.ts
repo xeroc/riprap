@@ -80,12 +80,12 @@ describe("buildClaimFlow", () => {
     expect(flow.manifestTitle("2026-11-15")).toBe("Payout request — Chairmageddon, 2026-11-15");
     const bounty = buildClaimFlow(BOUNTY_DEF);
     expect(bounty.screenChecks[0]?.label).toContain("qualifying act");
-    expect(bounty.manifestTitle("2026-11-15")).toBe("Bounty claim — Hot Drink, 2026-11-15");
+    expect(bounty.manifestTitle("2026-11-15")).toBe("Bounty request — Hot Drink, 2026-11-15");
   });
 
   it("reads the exclusions line off the doc's Exclusions heading (number optional)", () => {
     expect(flow.exclusionsLine).toBe(
-      "Not covered: Seats available when the member arrived., Members who sat at any point during the ceremony..",
+      "Excluded: Seats available when the member arrived., Members who sat at any point during the ceremony..",
     );
     expect(buildClaimFlow(BOUNTY_DEF).exclusionsLine).toContain("Not paid:");
   });
@@ -115,7 +115,7 @@ describe("buildAdjudicationPolicy", () => {
   });
 
   it("kind-templates the coverage criteria and carries the tier-max verdict note", () => {
-    expect(policy.coverageCriteria[0]).toContain("covered event");
+    expect(policy.coverageCriteria[0]).toContain("qualifying event");
     expect(buildAdjudicationPolicy(BOUNTY_DEF).coverageCriteria[0]).toContain("qualifying act");
     expect(policy.verdictNote).toContain("clamps it to the tier's maximum");
     expect(policy.verdictNote).toContain("denied outright");

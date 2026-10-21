@@ -24,7 +24,7 @@ export function MertOfTheYearPage() {
         ],
         tiers: [{ name: "Flat", fee: 10, cap: 1000 }],
         definition:
-          'The Commissioning: you personally commissioned or hand-built a physical trophy, at your own expense. The Inscription: it bears, engraved or otherwise permanently and legibly affixed, the exact text "For Outstanding Contributions to Making Solana Developers Less Miserable." The Speech: immediately before the handover, you delivered an acceptance speech on Mert’s behalf — aloud, in the first person, as Mert, accepting the award, completely serious in delivery, at least thirty seconds long as spoken. The Handover: you personally presented the trophy to Mert, within the covered area, during the bounty period. The Notification: a public post on X from your own account, within 24 hours of the presentation, showing the trophy and the handover, tagging @riprapxyz. The Verdict: after the bounty period ends and before the verdict deadline, Mert declares which entry’s trophy was the best he was handed.',
+          'The Commissioning: you personally commissioned or hand-built a physical trophy, at your own expense. The Inscription: it bears, engraved or otherwise permanently and legibly affixed, the exact text "For Outstanding Contributions to Making Solana Developers Less Miserable." The Speech: immediately before the handover, you delivered an acceptance speech on Mert’s behalf — aloud, in the first person, as Mert, accepting the award, completely serious in delivery, at least thirty seconds long as spoken. The Handover: you personally presented the trophy to Mert, within the event area, during the bounty period. The Notification: a public post on X from your own account, within 24 hours of the presentation, showing the trophy and the handover, tagging @riprapxyz. The Verdict: after the bounty period ends and before the verdict deadline, Mert declares which entry’s trophy was the best he was handed.',
         definitionNotes: [
           "The named person is Mert Mumtaz; he may not hold a membership in this bounty pool.",
           "Trophy — a physical, three-dimensional, freestanding object intended to be displayed: cup, statuette, obelisk, monument, or similar. An image of a trophy is not a trophy. An NFT of a trophy is not a trophy. A printout of an NFT of a trophy is not a trophy.",
@@ -42,7 +42,7 @@ export function MertOfTheYearPage() {
           "Presentations made to staff, security, handlers, or the nearest table — or made in Mert’s absence. His advance knowledge or cooperation does not disqualify a presentation; his absence does.",
           "Members reimbursed by anyone for the trophy. A crowdfunded monument is not a commission.",
           "Trophies previously presented to anyone, by anyone. Mert of the Year does not take hand-me-downs.",
-          "Presentations outside the bounty period or outside the covered area.",
+          "Presentations outside the bounty period or outside the event area.",
           "Entries not notified: posts without the @riprapxyz tag, posts from an account that is not your own, or posts published more than 24 hours after the presentation. The field must freeze for the judge.",
           "A second entry by the same member. One member, one trophy.",
         ],
@@ -52,7 +52,7 @@ export function MertOfTheYearPage() {
           "Trophy evidence — at least two photographs of the trophy, at least one showing the inscription legibly and verbatim, plus the receipt, order confirmation, or documented build",
           "Presentation evidence — a single continuous, timestamped video showing the speech in full and the handover: you speaking, Mert present, and the trophy. The thirty seconds are measured on this video.",
           "Notification evidence — the URL of your X post, showing the @riprapxyz tag and a publication timestamp within 24 hours of the presentation",
-          "Verdict evidence — Mert’s declaration, from an account or in a form the jury can verify, naming the winning trophy or member. Without it, the claim fails. The verdict is the proof.",
+          "Verdict evidence — Mert’s declaration, from an account or in a form the jury can verify, naming the winning trophy or member. Without it, the request fails. The verdict is the proof.",
         ],
         feeNote:
           "Filing pre-pays an adjudication fee of 40 USDC — denied forfeits it, approved returns it with the payment.",
@@ -67,7 +67,7 @@ export function MertOfTheYearPage() {
           note: "The pot pays exactly one Qualifying Entry — the verdict’s. There is no second place. A member who contributed $10 and won is up to $990 ahead; the thirteen who did not win keep their trophies — the pot cannot refund a trophy.",
         },
         endNote:
-          "After the conference, the claim window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently.",
+          "After the conference, the request window, and settlement, the remaining balance returns to eligible members and the bounty pool dissolves permanently.",
         caveat:
           "Prices follow the doc's tier table (final there); the named person's consent is still TODO in the terms — nothing on this page is live.",
       }}

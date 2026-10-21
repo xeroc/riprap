@@ -125,10 +125,10 @@ export function PoolPageShell({
         </SectionBand>
 
         {/* what's covered / what pays — §3 verbatim + the definitions */}
-        <SectionBand id="covered" label={bounty ? "what pays" : "what's covered"} tone="soft">
+        <SectionBand id="covered" label={bounty ? "what pays" : "what's paid"} tone="soft">
           <Settle className="flex flex-col gap-(--riprap-space-xl)">
             <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
-              {bounty ? "What pays." : "What's covered."}
+              {bounty ? "What pays." : "What the pool pays for."}
             </h2>
             {c.terms ? (
               <PolicyBody markdown={c.definition} />
@@ -198,10 +198,10 @@ export function PoolPageShell({
         </SectionBand>
 
         {/* claims — §7 proof list, fee, jury */}
-        <SectionBand id="claims" label="claims" tone="soft">
+        <SectionBand id="claims" label="requests" tone="soft">
           <Settle className="flex flex-col gap-(--riprap-space-xl)">
             <h2 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
-              A claim carries its proof.
+              A request carries its proof.
             </h2>
             <ol className="flex max-w-3xl flex-col">
               {c.proof.map((item, i) => (
@@ -217,8 +217,8 @@ export function PoolPageShell({
               ))}
             </ol>
             <p className="max-w-3xl leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-              {c.feeNote} Claims are adjudicated by a randomly drawn jury of staked members
-              (Accord). If approved claims exceed the pot, payments scale down proportionally; it
+              {c.feeNote} Requests are adjudicated by a randomly drawn jury of staked members
+              (Accord). If approved requests exceed the pot, payments scale down proportionally; it
               never pays more than it holds.
             </p>
           </Settle>

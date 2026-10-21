@@ -32,14 +32,14 @@ export const BLADE_POOL_FLOW: ClaimFlow = {
   // Policy §3 covered event — the step-1 self-screen, §3 order.
   screenChecks: [
     { key: "blade", label: "Another person used a knife or blade against me" },
-    { key: "window", label: "It happened during the coverage window" },
-    { key: "area", label: "It happened inside the covered area" },
+    { key: "window", label: "It happened during the event window" },
+    { key: "area", label: "It happened inside the event area" },
     { key: "injury", label: "It caused bodily injury" },
   ],
 
   // Step-1 exclusions line — the copy doc's §4 summary sentence.
   exclusionsLine:
-    "Not covered: injuries you caused yourself, accidents, ordinary knife handling, consensual activities, incidents outside the window or area, distress without qualifying injury.",
+    "Excluded: injuries you caused yourself, accidents, ordinary knife handling, consensual activities, incidents outside the window or area, distress without qualifying injury.",
   wherePlaceholder: "in or around the venue and the designated event area",
   narrativePlaceholder: "free text — it feeds the statutory declaration",
 

@@ -63,11 +63,14 @@ interface AuthorPhaseDef {
   gate: string[];
 }
 
+/** The authoring rail. Both kinds walk the same six screens today — the kind
+ * (step 01) drives copy templates only; a kind that changes the steps
+ * themselves (an ongoing template) diverges HERE, not in the page. */
 const AUTHOR_PHASES: readonly AuthorPhaseDef[] = [
   { id: "identity", label: "Identity", gate: ["name"] },
-  { id: "coverage", label: "Coverage", gate: ["tiers"] },
+  { id: "coverage", label: "Tiers", gate: ["tiers"] },
   { id: "window", label: "Window", gate: ["period"] },
-  { id: "claims", label: "Claims", gate: ["proof"] },
+  { id: "claims", label: "Terms", gate: ["proof"] },
   { id: "marketing", label: "Marketing", gate: ["marketing"] },
   { id: "advanced", label: "Advanced", gate: ["advanced"] },
 ];
@@ -679,6 +682,11 @@ function AuthorStep({
         >
           {phase === "identity" ? (
             <Band label="The pool">
+              <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
+                This wizard builds a pool scoped to one purpose and one fixed window — not a
+                standing fund. Members pay in once while joining is open, and whatever the pool does
+                not pay out goes back to them when the pool settles.
+              </p>
               <Field id="def-name" label="Name" rejections={errorsFor("name")}>
                 {(props) => (
                   <Input
@@ -710,7 +718,9 @@ function AuthorStep({
           ) : phase === "coverage" ? (
             <Band label="Tiers">
               <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
-                Members chip in at these prices; a claim pays out at most the cap.
+                Entry is one payment per member, made while joining is open — this pool takes no
+                recurring contributions. Each tier caps what one request can pay; unused money is
+                never kept by the pool.
               </p>
               {def.tiers.map((tier, index) => (
                 <div
@@ -801,6 +811,12 @@ function AuthorStep({
             </Band>
           ) : phase === "window" ? (
             <Band label="Window">
+              <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
+                These dates are the pool&apos;s clock, fixed at deploy: joining closes the moment
+                the doors open, and a request only counts for an incident inside the window, filed
+                before requests close. After requests close the pool settles — approved requests pay
+                out, the remainder returns to the members.
+              </p>
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field
                   id="period-start"
@@ -823,7 +839,7 @@ function AuthorStep({
                     />
                   )}
                 </Field>
-                <Field id="period-end" label="Coverage ends" rejections={errorsFor("period.end")}>
+                <Field id="period-end" label="Window ends" rejections={errorsFor("period.end")}>
                   {(props) => (
                     <Input
                       {...props}
@@ -841,7 +857,7 @@ function AuthorStep({
                 </Field>
                 <Field
                   id="period-claims"
-                  label="Claims close"
+                  label="Requests close"
                   rejections={errorsFor("period.claimsClose")}
                 >
                   {(props) => (
@@ -882,12 +898,16 @@ function AuthorStep({
             <>
               <Band label="The terms">
                 <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
-                  What a member shows to get paid.
+                  Every payout is adjudicated: drawn jurors read these terms and the member&apos;s
+                  proof, then rule — the pool itself decides nothing. Only requests inside the
+                  window can pay; a rejected request closes with nothing moving.
                 </p>
                 <Field
                   id="def-body"
                   label={
-                    def.kind === "mutual" ? "What this pool covers" : "What this pool pays for"
+                    def.kind === "mutual"
+                      ? "What this pool pays out for"
+                      : "What this pool pays for"
                   }
                   note="The whole policy body. Markdown is allowed. The fields above become the frontmatter; this body is everything after it — nothing is injected and nothing is required. The jury reads it verbatim."
                 >
@@ -899,7 +919,7 @@ function AuthorStep({
                       onChange={(e) => onPatchDef({ body: e.target.value })}
                       placeholder={
                         def.kind === "mutual"
-                          ? "## What this pool covers\n\nThe peril, named plainly — one narrowly defined incident, where and when it counts.\n\n## Exclusions\n\nWhat is not covered."
+                          ? "## What this pool pays out for\n\nThe peril, named plainly — one narrowly defined incident, where and when it counts.\n\n## Exclusions\n\nWhat is excluded."
                           : "## What this pool pays for\n\nThe act, what must be verified, and what is not paid."
                       }
                     />
@@ -907,6 +927,9 @@ function AuthorStep({
                 </Field>
               </Band>
               <Band label="Proof">
+                <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
+                  What a member shows to get paid.
+                </p>
                 {def.proof.map((slot, index) => (
                   <div
                     key={index}
@@ -989,8 +1012,9 @@ function AuthorStep({
           ) : phase === "marketing" ? (
             <Band label="Marketing">
               <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
-                Optional — nothing here is required. Absent fields fall back to the kind's templates
-                on the pool page.
+                Everything on this screen is surface — the terms, window, and tiers above are what
+                members actually get. Absent fields fall back to the kind&apos;s plain defaults on
+                the pool page.
               </p>
               <MarketingFields
                 draft={draft}
@@ -1187,8 +1211,9 @@ function AdvancedPhase({
   return (
     <Band label="Advanced">
       <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
-        One input needs your hand — the mint everything runs on. The rest ships with the pilot
-        preset, folded away below.
+        These are the chain&apos;s own parameters — they set how requests are judged, not what the
+        pool covers — and they are fixed at deploy. One input needs your hand (the mint); the rest
+        ships with the pilot preset, folded away below.
       </p>
       <div className="flex w-full max-w-xl flex-col gap-4">
         <Field
@@ -1285,7 +1310,7 @@ function AdvancedPhase({
             <AnchorRow label="seed" value={seed.toString()} />
             <AnchorRow label="evidence operator" value={evidenceOperator} />
             <p data-num className="break-all font-mono text-sm text-ink">
-              deposits close {defTimestamp(draft, "start")} · claims close{" "}
+              deposits close {defTimestamp(draft, "start")} · requests close{" "}
               {defTimestamp(draft, "claimsClose")} (unix)
             </p>
             {seedFreedom === "taken" ? (

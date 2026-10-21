@@ -13,12 +13,12 @@ const BENEFITS = [
   {
     stamp: "Transparent",
     h: "Every number is public.",
-    p: "The pool's balance, every payment in, every claim, every ruling: public on-chain, readable by anyone, live. Solvency is a number you can check whenever you want.",
+    p: "The pool's balance, every payment in, every request, every ruling: public on-chain, readable by anyone, live. Solvency is a number you can check whenever you want.",
   },
   {
     stamp: "Cost",
     h: "The back office is transaction fees.",
-    p: "Custody is a program, claims are settled by drawn peers, payouts are a permissionless transaction. The machinery that makes small cover unsellable — branches, claims departments, sales commissions — doesn't exist here.",
+    p: "Custody is a program, requests are decided by drawn peers, payouts are a permissionless transaction. The machinery that makes small cover unsellable — branches, claims departments, sales commissions — doesn't exist here.",
   },
   {
     stamp: "Composable",

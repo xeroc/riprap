@@ -228,7 +228,9 @@ describe("validateDef", () => {
   it("rejects claims closing before coverage ends", () => {
     const def = chairmageddon();
     def.period.claimsClose = "2026-11-17";
-    expect(rejections(def)).toContainEqual("period.claimsClose: Claims close after coverage ends.");
+    expect(rejections(def)).toContainEqual(
+      "period.claimsClose: Requests close after the window ends.",
+    );
   });
 
   it("rejects a logo that is not an http(s) link", () => {
@@ -326,7 +328,7 @@ describe("validateAdvanced (initialize_mutual gates)", () => {
     const past = chairmageddon();
     past.period.start = "2026-01-01";
     expect(rejections(past)).toContainEqual(
-      "period.start: Doors open in the future, claims close after them.",
+      "period.start: Doors open in the future, requests close after them.",
     );
     const badMint = defaultAdvanced();
     badMint.mint = "not-a-pubkey";

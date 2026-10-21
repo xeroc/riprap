@@ -19,7 +19,7 @@ export const Default: StoryObj<typeof meta> = {
         <Button
           size="sm"
           onClick={() =>
-            toast.success("Claim filed", {
+            toast.success("Request filed", {
               description: "payout up to <span data-num>$2,000</span>",
             })
           }

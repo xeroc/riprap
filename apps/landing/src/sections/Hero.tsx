@@ -104,8 +104,8 @@ export function Hero() {
             <Settle delay={120}>
               <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
                 A group doesn't pool for a stranger's purpose. It pools for its own: members fund
-                one pot, any member can claim on it under the purpose they all joined, and drawn
-                peers rule on every claim.
+                one pot, any member can request from it under the purpose they all joined, and drawn
+                peers rule on every request.
               </p>
             </Settle>
             {/* primary: browse the pools — the waitlist rides below, secondary */}

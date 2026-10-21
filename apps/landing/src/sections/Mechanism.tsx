@@ -70,13 +70,13 @@ const FLOWS = [
         step: "02",
         Glyph: Gather,
         headline: "Pay the entry",
-        text: "The published fee lands in the pool, on the pool's own terms — one pool, one defined risk. Paying in buys the same claim right every other member holds: the funders are the pool, and the pool exists for them.",
+        text: "The published fee lands in the pool, on the pool's own terms — one pool, one defined risk. Paying in buys the same payout right every other member holds: the funders are the pool, and the pool exists for them.",
       },
       {
         step: "03",
         Glyph: Return,
         headline: "Hold your stake",
-        text: "A member's money sits in the pot until a ruling or the wind-down moves it — no admin key, no discretionary signer. If nothing is ever claimed, it comes back pro rata.",
+        text: "A member's money sits in the pot until a ruling or the wind-down moves it — no admin key, no discretionary signer. If nothing is ever requested, it comes back pro rata.",
       },
     ],
   },
@@ -84,13 +84,13 @@ const FLOWS = [
     id: "drawing",
     Glyph: PaysOut,
     title: "Drawing on the pool",
-    actor: "the claimant",
+    actor: "the requester",
     steps: [
       {
         step: "01",
         Glyph: Filed,
         headline: "File a payout request",
-        text: "A member submits a request describing what the money is for. The request carries the evidence the terms demand — an incident covered by the terms, attached and on record.",
+        text: "A member submits a request describing what the money is for. The request carries the evidence the terms demand — an incident the terms name, attached and on record.",
       },
       {
         step: "02",
@@ -99,8 +99,8 @@ const FLOWS = [
         text: (
           <>
             The request is adjudicated against the pool's agreed purpose. Jurors are staked members
-            of the same pool, drawn at random when a claim needs them; votes are commit-reveal, and
-            an appeal doubles the jury. Adjudication runs on{" "}
+            of the same pool, drawn at random when a request needs them; votes are commit-reveal,
+            and an appeal doubles the jury. Adjudication runs on{" "}
             <TextLink href="https://useaccord.xyz" external>
               Accord
             </TextLink>
@@ -112,7 +112,7 @@ const FLOWS = [
         step: "03",
         Glyph: Claim,
         headline: "Get paid",
-        text: "Once approved, the payout is released from the pool. An approved claim pays what the terms promise — never more than the pool holds, because there is nothing else to hold.",
+        text: "Once approved, the payout is released from the pool. An approved request pays what the terms promise — never more than the pool holds, because there is nothing else to hold.",
       },
     ],
   },
