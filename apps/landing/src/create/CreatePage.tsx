@@ -1177,11 +1177,18 @@ function AdvancedPhase({
     </Field>
   );
 
+  /** The disclosure's open state: the author's toggle, force-opened while
+   * any of its fields rejects — a blocked submit must reach the field. */
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const hiddenRejections = advancedRejections.filter(
+    (r) => r.field.startsWith("advanced.") && r.field !== "advanced.mint",
+  );
+
   return (
     <Band label="Advanced">
       <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
-        Every remaining chain input, pre-filled with the pilot preset. These mirror the chain&apos;s
-        own checks — the deploy fails with the same words if one is wrong.
+        One input needs your hand — the mint everything runs on. The rest ships with the pilot
+        preset, folded away below.
       </p>
       <div className="flex w-full max-w-xl flex-col gap-4">
         <Field
@@ -1201,46 +1208,94 @@ function AdvancedPhase({
           )}
         </Field>
       </div>
-      <div className="grid w-full max-w-3xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {numberField(
-          "adv-min-stake",
-          "Min juror stake (USDC)",
-          "minStakeUsdc",
-          "Must be above zero.",
-        )}
-        {numberField("adv-fee-juror", "Juror fee (USDC)", "feePerJurorUsdc", "Must be above zero.")}
-        {numberField("adv-jury", "Min jury size", "minJurySize", "Must be odd.")}
-        {numberField(
-          "adv-appeals",
-          "Max appeals",
-          "maxAppeals",
-          "The appeal ladder must fit 31 jurors.",
-        )}
-        {numberField("adv-alpha", "Alpha (bps)", "alphaBps", "0–10000.")}
-        {numberField("adv-reveal-bps", "Reveal threshold (bps)", "revealThresholdBps", "0–10000.")}
-        {numberField("adv-review", "Review window (hours)", "reviewHours", "Must be above zero.")}
-        {numberField("adv-commit", "Commit window (hours)", "commitHours", "Must be above zero.")}
-        {numberField("adv-reveal", "Reveal window (hours)", "revealHours", "Must be above zero.")}
-        {numberField("adv-appeal", "Appeal window (hours)", "appealHours", "At least 1 hour.")}
-        {numberField("adv-draws", "Max draw attempts", "maxDrawAttempts", "1–10.")}
-      </div>
-      <div className="flex w-full max-w-3xl flex-col gap-2 border-t border-hairline pt-4">
-        <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
-          Derived
-        </p>
-        <AnchorRow label="policy hash" value={anchors?.hash ?? "…"} />
-        <AnchorRow label="seed" value={seed.toString()} />
-        <AnchorRow label="evidence operator" value={evidenceOperator} />
-        <p data-num className="break-all font-mono text-sm text-ink">
-          deposits close {defTimestamp(draft, "start")} · claims close{" "}
-          {defTimestamp(draft, "claimsClose")} (unix)
-        </p>
-        {seedFreedom === "taken" ? (
-          <p className="text-xs text-muted-foreground">
-            This seed&apos;s address is taken — the wizard re-picks until it finds a free one.
+      {/* the accordion — the FAQ's native-details pattern, no JS chrome */}
+      <details
+        data-slot="advanced-settings"
+        className="group border-t border-hairline"
+        open={settingsOpen || hiddenRejections.length > 0}
+        onToggle={(e) => setSettingsOpen(e.currentTarget.open)}
+      >
+        <summary className="flex cursor-pointer list-none items-baseline justify-between gap-6 py-4 [&::-webkit-details-marker]:hidden">
+          <span className="uppercase tracking-(--riprap-tracking-stamp) text-ink [font:var(--riprap-mono-label)]">
+            Advanced settings
+          </span>
+          <span aria-hidden className="font-mono text-base text-accent">
+            <span className="group-open:hidden">+</span>
+            <span className="hidden group-open:inline">–</span>
+          </span>
+        </summary>
+        <div className="flex flex-col gap-4 pb-4">
+          <p className="max-w-[36rem] text-xs leading-relaxed text-muted-foreground">
+            Every remaining chain input, pre-filled with the pilot preset. These mirror the
+            chain&apos;s own checks — the deploy fails with the same words if one is wrong.
           </p>
-        ) : null}
-      </div>
+          <div className="grid w-full max-w-3xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {numberField(
+              "adv-min-stake",
+              "Min juror stake (USDC)",
+              "minStakeUsdc",
+              "Must be above zero.",
+            )}
+            {numberField(
+              "adv-fee-juror",
+              "Juror fee (USDC)",
+              "feePerJurorUsdc",
+              "Must be above zero.",
+            )}
+            {numberField("adv-jury", "Min jury size", "minJurySize", "Must be odd.")}
+            {numberField(
+              "adv-appeals",
+              "Max appeals",
+              "maxAppeals",
+              "The appeal ladder must fit 31 jurors.",
+            )}
+            {numberField("adv-alpha", "Alpha (bps)", "alphaBps", "0–10000.")}
+            {numberField(
+              "adv-reveal-bps",
+              "Reveal threshold (bps)",
+              "revealThresholdBps",
+              "0–10000.",
+            )}
+            {numberField(
+              "adv-review",
+              "Review window (hours)",
+              "reviewHours",
+              "Must be above zero.",
+            )}
+            {numberField(
+              "adv-commit",
+              "Commit window (hours)",
+              "commitHours",
+              "Must be above zero.",
+            )}
+            {numberField(
+              "adv-reveal",
+              "Reveal window (hours)",
+              "revealHours",
+              "Must be above zero.",
+            )}
+            {numberField("adv-appeal", "Appeal window (hours)", "appealHours", "At least 1 hour.")}
+            {numberField("adv-draws", "Max draw attempts", "maxDrawAttempts", "1–10.")}
+          </div>
+          <div className="flex w-full max-w-3xl flex-col gap-2 border-t border-hairline pt-4">
+            <p className="uppercase tracking-(--riprap-tracking-stamp) text-muted-foreground [font:var(--riprap-mono-label)]">
+              Derived
+            </p>
+            <AnchorRow label="policy hash" value={anchors?.hash ?? "…"} />
+            <AnchorRow label="seed" value={seed.toString()} />
+            <AnchorRow label="evidence operator" value={evidenceOperator} />
+            <p data-num className="break-all font-mono text-sm text-ink">
+              deposits close {defTimestamp(draft, "start")} · claims close{" "}
+              {defTimestamp(draft, "claimsClose")} (unix)
+            </p>
+            {seedFreedom === "taken" ? (
+              <p className="text-xs text-muted-foreground">
+                This seed&apos;s address is taken — the wizard re-picks until it finds a free one.
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </details>
     </Band>
   );
 }

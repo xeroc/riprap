@@ -525,6 +525,11 @@ describe("#/create gate + state matrix", () => {
       if (node === null) throw new Error(`#${id} not on screen`);
       return node;
     });
+    // the settings ride a collapsed disclosure — open it like a user would
+    const disclosure = input.closest("details");
+    if (disclosure !== null && !disclosure.open) {
+      fireEvent.click(disclosure.querySelector("summary") as HTMLElement);
+    }
     fireEvent.change(input, { target: { value } });
   }
 
@@ -555,6 +560,41 @@ describe("#/create gate + state matrix", () => {
     expect(
       await screen.findByText(/evidence operator (the creator's wallet|\S{32,44})/),
     ).toBeTruthy();
+  });
+
+  it("the advanced settings disclosure: collapsed by default, opens on the summary, force-opens on a hidden rejection", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(null, { status: 200 })),
+    );
+    const first = renderPage();
+    await walkValidForm();
+    // one input outside — the mint; the settings ride collapsed beneath it
+    expect(document.getElementById("adv-mint")).toBeTruthy();
+    expect((document.getElementById("adv-jury") as HTMLElement).closest("details")).toBe(
+      document.querySelector('details[data-slot="advanced-settings"]'),
+    );
+    const closedDetails = document.querySelector(
+      'details[data-slot="advanced-settings"]',
+    ) as HTMLDetailsElement;
+    expect(closedDetails.open).toBe(false);
+    fireEvent.click(closedDetails.querySelector("summary") as HTMLElement);
+    expect(closedDetails.open).toBe(true);
+    // a resumed draft whose hidden field rejects lands with the disclosure
+    // already open — a blocked submit must reach the field that rejects
+    await setAdvanced("adv-jury", "4");
+    expect(await screen.findByText("Must be odd.")).toBeTruthy();
+    const draft = JSON.parse(localStorage.getItem("riprap:create") ?? "{}");
+    first.unmount();
+    localStorage.setItem("riprap:create", JSON.stringify(draft));
+    renderPage();
+    await waitFor(() => {
+      const reopened = document.querySelector(
+        'details[data-slot="advanced-settings"]',
+      ) as HTMLDetailsElement;
+      expect(reopened.open).toBe(true);
+    });
+    expect(await screen.findByText("Must be odd.")).toBeTruthy();
   });
 
   it("publish states: 400 rejected, 404 mutual-not-visible — each its deadpan line", async () => {
