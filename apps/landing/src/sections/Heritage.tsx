@@ -48,7 +48,7 @@ const lineage = [
 
 export function Heritage() {
   return (
-    <SectionBand id="lineage" label="Live today" tone="soft">
+    <SectionBand id="lineage" label="Live today" tone="ground">
       <Settle className="flex flex-col gap-(--riprap-space-xl)">
         <h2 className="max-w-3xl tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
           The mutual is old. The Solana primitive is new.

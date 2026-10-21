@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 import { Backstop } from "./Backstop";
+import { ChipIn } from "./ChipIn";
 import { Claim } from "./Claim";
 import { ClaimApproval } from "./ClaimApproval";
 import { ExpansionStrip } from "./ExpansionStrip";
@@ -12,9 +13,11 @@ import { HexBackdrop } from "./HexBackdrop";
 import { Join } from "./Join";
 import { LifecycleStrip } from "./LifecycleStrip";
 import { OnePool } from "./OnePool";
+import { PaysOut } from "./PaysOut";
 import { Renew } from "./Renew";
 import { Return } from "./Return";
 import { Rule } from "./Rule";
+import { Seal } from "./Seal";
 import { Sign } from "./Sign";
 import { Stack } from "./Stack";
 
@@ -88,6 +91,33 @@ export const FiledStory: StoryObj = {
   render: () => (
     <Frame>
       <Filed />
+    </Frame>
+  ),
+};
+
+export const SealStory: StoryObj = {
+  name: "seal — the terms, written and sealed",
+  render: () => (
+    <Frame>
+      <Seal />
+    </Frame>
+  ),
+};
+
+export const ChipInStory: StoryObj = {
+  name: "chip-in — the fee lands in the pool",
+  render: () => (
+    <Frame>
+      <ChipIn />
+    </Frame>
+  ),
+};
+
+export const PaysOutStory: StoryObj = {
+  name: "pays-out — the ruling releases the money",
+  render: () => (
+    <Frame>
+      <PaysOut />
     </Frame>
   ),
 };

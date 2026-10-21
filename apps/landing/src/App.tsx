@@ -6,7 +6,6 @@ import { SiteNav } from "./components/SiteNav";
 import { Faq } from "./sections/Faq";
 import { FinalCta } from "./sections/FinalCta";
 import { Footer } from "./sections/Footer";
-import { Heritage } from "./sections/Heritage";
 import { Hero } from "./sections/Hero";
 import { Mechanism } from "./sections/Mechanism";
 import { OnChain } from "./sections/OnChain";
@@ -21,10 +20,9 @@ export function App() {
       <main>
         <Hero />
         <Pools />
+        <Mechanism />
         <Purpose />
         <OnChain />
-        <Mechanism />
-        <Heritage />
         <Faq />
         <Supporters />
         <FinalCta />

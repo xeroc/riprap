@@ -1,8 +1,10 @@
 // §1 — hero: platform one-liner, the browse CTA, waitlist demoted to
-// secondary. Payout-pool pass (2026-10-06, copy doc §1, messaging-guide
-// § Payout-Pool Pass): the campaign line as H1 — WHY-led, the one line
-// true of every pool, cover or bounty; the formal descriptor as kicker;
-// the member line opens the subhead; bounties ride as one clause.
+// secondary. 2026-10-21 founder pass (copy doc §1): the subhead turns
+// WHY-led — a group pools for its own, and the claim right rides as the
+// belief's proof (M→M: the funders can be the claimants); the mechanism
+// detail stays told by §1.3 and §2. Payout-pool pass (2026-10-06): the
+// campaign line as H1 — WHY-led, the one line true of every pool, cover
+// or bounty; the formal descriptor as kicker. "Insurer" is off the page.
 // v4 rules keep: no pool named in the hero, no instance numbers; the
 // primary CTA scrolls to the pools band (§1.2); the waitlist stays,
 // low priority. "Insurer" is off the page.
@@ -101,10 +103,9 @@ export function Hero() {
             </Settle>
             <Settle delay={120}>
               <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                A pool exists for one purpose, set at creation and fixed forever. Members chip in;
-                every payout is decided by drawn peers, with the pool's purpose as the measure —
-                cover when it goes wrong, bounties when it goes right, or a purpose of your own.
-                Whatever the pool doesn't pay stays the group's.
+                A group doesn't pool for a stranger's purpose. It pools for its own: members fund
+                one pot, any member can claim on it under the purpose they all joined, and drawn
+                peers rule on every claim.
               </p>
             </Settle>
             {/* primary: browse the pools — the waitlist rides below, secondary */}
