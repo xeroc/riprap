@@ -166,11 +166,20 @@ export function slotPath(index: number, label: string, kind: "file" | "url"): st
   return `${String(index + 1).padStart(2, "0")}-${slug}${kind === "url" ? ".url" : ".pdf"}`;
 }
 
-/** kebab-case: lowercase, non-alphanumerics collapsed to single hyphens. */
+/** kebab-case, best practice: NFKD-normalized so accents fold (café →
+ * cafe, Müller → muller), ligatures mapped (ß → ss, ø → o, æ → ae,
+ * œ → oe), lowercase, non-alphanumerics collapsed to single hyphens,
+ * edges trimmed. A name with nothing slugable yields "". */
 export function slugify(text: string): string {
   return text
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
     .trim()
+    .replace(/ß/g, "ss")
+    .replace(/ø/g, "o")
+    .replace(/æ/g, "ae")
+    .replace(/œ/g, "oe")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }

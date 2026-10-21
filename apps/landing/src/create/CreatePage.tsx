@@ -41,13 +41,13 @@ import {
   randomSeed,
   renderDefDoc,
   slotPath,
-  slugify,
   validateAdvanced,
   validateDef,
 } from "./doc";
 import { type CreateDraft, clearDraft, emptyDraft, loadDraft, saveDraft } from "./draft";
 import { MarketingPreview } from "./MarketingPreview";
 import { alignDepositMint, useClusterDepositMint } from "./mint";
+import { poolSlug } from "./slug";
 import { DeployStep, PublishStep, VerifyStep } from "./steps";
 
 /** The wizard machine: six guided authoring screens (one question each),
@@ -64,7 +64,7 @@ interface AuthorPhaseDef {
 }
 
 const AUTHOR_PHASES: readonly AuthorPhaseDef[] = [
-  { id: "identity", label: "Identity", gate: ["name", "slug"] },
+  { id: "identity", label: "Identity", gate: ["name"] },
   { id: "coverage", label: "Coverage", gate: ["tiers"] },
   { id: "window", label: "Window", gate: ["period"] },
   { id: "claims", label: "Claims", gate: ["proof"] },
@@ -350,8 +350,9 @@ function CreateWizard() {
   const [draft, setDraft] = useState<CreateDraft>(() => loadDraft());
   /** A resumed draft picks up at the first screen with work left. */
   const [step, setStep] = useState<Step>(() => initialPhase(draft));
-  /** The slug derives from the name until the author edits it directly. */
-  const [slugAuto, setSlugAuto] = useState(draft.def.slug === "");
+  /** The slug always derives from the name (2026-10-21 founder pass — the
+   * editable field is retired); a collision with a listed pool's route id
+   * appends a counter (create/slug.ts). */
   const [seed, setSeed] = useState<bigint>(() => randomSeed());
   const [anchors, setAnchors] = useState<{
     doc: string;
@@ -481,7 +482,6 @@ function CreateWizard() {
         <AuthorStep
           phase={step}
           draft={draft}
-          slugAuto={slugAuto}
           defRejections={defRejections}
           advancedRejections={advancedRejections}
           anchors={anchors}
@@ -495,13 +495,9 @@ function CreateWizard() {
               def: {
                 ...current.def,
                 name,
-                slug: slugAuto ? slugify(name) : current.def.slug,
+                slug: poolSlug(name),
               },
             }));
-          }}
-          onSlugEdited={(slug) => {
-            setSlugAuto(false);
-            patchDef({ slug });
           }}
           onPhase={setStep}
         />
@@ -555,7 +551,6 @@ function CreateWizard() {
                 const fresh = emptyDraft();
                 if (clusterMint !== null) fresh.advanced.mint = clusterMint;
                 setDraft(fresh);
-                setSlugAuto(true);
                 setSeed(randomSeed());
                 setStep("identity");
               }}
@@ -603,7 +598,6 @@ function useSeedFreedom(seed: bigint): SeedFreedom {
 function AuthorStep({
   phase,
   draft,
-  slugAuto,
   defRejections,
   advancedRejections,
   anchors,
@@ -612,12 +606,10 @@ function AuthorStep({
   onPatchDef,
   onPatchAdvanced,
   onNameChange,
-  onSlugEdited,
   onPhase,
 }: {
   phase: AuthorPhase;
   draft: CreateDraft;
-  slugAuto: boolean;
   defRejections: Rejection[];
   advancedRejections: Rejection[];
   anchors: { doc: string; hash: string; ref: string } | null;
@@ -626,7 +618,6 @@ function AuthorStep({
   onPatchDef: (changes: Partial<CreateDraft["def"]>) => void;
   onPatchAdvanced: (changes: Partial<CreateDraft["advanced"]>) => void;
   onNameChange: (name: string) => void;
-  onSlugEdited: (slug: string) => void;
   onPhase: (phase: AuthorPhase | "preview") => void;
 }) {
   const def = draft.def;
@@ -688,30 +679,16 @@ function AuthorStep({
         >
           {phase === "identity" ? (
             <Band label="The pool">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field id="def-name" label="Name" rejections={errorsFor("name")}>
-                  {(props) => (
-                    <Input
-                      {...props}
-                      value={def.name}
-                      onChange={(e) => onNameChange(e.target.value)}
-                      placeholder="The pool's name"
-                    />
-                  )}
-                </Field>
-                <Field id="def-slug" label="Slug" rejections={errorsFor("slug")}>
-                  {(props) => (
-                    <Input
-                      {...props}
-                      value={def.slug}
-                      onChange={(e) => onSlugEdited(e.target.value)}
-                      placeholder={
-                        slugAuto ? slugify(def.name) || "pool-route-id" : "pool-route-id"
-                      }
-                    />
-                  )}
-                </Field>
-              </div>
+              <Field id="def-name" label="Name" rejections={errorsFor("name")}>
+                {(props) => (
+                  <Input
+                    {...props}
+                    value={def.name}
+                    onChange={(e) => onNameChange(e.target.value)}
+                    placeholder="The pool's name"
+                  />
+                )}
+              </Field>
               <div className="flex max-w-md flex-col gap-2">
                 <Label htmlFor="def-kind">Kind</Label>
                 <Select

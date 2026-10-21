@@ -363,4 +363,23 @@ describe("derivations", () => {
     );
     expect(slugify("  Caffeine Supercycle — v2 ")).toBe("caffeine-supercycle-v2");
   });
+
+  it("slugify folds accents and ligatures (best practice)", () => {
+    expect(slugify("café über")).toBe("cafe-uber");
+    expect(slugify("Müller Pööl")).toBe("muller-pool");
+    expect(slugify("Straße")).toBe("strasse");
+    expect(slugify("Ærø")).toBe("aero");
+    expect(slugify("cœur")).toBe("coeur");
+  });
+
+  it("slugify collapses separators and trims edges", () => {
+    expect(slugify("Mert of  the Year")).toBe("mert-of-the-year");
+    expect(slugify("--NGMI_Hairline--")).toBe("ngmi-hairline");
+    expect(slugify("Mert of the Year")).toBe("mert-of-the-year");
+  });
+
+  it("slugify yields the empty string when nothing is slugable", () => {
+    expect(slugify("!!!")).toBe("");
+    expect(slugify("———")).toBe("");
+  });
 });

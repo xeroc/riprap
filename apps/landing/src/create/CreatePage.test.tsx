@@ -196,10 +196,12 @@ describe("#/create author → preview", () => {
     expect(document.activeElement?.id).toBe("tier-0-fee");
   });
 
-  it("walks the six screens one question at a time, deriving the slug on the way", async () => {
+  it("walks the six screens one question at a time, the slug derived from the name", async () => {
     renderPage();
     fill("def-name", "Chairmageddon");
-    await waitFor(() => expect(inputValue("def-slug")).toBe("chairmageddon"));
+    // the editable slug field is retired (2026-10-21) — the slug derives
+    // from the name alone, with a counter past the listed pool
+    expect(document.getElementById("def-slug")).toBeNull();
     stepContinue();
     await atStep("tier-0-fee");
     // a fresh screen takes focus at its heading
