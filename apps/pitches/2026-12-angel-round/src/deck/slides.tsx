@@ -132,12 +132,16 @@ const Mark: FC<{ yes: boolean }> = ({ yes }) => (
 );
 
 /** ✓ = supported, ✗ = not. The first two rows are the business — both
- * worlds do them; the rest are the rails — only the web3 column has them. */
+ * worlds do them; the rest are the rails — only the web3 column has them.
+ * Re-staged 2026-10-22: "fast" renamed "settles instantly" — the point is
+ * not speed-as-UX but that the settlement intermediaries (premium finance,
+ * custodian, claims desk, paying bank) collapse to one transfer; the
+ * statement above names them. */
 const COMPARE_ROWS: { id: string; label: ReactNode; trad: boolean; web3: boolean }[] = [
   { id: "pool-money", label: "pool money", trad: true, web3: true },
   { id: "decide-payouts", label: "decide payouts", trad: true, web3: true },
   { id: "transparent", label: "transparent", trad: false, web3: true },
-  { id: "fast", label: "fast", trad: false, web3: true },
+  { id: "settles", label: "settles instantly", trad: false, web3: true },
   {
     id: "global",
     label: (
@@ -158,10 +162,12 @@ const COMPARE_ROWS: { id: string; label: ReactNode; trad: boolean; web3: boolean
 const VisionSlide: FC = () => {
   return (
     <SlideFrame kicker="the vision" headline="Trust Math &amp; Code over Paperwork">
-      {/* the statement — the heart of the slide */}
+      {/* the statement — the heart of the slide; re-staged 2026-10-22: the
+       * settlement intermediaries are named — the point is that they go away */}
       <div className="max-w-[58ch] text-ink [font:var(--riprap-display-sm)]">
-        When claims are judged on-chain and reserves earn in DeFi, insurance becomes faster,
-        transparent, and able to scale like software.
+        When claims are judged on-chain and reserves settle on-chain, the intermediaries between
+        member and money — premium finance, custodian, claims desk, paying bank — collapse.
+        Insurance scales like software.
       </div>
       {/* the comparison table — same business, different rails; receipts, not the argument */}
       <div className="flex w-full flex-col">
@@ -425,7 +431,13 @@ const ProductSlide: FC = () => {
  * to denominate premiums and claims in, and the two infrastructure rails a
  * real insurance contract needs, both ours: pull payments (Tributary) and
  * on-chain adjudication (Accord). The ✓ stamp is the point — two of the
- * three prerequisites are built by us. */
+ * three prerequisites are built by us. Re-staged 2026-10-22: the settlement
+ * card's asserted "institutional distribution layer" (and the flagged
+ * $16.3B stat) is replaced by named receipts — Lloyds Bank's tokenised-
+ * deposit gilt purchase on a public chain with its own validator node
+ * (LBG press release 2026-01-20), the six-UK-bank shared-ledger sterling
+ * pilot (UK Finance), and the GENIUS Act (US, law July 2025). Lloyds Bank
+ * plc ≠ Lloyd's of London — never conflate the two in copy. */
 const NOW_STEPS = [
   {
     id: "stablecoin-settlement",
@@ -435,9 +447,10 @@ const NOW_STEPS = [
     head: "stablecoin settlement on solana",
     body: (
       <>
-        Premiums and claims must settle in something people actually want to hold, like USDC.
-        There's now a much bigger institutional distribution layer than there was 12 months ago.
-        Meanwhile regulatory clarity has been established in the US and the EU.
+        Premiums and claims must settle in something people actually want to hold — USDC. Proof the
+        money already moved: Lloyds Bank bought a gilt with tokenised deposits on a public
+        blockchain, running its own validator node. Six UK banks pilot shared-ledger sterling. The
+        GENIUS Act is law.
       </>
     ),
     ours: false,
@@ -661,7 +674,7 @@ const PILOT_POOLS: {
 
 const LaunchSlide: FC = () => {
   return (
-    <SlideFrame kicker="the pilot" headline="Pivoted, Piloting, Learning Fast">
+    <SlideFrame kicker="the pilot" headline="Piloting, Pivoting, Iterating">
       {/* the statement — the pivot in one breath */}
       <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]">
         We extended slow risk pools for fast crowdfunded bounties on the same mechanics, so every
@@ -696,9 +709,6 @@ const LaunchSlide: FC = () => {
             </span>
           </div>
         ))}
-        <div className="pt-3 text-muted-soft [font:var(--riprap-mono-label)]">
-          Breakpoint 2026 · Olympia, London · 15–17 November 2026 · policy & terms §5
-        </div>
       </div>
     </SlideFrame>
   );
@@ -752,9 +762,6 @@ const BusinessSlide: FC = () => {
             </div>
           ))}
         </div>
-        <div className="flex flex-col gap-2 text-muted [font:var(--riprap-body-sm)]">
-          <div>USDC end to end. No product token required.</div>
-        </div>
       </div>
     </SlideFrame>
   );
@@ -769,13 +776,13 @@ const ASK_TERMS = [
   { v: "18 months", sub: "runway · primary milestone: organizer-initiated pools" },
 ];
 
-const UNLOCK_STEPS = [
-  "security — audit the arbitration layer and the pool/hanse programs",
-  "product — hanse orchestrator → SDK → end-to-end suite",
-  "proof — the pilots, results published",
-  "legal — the structure for broader membership",
-  "growth — convert pilot traction into organizer-initiated pools",
-];
+// const UNLOCK_STEPS = [
+//   "security — audit the arbitration layer and the pool/hanse programs",
+//   "product — hanse orchestrator → SDK → end-to-end suite",
+//   "proof — the pilots, results published",
+//   "legal — the structure for broader membership",
+//   "growth — convert pilot traction into organizer-initiated pools",
+// ];
 
 export const AskSlide: FC = () => {
   return (
@@ -818,10 +825,17 @@ export const AskSlide: FC = () => {
 /* 10 — the team (layout copied from the accord deck's builder slide) --------- */
 
 const FABIAN_ROWS = [
-  "Deep governance and treasury expertise",
+  "Deep into governance and treasury",
   "consistent pattern of early execution",
   "500M+ blocks produced",
-  "MakerDAO, Cryptonomex, PBSA, BitShares, Steemit",
+  "Early in MakerDAO, BitShares, Steemit, Solana",
+];
+
+const STEFAN_ROWS = [
+  "software eng. + math",
+  "runs RPC nodes on the side",
+  "hardware ops at scale",
+  "data analysis for pred. mkts",
 ];
 const CORINNA_ROWS = [
   //"centuries of experience",
@@ -845,6 +859,13 @@ const PERSONAS: {
       alt: "Dr.-Ing. Fabian Schuh",
       caption: "Dr.-Ing. Fabian Schuh · engineering PhD",
       rows: FABIAN_ROWS,
+    },
+    {
+      img: "stefan.webp",
+      alt: "Dr. Stefan Schießl",
+      caption: "Dr. Stefan Schießl · applied math PhD",
+      rows: STEFAN_ROWS,
+      imgAlign: "bottom",
     },
     {
       img: "corinna.webp",
@@ -1048,6 +1069,180 @@ export const AppendixQASlide: FC = () => {
   );
 };
 
+/* A1 — appendix: the industry has been trying since 2017 (added 2026-10-22;
+ * not yet mirrored in meta/PITCH.md) — the receipts that it is time: the
+ * 2017–22 attempts were private consortium ledgers and died (B3i — 20+
+ * insurers/reinsurers, $16M raised '19 — insolvent July '22, Insurance
+ * Journal; AXA fizzy — parametric flight delay on Ethereum, launched '17,
+ * closed '19 citing low market appetite and weak distribution, Insurance
+ * Post; Marsh Risk Exchange '19; BUILDINGBLOCK). What changed is not
+ * insurance — the money moved to PUBLIC rails (Lloyds Bank gilt purchase
+ * with tokenised deposits, own validator node, LBG press release
+ * 2026-01-20; six-UK-bank shared-ledger sterling, UK Finance; GENIUS Act).
+ * Everest Group (30+ case studies): insurers must partner with blockchain
+ * ecosystems to scale beyond proofs of concept — our thesis, sourced.
+ * Market figures are research-house forecasts that diverge ~4× by 2033/34
+ * — one shown, the spread named, both sourced. Lloyds Bank plc ≠ Lloyd's
+ * of London — never conflate in copy or speech. */
+
+const TRIED_ROWS: { name: string; detail: string }[] = [
+  {
+    name: "B3i",
+    detail: "20+ insurers & reinsurers · $16M raised '19 · insolvent '22",
+  },
+  {
+    name: "AXA fizzy",
+    detail: "parametric flight delay on Ethereum, '17 · closed '19",
+  },
+  {
+    name: "Marsh Risk Exchange",
+    detail: "placements, documents, invoices on chain · '19",
+  },
+  {
+    name: "BUILDINGBLOCK",
+    detail: "multinational property on a consortium ledger",
+  },
+];
+
+const CHANGED_ROWS: { name: string; detail: string }[] = [
+  {
+    name: "public rails settle real money",
+    detail:
+      "Lloyds Bank bought a gilt with tokenised deposits on a public chain — its own validator node (Jan '26)",
+  },
+  {
+    name: "sterling pilots on shared ledgers",
+    detail: "six UK banks, UK Finance Great British Tokenised Deposits",
+  },
+  {
+    name: "the rules exist",
+    detail: "GENIUS Act law (US '25) · MiCA live (EU)",
+  },
+  {
+    name: "pilots became operations",
+    detail:
+      "parametric payouts automatic; Everest Group: insurers must partner with blockchain ecosystems to scale",
+  },
+];
+
+export const AppendixIndustrySlide: FC = () => {
+  return (
+    <SlideFrame
+      kicker="appendix — the industry"
+      headline="Insurance has been trying since 2017. The money finally moved."
+    >
+      <div className="max-w-[76ch] text-ink [font:var(--riprap-title-md)]">
+        The first wave built private consortium ledgers and died. What changed is not insurance —
+        the money itself now settles on public rails.
+      </div>
+      <div className="deck-narrow:flex-col flex w-full items-start gap-12">
+        <div className="flex flex-1 flex-col gap-4">
+          <div className="uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
+            the first wave · private ledgers · 2017–22
+          </div>
+          {TRIED_ROWS.map((r) => (
+            <div key={r.name} className="flex flex-col gap-1 border-t border-hairline pt-3">
+              <span className="text-ink [font:var(--riprap-title-sm)]">{r.name}</span>
+              <span className="text-muted [font:var(--riprap-body-sm)]">{r.detail}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-1 flex-col gap-4">
+          <div className="uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
+            what changed · public rails · 2025–26
+          </div>
+          {CHANGED_ROWS.map((r) => (
+            <div key={r.name} className="flex flex-col gap-1 border-t border-hairline pt-3">
+              <span className="text-ink [font:var(--riprap-title-sm)]">{r.name}</span>
+              <span className="text-muted [font:var(--riprap-body-sm)]">{r.detail}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex w-full items-baseline gap-6 border-t border-hairline pt-3" data-num>
+        <span className="text-accent [font:var(--riprap-mono-number)]">$2.96B &rarr; ~$96B</span>
+        <span className="flex-1 text-muted [font:var(--riprap-body-sm)]">
+          blockchain-in-insurance market, 2025 &rarr; 2034 — research-house forecasts diverge
+          (~$22.5B by 2033 elsewhere); treat as direction, not size
+        </span>
+        <span className="text-muted-soft [font:var(--riprap-mono-label)]">
+          Fortune Business Insights &rsquo;25
+        </span>
+      </div>
+    </SlideFrame>
+  );
+};
+
+/* A2 — appendix: the destination has a buyer (added 2026-10-22; not yet
+ * mirrored in meta/PITCH.md) — Lloyd's Lab Cohort 17 (2026) runs a wildcard
+ * theme soliciting exactly our endpoint, by name. Composability law holds:
+ * pools-stack language stays modal ("can") — the 5–10-year horizon is the
+ * venue where horizon-talk is the expected register. Lloyd's of London
+ * (lloyds.com, the market) — never Lloyds Bank (lloydsbank.com). */
+
+const LLOYDS_QUOTES = [
+  {
+    text: "Next-generation Alternative Risk Transfer: highly sophisticated financial systems connecting institutional capital directly with insurance risks.",
+    src: "Lloyd's Lab · Cohort 17 themes · 2026",
+  },
+  {
+    text: "attract private equity and alternative capital into the Lloyd's ecosystem",
+    src: "same theme · named market gap",
+  },
+];
+
+const LLOYDS_MAPPING = [
+  {
+    v: "first loss",
+    label: "the members' pool — members' money, members' jurors, no company",
+  },
+  {
+    v: "the tail",
+    label: "syndicate capital can stake behind pools — the backstop layer Lloyd's is asking for",
+  },
+  {
+    v: "pools stack",
+    label: "one pool can cover another — reinsurance and tranching as protocol properties",
+  },
+];
+
+export const AppendixLloydsSlide: FC = () => {
+  return (
+    <SlideFrame
+      kicker="appendix — the destination"
+      headline="Lloyd&rsquo;s itself is asking for this."
+    >
+      <div className="flex w-full flex-col gap-4">
+        {LLOYDS_QUOTES.map((q) => (
+          <blockquote key={q.src} className="flex flex-col gap-2 border-l-2 border-accent pl-6">
+            <p className="max-w-[72ch] text-ink [font:var(--riprap-title-md)]">
+              &ldquo;{q.text}&rdquo;
+            </p>
+            <cite className="text-muted-soft [font:var(--riprap-mono-label)]">{q.src}</cite>
+          </blockquote>
+        ))}
+      </div>
+      <div className="flex w-full flex-col gap-4" data-num>
+        <div className="uppercase text-muted [font:var(--riprap-mono-label)] [letter-spacing:var(--riprap-tracking-stamp)]">
+          the mapping — our rails, their capital
+        </div>
+        {LLOYDS_MAPPING.map((r) => (
+          <div key={r.v} className="flex items-baseline gap-8 border-t border-hairline pt-3">
+            <span className="w-[14ch] text-right text-accent [font:var(--riprap-mono-number)]">
+              {r.v}
+            </span>
+            <span className="flex-1 text-ink [font:var(--riprap-title-sm)]">{r.label}</span>
+          </div>
+        ))}
+        <div className="pt-2 text-muted-soft [font:var(--riprap-mono-label)]">
+          5&ndash;10-year horizon, their words &middot; Lloyd&rsquo;s of London, the insurance
+          market &middot; not Lloyds Bank
+        </div>
+      </div>
+    </SlideFrame>
+  );
+};
+
 ///* A1 — appendix (the destination stack the vision slide carried pre-re-stage) */
 //
 ///** The five machines on-chain cover needs, one per step, ordinals matching
@@ -1200,8 +1395,15 @@ export const SLIDES: SlideDef[] = [
     id: "vision",
     label: "the vision",
     notes:
-      "25s. Why the world is ripe for internet insurance. Call a smart contract what it is: business logic that runs 24/7/365 — autonomous, permissionless, transparent. No surprise defi trading works great on-chain — it is well-understood business logic. You know what else is well-understood business logic? Insurance. Then the table, top to bottom: the first two rows are the business — tradinsure pools money and decides payouts, and so does web3 insure; every row below is the rails — transparent (the balance is a public number — solvency provable, not asserted), fast (payouts in minutes, not days), global & 24/7/365, permissionless (anyone with a wallet), composable (pools stack into tranched capital) — web3 only. Overhead dies on the way: the ~26¢-per-dollar back office becomes transaction fees. The five-machine destination stack moved to the appendix — walk it there if asked. Segue: so why doesn't on-chain insurance exist today — the problem, next slide.",
+      "25s. Why the world is ripe for internet insurance. Call a smart contract what it is: business logic that runs 24/7/365 — autonomous, permissionless, transparent. No surprise defi trading works great on-chain — it is well-understood business logic. You know what else is well-understood business logic? Insurance. Then the table, top to bottom: the first two rows are the business — tradinsure pools money and decides payouts, and so does web3 insure; every row below is the rails — transparent (the balance is a public number — solvency provable, not asserted), settles instantly (the point is not speed-as-UX: every settlement intermediary — premium finance, custodian, claims desk, paying bank — collapses to one transfer; no float custody between member and reserve), global & 24/7/365, permissionless (anyone with a wallet), composable (pools stack into tranched capital) — web3 only. Overhead dies on the way: the ~26¢-per-dollar back office becomes transaction fees. The five-machine destination stack moved to the appendix — walk it there if asked. Segue: so why doesn't on-chain insurance exist today — the problem, next slide.",
     component: VisionSlide,
+  },
+  {
+    id: "now",
+    label: "the now",
+    notes:
+      "25s. Why now — three pieces landing together. First: settlement — insurance has one hard requirement: premiums and claims must be denominated and paid in an asset people actually want to hold; SOL's volatility against the underlying risk never qualified. The receipts that the money already moved (re-staged 2026-10-22, replacing the $16.3B supply stat): Lloyds Bank bought a gilt with tokenised deposits on a PUBLIC blockchain, running its own validator node (LBG press release 2026-01-20) — one fact that retires the 'regulated institutions don't touch public rails' objection; six UK banks pilot shared-ledger sterling (UK Finance, Great British Tokenised Deposits); GENIUS Act federal law since July 2025; Visa settling USDC since late 2025. Name discipline: Lloyds Bank, the bank — a different institution from Lloyd's of London; never conflate. No FX conversion, no correspondent banking, no T+2 — the chain becomes the payment rail for the insurance contract. Second: recurring premiums need pull payments — Tributary, live on mainnet, built by us. Third: permissionless, decentralized claims adjudication — Accord, live, built by us. Land: two of the three prerequisites are already ours — settlement arrived on its own, the rails underneath are built. Segue: the pilot — where the machine first runs for real, next slide. Full industry timeline — the 2017–22 private-ledger attempts and what changed — appendix A1.",
+    component: NowSlide,
   },
   {
     id: "product",
@@ -1209,13 +1411,6 @@ export const SLIDES: SlideDef[] = [
     notes:
       "35s. One mutual, one risk, a lifetime of its choosing — event pools expire by clock; open-ended mutuals liquidate when members choose. Walk the lifecycle strip: join, gather, rule, claim. Three laws: two exit doors (no discretionary signer); members judge members (Accord — useaccord.xyz — staked jurors, sealed votes, appeals, slashing); an enforced end either way. Status row verbatim if asked: pool built, arbitration on devnet, hanse in build, Tributary on mainnet. Audits gate mainnet capital — that is what the raise funds first.",
     component: ProductSlide,
-  },
-  {
-    id: "now",
-    label: "the now",
-    notes:
-      "25s. Why now — three pieces landing together. First: settlement — insurance has one hard requirement: premiums and claims must be denominated and paid in an asset people actually want to hold; SOL's volatility against the underlying risk never qualified, and Solana's stablecoin layer is now deep enough to rely on — $16.3B supply Q2 2026 vs $11B a year earlier (founder's market brief 2026-09-18; mirror with a named source in PITCH.md before shipping), Visa settling USDC since late 2025, Western Union launching USDPT in 2026, GENIUS Act federal framework making the layer institutionally usable. No FX conversion, no correspondent banking, no T+2 — the chain becomes the payment rail for the insurance contract. Second: recurring premiums need pull payments — Tributary, live on mainnet, built by us. Third: permissionless, decentralized claims adjudication — Accord, live, built by us. Land: two of the three prerequisites are already ours — settlement arrived on its own, the rails underneath are built. Segue: the pilot — where the machine first runs for real, next slide.",
-    component: NowSlide,
   },
   {
     id: "business",
@@ -1231,13 +1426,13 @@ export const SLIDES: SlideDef[] = [
       "35s. The pilot, re-staged 2026-10-07: aid and bounties at Breakpoint. The pivot in one breath — we swapped slow risk pools for fast crowdfunded bounties on the same mechanics, so every pilot, silly or serious, turns into a lesson that sharpens the engine before real-world insurance. Two classes on one engine: mutuals where members cover each other — Blade Pool the serious anchor (capped payouts, bounded lifetime, one venue), Chairmageddon, NGMI Hairline and Coffee Apocalypse the silly-but-adjudicable ones — and bounties that pay for confirmed acts — OnlyFriends' per-introduction caps, the hot-drink runs for Raj/Lily/Toly (one mechanic, three pools), Mert of the Year. Numbers are the §5 policy/terms tables verbatim; the landing's mutuals directory carries the live batch. Venue unchanged: Olympia London, 15–17 Nov 2026, 8,000+ attendees.",
     component: LaunchSlide,
   },
-  {
-    id: "ask",
-    label: "the ask",
-    notes:
-      "30s. $700k on a post-money SAFE plus a bounded token warrant; range $600–800k; opening cap $7M post — 10%; 18 months; primary milestone organizer-initiated pools. The narrative: capital → de-risk → prove → unlock — security, product, proof, legal, growth. If asked what $100k gets an angel to: from an audited working product and an operational pilot to a repeatable network of organizer-initiated pools. Angel-ladder construction stays private.",
-    component: AskSlide,
-  },
+  // {
+  //   id: "ask",
+  //   label: "the ask",
+  //   notes:
+  //     "30s. $700k on a post-money SAFE plus a bounded token warrant; range $600–800k; opening cap $7M post — 10%; 18 months; primary milestone organizer-initiated pools. The narrative: capital → de-risk → prove → unlock — security, product, proof, legal, growth. If asked what $100k gets an angel to: from an audited working product and an operational pilot to a repeatable network of organizer-initiated pools. Angel-ladder construction stays private.",
+  //   component: AskSlide,
+  // },
   {
     id: "team",
     label: "the team",
@@ -1258,6 +1453,20 @@ export const SLIDES: SlideDef[] = [
     notes:
       "15s. The appendix opens with the four questions every IC asks, one card each — problem on top, our answer on the plate. Legal: the mutual is deliberately limited in scope and time to stay outside UK insurance regulation; scope widens step by step as we progress. Adjudication: the company risk, owned — parameters are case by case and defined for the pilot; the metric set publishes from Blade Pool onward. Blade Pool: the cheapest place to find adjudication failures — payouts capped $1k–4k, stakes $10–40, one venue, a bounded lifetime. Team: started solo, became a real business — none of it without mtnDAO, and on-chain insurance has been on our minds for half a decade.",
     component: AppendixQASlide,
+  },
+  {
+    id: "appendix-industry",
+    label: "appendix — the industry",
+    notes:
+      "Reference, not presented (added 2026-10-22). The receipts that it is time: insurance has tried on-chain since 2017 and the first wave died on private ledgers — B3i, 20+ insurers and reinsurers, $16M raised '19, insolvent July '22 (Insurance Journal); AXA fizzy, parametric flight delay on Ethereum, launched '17, closed '19 citing low market appetite and weak distribution (Insurance Post); Marsh Risk Exchange '19; BUILDINGBLOCK. What changed is not insurance — the money moved to public rails: Lloyds Bank's tokenised-deposit gilt purchase with its own validator node (Jan '26), six-UK-bank shared-ledger sterling, GENIUS Act law. Everest Group, 30+ case studies: insurers will need to partner with blockchain ecosystems to scale beyond proofs of concept — our thesis, sourced. The bank's own public-over-private argument is our posture verbatim: mass adoption with confidentiality — solvency public by default, evidence encrypted by design. Market figure shown with its spread ($2.96B 2025 → ~$96B 2034, Fortune Business Insights; other houses ~$22.5B by 2033) — direction, not size. If asked why the first wave failed where we should not: private ledgers reproduced the institution (membership, permissioning, no money of its own on the rail) — a faster bank, not a new one; we run on public rails where the money already is. Lloyds Bank plc ≠ Lloyd's of London.",
+    component: AppendixIndustrySlide,
+  },
+  {
+    id: "appendix-lloyds",
+    label: "appendix — the destination",
+    notes:
+      "Reference, not presented (added 2026-10-22). The destination has a named institutional buyer: Lloyd's Lab Cohort 17 (2026) runs a wildcard 'experimental innovation' theme soliciting, verbatim, next-generation Alternative Risk Transfer — 'highly sophisticated financial systems connecting institutional capital directly with insurance risks' — with the named market gap of attracting private equity and alternative capital into the Lloyd's ecosystem. The mapping, spoken modal (composability law — pools can stack, ships in order): the members' pool is the first loss, syndicate capital can stake behind pools as the tail, one pool can cover another. Their stated horizon is 5–10 years — horizon-talk is the expected register there, ours too. Lloyd's of London, the insurance market (lloyds.com) — never Lloyds Bank (lloydsbank.com); if the namesake comes up, it is an icebreaker, never a hint of affiliation.",
+    component: AppendixLloydsSlide,
   },
   // {
   //   id: "appendix",

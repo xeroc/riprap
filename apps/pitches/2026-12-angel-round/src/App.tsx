@@ -109,6 +109,13 @@ export function App() {
     }
   }, []);
 
+  // the counter's denominator counts the presented deck only — every slide
+  // from appendix onward (appendix-*, market, competitors) is reference and
+  // stays out of the total. Derived, not hand-counted: the "- 3" constant
+  // drifted twice already (fixed 2026-10-22).
+  const MAIN_COUNT = SLIDES.filter(
+    (s) => !s.id.startsWith("appendix") && s.id !== "market" && s.id !== "Competitors",
+  ).length;
   const slide = SLIDES[index];
   if (!slide) {
     return null;
@@ -162,7 +169,7 @@ export function App() {
       {/* presenter chrome: slide counter + notes (N) — mono stamps, hairline */}
       <div className="absolute bottom-6 left-[7cqw] z-30 flex items-center gap-4 text-muted-soft [font:var(--riprap-mono-label)]">
         <span data-num>
-          {String(index + 1).padStart(2, "0")} / {String(SLIDES.length - 3).padStart(2, "0")}
+          {String(index + 1).padStart(2, "0")} / {String(MAIN_COUNT).padStart(2, "0")}
         </span>
         <span className="uppercase [letter-spacing:var(--riprap-tracking-stamp)]">
           {slide.label}
@@ -177,10 +184,11 @@ export function App() {
             aria-label={s.label}
             aria-current={i === index ? "page" : undefined}
             onClick={() => go(i)}
-            className={`relative h-1.5 outline-none after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] focus-visible:ring-3 focus-visible:ring-ring [transition:width_var(--riprap-settle),background-color_var(--riprap-settle)] ${i === index
+            className={`relative h-1.5 outline-none after:absolute after:-inset-x-1 after:-inset-y-2 after:content-[''] focus-visible:ring-3 focus-visible:ring-ring [transition:width_var(--riprap-settle),background-color_var(--riprap-settle)] ${
+              i === index
                 ? "w-8 bg-accent active:bg-accent-hover"
                 : "w-3 bg-hairline-strong hover:bg-muted-soft active:bg-muted"
-              }`}
+            }`}
           />
         ))}
       </nav>
