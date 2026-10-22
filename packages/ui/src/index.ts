@@ -10,9 +10,11 @@
 // UI chrome layer (shadcn primitives restyled to DESIGN.md + brand bands)
 export * from "./components";
 export { Backstop } from "./illustrations/Backstop";
+export { ChipIn } from "./illustrations/ChipIn";
 export { Claim } from "./illustrations/Claim";
 export { ClaimApproval } from "./illustrations/ClaimApproval";
 export { ExpansionStrip, ExpansionTile } from "./illustrations/ExpansionStrip";
+export { Filed } from "./illustrations/Filed";
 export { Found } from "./illustrations/Found";
 export { FundingPool } from "./illustrations/FundingPool";
 export { Gather } from "./illustrations/Gather";
@@ -36,9 +38,12 @@ export { HexBackdrop } from "./illustrations/HexBackdrop";
 export { Join } from "./illustrations/Join";
 export { LifecycleStrip } from "./illustrations/LifecycleStrip";
 export { OnePool } from "./illustrations/OnePool";
+export { PaysOut } from "./illustrations/PaysOut";
 export { Renew } from "./illustrations/Renew";
 export { Return } from "./illustrations/Return";
 export { Rule } from "./illustrations/Rule";
+export { Seal } from "./illustrations/Seal";
+export { Sign } from "./illustrations/Sign";
 export { Stack } from "./illustrations/Stack";
 // lib
 export type { NumeralSegment } from "./lib/numeral";

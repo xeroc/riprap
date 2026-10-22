@@ -15,7 +15,7 @@ export const POLICY_TIERS = [
   { contribution: 40n * USDC, maxPayout: 4_000n * USDC },
 ];
 
-export function fakeMutual(overrides: Partial<Mutual> = {}): Mutual {
+export function fakePool(overrides: Partial<Mutual> = {}): Mutual {
   return {
     discriminator: new Uint8Array(8),
     authority: A,

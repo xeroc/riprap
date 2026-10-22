@@ -23,20 +23,20 @@ export const INTRO =
 /** Status line — the ask without numbers (pre-round law). */
 export const STATUS = "raising a pre-seed now · terms and deck on request";
 
-/** One-liner for chats — pooled-cover line (payout-pool pass,
- * 2026-10-06) + domain. */
-export const ONE_LINE = "riprap — Insurance, Finally Programmable. On Solana. riprap.xyz";
+/** One-liner for chats — purpose-pool line (purpose-pool pass,
+ * 2026-10-20) + domain. */
+export const ONE_LINE = "riprap — purpose pools on Solana, settled by peers. riprap.xyz";
 
 /** Short blurb — cost/yield pass (2026-10-11, founder call): the two
  * numbers (25% cost load, 18% privileged-LP yield — founder-supplied,
  * deck sources) + mutual-lineage mechanism + DeFi-both-directions +
  * motto close. First batch = bound facts (Breakpoint, November, London;
- * nine pools = mutuals/data.ts MUTUALS) + founder. */
-export const SHORT_BLURB = `Over 25% of every insurance dollar vanishes before a claim is paid; meanwhile, only privileged LPs earn up to 18% yield.
+ * nine pools = pools/data.ts POOLS) + founder. */
+export const SHORT_BLURB = `Over 25% of every insurance dollar vanishes before a request is paid; meanwhile, only privileged LPs earn up to 18% yield.
 
 riprap solves this, makes insurances permissionless, transparent and more competitive by putting the insurances business logic into a smart contract on solana.
 
-Today, it runs the original insurance — mutual risk pools — on-chain: peers chip in, peers settle claims.
+Today it runs purpose pools on Solana: any group can start one — chip in under a purpose you set, drawn peers decide every payout against it, the money stays the group's. The first market is the original insurance — mutual risk pools.
 
 Insurance, Finally Programmable.
 
@@ -51,18 +51,18 @@ riprap.xyz`;
  * + mutual-lineage mechanism + how-it-works + bounty clause (payout-pool
  * pass, 2026-10-06) + DeFi-both-directions roadmap (modal: can —
  * composability law) + motto close + team + first batch. */
-export const STANDARD_BLURB = `Over 25% of every insurance dollar vanishes before a single claim is paid. Meanwhile, privileged LPs earn up to 18% on the same risk — insurance is expensive for the people who buy it and closed to the people who would fund it.
+export const STANDARD_BLURB = `Over 25% of every insurance dollar vanishes before a single request is paid. Meanwhile, privileged LPs earn up to 18% on the same risk — insurance is expensive for the people who buy it and closed to the people who would fund it.
 
 riprap solves this, makes insurances permissionless, transparent and more competitive by putting the insurances business logic into a smart contract on solana.
 
-We start with the original insurance: mutual risk pools — humanity's oldest protection — put on-chain. Peers chip in, peers settle claims. That changes what they can do.
+riprap is purpose pools on Solana: any group can start one — chip in under a purpose you set, drawn peers decide every payout against it, the money stays the group's. The purpose never changes; a new purpose is a new pool. The first market is the original insurance — mutual risk pools, humanity's oldest protection.
 
 How it works:
 
  - Members pay a fixed fee into a pool.
  - Incidents are judged by jurors staked from the pool itself.
  - Verdicts run on Accord, a Schelling-point arbitration protocol.
- - Approved claims pay out of the pool.
+ - Approved requests pay out of the pool.
 
 Insurance, Finally Programmable.
 
@@ -83,14 +83,14 @@ export const EMAIL_BODY = `Hi [name],
 
 Meet Fabian. He's building riprap — Insurance, Finally Programmable.
 
-Two numbers: over 25% of every insurance dollar vanishes before a single claim is paid, while privileged LPs earn up to 18% yield. Insurance is expensive for the people who buy it and closed to the people who would fund it.
+Two numbers: over 25% of every insurance dollar vanishes before a single request is paid, while privileged LPs earn up to 18% yield. Insurance is expensive for the people who buy it and closed to the people who would fund it.
 
-riprap to open both sides. At first we provide the original insurance — mutual risk pools, humanity's oldest protection — put on-chain: peers chip in, drawn peers settle claims. First market: the risks insurers can't sell — too small, too new, too narrow.
+riprap to open both sides. At first we provide the original insurance — mutual risk pools, humanity's oldest protection — put on-chain: peers chip in, drawn peers settle requests. First market: the risks insurers can't sell — too small, too new, too narrow.
 
 They already built the rails this runs on:
 
  - Pull payments for recurring premiums — tributary.so
- - On-chain claims adjudication — useaccord.xyz
+ - On-chain request adjudication — useaccord.xyz
 
 Later, they will allow risk capital in and connect DeFi for investors to earn a yield. Permissionlessly, Transparent, Fair. Not just privileged LPs. And pools themselves can use DeFi primitives.
 
@@ -109,7 +109,7 @@ Worth 20 minutes? → https://riprap.xyz/#/blurb`;
 export const EMAIL_FULL = `Subject: ${EMAIL_SUBJECT}\n\n${EMAIL_BODY}`;
 
 /** Team — from the seed deck team slide
- * (apps/pitch-seed-raise/src/deck/slides.tsx); founder rows edited by
+ * (apps/pitches/2026-11-pitch-seed-raise/src/deck/slides.tsx); founder rows edited by
  * Fabian 2026-09-23 (Superteam member, split contact rows). */
 export interface Persona {
   img: string;
@@ -146,7 +146,7 @@ export const PERSONAS: Persona[] = [
 ];
 
 /** Track record — the deck's kudos wall, all 22 lines verbatim
- * (apps/pitch-seed-raise/src/deck/slides.tsx, 2026-09-23). */
+ * (apps/pitches/2026-11-pitch-seed-raise/src/deck/slides.tsx, 2026-09-23). */
 export const KUDOS = [
   "Accord — on-chain arbitration · live",
   "Colosseum Honorable Mentions",
@@ -303,10 +303,11 @@ export const BRAND_TYPE: BrandType[] = [
  * from the founder's X build log, ordered by what they explain: the
  * mutual, the verdict layer, the court, the full pitch — then how the
  * explainers got made. Tweet bodies are verbatim quotes pulled from
- * x.com/xer0c via the twitterapi MCP on 2026-09-28; each entry's comment
- * carries its permalink. The trailing media t.co short link is stripped
+ * x.com/xer0c via the twitterapi MCP on 2026-09-28 (whitepaper entry via
+ * fxtwitter 2026-10-15); each entry's comment carries its permalink. The
+ * trailing media t.co short link is stripped
  * from each body exactly as x.com renders it (the poster frame below the
- * text IS that link). Counts are as of the 2026-09-28 fetch and will
+ * text IS that link). Counts are as of each entry's fetch date and will
  * drift. Poster frames are served locally from /blurb/. */
 export interface ExplainerTweet {
   /** mono kicker — the ordinal and what this tweet explains */
@@ -338,7 +339,7 @@ export const EXPLAINERS: ExplainerTweet[] = [
     // x.com/xer0c/status/2092072543876440364 — pinned; HANSE 30s explainer
     kicker: "01 · the mutual",
     note: "What pooled protection is, how much of the world already runs on it, and why on-chain mutuals cover the wrong risk.",
-    text: "Mutuals are the oldest form of pooled protection on earth.\n\nA quarter of the world's cover ($1.6T across 4,700+ societies, ICMIF24) runs on this structure\n\nOn-chain, the sector holds ~$104M. Why? Because they cover the wrong thing: web3 losses\n\nWE are building HANSE to fix this.",
+    text: "Pools are the oldest form of pooled protection on earth.\n\nA quarter of the world's cover ($1.6T across 4,700+ societies, ICMIF24) runs on this structure\n\nOn-chain, the sector holds ~$104M. Why? Because they cover the wrong thing: web3 losses\n\nWE are building HANSE to fix this.",
     date: "Aug 25, 2026",
     meta: "1,046 views · 13 likes",
     media: "/blurb/hanse-mutuals.jpg",
@@ -349,7 +350,7 @@ export const EXPLAINERS: ExplainerTweet[] = [
   {
     // x.com/xer0c/status/2092273036791816595 — ACCORD 30s explainer
     kicker: "02 · the verdict layer",
-    note: "How a claim gets decided: Schelling points instead of a multisig or arbitrators.",
+    note: "How a request gets decided: Schelling points instead of a multisig or arbitrator.",
     text: "30 seconds on ACCORD.\n\nIt's a dispute resolution system built on Schelling points.\n\nNo Multisig. No arbitrators. Just aligned incentives that nudge everyone toward the obvious fair outcome.\n\nWhat becomes possible? Watch till the end.\n\nExplainer 🎥👇",
     date: "Aug 25, 2026",
     meta: "210 views · 5 likes",
@@ -396,10 +397,24 @@ export const EXPLAINERS: ExplainerTweet[] = [
     url: "https://x.com/xer0c/status/2090336880126726271",
   },
   {
+    // x.com/xer0c/status/2110388109837779013 — Accord whitepaper
+    // announcement; text verbatim (media t.co stripped), counts as of the
+    // 2026-10-15 fetch
+    kicker: "06 · the whitepaper",
+    note: "The whitepaper thesis in one post: code handles execution, humans handle judgment — link to the paper in the thread.",
+    text: "Smart contracts are deterministic.\nDisputes are not.\n\nThat’s why I brought native on-chain arbitration to @solana with Accord.\n\nRandom jurors. Transparent process. Binding on-chain verdicts.\n\nCode handles execution. Humans handle judgment.\n\nLink to whitepaper in the comments\n🧵👇",
+    date: "Oct 14, 2026",
+    meta: "567 views · 13 likes",
+    media: "/blurb/accord-whitepaper.png",
+    mediaAlt:
+      "Cover of the Accord whitepaper: Schelling-Point Arbitration as a Composable Solana Primitive",
+    url: "https://x.com/xer0c/status/2110388109837779013",
+  },
+  {
     // x.com/xer0c/status/2094103781646712882 — mtnDAO demo day pitch;
     // the full talk is linked in the thread's first comment:
     // youtube.com/watch?v=W816NeczDx8 (resolved 2026-09-28)
-    kicker: "06 · the full pitch",
+    kicker: "07 · the full pitch",
     note: "Accord and mutual risk pools in one demo-day pitch; the full talk is on YouTube.",
     text: "Solana @mtnDAO Demo Day with\n\n💡 Accord and Mutual Risk Pools\n\nDemo day pitch presenting Accord (), a Schelling point based adjudication system on Solana.\n\n✅select jurors from a pool,\n✅have them commit to & reveal a verdict\n✅majority rules\n\nIncentives do the hard work to keep keep jurors in line with the truth. \nThe only outcome of accord: A verdict, to be consumed by another Program.  \n\nA program on top has been built called Hanse: mutual risk pool - the oldest form of pooled protection on earth.\n\nLinks below 👇👇",
     date: "Aug 30, 2026",
@@ -414,4 +429,4 @@ export const EXPLAINERS: ExplainerTweet[] = [
 
 /** Explainer band intro — authored 2026-09-28 with the tweet embeds. */
 export const EXPLAINERS_INTRO =
-  "Short cuts and talks from the founder's build log, ordered by what they explain: the mutual, the verdict layer, the court — how the explainers got made — and, last, the full mtnDAO demo-day pitch.";
+  "Short cuts and talks from the founder's build log, ordered by what they explain: the mutual, the verdict layer, the court — how the explainers got made — the whitepaper — and, last, the full mtnDAO demo-day pitch.";

@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 import { Backstop } from "./Backstop";
+import { ChipIn } from "./ChipIn";
 import { Claim } from "./Claim";
 import { ClaimApproval } from "./ClaimApproval";
 import { ExpansionStrip } from "./ExpansionStrip";
+import { Filed } from "./Filed";
 import { Found } from "./Found";
 import { FundingPool } from "./FundingPool";
 import { Gather } from "./Gather";
@@ -11,9 +13,12 @@ import { HexBackdrop } from "./HexBackdrop";
 import { Join } from "./Join";
 import { LifecycleStrip } from "./LifecycleStrip";
 import { OnePool } from "./OnePool";
+import { PaysOut } from "./PaysOut";
 import { Renew } from "./Renew";
 import { Return } from "./Return";
 import { Rule } from "./Rule";
+import { Seal } from "./Seal";
+import { Sign } from "./Sign";
 import { Stack } from "./Stack";
 
 const meta = {
@@ -46,7 +51,7 @@ export const JoinStory: StoryObj = {
 };
 
 export const ClaimStory: StoryObj = {
-  name: "claim — a claim is paid",
+  name: "claim — a request is paid",
   render: () => (
     <Frame>
       <Claim />
@@ -68,6 +73,51 @@ export const ReturnStory: StoryObj = {
   render: () => (
     <Frame>
       <Return />
+    </Frame>
+  ),
+};
+
+export const SignStory: StoryObj = {
+  name: "sign — every member signs the terms",
+  render: () => (
+    <Frame>
+      <Sign />
+    </Frame>
+  ),
+};
+
+export const FiledStory: StoryObj = {
+  name: "filed — a payout request is filed",
+  render: () => (
+    <Frame>
+      <Filed />
+    </Frame>
+  ),
+};
+
+export const SealStory: StoryObj = {
+  name: "seal — the terms, written and sealed",
+  render: () => (
+    <Frame>
+      <Seal />
+    </Frame>
+  ),
+};
+
+export const ChipInStory: StoryObj = {
+  name: "chip-in — the fee lands in the pool",
+  render: () => (
+    <Frame>
+      <ChipIn />
+    </Frame>
+  ),
+};
+
+export const PaysOutStory: StoryObj = {
+  name: "pays-out — the ruling releases the money",
+  render: () => (
+    <Frame>
+      <PaysOut />
     </Frame>
   ),
 };

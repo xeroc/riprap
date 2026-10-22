@@ -19,6 +19,7 @@ import { Button, buttonVariants, Checkbox } from "@riprap/ui";
 import { useEffect, useState } from "react";
 
 import { Settle } from "../components/Settle";
+import type { PolicySamePersonRule } from "./policy";
 
 /** One policy §7 document slot: what to verify + the verified bytes. The
  * AdjudicationPolicy pack supplies path + verify (copy doc § step 1); the
@@ -139,11 +140,12 @@ function slotComplete(tick: SlotTick | undefined): boolean {
   return tick?.seen === true && tick.legible && tick.inSlot;
 }
 
-/** Privacy line, every screen (copy doc § step 1, policy §7). */
-function PrivacyLine() {
+/** Privacy line, every screen (copy doc § step 1, policy §7) — the pack's
+ *  evidence-use note. */
+function PrivacyLine({ note }: { note: string }) {
   return (
     <p className="max-w-xl leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-      Evidence is used solely to adjudicate this request.
+      {note}
     </p>
   );
 }
@@ -151,16 +153,21 @@ function PrivacyLine() {
 /**
  * The step body. Owns slot paging (forward only through the next complete
  * slot; back free), the closing cross-check screen, and the answer
- * persistence. The session shell supplies the verified slots, the §8
- * storage key, and the step-boundary callbacks.
+ * persistence. The session shell supplies the verified slots, the policy
+ * pack's same-person rule and evidence-use note, the §8 storage key, and
+ * the step-boundary callbacks.
  */
 export function DocumentsStep({
   slots,
+  samePersonRule,
+  evidenceUseNote,
   storageKey,
   onBack,
   onDone,
 }: {
   slots: DocumentSlot[];
+  samePersonRule: PolicySamePersonRule;
+  evidenceUseNote: string;
   storageKey: string;
   onBack: () => void;
   onDone: () => void;
@@ -228,7 +235,7 @@ export function DocumentsStep({
       ) : (
         <div className="flex max-w-xl flex-col gap-4" data-slot="same-person-screen">
           <p className="leading-relaxed text-body [font:var(--riprap-body-sm)]">
-            The ticket, the ID, and the declaration name one person — the person on this membership.
+            {samePersonRule.statement}
           </p>
           <label
             htmlFor="gate-same-person"
@@ -239,11 +246,11 @@ export function DocumentsStep({
               checked={answers.samePerson}
               onChange={(e) => setAnswers((prev) => ({ ...prev, samePerson: e.target.checked }))}
             />
-            <span>Same person throughout</span>
+            <span>{samePersonRule.tickLabel}</span>
           </label>
         </div>
       )}
-      <PrivacyLine />
+      <PrivacyLine note={evidenceUseNote} />
       <div className="flex items-center gap-3">
         <Button variant="outline" onClick={back}>
           Back

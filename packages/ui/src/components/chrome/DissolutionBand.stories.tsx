@@ -12,6 +12,6 @@ export default meta;
 export const Default: StoryObj<typeof meta> = {
   args: {
     remaining: 0,
-    line: "Every claim paid. The crank returned the rest. The pool is closed.",
+    line: "Every request paid. The crank returned the rest. The pool is closed.",
   },
 };

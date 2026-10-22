@@ -23,7 +23,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { microToUsd } from "../pool/mutual";
+import { microToUsd } from "../pool/pool";
 import { useHanseEnv } from "../shared/rpc";
 import { describeError, sendInstruction } from "../shared/transaction";
 import { useStakingProof } from "./useStakingProof";

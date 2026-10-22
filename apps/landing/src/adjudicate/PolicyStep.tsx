@@ -148,7 +148,7 @@ export function PolicyStep({
         Answer every question. Yes, no, and unsure all count — blank doesn't.
       </p>
       <section className="flex max-w-xl flex-col gap-4" data-slot="policy-coverage">
-        <h3 className="text-ink [font:var(--riprap-body-md)]">Coverage criteria</h3>
+        <h3 className="text-ink [font:var(--riprap-body-md)]">Qualifying criteria</h3>
         {criteria.map((question, i) => (
           <Question
             key={question}

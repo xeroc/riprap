@@ -1,0 +1,5 @@
+---
+"@riprap/landing": minor
+---
+
+Landing repositioned to purpose pools (2026-10-20 pass). The directory route renames `#/mutuals` → `#/pools` (legacy hash kept as an alias) and the band anchor becomes `#pools`. `src/mutuals/` → `src/pools/` with landing-owned identifiers following (`MUTUALS`→`POOLS`, `MutualListing`→`PoolListing`, `useMutualStore`→`usePoolStore`, `useMutual`→`usePool`, `resolveMutualAddress`→`resolvePoolAddress` with the listing resolver becoming `resolveListingAddress`, `VITE_LOCALNET_MUTUAL`→`VITE_LOCALNET_POOL`); the on-chain `Mutual` vocabulary is untouched. Copy takes the pass verbatim: hero kicker `PURPOSE POOLS ON SOLANA` and new subhead, the §1.3 purpose band ("Set the purpose. It's set forever."), the pools-band/page intro, mechanism step 1's pinned-purpose clause, the FAQ's insurance answer plus two new entries, the Heritage pivot line, the footer descriptor, and the create wizard's site line. Metadata (`index.html`, `llms.txt`) and the blurb page's platform descriptors move to the purpose-pool register.

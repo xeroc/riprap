@@ -148,7 +148,7 @@ async function renderAtReview(
   });
   stubOperator(manifest.bytes);
   renderRecovery(slots);
-  await screen.findByText(/Claim #0 — as filed/);
+  await screen.findByText(/Request #0 — as filed/);
   return manifest;
 }
 
@@ -185,7 +185,7 @@ describe("Recovery — entry: the operator's manifest first", () => {
     stubOperator(manifest.bytes);
     renderRecovery();
 
-    expect(await screen.findByText(/Claim #0 — as filed/)).toBeTruthy();
+    expect(await screen.findByText(/Request #0 — as filed/)).toBeTruthy();
     // the read-only facts, labels verbatim with REVIEW
     expect(screen.getByText("$2,000")).toBeTruthy();
     expect(screen.getByText("2026-11-15T18:05:00Z")).toBeTruthy();
@@ -207,12 +207,12 @@ describe("Recovery — entry: the operator's manifest first", () => {
     renderRecovery();
 
     expect(
-      await screen.findByText("The operator doesn't hold this claim's manifest."),
+      await screen.findByText("The operator doesn't hold this request's manifest."),
     ).toBeTruthy();
     setInputFiles(document.querySelector('input[type="file"]') as HTMLInputElement, [
       new File([manifest.bytes], "manifest.yaml", { type: "text/yaml" }),
     ]);
-    expect(await screen.findByText(/Claim #0 — as filed/)).toBeTruthy();
+    expect(await screen.findByText(/Request #0 — as filed/)).toBeTruthy();
   });
 
   it("a manifest whose hash misses the chain slot is refused — fetched or uploaded alike", async () => {
@@ -226,7 +226,7 @@ describe("Recovery — entry: the operator's manifest first", () => {
     stubOperator(held.bytes);
     renderRecovery();
 
-    expect(await screen.findByText("This manifest doesn't match this claim.")).toBeTruthy();
+    expect(await screen.findByText("This manifest doesn't match this request.")).toBeTruthy();
   });
 });
 
@@ -261,7 +261,7 @@ describe("Recovery — re-delivery (idempotent; the PUBLISH table)", () => {
       }),
     );
     renderRecovery();
-    await screen.findByText(/Claim #0 — as filed/);
+    await screen.findByText(/Request #0 — as filed/);
     await attachAll();
     fireEvent.click(screen.getByRole("button", { name: "Redeliver evidence" }));
 
@@ -296,7 +296,7 @@ describe("Recovery — re-delivery (idempotent; the PUBLISH table)", () => {
       }),
     );
     renderRecovery();
-    await screen.findByText(/Claim #0 — as filed/);
+    expect(await screen.findByText(/Request #0 — as filed/)).toBeTruthy();
     await attachAll();
     fireEvent.click(screen.getByRole("button", { name: "Redeliver evidence" }));
 
@@ -318,7 +318,7 @@ describe("Recovery — re-delivery (idempotent; the PUBLISH table)", () => {
     stubOperator(manifest.bytes);
     renderRecovery(TOLY_FUEL_FLOW.documentSlots);
 
-    expect(await screen.findByText(/Claim #0 — as filed/)).toBeTruthy();
+    expect(await screen.findByText(/Request #0 — as filed/)).toBeTruthy();
     // the bounty's own paths parse and render — no blade-slot error
     const rows = [...document.querySelectorAll("li")];
     expect(rows.some((r) => r.textContent?.includes("03-request-evidence.png — sha256"))).toBe(
@@ -357,7 +357,7 @@ describe("Recovery — re-delivery (idempotent; the PUBLISH table)", () => {
     renderRecovery(); // blade slots
 
     expect(
-      await screen.findByText("The operator doesn't hold this claim's manifest."),
+      await screen.findByText("The operator doesn't hold this request's manifest."),
     ).toBeTruthy();
     // the parse message rides the prompt — naming the blade path it expected
     expect(screen.getByText(/bad entry for 03-police-report.pdf/)).toBeTruthy();
@@ -369,6 +369,6 @@ describe("Recovery — re-delivery (idempotent; the PUBLISH table)", () => {
     setInputFiles(document.querySelector('input[type="file"]') as HTMLInputElement, [
       new File([manifest.bytes], "manifest.yaml", { type: "text/yaml" }),
     ]);
-    expect(await screen.findByText(/Claim #0 — as filed/)).toBeTruthy();
+    expect(await screen.findByText(/Request #0 — as filed/)).toBeTruthy();
   });
 });

@@ -17,7 +17,7 @@
 import { buildFileClaim, fetchMaybeMutual } from "@riprap/hanse";
 import { Button, HexBackdrop, SectionBand, TextLink, usd } from "@riprap/ui";
 import { useCluster, useWallet } from "@solana/connector";
-import type { Address } from "@solana/kit";
+import { type Address, isAddress } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 import { findAccordStatePda, findDisputePda } from "@useaccord/sdk";
 import { useEffect, useRef, useState } from "react";
@@ -25,16 +25,18 @@ import { Navigate } from "react-router";
 import { toast } from "sonner";
 import { Settle } from "../../components/Settle";
 import { SiteNav } from "../../components/SiteNav";
-import { poolByRouteId, poolRoute } from "../../mutuals/data";
-import type { MutualListing } from "../../mutuals/types";
 import {
   formatUtc,
   microToUsd,
   poolTiers,
-  resolvePoolAddress,
+  resolveListingAddress,
   TIER_NAMES,
-} from "../../pool/mutual";
-import { useMutual } from "../../pool/useMutual";
+} from "../../pool/pool";
+import { usePool } from "../../pool/usePool";
+import { poolByRouteId, poolRoute } from "../../pools/data";
+import { listingFromDef } from "../../pools/def/listing";
+import { usePoolDef } from "../../pools/def/usePoolDef";
+import type { PoolListing } from "../../pools/types";
 import { useClusterRpc, useHanseEnv } from "../../shared/rpc";
 import { describeError, sendInstruction } from "../../shared/transaction";
 import { ClusterSwitch, ConnectWalletButton } from "../controls";
@@ -185,7 +187,7 @@ function PreflightGate({
   // loading and the pass instant before onPass advances
   return (
     <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-      Checking your membership, the claims window, and the adjudication fee.
+      Checking your membership, the request window, and the adjudication fee.
     </p>
   );
 }
@@ -206,7 +208,7 @@ function BlockedState({ block, poolHref }: { block: PreflightBlock; poolHref: st
         <div className="flex max-w-3xl flex-col gap-2" data-slot="cap-exhausted">
           <p className="text-ink [font:var(--riprap-body-md)]">Your tier cap is used up.</p>
           <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-            This membership has already requested its maximum payout. Follow your claims on{" "}
+            This membership has already requested its maximum payout. Follow your requests on{" "}
             <TextLink href="#/app">the app surface</TextLink>.
           </p>
         </div>
@@ -215,7 +217,7 @@ function BlockedState({ block, poolHref }: { block: PreflightBlock; poolHref: st
       return (
         <div className="flex max-w-3xl flex-col gap-2" data-slot="window-closed">
           <p className="text-ink [font:var(--riprap-body-md)]">
-            The claims window closed{" "}
+            The request window closed{" "}
             <span data-num className="font-mono">
               {formatUtc(block.closedAt)}
             </span>
@@ -258,16 +260,33 @@ function BlockedState({ block, poolHref }: { block: PreflightBlock; poolHref: st
 
 /** The wizard machine: gate → collect → one signature → delivery → filed,
  *  for ONE pool — `pool` is its route id (`pubkey ?? slug`, the row's
- *  deep link); unknown ids and flow-less pools fall back to the app
- *  surface (the joined-pools table). */
+ *  deep link); a data.ts listing resolves its hand-written pack, an
+ *  unknown on-chain pubkey resolves its anchored def and builds the pack
+ *  from it (epic riprap-hs4r). Ids with no pool, no listing, and no
+ *  published def fall back to the app surface (the joined-pools table). */
 function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   const clusters = useCluster();
-  const listing: MutualListing | undefined = pool !== undefined ? poolByRouteId(pool) : undefined;
-  const flow: ClaimFlow | null = claimFlowFor(listing);
+  const staticListing: PoolListing | undefined =
+    pool !== undefined ? poolByRouteId(pool) : undefined;
+  // a route id the directory doesn't know is a community pool's on-chain
+  // pubkey — resolve its def (honest loading state; refusals are invalid)
+  const communityAddress =
+    staticListing === undefined && pool !== undefined && isAddress(pool) ? (pool as Address) : null;
+  const resolution = usePoolDef(communityAddress);
+  const def = resolution.state === "ready" ? resolution.def : undefined;
+  const defListing =
+    def !== undefined && communityAddress !== null
+      ? listingFromDef(def, communityAddress)
+      : undefined;
+  const listing = staticListing ?? defListing;
+  const flow: ClaimFlow | null = claimFlowFor(listing, def);
+  const resolving =
+    communityAddress !== null &&
+    (resolution.state === "pool-loading" || resolution.state === "doc-loading");
   const invalidPool = listing === undefined || flow === null;
   // undefined ⇒ the static map — harmless when invalid: we navigate away at
   // render, before any step shows.
-  const mutualAddress = invalidPool ? undefined : resolvePoolAddress(listing, clusters);
+  const mutualAddress = invalidPool ? undefined : resolveListingAddress(listing, clusters);
   const tierNames = listing !== undefined ? listing.tiers.map((t) => t.name) : TIER_NAMES;
   const docPaths = flow !== null ? flow.documentSlots.map((s) => s.path) : [];
   /** File slots only — url slots have no document to PUT; the manifest
@@ -697,6 +716,16 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
   ];
   const deliveredCount = docPaths.filter((path) => docRows[path] === "delivered").length;
 
+  if (resolving) {
+    return (
+      <div className="flex max-w-3xl flex-col gap-2" data-slot="def-resolving">
+        <p className="text-ink [font:var(--riprap-body-md)]">Reading the pool from the chain.</p>
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          The pool's terms and proof set resolve before the wizard opens.
+        </p>
+      </div>
+    );
+  }
   if (invalidPool) return <Navigate to="/app" replace />;
 
   return (
@@ -809,12 +838,24 @@ function Wizard({ wallet, pool }: { wallet: Address; pool?: string }) {
 function RestoreSurface({ pool, nonce }: { pool?: string; nonce?: string }) {
   const clusters = useCluster();
   const clusterRpc = useClusterRpc();
-  const listing = pool !== undefined ? poolByRouteId(pool) : undefined;
-  const flow = claimFlowFor(listing);
+  const staticListing = pool !== undefined ? poolByRouteId(pool) : undefined;
+  const communityAddress =
+    staticListing === undefined && pool !== undefined && isAddress(pool) ? (pool as Address) : null;
+  const resolution = usePoolDef(communityAddress);
+  const def = resolution.state === "ready" ? resolution.def : undefined;
+  const defListing =
+    def !== undefined && communityAddress !== null
+      ? listingFromDef(def, communityAddress)
+      : undefined;
+  const listing = staticListing ?? defListing;
+  const flow = claimFlowFor(listing, def);
+  const resolving =
+    communityAddress !== null &&
+    (resolution.state === "pool-loading" || resolution.state === "doc-loading");
   const invalid =
     listing === undefined || flow === null || nonce === undefined || !/^\d+$/.test(nonce);
-  const mutualAddress = invalid ? null : resolvePoolAddress(listing, clusters);
-  const mutualQuery = useMutual(mutualAddress);
+  const mutualAddress = invalid ? null : resolveListingAddress(listing, clusters);
+  const mutualQuery = usePool(mutualAddress);
   const disputePda = useQuery({
     queryKey: ["dispute-pda", clusterRpc?.endpoint, mutualAddress, nonce],
     queryFn: () =>
@@ -823,6 +864,13 @@ function RestoreSurface({ pool, nonce }: { pool?: string; nonce?: string }) {
     retry: 1,
   });
 
+  if (resolving) {
+    return (
+      <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+        Reading the pool from the chain.
+      </p>
+    );
+  }
   if (invalid) return <Navigate to="/app" replace />;
   if (mutualQuery.state === "not-found") {
     return (

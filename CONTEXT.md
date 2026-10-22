@@ -1,6 +1,6 @@
 # Riprap
 
-Event-scoped mutual protection pools on Solana. This glossary is the domain language; the pool program (`programs/pool`) implements the pool layer. Implementation details live in code and ADRs, never here.
+Purpose pools on Solana — member money bound to one purpose, fixed at creation (repositioned 2026-10-20; was "event-scoped mutual protection pools"). This glossary is the domain language; the pool program (`programs/pool`) implements the pool layer. Implementation details live in code and ADRs, never here.
 
 ## Pool layer (this program)
 
@@ -13,7 +13,7 @@ The pool's single token account. All deposits land in it; both doors pay out of 
 _Avoid_: vault, escrow
 
 **Track**:
-One of three claim dimensions of a pool — ownership, rights, yield — each with its own stake rate and authority.
+One of three dimensions of a pool — ownership, rights, yield — each with its own stake rate and authority.
 _Avoid_: tranche, class
 
 **Stake**:
@@ -33,8 +33,8 @@ The controller of one track's powers: the rights authority governs spending, the
 _Avoid_: owner, admin, signer
 
 **Spending**:
-Exit door one — the rights authority moves treasury money out to a destination. In the full design this is how adjudicated claims get paid.
-_Avoid_: payout (claims-layer word), transfer, withdraw
+Exit door one — the rights authority moves treasury money out to a destination. In the full design this is how approved requests get paid.
+_Avoid_: payout (request-layer word), transfer, withdraw
 
 **Liquidation**:
 Exit door two — the ownership authority permanently ends the pool. After it, deposits are refused and only the liquidation crank can move money.
@@ -54,4 +54,62 @@ A depositor that has received its liquidation payout. A settled depositor cannot
 ## Mutual layer (not this program)
 
 **Member, Claim, Tier, Juror**:
-Policy-layer concepts owned by the mutual program and `meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md`. The pool knows none of them; entry fees, tier caps ($10/$20/$40 entry, $1,000/$2,000/$4,000 caps), claims windows, and juror staking live above the pool.
+Policy-layer concepts owned by the mutual program and `meta/Breakpoint/Micro Mutual — Knife Assault - Policy.md`. The pool knows none of them; entry fees, tier caps ($10/$20/$40 entry, $1,000/$2,000/$4,000 caps), the request window, and juror staking live above the pool. Copy law (2026-10-21): customer-facing copy says request / requester / request window; the chain keeps `Claim`, `file_claim`, `claims_close_at`.
+
+## Circle layer (the kitty program, planned)
+
+**Circle**:
+An ongoing purpose pool — members contribute per epoch, request payouts of any amount, and the members adjudicate requests against the circle's purpose.
+_Avoid_: funding circle (descriptive, never canonical), subscription pool, ROSCA, ongoing mutual
+
+**Epoch**:
+The circle's fixed-length settlement period; budget, renewal, and exits all turn at its boundary.
+_Avoid_: period, cycle, round (an Accord round is a juror vote)
+
+**Contribution**:
+A member's per-epoch payment; it stacks capital and renews rights together.
+_Avoid_: premium (banned word), entry fee (mutual layer), subscription payment
+
+**Renewal**:
+Paying for the next epoch's cover; extends forward from payment or current expiry, whichever is later — never retroactive over a gap.
+_Avoid_: autopay, top-up
+
+**Request**:
+A member's ask for money from the circle — any amount, adjudicated with the purpose as the measure.
+_Avoid_: claim (banned in copy — request is the platform word), ask, application
+
+**Budget**:
+The most a circle may pay out in one epoch; consumed at filing, refreshed at the boundary.
+_Avoid_: cap, max payout (tier words)
+
+**Reserve**:
+The amount a filed request holds from its epoch's budget until ruled; released whole on denial.
+_Avoid_: escrow, lock
+
+**Obligation**:
+An approved request not yet paid, queued until budget allows; obligations bind no more than the treasury holds.
+_Avoid_: debt, outstanding claim
+
+**Recovery ratio**:
+Treasury over total contributions — the one number: requests lower it, contributions raise it, exits never move it.
+_Avoid_: NAV, unit price, implied premium (premium is banned outright)
+
+**Exit intent**:
+A member's declaration it will leave; settles at the first boundary its paid cover ends, against the exit base — never delayed, never credential-gated.
+_Avoid_: withdrawal, refund, redeem
+
+**Exit base**:
+Treasury minus reserves minus obligations — the only pot exit intents divide.
+_Avoid_: residual, remainder
+
+**Entry credential**:
+The external membership attestation gating join, renewal, and filing; it never gates money out.
+_Avoid_: ticket, pass, KYC
+
+**Take**:
+The operator's off-the-top share of an adjudicated payout; set at creation, reducible, never increasable.
+_Avoid_: fee, premium, cut
+
+**Protocol share**:
+The platform's fraction of the operator's take.
+_Avoid_: protocol fee, royalty

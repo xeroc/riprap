@@ -22,11 +22,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { poolBySlug } from "../mutuals/data";
+import { poolBySlug } from "../pools/data";
 import { SUPPORTERS } from "../sections/Supporters";
 import { sendInstruction, TransactionSendError } from "../shared/transaction";
 import { BreakpointPage } from "./BreakpointPage";
-import { fakeMutual, POLICY_TIERS } from "./fixtures";
+import { fakePool, POLICY_TIERS } from "./fixtures";
 
 // --- hoisted mock state (vi.mock factories run before the module body) -------
 
@@ -106,7 +106,7 @@ const joinIx = {
 /** A joinable context: $100 USDC, funded SOL, no member PDA (facade §2). */
 function joinCtx(overrides: Partial<JoinContext> = {}): JoinContext {
   return {
-    mutual: maybe(fakeMutual()) as unknown as JoinContext["mutual"],
+    mutual: maybe(fakePool()) as unknown as JoinContext["mutual"],
     memberAccount: "M".repeat(32) as Address,
     alreadyMember: null,
     contribution: POLICY_TIERS[0].contribution,
@@ -118,13 +118,13 @@ function joinCtx(overrides: Partial<JoinContext> = {}): JoinContext {
   };
 }
 
-// localnet default + a stubbed VITE_LOCALNET_MUTUAL: the resolver sees an
+// localnet default + a stubbed VITE_LOCALNET_POOL: the resolver sees an
 // address and the (mocked) SDK fetch answers — no network in jsdom. Pass ""
 // to renderPoolPage to exercise the no-deployment path.
 const testConfig = getDefaultConfig({ appName: "riprap-test", network: "localnet" });
 
 function renderPoolPage(mutualAddress = MUTUAL_ADDR) {
-  vi.stubEnv("VITE_LOCALNET_MUTUAL", mutualAddress);
+  vi.stubEnv("VITE_LOCALNET_POOL", mutualAddress);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
   });
@@ -163,7 +163,7 @@ afterEach(() => {
 
 describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, policy §5)", () => {
   it("tier slider defaults to Standard and moves through exactly the three on-chain tiers", async () => {
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     renderPoolPage();
     await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
     const thumb = screen.getByRole("slider");
@@ -178,7 +178,7 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
   // assertion until it ships again
 
   it("hero split (2026-09-24): supporters left in the odds table's old slot, odds a right rail", async () => {
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     const { container } = renderPoolPage();
     await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
 
@@ -207,7 +207,7 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
   });
 
   it("no wallet: 'Connect a wallet to chip in' opens the picker and reads no join context", async () => {
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     renderPoolPage();
     fireEvent.click(await screen.findByRole("button", { name: "Connect a wallet to chip in" }));
     expect(screen.getByRole("dialog")).toBeTruthy();
@@ -215,7 +215,7 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
   });
 
   it("policy details: §5 table from mutual.tiers, the one subaccord stamp linked (policy §5/§7)", async () => {
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     const { container } = renderPoolPage();
     await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
     const sections = [...container.querySelectorAll('[data-slot="policy-section"]')];
@@ -239,7 +239,7 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
   });
 
   it("policy hidden by default: details closed, EXPLAINED shown, RAW POLICY one click away", async () => {
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     const { container } = renderPoolPage();
     await screen.findByText("Standard · $20 entry · up to $2,000 maximum payout");
     // collapsed on load (copy doc § Policy details, 2026-09-27)
@@ -261,7 +261,7 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
   it("connected + joinable: click walks building → wallet-signing → confirming → covered", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     joinMock.mockResolvedValue(joinCtx());
     subaccordMock.mockResolvedValue(subaccord());
     let resolveBuild!: (v: Instruction[]) => void;
@@ -292,7 +292,7 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
 
     // findAll — the inline stamp and the overlay stamp both say it (race on
     // which commits first); the dialog asserts follow either way
-    expect((await screen.findAllByText("Covered — Standard")).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("Member — Standard")).length).toBeGreaterThan(0);
 
     // the covered overlay fires on confirmation — the join moment (copy doc
     // § Covered overlay): stamp, headline, the three figures (total last,
@@ -346,7 +346,7 @@ describe("chip-in — the one-tx join machine (HANDOFF §4, copy doc § on-chain
   it("failure: one-line toast from the program logs, hero back to idle, context refetched", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     joinMock.mockResolvedValue(joinCtx());
     buildMock.mockResolvedValue([joinIx]);
     sendMock.mockRejectedValue(
@@ -373,7 +373,7 @@ describe("balance pre-checks — chip-in disabled with an inline reason (copy do
   it("insufficient USDC: disabled + `Not enough USDC. This wallet holds {{balance}}; the {{tier}} tier costs {{fee}}.`, tracking the selected tier", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     joinMock.mockResolvedValue(
       joinCtx({
         depositBalance: 5n * 1_000_000n,
@@ -404,7 +404,7 @@ describe("balance pre-checks — chip-in disabled with an inline reason (copy do
   it("insufficient SOL: `You'll also need SOL for network fees.` and the button stays down", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     joinMock.mockResolvedValue(
       joinCtx({ solBalance: 0n, canJoin: false, reason: "insufficient-sol" }),
     );
@@ -419,7 +419,7 @@ describe("covered — an existing member is a state, never an error toast", () =
   it("renders the Covered stamp with their on-chain tier; picker and explainer hide, app linked", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     joinMock.mockResolvedValue(
       joinCtx({ alreadyMember: { tier: 0 }, canJoin: false, reason: "already-member" }),
     );
@@ -430,18 +430,18 @@ describe("covered — an existing member is a state, never an error toast", () =
     // session's first covered read (copy doc § Covered overlay). Dismiss it
     // first: an open dialog aria-hides the inline state.
     const dialog = await screen.findByRole("dialog");
-    expect(dialog.textContent).toContain("Covered — Basic");
+    expect(dialog.textContent).toContain("Member — Basic");
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 
-    expect(await screen.findByText("Covered — Basic")).toBeTruthy();
+    expect(await screen.findByText("Member — Basic")).toBeTruthy();
     const coveredSlot = screen
-      .getAllByText("Covered — Basic")
+      .getAllByText("Member — Basic")
       .map((el) => el.closest('[data-slot="covered"]'));
     expect(
       coveredSlot.some((slot) =>
         slot?.textContent?.includes(
-          "This wallet is in the pool. Your membership and claims live in the app.",
+          "This wallet is in the pool. Your membership and requests live in the app.",
         ),
       ),
     ).toBe(true);
@@ -449,7 +449,7 @@ describe("covered — an existing member is a state, never an error toast", () =
     // once covered there is nothing for sale: no slider, no picker label,
     // no by-slider explainer (copy doc § Covered, 2026-09-24)
     expect(screen.queryByRole("slider")).toBeNull();
-    expect(screen.queryByText("Choose your coverage")).toBeNull();
+    expect(screen.queryByText("Choose your tier")).toBeNull();
     expect(screen.queryByText(/buys you into the weirdest hedge/)).toBeNull();
     // their tier line stays — the member's own facts, from their member PDA
     expect(screen.getByText("Basic · $10 entry · up to $1,000 maximum payout")).toBeTruthy();
@@ -460,7 +460,7 @@ describe("covered — an existing member is a state, never an error toast", () =
   it("the moment is once per session: a second covered read opens no overlay", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
-    fetchMock.mockResolvedValue(maybe(fakeMutual()));
+    fetchMock.mockResolvedValue(maybe(fakePool()));
     joinMock.mockResolvedValue(
       joinCtx({ alreadyMember: { tier: 1 }, canJoin: false, reason: "already-member" }),
     );
@@ -472,7 +472,7 @@ describe("covered — an existing member is a state, never an error toast", () =
 
     // same session, same wallet: the inline state only, no second moment
     renderPoolPage();
-    expect(await screen.findByText("Covered — Standard")).toBeTruthy();
+    expect(await screen.findByText("Member — Standard")).toBeTruthy();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
@@ -541,13 +541,13 @@ describe("mutual absent on the cluster — switch-cluster empty state", () => {
 describe("deposits closed — entry-closed state from deposits_close_at", () => {
   it("states 'Entry closed.' and drops the chip-in CTA", async () => {
     fetchMock.mockResolvedValue(
-      maybe(fakeMutual({ depositsCloseAt: BigInt(Date.UTC(2026, 0, 15) / 1000) })),
+      maybe(fakePool({ depositsCloseAt: BigInt(Date.UTC(2026, 0, 15) / 1000) })),
     );
     renderPoolPage();
     expect(await screen.findByText("Entry closed.")).toBeTruthy();
     expect(
       screen.getByText(
-        "This pool stopped taking members. Claims, settlement, and dissolution follow the policy.",
+        "This pool stopped taking members. Requests, settlement, and dissolution follow the policy.",
       ),
     ).toBeTruthy();
     // tiers still render (real chain data), but there is nothing to chip into
@@ -561,7 +561,7 @@ describe("deposits closed — entry-closed state from deposits_close_at", () => 
 it("connected + joinable: the line renders under the chip-in button", async () => {
   walletState.isConnected = true;
   walletState.account = WALLET;
-  fetchMock.mockResolvedValue(maybe(fakeMutual()));
+  fetchMock.mockResolvedValue(maybe(fakePool()));
   joinMock.mockResolvedValue(joinCtx());
   renderPoolPage();
   await screen.findByRole("button", { name: "Chip in $20" });
@@ -571,20 +571,20 @@ it("connected + joinable: the line renders under the chip-in button", async () =
 it("covered: nothing left to accept — no line", async () => {
   walletState.isConnected = true;
   walletState.account = WALLET;
-  fetchMock.mockResolvedValue(maybe(fakeMutual()));
+  fetchMock.mockResolvedValue(maybe(fakePool()));
   joinMock.mockResolvedValue(
     joinCtx({ alreadyMember: { tier: 0 }, canJoin: false, reason: "already-member" }),
   );
   renderPoolPage();
   fireEvent.click(await screen.findByRole("button", { name: "Continue" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  expect(await screen.findByText("Covered — Basic")).toBeTruthy();
+  expect(await screen.findByText("Member — Basic")).toBeTruthy();
   expect(document.querySelector('[data-slot="policy-accept"]')).toBeNull();
 });
 
 it("entry closed: no line", async () => {
   fetchMock.mockResolvedValue(
-    maybe(fakeMutual({ depositsCloseAt: BigInt(Date.UTC(2026, 0, 15) / 1000) })),
+    maybe(fakePool({ depositsCloseAt: BigInt(Date.UTC(2026, 0, 15) / 1000) })),
   );
   renderPoolPage();
   await screen.findByText("Entry closed.");

@@ -224,7 +224,7 @@ export function SessionWizard({
       {current === 0 && (
         <div className="flex max-w-3xl flex-col gap-(--riprap-space-lg)" data-slot="step-0">
           <p className="max-w-xl leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-            The evidence is checked against the hash the claim filed before anything renders.
+            The evidence is checked against the hash the requester filed before anything renders.
           </p>
           <PackageGate
             verification={verification}
@@ -243,6 +243,8 @@ export function SessionWizard({
         <div data-slot="step-1">
           <DocumentsStep
             slots={slots}
+            samePersonRule={policy.samePersonRule}
+            evidenceUseNote={policy.evidenceUseNote}
             storageKey={documentsKey}
             onBack={back}
             onDone={() => advanceFrom(1)}

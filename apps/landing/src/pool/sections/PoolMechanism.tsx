@@ -7,14 +7,14 @@
 import { LifecycleStrip, SectionBand, usd } from "@riprap/ui";
 
 import { Settle } from "../../components/Settle";
-import { poolTiers } from "../mutual";
-import { useMutual } from "../useMutual";
+import { poolTiers } from "../pool";
+import { usePool } from "../usePool";
 
 // Kit data law: unknown values render as mono {{PARAM}} placeholders.
 const PARAM = "{{PARAM}}";
 
 export function PoolMechanism() {
-  const mutualQuery = useMutual();
+  const mutualQuery = usePool();
   const tiers = mutualQuery.state === "ready" ? poolTiers(mutualQuery.mutual) : null;
   // policy §5 — the outer bounds of the three on-chain tiers
   const range =
@@ -26,7 +26,7 @@ export function PoolMechanism() {
     {
       n: "01",
       h: "You pick a tier.",
-      p: "Entry is one payment, made before the conference opens — joining closes the moment coverage begins, so a membership can't be created after an incident has occurred. One membership per person; a sponsor can pay the entry fee — a claim payment goes to you, the unused remainder goes back to them.",
+      p: "Entry is one payment, made before the conference opens — joining closes the moment the window opens, so a membership can't be created after an incident has occurred. One membership per person; a sponsor can pay the entry fee — a payout goes to you, the unused remainder goes back to them.",
       range,
     },
     {
@@ -38,7 +38,7 @@ export function PoolMechanism() {
     {
       n: "03",
       h: "The worst case is narrow.",
-      p: "Coverage is bodily injury caused by another person intentionally using a knife or bladed instrument against you — including injury sustained while escaping or defending.",
+      p: "The pool pays for bodily injury caused by another person intentionally using a knife or bladed instrument against you — including injury sustained while escaping or defending.",
       stamp:
         "15–17 NOVEMBER 2026 · OPENS/CLOSES WITH THE CONFERENCE · OLYMPIA CONVENTION CENTRE + DESIGNATED EVENT AREA, LONDON", // §3, §2
     },

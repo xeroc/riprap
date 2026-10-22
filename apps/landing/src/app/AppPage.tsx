@@ -1,13 +1,13 @@
 // #/app — the member wallet surface, reads-only v1 (milestone riprap-9ehc,
 // bean riprap-c1r1): the app hero band (backdrop on — the Riprap App's
-// identity: manage the mutuals this wallet participates in), then the
+// identity: manage the pools this wallet participates in), then the
 // joined-pools table in its own band (no backdrop): one membership read per
-// LIVE pool (the mutuals store scan — no static map) → one row per pool
-// this wallet entered, tabular like /mutuals. Per row: the pool's own
+// LIVE pool (the pools store scan — no static map) → one row per pool
+// this wallet entered, tabular like /pools. Per row: the pool's own
 // payout-request wizard (#/app/file-claim/<pool>) and jury-duty board
 // (#/app/adjudicate/<pool>), both buttons. No writes. Copy source:
 // meta/marketing/03-website-copy/landing-page.md § "/app — the member
-// wallet surface" and § /mutuals (table structure, shared state lines) —
+// wallet surface" and § /pools (table structure, shared state lines) —
 // rendered verbatim where doc'd; unknown values render {{PARAM}} mono
 // placeholders, never static numbers.
 import { ClaimStatus, fetchMaybeMemberByOwner, type Member } from "@riprap/hanse";
@@ -17,10 +17,10 @@ import type { Address } from "@solana/kit";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
-import { poolRouteId } from "../mutuals/data";
-import { PoolBadgeRail } from "../mutuals/PoolBadgeRail";
-import { type LiveMutual, useMutualStore } from "../mutuals/store";
-import { formatUtc, microToUsd, poolTiers } from "../pool/mutual";
+import { formatUtc, microToUsd, poolTiers } from "../pool/pool";
+import { poolRouteId } from "../pools/data";
+import { PoolBadgeRail } from "../pools/PoolBadgeRail";
+import { type LivePool, usePoolStore } from "../pools/store";
 import { useClusterRpc } from "../shared/rpc";
 import { ClusterSwitch, ConnectWalletButton } from "./controls";
 import { claimFlowFor } from "./file-claim/flows/index";
@@ -62,7 +62,7 @@ function statusLabel(status: ClaimStatus): string {
  * RESTORE); settled rows stay plain. */
 function ClaimsBlock({
   claims,
-  label = "Claims",
+  label = "Requests",
   routeId,
 }: {
   claims: ClaimsQuery;
@@ -80,7 +80,7 @@ function ClaimsBlock({
       <div data-slot="claims" className="flex max-w-[36rem] flex-col gap-2">
         {heading}
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          Reading your claims from the chain.
+          Reading your requests from the chain.
         </p>
       </div>
     );
@@ -89,7 +89,7 @@ function ClaimsBlock({
     return (
       <div data-slot="claims" className="flex max-w-[36rem] flex-col gap-2">
         {heading}
-        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't read your claims.</p>
+        <p className="text-ink [font:var(--riprap-body-md)]">Couldn't read your requests.</p>
         <Button variant="outline" className="w-44" onClick={claims.retry}>
           Try again
         </Button>
@@ -103,7 +103,7 @@ function ClaimsBlock({
       {heading}
       {claims.claims.length === 0 ? (
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          No claims filed from this wallet.
+          No payout requests filed from this wallet.
         </p>
       ) : (
         <ul className="w-full">
@@ -142,7 +142,7 @@ function ClaimsBlock({
  * THIS pool. File renders only while preflight passes (copy doc § /app,
  * CLAIM-WIZARD §2); the wizard's step 0 carries the honest block states
  * either way. */
-function JoinedPoolRow({ pool, member }: { pool: LiveMutual; member: Member }) {
+function JoinedPoolRow({ pool, member }: { pool: LivePool; member: Member }) {
   const preflight = useClaimPreflight(pool.address);
   const flow = claimFlowFor(pool.listing);
 
@@ -168,7 +168,7 @@ function JoinedPoolRow({ pool, member }: { pool: LiveMutual; member: Member }) {
           {pool.listing.name}
         </a>
         <div className="mt-2">
-          <BadgeStamp data-num>Covered — {tier.name}</BadgeStamp>
+          <BadgeStamp data-num>Member — {tier.name}</BadgeStamp>
         </div>
       </th>
       <td className="hidden py-4 pr-4 text-body align-top sm:table-cell [font:var(--riprap-body-sm)]">
@@ -193,7 +193,7 @@ function JoinedPoolRow({ pool, member }: { pool: LiveMutual; member: Member }) {
 /** One joined pool's claims, for the claims band: this wallet's filed
  *  payout requests against that pool — hairline rows under the pool's
  *  name, every field straight off the chain. */
-function PoolClaims({ pool, wallet }: { pool: LiveMutual; wallet: Address }) {
+function PoolClaims({ pool, wallet }: { pool: LivePool; wallet: Address }) {
   const claims = useClaims({
     mutual: pool.address,
     claimant: wallet,
@@ -210,7 +210,7 @@ function PoolClaims({ pool, wallet }: { pool: LiveMutual; wallet: Address }) {
  * and the claims band (this wallet's filed payout requests, pool by
  * pool). Shared scan states render in their own band. */
 function MemberSurface({ wallet }: { wallet: Address }) {
-  const store = useMutualStore();
+  const store = usePoolStore();
   const clusterRpc = useClusterRpc();
   const pools = store.state === "ready" ? store.pools : [];
   const queryClient = useQueryClient();
@@ -309,7 +309,7 @@ function MemberSurface({ wallet }: { wallet: Address }) {
         <div className="flex max-w-2xl flex-col gap-2" data-slot="not-a-member">
           <p className="text-ink [font:var(--riprap-body-md)]">This wallet isn't in any pool.</p>
           <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-            Membership opens on <TextLink href="#/mutuals">the pools</TextLink>.
+            Membership opens on <TextLink href="#/pools">the pools</TextLink>.
           </p>
         </div>
       </AppStateBand>
@@ -348,7 +348,7 @@ function MemberSurface({ wallet }: { wallet: Address }) {
           </tbody>
         </table>
       </SectionBand>
-      <SectionBand id="app-claims" label="claims" tone="ground">
+      <SectionBand id="app-claims" label="requests" tone="ground">
         <div className="flex w-full flex-col gap-(--riprap-space-xl)" data-slot="claims-list">
           {joined.map(({ pool }) => (
             <PoolClaims key={pool.address} pool={pool} wallet={wallet} />
@@ -393,8 +393,8 @@ function ClusterError({ retry }: { retry: () => void }) {
   );
 }
 
-/** The connected hero: what this surface is — the app for the mutuals this
- *  wallet participates in. Mirrors /mutuals' display intro band. */
+/** The connected hero: what this surface is — the app for the pools this
+ *  wallet participates in. Mirrors /pools' display intro band. */
 function AppHero() {
   return (
     <div className="flex max-w-2xl flex-col gap-4">
@@ -405,7 +405,7 @@ function AppHero() {
       </Settle>
       <Settle delay={60}>
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
-          Every mutual this wallet joined — file a payout request or sit on a jury, pool by pool.
+          Every pool this wallet joined — file a payout request or sit on a jury, one row per pool.
         </p>
       </Settle>
     </div>

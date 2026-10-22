@@ -11,7 +11,7 @@ import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 
 import { useClusterRpc } from "../shared/rpc";
-import { resolveMutualAddress } from "./mutual";
+import { resolvePoolAddress } from "./pool";
 
 export type JoinContextQuery =
   | { state: "off" } // no wallet (or no cluster/address) — nothing to read
@@ -28,9 +28,7 @@ export function useJoinContext(
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const clusterRpc = useClusterRpc();
   const address =
-    mutual === null
-      ? undefined
-      : (mutual ?? resolveMutualAddress({ isLocal, isMainnet, isDevnet }));
+    mutual === null ? undefined : (mutual ?? resolvePoolAddress({ isLocal, isMainnet, isDevnet }));
   const { account } = useWallet();
 
   const enabled = clusterRpc !== null && address !== undefined && account !== null;

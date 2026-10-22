@@ -11,7 +11,7 @@ import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 
 import { useClusterRpc } from "../shared/rpc";
-import { microToUsd } from "./mutual";
+import { microToUsd } from "./pool";
 
 const PARAM = "{{PARAM}}";
 

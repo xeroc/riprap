@@ -11,7 +11,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { Accord, type Round } from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
-import { formatUtc } from "../pool/mutual";
+import { formatUtc } from "../pool/pool";
 import { RevealStep } from "./RevealStep";
 import { encodeRevealCode, saltBridgeKey, saveStoredVote } from "./vote";
 

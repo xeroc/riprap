@@ -23,7 +23,7 @@ export const Ghost: StoryObj<typeof meta> = {
 };
 
 export const Link: StoryObj<typeof meta> = {
-  args: { variant: "link", children: "What is a mutual?" },
+  args: { variant: "link", children: "What is a pool?" },
 };
 
 export const Disabled: StoryObj<typeof meta> = {
@@ -31,5 +31,5 @@ export const Disabled: StoryObj<typeof meta> = {
 };
 
 export const WithIcon: StoryObj<typeof meta> = {
-  args: { children: ["Claim", <SendIcon key="i" className="size-4" />] },
+  args: { children: ["Request", <SendIcon key="i" className="size-4" />] },
 };
