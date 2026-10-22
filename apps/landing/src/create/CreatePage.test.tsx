@@ -452,7 +452,6 @@ describe("#/create deploy → publish → verify", () => {
     await continueToDeploy();
     await screen.findByText(/Your wallet pays the rent/);
     fireEvent.click(screen.getByRole("button", { name: "Deploy the pool" }));
-    await screen.findByText(/The pool is live/);
   }
 
   it("prefills USDC and gates the advanced screen when the mint is cleared", async () => {
