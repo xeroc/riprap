@@ -1,4 +1,13 @@
+import { configure } from "@testing-library/react";
 import { afterAll } from "vitest";
+
+/*
+ * findBy* waits run on testing-library's own clock (default 1000ms), NOT
+ * vitest's testTimeout — on a loaded CI runner the first ready-state render
+ * regularly misses 1s while the whole monorepo's test processes compete for
+ * the CPU (same rationale as the 20s testTimeout below in vitest.config).
+ */
+configure({ asyncUtilTimeout: 5000 });
 
 /*
  * jsdom ships no IntersectionObserver; motion's useInView needs one at
