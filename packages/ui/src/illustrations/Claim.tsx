@@ -30,7 +30,7 @@ export function Claim() {
     // deterministic twin of the motion path below, from the glyph clock
     const p = settleAt(clock.frame / clock.fps, 3 * STAGGER, 2 * SETTLE);
     return (
-      <Glyph label="a claim is paid out" name="claim">
+      <Glyph label="a request is paid out" name="claim">
         <VesselLines door />
         <rect
           x={fill.x}
@@ -54,7 +54,7 @@ export function Claim() {
   }
 
   return (
-    <Glyph label="a claim is paid out" name="claim">
+    <Glyph label="a request is paid out" name="claim">
       <VesselLines door />
       {/* the pool's money — resting below the door */}
       <rect

@@ -1,0 +1,7 @@
+---
+"@riprap/landing": patch
+---
+
+Restructure the #/create authoring half into six guided screens — identity, coverage, window, claims, marketing, advanced — each with its own Continue gate and back navigation; the advanced drawer became the sixth screen (pilot preset inline), the marketing screen always rides its live pool-page preview, and a resumed draft reopens on the first screen that still has work left. One live progress strip now carries the whole journey (phase row, 01–10 counter, ten-segment hairline track, sticky under the navbar), replacing the hero's static step rail and the authoring screens' own rail. Copy doc § /create rewritten first (source of every string); draft drops the retired marketingOpen flag.
+
+Usability pass on the same wizard: the progress track is now navigation (one button per stop — author screens and preview while the draft is live, publish and verify once it is frozen, deploy never), each author screen is a form with Enter-to-submit, Continue is never disabled (a blocked submit stays put and focuses the first field whose gate rejects), the footer nav sticks to the viewport bottom, step changes scroll the strip back into view and hand focus to the new screen's heading with an sr-only `Step {{n}} of 10` announcement, and the preview (and deploy) carry the first blocking gate line as `Fix it in the {{screen}} step.` with a button that jumps to the screen that owns it.

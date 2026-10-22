@@ -27,6 +27,8 @@ export type { EmailCardProps } from "./chrome/EmailCard";
 export { EmailCard } from "./chrome/EmailCard";
 export type { FeatureCardProps } from "./chrome/FeatureCard";
 export { FeatureCard } from "./chrome/FeatureCard";
+export type { FlowStepProps } from "./chrome/FlowStep";
+export { FlowStep } from "./chrome/FlowStep";
 export type { FooterBandProps, FooterColumn, FooterLink } from "./chrome/FooterBand";
 export { FooterBand } from "./chrome/FooterBand";
 export type { GlyphTileProps } from "./chrome/GlyphTile";

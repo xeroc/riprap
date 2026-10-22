@@ -4,13 +4,13 @@
 // pinned case).
 
 import { describe, expect, it } from "vitest";
-import { MUTUALS } from "../../mutuals/data";
+import { POOLS } from "../../pools/data";
 import { BLADE_POOL_POLICY } from "./blade-pool";
 import { adjudicationPolicyFor } from "./index";
 
 describe("adjudicationPolicyFor (the data.ts → pack connection)", () => {
   it("every listing that names an adjudicationPolicy resolves to a registered pack with a matching id", () => {
-    const named = MUTUALS.filter((m) => m.adjudicationPolicy !== undefined);
+    const named = POOLS.filter((m) => m.adjudicationPolicy !== undefined);
     expect(named.length).toBeGreaterThan(0);
     for (const listing of named) {
       const policy = adjudicationPolicyFor(listing);
@@ -24,13 +24,13 @@ describe("adjudicationPolicyFor (the data.ts → pack connection)", () => {
       "BXGcC19c43fzU3JyowyJrTVQ7gahtGR9o2Ca1JKSGKbe",
       "DtjVEhcrESkED2Mc57smYE5doGxRSi4TK3bP2zqGEccF",
     ]) {
-      const listing = MUTUALS.find((m) => m.pubkey === pin);
+      const listing = POOLS.find((m) => m.pubkey === pin);
       expect(adjudicationPolicyFor(listing)).toBe(BLADE_POOL_POLICY);
     }
   });
 
   it("a listing without an adjudicationPolicy, or an unknown pool, resolves to null", () => {
-    expect(adjudicationPolicyFor(MUTUALS.find((m) => m.slug === "chairmageddon"))).toBeNull();
+    expect(adjudicationPolicyFor(POOLS.find((m) => m.slug === "chairmageddon"))).toBeNull();
     expect(adjudicationPolicyFor(undefined)).toBeNull();
   });
 });

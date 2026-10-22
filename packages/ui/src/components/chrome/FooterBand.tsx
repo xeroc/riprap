@@ -22,7 +22,7 @@ export interface FooterBandProps extends React.ComponentProps<"footer"> {
   columns: FooterColumn[];
   /** mark + wordmark lockup slot */
   brand?: React.ReactNode;
-  /** e.g. "Event mutuals on Solana." */
+  /** e.g. "Purpose pools on Solana." */
   tagline?: string;
   /** closing mono line — DESIGN.md default: "dead on schedule" */
   closing?: string;

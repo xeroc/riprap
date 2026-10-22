@@ -8,7 +8,7 @@ import { useCluster, useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 
-import { resolveMutualAddress } from "../pool/mutual";
+import { resolvePoolAddress } from "../pool/pool";
 import { useClusterRpc } from "../shared/rpc";
 
 export type MembershipQuery =
@@ -22,7 +22,7 @@ export function useMembership(mutual?: Address): MembershipQuery {
   // listing-resolved address.
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const clusterRpc = useClusterRpc();
-  const address = mutual ?? resolveMutualAddress({ isLocal, isMainnet, isDevnet });
+  const address = mutual ?? resolvePoolAddress({ isLocal, isMainnet, isDevnet });
   const { account } = useWallet();
 
   const enabled = clusterRpc !== null && address !== undefined && account !== null;

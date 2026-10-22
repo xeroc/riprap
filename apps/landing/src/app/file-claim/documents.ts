@@ -97,20 +97,21 @@ export async function intakeDocument(slot: DocSlot, file: File): Promise<IntakeR
   return { bytes, sha256: await sha256Hex(bytes), fileName: file.name };
 }
 
-/** Posts on x.com / twitter.com — the confirmation slot's verifiable home
- * (terms §7.5: a post from the named person's known account). */
-const POST_URL = /^https?:\/\/([^/]+\.)?(x|twitter)\.com\/\S+$/i;
+/** Any https link — a url-slot's verifiable home is wherever the terms put
+ *  it (a post, a receipt, a hosted record); plain http is not accepted
+ *  (v1: the gate is scheme-only, the MIME gate stays global). */
+const HTTPS_URL = /^https:\/\/\S+$/i;
 
 /**
- * Gate one pasted URL for a url-slot: validated against the post-URL rule,
+ * Gate one pasted URL for a url-slot: validated against the https rule,
  * hashed as its UTF-8 bytes — those bytes ARE the slot's document (the
  * manifest entry and the operator PUT are indistinguishable from a file's).
  */
 export async function intakeUrl(slot: DocSlot, url: string): Promise<IntakeResult> {
   const trimmed = url.trim();
-  if (!POST_URL.test(trimmed)) {
+  if (!HTTPS_URL.test(trimmed)) {
     throw new DocumentRejected(
-      `${trimmed || "that"} is not a post URL — ${slot.label} needs a link to the post on x.com or twitter.com.`,
+      `${trimmed || "that"} is not a valid link — ${slot.label} needs an https URL.`,
     );
   }
   const bytes = new TextEncoder().encode(trimmed);

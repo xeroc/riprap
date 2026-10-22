@@ -43,6 +43,6 @@ export const Default: StoryObj<typeof meta> = {
         riprap<span className="text-(--riprap-accent)">.</span>
       </span>
     ),
-    tagline: "Event mutuals on Solana.",
+    tagline: "Purpose pools on Solana.",
   },
 };

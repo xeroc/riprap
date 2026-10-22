@@ -24,15 +24,16 @@ import {
 import { useWallet } from "@solana/connector";
 import type { Address } from "@solana/kit";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchMaybeDispute, findRoundPda } from "@useaccord/sdk";
+import { fetchMaybeDispute, findRoundPda, type Round } from "@useaccord/sdk";
 import { useEffect, useState } from "react";
 import { ClusterSwitch, ConnectWalletButton } from "../app/controls";
 import { Settle } from "../components/Settle";
 import { SiteNav } from "../components/SiteNav";
-import { poolRoute } from "../mutuals/data";
-import { type LiveMutual, useMutualStore } from "../mutuals/store";
-import { formatUtc, microToUsd } from "../pool/mutual";
+import { formatUtc, microToUsd } from "../pool/pool";
 import { useMinStake, useMinStakeMicro } from "../pool/useMinStake";
+import { poolRoute } from "../pools/data";
+import { usePoolDef } from "../pools/def/usePoolDef";
+import { type LivePool, usePoolStore } from "../pools/store";
 import { useClusterRpc } from "../shared/rpc";
 import { currentDecryptDelivery, localDeliveryKeyStore } from "./delivery";
 import { phaseLabel, seatPhase } from "./phase";
@@ -193,13 +194,9 @@ function SessionShell({
 }: {
   session: SessionRoute;
   wallet: Address;
-  pools: LiveMutual[];
+  pools: LivePool[];
 }) {
   const clusterRpc = useClusterRpc();
-  const roundPda = useQuery({
-    queryKey: ["round-pda", session.dispute, session.round],
-    queryFn: () => findRoundPda({ dispute: session.dispute as Address, roundIdx: session.round }),
-  });
   const disputeQuery = useQuery({
     queryKey: ["dispute", clusterRpc?.endpoint, session.dispute],
     queryFn: () => {
@@ -278,7 +275,41 @@ function SessionShell({
       </div>
     );
   }
-  const policy = adjudicationPolicyFor(pool.listing);
+  return <PoolSession pool={pool} session={session} round={round} wallet={wallet} />;
+}
+
+/** The session for one resolved pool. First-party pools resolve their policy
+ *  pack from the directory entry; community pools (no entry) resolve theirs
+ *  from the pool's anchored def — the registry's def path (epic
+ *  riprap-hs4r). Every def refusal is an honest state, never a fallback. */
+function PoolSession({
+  pool,
+  session,
+  round,
+  wallet,
+}: {
+  pool: LivePool;
+  session: SessionRoute;
+  round: Round;
+  wallet: Address;
+}) {
+  const needsDef = pool.listing.adjudicationPolicy === undefined;
+  const resolution = usePoolDef(needsDef ? pool.address : null);
+  const def = resolution.state === "ready" ? resolution.def : undefined;
+  const policy = adjudicationPolicyFor(pool.listing, def);
+  const roundPda = useQuery({
+    queryKey: ["round-pda", session.dispute, session.round],
+    queryFn: () => findRoundPda({ dispute: session.dispute as Address, roundIdx: session.round }),
+  });
+  if (needsDef) {
+    if (resolution.state === "pool-loading" || resolution.state === "doc-loading") {
+      return (
+        <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
+          Reading the pool's terms from the chain.
+        </p>
+      );
+    }
+  }
   if (policy === null) {
     return (
       <div className="flex max-w-3xl flex-col gap-2" data-slot="no-policy">
@@ -341,15 +372,7 @@ function SessionShell({
 /** One joined pool's block: its name (→ its detail route) over its serve
  * panel and its seats — the pool's subaccord carries its own stake, its
  * claims their own draw pool (spec §3). */
-function PoolBoard({
-  pool,
-  member,
-  wallet,
-}: {
-  pool: LiveMutual;
-  member: Member;
-  wallet: Address;
-}) {
+function PoolBoard({ pool, member, wallet }: { pool: LivePool; member: Member; wallet: Address }) {
   const subaccord = pool.account.subaccord;
   // Rules of hooks: every read runs before the early returns.
   const minStake = useMinStake(subaccord);
@@ -417,7 +440,7 @@ function PoolBoard({
  * serve-panel + seat block per joined pool, or the session shell (copy doc
  * frame; no pool is named in the route — the memberships are the scope). */
 function Board({ wallet, session }: { wallet: Address; session: SessionRoute | null }) {
-  const store = useMutualStore();
+  const store = usePoolStore();
   const clusterRpc = useClusterRpc();
   const queryClient = useQueryClient();
   const pools = store.state === "ready" ? store.pools : [];
@@ -444,7 +467,7 @@ function Board({ wallet, session }: { wallet: Address; session: SessionRoute | n
       <div className="flex max-w-3xl flex-col gap-2" data-slot="not-live">
         <p className="text-ink [font:var(--riprap-body-md)]">Not live on this cluster</p>
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          The Blade Pool isn't deployed on this network. Switch networks to find it.
+          No pools are live on this network. Switch networks to find them.
         </p>
         <ClusterSwitch />
       </div>
@@ -514,7 +537,7 @@ function Board({ wallet, session }: { wallet: Address; session: SessionRoute | n
       <div className="flex max-w-3xl flex-col gap-2" data-slot="not-a-member">
         <h1 className="text-ink [font:var(--riprap-body-md)]">This wallet isn't in any pool.</h1>
         <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-          Membership opens on <TextLink href="#/mutuals">the pools</TextLink>.
+          Membership opens on <TextLink href="#/pools">the pools</TextLink>.
         </p>
       </div>
     );

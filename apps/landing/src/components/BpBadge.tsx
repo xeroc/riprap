@@ -1,7 +1,7 @@
 // The Breakpoint 2026 event lockup chip — the event site's nav lockup
 // (public/breakpoint-assets/), black on the event pink at half the site's
-// nav size (founder ask). Shared by the mutuals carousel (floating above
-// each card) and the /mutuals table (inline per row) — callers pass the
+// nav size (founder ask). Shared by the pools carousel (floating above
+// each card) and the /pools table (inline per row) — callers pass the
 // positioning classes.
 export function BpBadge({ className = "" }: { className?: string }) {
   return (

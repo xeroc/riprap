@@ -59,7 +59,6 @@ const ERR = {
   PULL_WINDOW_OPEN: 6027,
   CLAIM_ALREADY_PAID: 6029,
   TIER_CAP_EXHAUSTED: 6019,
-  UNAUTHORIZED: 6030,
 } as const;
 
 /** Deep error text: message + cause chain (kit nests the anchor code in the
@@ -232,28 +231,12 @@ describe("e2e spec e: lifecycle gates and idempotence (riprap-c448)", () => {
       ERR.PULL_WINDOW_OPEN,
     );
 
-    // claim_payout by a NON-authority cranker reverts (pilot pass gate).
+    // claim_payout is permissionless (pilot pass gate retired 2026-10-15,
+    // ADR-0005): a NON-authority cranker pays the claimant.
     const stranger = await fundSigner(env);
-    await expectRevert(
-      env.sendIx(
-        await getClaimPayoutInstructionAsync({
-          cranker: stranger, // NOT mutual.authority
-          claimant: claimA.claimant.address,
-          mutual,
-          claim: claimA.claimPda,
-          pool: poolPda,
-          depositor: (await findDepositorPda({ pool: poolPda, owner: claimA.claimant.address }))[0],
-          treasury,
-          depositMint: mint,
-        }),
-      ),
-      ERR.UNAUTHORIZED,
-    );
-
-    // Valid payout goes through once…
     await env.sendIx(
       await getClaimPayoutInstructionAsync({
-        cranker: env.payer,
+        cranker: stranger, // NOT mutual.authority — may crank
         claimant: claimA.claimant.address,
         mutual,
         claim: claimA.claimPda,

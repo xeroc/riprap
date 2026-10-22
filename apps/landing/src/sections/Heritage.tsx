@@ -29,7 +29,7 @@ const lineage = [
     body: (
       <>
         A mutual of strangers needs a treasurer everyone trusts and a court for the subjective
-        claims. Off-chain, those two roles mean an institution: the fixed cost a small pooled
+        requests. Off-chain, those two roles mean an institution: the fixed cost a small pooled
         contribution can't carry.
       </>
     ),
@@ -39,7 +39,7 @@ const lineage = [
     name: "Two programs",
     body: (
       <>
-        Programmatic custody holds the Treasury; peer adjudication rules the claims. The treasurer
+        Programmatic custody holds the Treasury; peer adjudication rules the requests. The treasurer
         and the court are programs now — the fixed cost that made small cover unsellable is gone.
       </>
     ),
@@ -48,14 +48,14 @@ const lineage = [
 
 export function Heritage() {
   return (
-    <SectionBand id="lineage" label="Live today" tone="soft">
+    <SectionBand id="lineage" label="Live today" tone="ground">
       <Settle className="flex flex-col gap-(--riprap-space-xl)">
         <h2 className="max-w-3xl tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-lg)]">
           The mutual is old. The Solana primitive is new.
         </h2>
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">
-          At first, we offer Mutuals, the oldest form of risk protection on earth. The pre-stage to
-          insurance.
+          The first pools run the oldest form — mutuals. The rails aren't limited to it: any group
+          can set any purpose, fixed at creation.
         </p>
 
         <ol className="border-y border-hairline">

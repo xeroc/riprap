@@ -7,22 +7,12 @@
 //
 // Pure module: no chain, no React — also the recovery path's verifier input.
 
-/** The five policy §7 proof documents, in policy order (CLAIM-WIZARD §4 step 3). */
-export const CLAIM_DOCUMENT_PATHS = [
-  "01-ticket.pdf",
-  "02-id-document.jpg",
-  "03-police-report.pdf",
-  "04-medical-report.pdf",
-  "05-statutory-declaration.pdf",
-] as const;
-
 /** A slot as the serializer sees it: its canonical path, optionally its
  *  url-slot manifest key (flow.ts DocSlot is this plus display fields). */
 export interface ManifestSlot {
   path: string;
   url?: string;
 }
-export type ClaimDocumentPath = (typeof CLAIM_DOCUMENT_PATHS)[number];
 
 /** One evidence entry: a canonical path + the client sha256 of the exact
  * uploaded bytes (hex, lower-case), or — for a url-slot (flow.ts DocSlot)
@@ -98,15 +88,15 @@ function iso(field: string, value: string): string {
 
 /** Serialize to the exact §5 layout. Pure and deterministic: same input,
  * same bytes — the on-chain hash must reproduce months later (recovery).
- * `slots` is the pool's policy §7 proof list (the flow pack's document
- * slots; plain path strings are accepted and mean file slots); the Blade
- * Pool's CLAIM_DOCUMENT_PATHS is the default so the adjudication-side
- * parsers and recovery keep their single-source list. A url-slot's entry
- * carries the RAW link under the slot's manifest key — a URL has no file,
- * the manifest is its delivery. */
+ * `slots` is the pool's policy §7 proof list — ALWAYS threaded by the
+ * caller (the flow pack's documentSlots; plain path strings are accepted
+ * and mean file slots); no default list exists, so no pool can silently
+ * serialize another pool's canonical set. A url-slot's entry carries the
+ * RAW link under the slot's manifest key — a URL has no file, the manifest
+ * is its delivery. */
 export function serializeClaimManifest(
   input: ClaimManifestInput,
-  slots: readonly (string | ManifestSlot)[] = CLAIM_DOCUMENT_PATHS,
+  slots: readonly (string | ManifestSlot)[],
 ): string {
   const { claimContext: ctx } = input;
   const canonical: ManifestSlot[] = slots.map((s) => (typeof s === "string" ? { path: s } : s));
@@ -176,7 +166,7 @@ export async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string>
  * on-chain hash — never re-serialize (CLAIM-WIZARD §5). */
 export async function buildClaimManifest(
   input: ClaimManifestInput,
-  slots?: readonly (string | ManifestSlot)[],
+  slots: readonly (string | ManifestSlot)[],
 ): Promise<BuiltClaimManifest> {
   const yaml = serializeClaimManifest(input, slots);
   return { yaml, sha256Hex: await sha256Hex(new TextEncoder().encode(yaml)) };

@@ -60,19 +60,19 @@ export const TOLY_FUEL_FLOW: ClaimFlow = {
     {
       key: "handover",
       label:
-        "I placed it, still hot, in Toly's hand — inside the covered area, during the bounty period",
+        "I placed it, still hot, in Toly's hand — inside the event area, during the bounty period",
     },
     { key: "confirmation", label: "Toly confirmed the request and the delivery" },
   ],
 
   // Step-1 exclusions line — the terms §4 summary, one sentence.
   exclusionsLine:
-    "Not paid: drinks he didn't ask for, drinks no longer hot at handover, iced drinks, handovers to an intermediary, drinks someone else paid for, deliveries outside the period or area, staged requests, more than one claim per member.",
+    "Not paid: drinks he didn't ask for, drinks no longer hot at handover, iced drinks, handovers to an intermediary, drinks someone else paid for, deliveries outside the period or area, staged requests, more than one request per member.",
   wherePlaceholder: "inside the venue and the designated event area",
   narrativePlaceholder: "free text — your account of the request and the handover",
 
   // Terms §1/§5: the manifest title names the act plainly, the delivery
   // date appended.
   manifestTitle: (incidentIsoDate) =>
-    `Bounty claim — hot drink delivered to Toly, ${incidentIsoDate}`,
+    `Bounty request — hot drink delivered to Toly, ${incidentIsoDate}`,
 };

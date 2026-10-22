@@ -5,13 +5,14 @@
 #
 # Prerequisites (SETUP.BLADE-POOL.md §1–§2):
 #   export RIPRAP_KEYPAIR_PATH=/path/to/operator.json  # becomes the IMMUTABLE
-#       authority (payout pass-gate cranker) — dedicated ops keypair, not a personal key
+#       authority (proposes subaccord params; payouts are permissionless) —
+#       dedicated ops keypair, not a personal key
 #
 # Every command below ends in --dry-run (builds + prints the instruction,
 # signs nothing). To SEND: delete the --dry-run line, run again, record the
-# printed mutual address, then verify:
+# printed pool address, then verify:
 #   pnpm --filter @riprap/cli dev hanse:show --mutual <MUTUAL> --rpc https://api.devnet.solana.com
-# Afterwards pin each mutual pubkey into apps/landing/src/mutuals/data.ts.
+# Afterwards pin each pool's MUTUAL pubkey into apps/landing/src/pools/data.ts.
 #
 # ── Parameter provenance (verified 2026-10-07) ────────────────────────────────
 # Entry/payout tiers and adjudication fees: each pool's policy/terms doc §5/§7
@@ -23,7 +24,7 @@
 #   Raj/Lily/Toly $8  Mert $40
 # min-stake = max(entry fee, 2 × fee-per-juror) — the chain's slash-dominance
 # gate (α·min_stake ≥ 2·fpj); Mert is the only pool bumped ($10 → $20).
-# Everything else is byte-identical to the DEPLOYED mainnet Blade mutual
+# Everything else is byte-identical to the DEPLOYED mainnet Blade pool
 # (DtjVEhcr… / subaccord 6GZuBhcc…, read back 2026-10-07):
 #   α 10000 (100%) · windows 48h/24h/24h/48h · J=3 · max-appeals 2 (3→7→15)
 #   reveal 6666 · max-draw 3 · evidence operator evidb4…
@@ -35,7 +36,7 @@
 # $X → X_000000 raw).
 #
 # POLICY HASH: --policy-hash takes the sha256 of the FINAL, published policy
-# doc — immutable on-chain; a post-init doc edit means a new mutual. Each
+# doc — immutable on-chain; a post-init doc edit means a new pool. Each
 # block hashes the doc file inline; freeze + publish each doc first.
 
 cd "$(dirname "$0")"

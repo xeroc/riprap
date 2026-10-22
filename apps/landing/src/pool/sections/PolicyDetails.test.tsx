@@ -10,8 +10,8 @@ import type { Mutual } from "@riprap/hanse";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fakeMutual } from "../fixtures";
-import { type MutualQuery, useMutual } from "../useMutual";
+import { fakePool } from "../fixtures";
+import { type PoolQuery, usePool } from "../usePool";
 import { PolicyDetails } from "./PolicyDetails";
 
 // PolicyDetails resolves the daemon URL from the ACTIVE cluster — stub the
@@ -24,8 +24,8 @@ vi.mock("@solana/connector", () => ({
   }),
 }));
 
-vi.mock("../useMutual", () => ({ useMutual: vi.fn() }));
-const mutualMock = vi.mocked(useMutual);
+vi.mock("../usePool", () => ({ usePool: vi.fn() }));
+const mutualMock = vi.mocked(usePool);
 
 const BASE = "http://evidence.test";
 const POLICY_HASH = "d5756c2e6ec42a9a557da82b0ac7000a7c0e613f997fb822407c7a43801172b4";
@@ -36,13 +36,13 @@ const PREIMAGE =
 const DOC_TEXT = "# Hanse Cover Terms\n\nPilot v1 mutual cover terms.\n";
 const DOC = new TextEncoder().encode(DOC_TEXT);
 
-const READY: MutualQuery = (() => {
+const READY: PoolQuery = (() => {
   const policyHash = new Uint8Array(32);
   for (let i = 0; i < 32; i++)
     policyHash[i] = Number.parseInt(POLICY_HASH.slice(i * 2, i * 2 + 2), 16);
   return {
     state: "ready",
-    mutual: fakeMutual({ seed: 1n, policyHash }) as Mutual,
+    mutual: fakePool({ seed: 1n, policyHash }) as Mutual,
     depositsOpen: true,
   };
 })();
@@ -122,7 +122,10 @@ describe("raw policy tab — GET by derived domain_ref (HANSE §4 vector)", () =
     renderRawTab();
     const docEl = await screen.findByText(/Pilot v1 mutual cover terms/);
     expect(
-      screen.getByRole("heading", { level: 3, name: "The immutable terms of this mutual." }),
+      screen.getByRole("heading", {
+        level: 3,
+        name: "The immutable terms of this pool.",
+      }),
     ).toBeTruthy();
     expect(screen.getByLabelText("copy policy hash").textContent).toContain("d575…72b4");
     expect(screen.getByLabelText("copy domain ref").textContent).toContain("f76a…686e");
@@ -136,11 +139,23 @@ describe("raw policy tab — GET by derived domain_ref (HANSE §4 vector)", () =
     fetchStub.mockResolvedValueOnce(response(200, DOC_TEXT));
     renderRawTab();
     await screen.findByText(/Pilot v1 mutual cover terms/);
-    const copyButton = screen.getByRole("button", { name: "copy the cover terms" });
+    const copyButton = screen.getByRole("button", {
+      name: "copy the cover terms",
+    });
     expect(copyButton.querySelector(".lucide-copy")).toBeTruthy(); // icon, not the word
     fireEvent.click(copyButton);
     await waitFor(() => expect(copyButton.querySelector(".lucide-check")).toBeTruthy());
     expect(writeText).toHaveBeenCalledWith(DOC_TEXT);
+  });
+
+  it("hides the frontmatter in the panel but copies the full anchored bytes", async () => {
+    const withFrontmatter = `---\nschema: riprap-def/v1\nkind: mutual\n---\n${DOC_TEXT}`;
+    fetchStub.mockResolvedValueOnce(response(200, withFrontmatter));
+    renderRawTab();
+    const docEl = await screen.findByText(/Pilot v1 mutual cover terms/);
+    expect(docEl.textContent).not.toContain("riprap-def/v1");
+    fireEvent.click(screen.getByRole("button", { name: "copy the cover terms" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(withFrontmatter));
   });
 
   it("404 renders the upload remedy (copy doc § anchored terms)", async () => {
@@ -182,10 +197,14 @@ describe("raw policy tab — proof-mode PUT (HANSE §2)", () => {
     fetchStub.mockResolvedValueOnce(response(404));
     renderRawTab();
     await screen.findByText("Not published yet.");
-    pickFile(new File(["not the anchored bytes"], "wrong.md", { type: "text/markdown" }));
+    pickFile(
+      new File(["not the anchored bytes"], "wrong.md", {
+        type: "text/markdown",
+      }),
+    );
     expect(
       await screen.findByText(
-        "This file's hash doesn't match the mutual's policy hash. Nothing was uploaded.",
+        "This file's hash doesn't match the pool's policy hash. Nothing was uploaded.",
       ),
     ).toBeTruthy();
     expect(fetchStub).toHaveBeenCalledTimes(1); // the GET only

@@ -65,7 +65,7 @@ describe("TOLY_FUEL_FLOW step-1 screen (terms §3, in order)", () => {
       {
         key: "handover",
         label:
-          "I placed it, still hot, in Toly's hand — inside the covered area, during the bounty period",
+          "I placed it, still hot, in Toly's hand — inside the event area, during the bounty period",
       },
       { key: "confirmation", label: "Toly confirmed the request and the delivery" },
     ]);
@@ -76,7 +76,7 @@ describe("TOLY_FUEL_FLOW step-1 screen (terms §3, in order)", () => {
 
   it("exclusions line + field placeholders quote the terms §4/§2/§7", () => {
     expect(TOLY_FUEL_FLOW.exclusionsLine).toBe(
-      "Not paid: drinks he didn't ask for, drinks no longer hot at handover, iced drinks, handovers to an intermediary, drinks someone else paid for, deliveries outside the period or area, staged requests, more than one claim per member.",
+      "Not paid: drinks he didn't ask for, drinks no longer hot at handover, iced drinks, handovers to an intermediary, drinks someone else paid for, deliveries outside the period or area, staged requests, more than one request per member.",
     );
     expect(TOLY_FUEL_FLOW.wherePlaceholder).toBe("inside the venue and the designated event area");
     expect(TOLY_FUEL_FLOW.narrativePlaceholder).toBe(
@@ -100,7 +100,7 @@ describe("TOLY_FUEL_FLOW step-3 evidence + manifest title (terms §7, §1/§5)",
 
   it("manifest title names the act with the UTC delivery date", () => {
     expect(TOLY_FUEL_FLOW.manifestTitle("2026-11-16")).toBe(
-      "Bounty claim — hot drink delivered to Toly, 2026-11-16",
+      "Bounty request — hot drink delivered to Toly, 2026-11-16",
     );
   });
 

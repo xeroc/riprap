@@ -19,7 +19,7 @@ import {
 import { Loader2Icon } from "lucide-react";
 import { Prose } from "../../components/Prose";
 import { Settle } from "../../components/Settle";
-import { microToUsd } from "../../pool/mutual";
+import { microToUsd } from "../../pool/pool";
 import type { ClaimDraft } from "./draft";
 import type { DocSlot, EmergencySpec, ScreenCheck } from "./flow";
 
@@ -167,7 +167,9 @@ export function StepIncident({
               id={`screen-${field.key}`}
               checked={draft.screen[field.key]}
               onChange={(e) =>
-                onChange({ screen: { ...draft.screen, [field.key]: e.target.checked } })
+                onChange({
+                  screen: { ...draft.screen, [field.key]: e.target.checked },
+                })
               }
             />
             <span>{field.label}</span>
@@ -233,7 +235,7 @@ export function StepAmount({
           ) : null}
         </div>
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-          The chain clamps the request to your cap. The jury sees the amount — an overpriced claim
+          The chain clamps the request to your cap. The jury sees the amount — an overpriced request
           can be denied outright.
         </p>
       </div>
@@ -333,6 +335,11 @@ export function StepEvidence({
                   </label>
                 )}
               </span>
+              {slot.verify ? (
+                <p className="w-full text-stone [font:var(--riprap-body-sm)]">
+                  Jurors verify: <Prose text={slot.verify} />
+                </p>
+              ) : null}
               {intake?.error ? (
                 <p className="w-full text-sm text-error [font:var(--riprap-body-sm)]">
                   {intake.error}
@@ -402,8 +409,8 @@ export function StepManifest({
           </Button>
         </div>
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-          This download is your recovery copy — keep it until the claim settles. It re-attaches your
-          evidence if delivery ever fails.
+          This download is your recovery copy — keep it until the request settles. It re-attaches
+          your evidence if delivery ever fails.
         </p>
       </div>
       <StepNav complete onBack={onBack} onContinue={onContinue} />
@@ -470,7 +477,7 @@ export function StepReview({
       </dl>
       <div className="flex max-w-3xl flex-col gap-2">
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
-          If approved claims exceed the pool, payouts are reduced proportionally — the pool never
+          If approved requests exceed the pool, payouts are reduced proportionally — the pool never
           pays more than it holds.
         </p>
         <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
@@ -511,7 +518,7 @@ export function StepSign({ phase, nonceRace }: { phase: SignPhase; nonceRace: bo
         <p className="text-body [font:var(--riprap-body-md)]">{SIGN_PHASE_LINES[phase]}</p>
         {nonceRace ? (
           <p className="text-muted-foreground [font:var(--riprap-body-sm)]" data-slot="nonce-race">
-            Another member filed first — the claim number moved. Sign once more.
+            Another member filed first — the request number moved. Sign once more.
           </p>
         ) : null}
       </div>
@@ -632,7 +639,7 @@ export function StepPublish({
             className="max-w-[42rem] leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]"
             data-slot="publish-unreachable"
           >
-            Couldn't reach the operator. Your claim is on-chain — delivery keeps retrying, and the
+            Couldn't reach the operator. Your request is on-chain — delivery keeps retrying, and the
             review window is 48 hours. Keep manifest.yaml; if this page closes, re-enter from the
             app surface.
           </p>
@@ -669,11 +676,11 @@ export function StepFiled({
   return (
     <Settle className="flex max-w-3xl flex-col gap-(--riprap-space-lg)">
       <h2>
-        <BadgeStamp data-num>Filed — claim #{nonce}</BadgeStamp>
+        <BadgeStamp data-num>Filed — request #{nonce}</BadgeStamp>
       </h2>
       <div className="flex max-w-3xl flex-col gap-2">
         <p className="flex flex-wrap items-baseline gap-2 text-body [font:var(--riprap-body-sm)]">
-          Claim <AddressChipInline value={claim} />
+          Request <AddressChipInline value={claim} />
         </p>
         <p className="flex flex-wrap items-baseline gap-2 text-body [font:var(--riprap-body-sm)]">
           Dispute <AddressChipInline value={dispute} />
@@ -696,7 +703,7 @@ export function StepFiled({
       </p>
       <p className="max-w-[42rem] leading-relaxed text-muted-foreground [font:var(--riprap-body-sm)]">
         Keep manifest.yaml. If evidence delivery failed, re-enter from the app surface — the
-        manifest re-verifies against the claim and re-delivers.
+        manifest re-verifies against the request and re-delivers.
       </p>
       <div>
         <Button variant="outline" onClick={onDownload}>

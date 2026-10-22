@@ -33,7 +33,7 @@ export default class HanseList extends ChainCommand {
       address,
       seed: m.seed,
       phase: m.phase === 0 ? "Active" : m.phase === 1 ? "Settled" : "Dissolved",
-      claims: `${m.claimsResolved}/${m.claimsFiled} resolved`,
+      claims: `${m}/${m.claimsFiled}/${m.claimsResolved}`,
       depositsCloseAt: m.depositsCloseAt,
       claimsCloseAt: m.claimsCloseAt,
       pool: m.pool,

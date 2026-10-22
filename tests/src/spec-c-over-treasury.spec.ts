@@ -112,7 +112,7 @@ describe("e2e spec c: over-treasury proportional pulls (riprap-e5t9)", () => {
     const pull = async (claim: FiledClaim): Promise<bigint> => {
       await env.sendIx(
         await getClaimPayoutInstructionAsync({
-          cranker: env.payer, // §12 pass gate: initializer cranks
+          cranker: env.payer, // any key may crank (pilot gate retired 2026-10-15)
           claimant: claim.claimant.address,
           mutual,
           claim: claim.claimPda,

@@ -18,7 +18,7 @@ const STEPS = [
   { id: "join", step: "01", label: "one more member", Glyph: Join },
   { id: "gather", step: "02", label: "money gathers", Glyph: Gather },
   { id: "rule", step: "03", label: "peers decide", Glyph: Rule },
-  { id: "claim", step: "04", label: "a claim is paid", Glyph: Claim },
+  { id: "claim", step: "04", label: "a request is paid", Glyph: Claim },
   { id: "return", step: "05", label: "liquidate", Glyph: Return },
 ] as const;
 

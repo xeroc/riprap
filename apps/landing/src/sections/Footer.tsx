@@ -11,7 +11,7 @@ export function Footer() {
           <LogoLockup size={22} />
         </a>
       }
-      tagline="Pooled cover on Solana. Any group, any terms, any lifetime."
+      tagline="Purpose pools on Solana. Any group, any purpose, any lifetime."
       columns={[
         {
           heading: "page",

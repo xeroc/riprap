@@ -177,7 +177,7 @@ describe("BlurbPage — the unlisted blurb & brand kit", () => {
     expect(card?.textContent).toContain("deck and terms on request");
   });
 
-  it("explainers: six tweets ordered by what they explain, videos embedded, X glyph links to x.com", () => {
+  it("explainers: seven tweets ordered by what they explain, videos embedded, X glyph links to x.com", () => {
     render(<BlurbPage />);
     expect(screen.getByText("the explainers")).toBeTruthy();
     // every kicker renders, in the teach order of content.ts
@@ -186,10 +186,11 @@ describe("BlurbPage — the unlisted blurb & brand kit", () => {
       expect(kickers[0].compareDocumentPosition(k)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     }
     // the tall full-pitch card (photo + YouTube embed) closes the band
-    expect(kickers.at(-1)?.textContent).toBe("06 · the full pitch");
+    expect(kickers.at(-1)?.textContent).toBe("07 · the full pitch");
     // tweet bodies render verbatim (un-clipped closers)
     expect(screen.getByText(/WE are building HANSE to fix this\./)).toBeTruthy();
     expect(screen.getByText(/Links below 👇👇/)).toBeTruthy();
+    expect(screen.getByText(/Code handles execution\. Humans handle judgment\./)).toBeTruthy();
     // the five native videos embed as controllable <video> with their poster
     // frame; the demo-day card keeps its photo as an <img>
     for (const tweet of EXPLAINERS) {

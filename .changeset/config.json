@@ -7,7 +7,7 @@
       "repo": "xeroc/riprap"
     }
   ],
-  "packages": ["packages/*", "apps/*", "tests"],
+  "packages": ["packages/*", "apps/*", "apps/pitches/*", "tests"],
   "fixed": [
     [
       "@riprap/pool",
@@ -17,6 +17,8 @@
       "@riprap/cranker",
       "@riprap/landing",
       "@riprap/pitch-seed-raise",
+      "@riprap/demo-worlds-fair",
+      "@riprap/angel-round",
       "@riprap/remotion",
       "@riprap/tests"
     ]

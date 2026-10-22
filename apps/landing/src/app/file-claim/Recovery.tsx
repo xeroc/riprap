@@ -14,7 +14,7 @@ import type { Address } from "@solana/kit";
 import { fetchDispute, fetchSubaccordMaybe } from "@useaccord/sdk";
 import { useEffect, useRef, useState } from "react";
 import { parseClaimManifest } from "../../adjudicate/package";
-import { microToUsd } from "../../pool/mutual";
+import { microToUsd } from "../../pool/pool";
 import type { ClusterRpc } from "../../shared/rpc";
 import { intakeDocument, sha256Hex } from "./documents";
 import { fetchManifest, operatorPubFromKey, postManifest, putDocument } from "./evidence";
@@ -306,7 +306,7 @@ export function Recovery({
       {state.phase === "upload" || state.phase === "verifying" ? (
         <>
           <p className="text-body [font:var(--riprap-body-sm)]">
-            The operator doesn't hold this claim's manifest.
+            The operator doesn't hold this request's manifest.
           </p>
           {state.phase === "upload" && state.note !== undefined ? (
             <p data-num className="break-all font-mono text-xs text-error">
@@ -333,13 +333,13 @@ export function Recovery({
       ) : null}
       {state.phase === "mismatch" ? (
         <p className="text-error [font:var(--riprap-body-sm)]">
-          This manifest doesn't match this claim.
+          This manifest doesn't match this request.
         </p>
       ) : null}
       {state.phase === "review" && parsed !== null ? (
         <>
           <h1 data-num className="font-mono text-lg text-ink">
-            <BadgeStamp>Claim #{nonce.toString()} — as filed</BadgeStamp>
+            <BadgeStamp>Request #{nonce.toString()} — as filed</BadgeStamp>
           </h1>
           <dl className="flex max-w-3xl flex-col gap-2">
             <SummaryRow
@@ -361,7 +361,7 @@ export function Recovery({
             <AddressChip address={dispute} />
           </p>
           <p className="text-body [font:var(--riprap-body-sm)]">
-            Manifest verified against the claim — re-attach the five documents.
+            Manifest verified against the request — re-attach the five documents.
           </p>
           <ul className="flex flex-col">
             {parsed.entries.map((entry) => {

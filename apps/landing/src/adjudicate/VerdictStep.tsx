@@ -11,7 +11,7 @@
 
 import { Button, usd } from "@riprap/ui";
 import { Settle } from "../components/Settle";
-import { microToUsd } from "../pool/mutual";
+import { microToUsd } from "../pool/pool";
 
 /** hanse-opt/v1 (spec §5, file_claim.rs::option_label): the option recipe
  * every riprap claim files with. The surface labels the options from this

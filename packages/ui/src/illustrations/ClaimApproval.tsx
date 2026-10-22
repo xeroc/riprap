@@ -61,7 +61,7 @@ export function ClaimApproval({ className }: { className?: string }) {
         >
           <Paper
             eyebrow="Submitted"
-            title="Claim"
+            title="Request"
             checks={["Request details", "Supporting evidence"]}
             reduced={reduced}
           >

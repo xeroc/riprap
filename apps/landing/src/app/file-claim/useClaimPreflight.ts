@@ -17,8 +17,8 @@ import type { Address } from "@solana/kit";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSubaccordMaybe } from "@useaccord/sdk";
 
-import { resolveMutualAddress } from "../../pool/mutual";
-import { useMutual } from "../../pool/useMutual";
+import { resolvePoolAddress } from "../../pool/pool";
+import { usePool } from "../../pool/usePool";
 import { useClusterRpc } from "../../shared/rpc";
 import { useMembership } from "../useMembership";
 
@@ -64,9 +64,9 @@ export function useClaimPreflight(mutual?: Address): ClaimPreflight {
   // wizard passes the listing-resolved address of the pool it files against.
   const { isLocal, isMainnet, isDevnet } = useCluster();
   const clusterRpc = useClusterRpc();
-  const mutualAddress = mutual ?? resolveMutualAddress({ isLocal, isMainnet, isDevnet });
+  const mutualAddress = mutual ?? resolvePoolAddress({ isLocal, isMainnet, isDevnet });
   const { account } = useWallet();
-  const mutualQuery = useMutual(mutual);
+  const mutualQuery = usePool(mutual);
   const membership = useMembership(mutual);
   const mutualReady = mutualQuery.state === "ready" ? mutualQuery.mutual : null;
   const member = membership.state === "ready" ? membership.member : null;

@@ -19,7 +19,7 @@ const CROSS = "M4 4 10 10 M10 4 4 10";
 
 export function Rule() {
   return (
-    <Glyph label="peers decide the claim" name="rule">
+    <Glyph label="peers decide the request" name="rule">
       {[0, 1, 2].map((i) => {
         const approve = i < 2;
         return (

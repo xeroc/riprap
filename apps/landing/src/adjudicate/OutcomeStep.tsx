@@ -14,7 +14,7 @@ import { AddressChip, BadgeStamp, Button, usd } from "@riprap/ui";
 import type { Round } from "@useaccord/sdk";
 import { useEffect } from "react";
 import { Settle } from "../components/Settle";
-import { microToUsd } from "../pool/mutual";
+import { microToUsd } from "../pool/pool";
 import { clearDocumentsAnswers } from "./DocumentsStep";
 import { clearPolicyAnswers } from "./PolicyStep";
 import { tallyOf } from "./useSeats";

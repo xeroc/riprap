@@ -14,6 +14,7 @@ import {
   DocumentsStep,
   documentsAnswersKey,
 } from "./DocumentsStep";
+import { BLADE_POOL_POLICY } from "./policies/blade-pool";
 
 const PDF_BYTES = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]);
 const JPG_BYTES = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
@@ -66,6 +67,8 @@ function renderDocuments(props: { onBack: () => void; onDone: () => void }) {
   render(
     <DocumentsStep
       slots={slots()}
+      samePersonRule={BLADE_POOL_POLICY.samePersonRule}
+      evidenceUseNote={BLADE_POOL_POLICY.evidenceUseNote}
       storageKey={STORAGE_KEY}
       onBack={props.onBack}
       onDone={props.onDone}
