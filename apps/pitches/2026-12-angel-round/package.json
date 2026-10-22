@@ -1,0 +1,28 @@
+{
+  "name": "@riprap/angel-round",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Angel-round deck — copied 2026-10-12 from the World's Fair demo deck (apps/pitches/2026-11-demo-worlds-fair) and restaged from there; @riprap/ui tokens throughout.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "biome check src"
+  },
+  "dependencies": {
+    "@riprap/ui": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2",
+    "@types/node": "^24.13.3"
+  }
+}

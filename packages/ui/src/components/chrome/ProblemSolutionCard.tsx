@@ -18,7 +18,7 @@ import { Card } from "../ui/card";
  * consumer's call (`className`, e.g. "w-80").
  */
 export interface ProblemSolutionCardProps extends React.ComponentProps<"div"> {
-  /** the question, verbatim (e.g. from apps/pitch-seed-raise/PROBLEMS.md) */
+  /** the question, verbatim (e.g. from apps/pitches/2026-11-pitch-seed-raise/PROBLEMS.md) */
   question: string;
   /** the proposed answer, verbatim */
   answer: string;

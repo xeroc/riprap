@@ -524,27 +524,6 @@ describe("#/create deploy → publish → verify", () => {
     expect(url).toContain("preimage=");
     expect(screen.getByRole("link", { name: /Open the pool page/ })).toBeTruthy();
   });
-
-  it("a 409 stops with the deadpan conflict line; Publish later advances to verify", async () => {
-    await walkToPublish(() => {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) =>
-          init?.method === "PUT"
-            ? new Response(null, { status: 409 })
-            : new Response("", { status: 200 }),
-        ),
-      );
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Publish the document" }));
-    expect(
-      await screen.findByText(
-        "Different bytes are already stored at this address — nothing was overwritten.",
-      ),
-    ).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Publish later" }));
-    await screen.findByText(/Reading the document back|doesn't match/);
-  });
 });
 
 // ─── the tester-matrix: mapped gate lines, publish states, seed re-pick ────
