@@ -19,7 +19,7 @@ Source: GP review of `develop.riprap-pre-seed.pages.dev` (2026-09-18 teardown, a
 
 ## Appendix slide — "the hard questions"
 
-Deck copy of record (2026-09-18, founder's answers supersede the proposals above for rows 2, 3, 4, 9). Rendered by `AppendixQASlide` (`apps/pitch-seed-raise/src/deck/slides.tsx`) via `ProblemSolutionCard`; questions condensed to under seven words.
+Deck copy of record (2026-09-18, founder's answers supersede the proposals above for rows 2, 3, 4, 9). Rendered by `AppendixQASlide` (`apps/pitches/2026-12-angel-round/src/deck/slides.tsx`) via `ProblemSolutionCard`; questions condensed to under seven words.
 
 | Row | Question on the slide | Answer on the slide |
 |---|---|---|
