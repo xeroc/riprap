@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ProblemSolutionCard } from "./ProblemSolutionCard";
 
-// copy sourced verbatim from apps/pitch-seed-raise/PROBLEMS.md (GP review,
+// copy sourced verbatim from apps/pitches/2026-11-pitch-seed-raise/PROBLEMS.md (GP review,
 // 2026-09-18) — values never invented here; the deck passes rows from that
 // table the same way the landing passes copy from the marketing source doc
 const meta = {
