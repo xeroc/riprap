@@ -4,7 +4,6 @@
 // the same list (bean riprap-h6wp parity, adjudicate pack tests).
 import { describe, expect, it } from "vitest";
 import { BLADE_POOL_POLICY } from "../../../adjudicate/policies/blade-pool";
-import { CLAIM_DOCUMENT_PATHS } from "../manifest";
 import { BLADE_POOL_FLOW } from "./blade-pool";
 
 describe("BLADE_POOL_FLOW document slots (policy §7, copy doc step 3)", () => {
@@ -20,7 +19,15 @@ describe("BLADE_POOL_FLOW document slots (policy §7, copy doc step 3)", () => {
   });
 
   it("paths are the manifest's canonical paths — the wizard's slots never drift from the riprap-claim/v1 set", () => {
-    expect(BLADE_POOL_FLOW.documentSlots.map((s) => s.path)).toEqual([...CLAIM_DOCUMENT_PATHS]);
+    expect(BLADE_POOL_FLOW.documentSlots.map((s) => s.path)).toEqual([
+      "01-ticket.pdf",
+      "02-id-document.jpg",
+      "03-police-report.pdf",
+      "04-medical-report.pdf",
+      "05-statutory-declaration.pdf",
+    ]);
+    // the manifest has no default list anymore (de-blading, riprap-hs4r) —
+    // the pack IS the single source
   });
 
   it("paths match the adjudication policy pack — claimant slots and juror slots are one list", () => {
@@ -34,8 +41,8 @@ describe("BLADE_POOL_FLOW step-1 screen (policy §3, copy doc step 1)", () => {
   it("the four self-screen checks verbatim, §3 order, unique draft keys", () => {
     expect(BLADE_POOL_FLOW.screenChecks).toEqual([
       { key: "blade", label: "Another person used a knife or blade against me" },
-      { key: "window", label: "It happened during the coverage window" },
-      { key: "area", label: "It happened inside the covered area" },
+      { key: "window", label: "It happened during the event window" },
+      { key: "area", label: "It happened inside the event area" },
       { key: "injury", label: "It caused bodily injury" },
     ]);
     expect(new Set(BLADE_POOL_FLOW.screenChecks.map((c) => c.key)).size).toBe(
@@ -45,7 +52,7 @@ describe("BLADE_POOL_FLOW step-1 screen (policy §3, copy doc step 1)", () => {
 
   it("exclusions line + field placeholders quote the copy doc verbatim", () => {
     expect(BLADE_POOL_FLOW.exclusionsLine).toBe(
-      "Not covered: injuries you caused yourself, accidents, ordinary knife handling, consensual activities, incidents outside the window or area, distress without qualifying injury.",
+      "Excluded: injuries you caused yourself, accidents, ordinary knife handling, consensual activities, incidents outside the window or area, distress without qualifying injury.",
     );
     expect(BLADE_POOL_FLOW.wherePlaceholder).toBe(
       "in or around the venue and the designated event area",

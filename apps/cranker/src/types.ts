@@ -3,10 +3,8 @@
  * scan and the per-crank implementations (ported from @useaccord/cranker
  * src/types.ts, scaled to riprap's five cranks).
  *
- * Every riprap crank is permissionless by design; the pilot pass gate pins
- * claim_payout's cranker to the mutual's authority (ADR-0005) — the
- * reconciler checks that before emitting the action, so an unauthorized
- * cranker simply skips payouts rather than burning simulation fees.
+ * Every riprap crank is permissionless by design (the claim_payout pilot
+ * authority gate retired 2026-10-15 — ADR-0005 amendment).
  */
 
 import type { Mutual } from "@riprap/hanse";

@@ -1,13 +1,13 @@
 import type * as Connector from "@solana/connector";
 import type { Address } from "@solana/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
-import { MUTUALS, poolRoute } from "./mutuals/data";
-import type { MutualStore } from "./mutuals/store";
-import { fakeMutual } from "./pool/fixtures";
-import { needMeterColor } from "./sections/Mutuals";
+import { fakePool } from "./pool/fixtures";
+import { POOLS, poolRoute } from "./pools/data";
+import type { PoolStore } from "./pools/store";
+import { needMeterColor } from "./sections/Pools";
 
 // Structure and behavior only — copy, pool names, order, and prices are the
 // copy doc's and data.ts's job, so every expectation here is derived from
@@ -27,15 +27,15 @@ vi.mock("@solana/connector", async (importOriginal) => {
   };
 });
 
-// The mutuals band renders the store's live pools (copy doc §1.2 v13) —
+// The pools band renders the store's live pools (copy doc §1.2 v13) —
 // stub the hook; default is every listing live so the structure tests see
 // the full batch, and the live-only tests narrow it per-test. Blade Pool
 // pins twice (devnet + mainnet, data.ts) — one cluster resolves one, so
 // the default carries one listing per pool name.
-const { bandStore } = vi.hoisted(() => ({ bandStore: { current: null as MutualStore | null } }));
-vi.mock("./mutuals/store", () => ({ useMutualStore: () => bandStore.current }));
+const { bandStore } = vi.hoisted(() => ({ bandStore: { current: null as PoolStore | null } }));
+vi.mock("./pools/store", () => ({ usePoolStore: () => bandStore.current }));
 
-const UNIQUE_POOLS = [...new Map(MUTUALS.map((m) => [m.name, m])).values()];
+const UNIQUE_POOLS = [...new Map(POOLS.map((m) => [m.name, m])).values()];
 
 beforeEach(() => {
   bandStore.current = {
@@ -43,13 +43,13 @@ beforeEach(() => {
     pools: UNIQUE_POOLS.map((listing) => ({
       listing,
       address: listing.slug as Address,
-      account: fakeMutual(),
+      account: fakePool(),
     })),
   };
 });
 afterEach(cleanup);
 
-// The mutuals band reads live member counts (useMemberCount → useQuery) —
+// The pools band reads live member counts (useMemberCount → useQuery) —
 // the platform tests mount bare, so give them a throwaway client.
 function renderApp() {
   const queryClient = new QueryClient({
@@ -63,17 +63,17 @@ function renderApp() {
 }
 
 describe("landing", () => {
-  it("renders a single h1 and the browse CTA pointing at the mutuals band (copy doc §1)", () => {
+  it("renders a single h1 and the browse CTA pointing at the pools band (copy doc §1)", () => {
     renderApp();
     expect(screen.getAllByRole("heading", { level: 1 }).length).toBe(1);
     expect(screen.getByRole("link", { name: "Browse the pools" }).getAttribute("href")).toBe(
-      "#mutuals",
+      "#pools",
     );
   });
 
-  it("mutuals band: one card per live listing, each linking its detail route (copy doc §1.2 v13)", () => {
+  it("pools band: one card per live listing, each linking its detail route (copy doc §1.2 v13)", () => {
     const { container } = renderApp();
-    const band = container.querySelector("section#mutuals");
+    const band = container.querySelector("section#pools");
     expect(band).not.toBeNull();
     // every card is one link to the pool's detail route (stretched over the
     // card — cursor: pointer everywhere; discs keep their own links above),
@@ -114,7 +114,7 @@ describe("landing", () => {
     expect(needMeterColor(1)).toContain(" 100%,");
     expect(needMeterColor(7)).toContain(" 100%,");
     // the directory CTA; no arrows — the drift and drag carry the carousel
-    expect(screen.getByRole("link", { name: "Show all" }).getAttribute("href")).toBe("#/mutuals");
+    expect(screen.getByRole("link", { name: "Show all" }).getAttribute("href")).toBe("#/pools");
     expect(screen.queryByRole("button", { name: "Previous pools" })).toBeNull();
     expect(screen.queryByRole("button", { name: "More pools" })).toBeNull();
     // the track autoplays (drift), hides its scrollbar, and fades at its
@@ -125,18 +125,18 @@ describe("landing", () => {
     expect(track?.getAttribute("data-autoplay")).toMatch(/^(on|off)$/);
   });
 
-  it("mutuals band: only live pools render — drafts never show (copy doc §1.2 v13)", () => {
+  it("pools band: only live pools render — drafts never show (copy doc §1.2 v13)", () => {
     if (UNIQUE_POOLS.length < 2) throw new Error("directory needs at least two pools");
     const [a, b] = UNIQUE_POOLS;
     bandStore.current = {
       state: "ready",
       pools: [
-        { listing: a, address: "A".repeat(44) as Address, account: fakeMutual() },
-        { listing: b, address: "B".repeat(44) as Address, account: fakeMutual() },
+        { listing: a, address: "A".repeat(44) as Address, account: fakePool() },
+        { listing: b, address: "B".repeat(44) as Address, account: fakePool() },
       ],
     };
     const { container } = renderApp();
-    const band = container.querySelector("section#mutuals");
+    const band = container.querySelector("section#pools");
     // 2 live pools, under the 5-card threshold — no duplicated wrap rail
     expect(band?.querySelectorAll("article").length).toBe(2);
     expect(band?.querySelectorAll('div[aria-hidden="true"] article').length).toBe(0);
@@ -146,29 +146,13 @@ describe("landing", () => {
     if (absent) expect(band?.textContent).not.toContain(absent.name);
   });
 
-  it("mutuals band: nothing live yet — the honest empty line (copy doc §1.2 v13)", () => {
+  it("pools band: nothing live yet — the honest empty line (copy doc §1.2 v13)", () => {
     bandStore.current = { state: "ready", pools: [] };
     const { container } = renderApp();
-    const band = container.querySelector("section#mutuals");
+    const band = container.querySelector("section#pools");
     expect(band?.querySelectorAll("article").length).toBe(0);
     // the directory CTA stays — the table route carries its own states
-    expect(screen.getByRole("link", { name: "Show all" }).getAttribute("href")).toBe("#/mutuals");
-  });
-
-  it("mechanism tabs: scenes mount only on their tab (§2 tabs)", () => {
-    renderApp();
-    // inactive content unmounts — the scenes only run on their tab
-    expect(document.querySelector('[data-slot="funding-pool"]')).toBeNull();
-    expect(document.querySelector('[data-slot="claim-approval"]')).toBeNull();
-
-    const tabs = screen.getAllByRole("tab");
-    expect(tabs.length).toBe(3);
-    expect(tabs[0].getAttribute("data-state")).toBe("active");
-    fireEvent.mouseDown(tabs[1]); // Radix tabs activate on mousedown, not click
-    expect(document.querySelector('[data-slot="funding-pool"]')).not.toBeNull();
-
-    fireEvent.mouseDown(tabs[2]);
-    expect(document.querySelector('[data-slot="claim-approval"]')).not.toBeNull();
+    expect(screen.getByRole("link", { name: "Show all" }).getAttribute("href")).toBe("#/pools");
   });
 
   it("renders the waitlist form exactly once per capture point (hero + final CTA)", () => {
@@ -187,6 +171,8 @@ describe("landing", () => {
         href?.startsWith("#") ||
           href === "/" ||
           href === "https://x.com/riprapxyz" ||
+          // the flows band's Accord link (copy doc §2 flows) — real endpoint
+          href === "https://useaccord.xyz" ||
           supporterPost,
       ).toBe(true);
     }

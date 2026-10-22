@@ -15,7 +15,7 @@ afterEach(cleanup);
 // copy-free kit: every word and figure arrives as props (the landing copy
 // doc § Covered overlay owns the real strings; these mirror its shape)
 const PROPS = {
-  stamp: "Covered — Standard",
+  stamp: "Member — Standard",
   headline: "You're in the ring.",
   figures: [
     <span key="fee">

@@ -14,6 +14,7 @@
   --color-ink: var(--riprap-ink);
   --color-body: var(--riprap-body);
   --color-muted: var(--riprap-muted);
+  --color-muted-foreground: var(--riprap-muted);
   --color-muted-soft: var(--riprap-muted-soft);
   --color-stone: var(--riprap-stone);
   --color-accent: var(--riprap-accent);

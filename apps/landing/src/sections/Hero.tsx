@@ -1,8 +1,10 @@
 // §1 — hero: platform one-liner, the browse CTA, waitlist demoted to
-// secondary. Payout-pool pass (2026-10-06, copy doc §1, messaging-guide
-// § Payout-Pool Pass): the campaign line as H1 — WHY-led, the one line
-// true of every pool, cover or bounty; the formal descriptor as kicker;
-// the member line opens the subhead; bounties ride as one clause.
+// secondary. 2026-10-21 founder pass (copy doc §1): the subhead turns
+// WHY-led — a group pools for its own, and the claim right rides as the
+// belief's proof (M→M: the funders can be the claimants); the mechanism
+// detail stays told by §1.3 and §2. Payout-pool pass (2026-10-06): the
+// campaign line as H1 — WHY-led, the one line true of every pool, cover
+// or bounty; the formal descriptor as kicker. "Insurer" is off the page.
 // v4 rules keep: no pool named in the hero, no instance numbers; the
 // primary CTA scrolls to the pools band (§1.2); the waitlist stays,
 // low priority. "Insurer" is off the page.
@@ -19,13 +21,14 @@ import { Waitlist } from "../components/Waitlist";
 
 /** The rotating one-liners — 2–3 words each, from the marketing material.
  * The first is the founder-locked campaign H1 (copy doc §1, 2026-10-06);
- * it stays alone under reduced motion and is what loads without JS. */
+ * it stays alone under reduced motion and is what loads without JS. The
+ * rest are purpose-pool pass vocabulary (2026-10-20): the platform word,
+ * the chain, the any-purpose law (§1.3/§5, footer descriptor). */
 export const HEADLINES = [
   "Self-governing money",
-  "Pooled cover",
-  "Mutuals on Solana",
-  "Payout pools",
-  "On-chain insurance",
+  "Purpose pools",
+  "Pools on Solana",
+  "Any purpose",
   "P2P purpose pools",
 ] as const;
 
@@ -90,7 +93,7 @@ export function Hero() {
           <div className="flex flex-col gap-(--riprap-space-lg)">
             <Settle>
               <p className="uppercase tracking-(--riprap-tracking-stamp) text-accent [font:var(--riprap-mono-label)]">
-                Pooled cover on Solana
+                Purpose pools on Solana
               </p>
             </Settle>
             <Settle delay={60}>
@@ -100,16 +103,16 @@ export function Hero() {
             </Settle>
             <Settle delay={120}>
               <p className="max-w-[36rem] leading-relaxed text-body [font:var(--riprap-body-md)]">
-                Each pool runs on its own terms, written before anyone joins. Accept them when you
-                join, and you can claim from the pool. Claims are reviewed and approved by other
-                pool members — transparent and on-chain. Build bounties, mutuals or insurances.
+                A group doesn't pool for a stranger's purpose. It pools for its own: members fund
+                one pot, any member can request from it under the purpose they all joined, and drawn
+                peers rule on every request.
               </p>
             </Settle>
             {/* primary: browse the pools — the waitlist rides below, secondary */}
             <Settle delay={180} className="flex flex-col gap-5 pt-(--riprap-space-sm)">
               <div className="flex flex-wrap items-center gap-4">
                 <Button asChild>
-                  <a href="#mutuals">Browse the pools</a>
+                  <a href="#pools">Browse the pools</a>
                 </Button>
                 <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
                   First batch: Breakpoint 2026, London.

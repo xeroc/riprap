@@ -2,7 +2,7 @@
 // membership read per pool lists the entered ones, and each row carries its
 // own filing + jury-duty actions. Copy verbatim from
 // meta/marketing/03-website-copy/landing-page.md § "/app — the member
-// wallet surface" and § /mutuals (shared state lines); numbers render from
+// wallet surface" and § /pools (shared state lines); numbers render from
 // the chain, never static.
 
 import {
@@ -21,7 +21,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fakeMutual } from "../pool/fixtures";
+import { fakePool } from "../pool/fixtures";
 import { AppPage } from "./AppPage";
 
 // --- hoisted mock state (vi.mock factories run before the module body) -------
@@ -33,12 +33,12 @@ const { walletState } = vi.hoisted(() => ({
 // The directory gains a second PINNED live pool for the multi-pool case —
 // the store resolves scan hits against pinned pubkeys, so the pin is what
 // makes the extra pool resolvable (it carries no claimFlow: filing gated).
-vi.mock("../mutuals/data", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../mutuals/data")>();
+vi.mock("../pools/data", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../pools/data")>();
   return {
     ...actual,
-    MUTUALS: [
-      ...actual.MUTUALS,
+    POOLS: [
+      ...actual.POOLS,
       {
         name: "Chairmageddon Live",
         kind: "mutual",
@@ -162,8 +162,8 @@ function renderApp() {
 // the adjudication fee, so preflight passes. The scan answers the devnet
 // blade pin by default — every covered-state test enters through it.
 beforeEach(() => {
-  mutualMock.mockResolvedValue(maybe(fakeMutual()));
-  scanMock.mockResolvedValue([{ address: BLADE_DEVNET, data: fakeMutual() }]);
+  mutualMock.mockResolvedValue(maybe(fakePool()));
+  scanMock.mockResolvedValue([{ address: BLADE_DEVNET, data: fakePool() }]);
   subaccordMock.mockResolvedValue({
     exists: true,
     address: "S".repeat(32) as Address,
@@ -211,7 +211,7 @@ describe("/app — wallet gate (reads-only: no chain calls until connected)", ()
   });
 });
 
-describe("/app — store states (shared copy, verbatim with /mutuals)", () => {
+describe("/app — store states (shared copy, verbatim with /pools)", () => {
   it("scan unreachable: retry state", async () => {
     walletState.isConnected = true;
     walletState.account = WALLET;
@@ -240,7 +240,7 @@ describe("/app — the joined-pools table (data-bound to the chain)", () => {
     memberMock.mockResolvedValue(NOT_A_MEMBER);
     renderApp();
     expect(await screen.findByText("This wallet isn't in any pool.")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "the pools" }).getAttribute("href")).toBe("#/mutuals");
+    expect(screen.getByRole("link", { name: "the pools" }).getAttribute("href")).toBe("#/pools");
     expect(claimMock).not.toHaveBeenCalled();
   });
 
@@ -254,13 +254,13 @@ describe("/app — the joined-pools table (data-bound to the chain)", () => {
     expect(await screen.findByText("The app.")).toBeTruthy();
     expect(
       screen.getByText(
-        "Every mutual this wallet joined — file a payout request or sit on a jury, pool by pool.",
+        "Every pool this wallet joined — file a payout request or sit on a jury, one row per pool.",
       ),
     ).toBeTruthy();
 
-    // the row: name links the pool's detail route, Covered — Standard stamp
+    // the row: name links the pool's detail route, Member — Standard stamp
     expect(await screen.findByRole("link", { name: "Blade Pool" })).toBeTruthy();
-    expect(screen.getByText("Covered — Standard")).toBeTruthy();
+    expect(screen.getByText("Member — Standard")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Blade Pool" }).getAttribute("href")).toBe(
       `#/m/${BLADE_DEVNET}`,
     );
@@ -292,11 +292,11 @@ describe("/app — the joined-pools table (data-bound to the chain)", () => {
       if (seeds.nonce === 1n) return claimAccount(WALLET, { status: ClaimStatus.Pending });
       return claimAccount(OTHER);
     });
-    scanMock.mockResolvedValue([{ address: BLADE_DEVNET, data: fakeMutual({ claimNonce: 2n }) }]);
+    scanMock.mockResolvedValue([{ address: BLADE_DEVNET, data: fakePool({ claimNonce: 2n }) }]);
     renderApp();
 
     // the band label + the pool-named block
-    expect(await screen.findByText("claims")).toBeTruthy();
+    expect(await screen.findByText("requests")).toBeTruthy();
     expect(await screen.findByText("#0 · $2,000 · PAID")).toBeTruthy();
     expect(screen.getAllByText("filed 2026-11-16 10:00 UTC").length).toBe(2);
     // the settled row is plain — no anchor
@@ -314,10 +314,10 @@ describe("/app — the joined-pools table (data-bound to the chain)", () => {
     walletState.account = WALLET;
     memberMock.mockResolvedValue(memberAccount(0));
     claimMock.mockRejectedValue(new Error("rpc down"));
-    scanMock.mockResolvedValue([{ address: BLADE_DEVNET, data: fakeMutual({ claimNonce: 1n }) }]);
+    scanMock.mockResolvedValue([{ address: BLADE_DEVNET, data: fakePool({ claimNonce: 1n }) }]);
     renderApp();
     expect(
-      await screen.findByText("Couldn't read your claims.", {}, { timeout: 5000 }),
+      await screen.findByText("Couldn't read your requests.", {}, { timeout: 5000 }),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
   });
@@ -332,7 +332,7 @@ describe("/app — payout-request entry action (copy doc § /app, CLAIM-WIZARD �
     renderApp();
 
     // claims (started with the money reads) settled — preflight evaluated
-    expect(await screen.findByText("No claims filed from this wallet.")).toBeTruthy();
+    expect(await screen.findByText("No payout requests filed from this wallet.")).toBeTruthy();
     await waitFor(() => expect(feeBalanceMock).toHaveBeenCalled());
     expect(screen.queryByRole("link", { name: "File a payout request" })).toBeNull();
     expect(screen.getByRole("link", { name: "Jury duty" }).getAttribute("href")).toBe(
@@ -346,8 +346,8 @@ describe("/app — multi-pool listing (every entered pool gets its row)", () => 
     walletState.isConnected = true;
     walletState.account = WALLET;
     scanMock.mockResolvedValue([
-      { address: BLADE_DEVNET, data: fakeMutual() },
-      { address: CHAIR, data: fakeMutual({ tiers: [fakeMutual().tiers[0]] }) },
+      { address: BLADE_DEVNET, data: fakePool() },
+      { address: CHAIR, data: fakePool({ tiers: [fakePool().tiers[0]] }) },
     ]);
     memberMock.mockImplementation(async (_rpc, seeds) =>
       maybe(memberData(seeds.mutual === CHAIR ? 0 : 1, seeds.mutual), seeds.mutual),
@@ -356,7 +356,7 @@ describe("/app — multi-pool listing (every entered pool gets its row)", () => 
 
     // both rows render as entered (the stamps carry each pool's tier); each
     // pool also names its claims block in the claims band
-    await waitFor(() => expect(screen.getAllByText(/^Covered —/)).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByText(/^Member —/)).toHaveLength(2));
     expect(screen.getAllByText("Blade Pool")).toHaveLength(2);
     expect(screen.getAllByText("Chairmageddon Live")).toHaveLength(2);
 

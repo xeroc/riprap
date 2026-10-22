@@ -17,7 +17,7 @@ export default meta;
 const args: CoveredOverlayProps = {
   open: false,
   onDismiss: () => {},
-  stamp: "Covered — Standard",
+  stamp: "Member — Standard",
   headline: "Welcome, friend!",
   figures: [
     <span key="fee">

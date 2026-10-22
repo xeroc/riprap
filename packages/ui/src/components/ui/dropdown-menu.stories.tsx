@@ -27,7 +27,7 @@ export const Default: StoryObj<typeof meta> = {
       <DropdownMenuContent className="w-48">
         <DropdownMenuLabel>member</DropdownMenuLabel>
         <DropdownMenuItem>
-          Claim <DropdownMenuShortcut>⌘C</DropdownMenuShortcut>
+          Request <DropdownMenuShortcut>⌘C</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem>
           Withdraw stake <DropdownMenuShortcut>⌘W</DropdownMenuShortcut>

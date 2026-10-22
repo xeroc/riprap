@@ -15,7 +15,7 @@ export function Audience() {
           <p className="leading-relaxed text-body [font:var(--riprap-body-md)]">
             Groups the fixed-cost industry won't underwrite — an event crowd, a crew, a club, a
             cohort: people sharing one risk with a defined window and a definable answer. The terms
-            are written at founding: what's covered, what it pays, when it ends. The money stays the
+            are written at founding: what qualifies, what it pays, when it ends. The money stays the
             group's.
           </p>
           <p className="leading-relaxed text-muted-foreground [font:var(--riprap-body-md)]">

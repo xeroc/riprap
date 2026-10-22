@@ -9,8 +9,8 @@ import type { ReactNode } from "react";
 
 import { Prose } from "../../components/Prose";
 import { Settle } from "../../components/Settle";
-import { type PoolTier, poolTiers } from "../mutual";
-import { useMutual } from "../useMutual";
+import { type PoolTier, poolTiers } from "../pool";
+import { usePool } from "../usePool";
 
 // Kit data law: unknown values render as mono {{PARAM}} placeholders.
 const PARAM = "{{PARAM}}";
@@ -31,16 +31,16 @@ function buildFaqs(tiers: PoolTier[] | null): { q: string; a: ReactNode }[] {
   return [
     {
       // policy §3, §2
-      q: "What exactly is covered?",
+      q: "What exactly does the pool pay for?",
       a: (
         <Prose text="Bodily injury caused by another person intentionally using a knife or other bladed instrument against you — including injury sustained while escaping or defending. It must happen during the conference (15–17 November 2026, daily hours per the published schedule), inside the Olympia Convention Centre and the designated event area, while you're an active member." />
       ),
     },
     {
       // policy §4
-      q: "What's not covered?",
+      q: "What's excluded?",
       a: (
-        <Prose text="Self-inflicted injuries. Accidents involving a blade, and ordinary knife handling. Consensual activities. Staged or collusive assaults. Injuries from a fight you started or willingly joined, or suffered while committing a criminal offence. Anything outside the coverage window or the covered area. Distress without qualifying bodily injury." />
+        <Prose text="Self-inflicted injuries. Accidents involving a blade, and ordinary knife handling. Consensual activities. Staged or collusive assaults. Injuries from a fight you started or willingly joined, or suffered while committing a criminal offence. Anything outside the event window or the event area. Distress without qualifying bodily injury." />
       ),
     },
     {
@@ -81,7 +81,7 @@ function buildFaqs(tiers: PoolTier[] | null): { q: string; a: ReactNode }[] {
       // policy §5
       q: "Can I join at the door?",
       a: (
-        <Prose text="No. Joining closes when coverage begins, so a membership can't be created after an incident has occurred. One membership per person. An employer or a friend can pay the entry fee: a claim payment goes to you, the unused remainder goes back to them." />
+        <Prose text="No. Joining closes when the window opens, so a membership can't be created after an incident has occurred. One membership per person. An employer or a friend can pay the entry fee: a payout goes to you, the unused remainder goes back to them." />
       ),
     },
     {
@@ -109,7 +109,7 @@ function buildFaqs(tiers: PoolTier[] | null): { q: string; a: ReactNode }[] {
 }
 
 export function PoolFaq() {
-  const mutualQuery = useMutual();
+  const mutualQuery = usePool();
   const tiers = mutualQuery.state === "ready" ? poolTiers(mutualQuery.mutual) : null;
   return (
     <SectionBand id="faq" label="questions" tone="soft">

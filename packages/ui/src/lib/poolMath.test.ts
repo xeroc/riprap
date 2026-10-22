@@ -45,7 +45,7 @@ describe("proRataShare (policy §7 — remainder returns pro-rata)", () => {
   });
 });
 
-describe("scaledPayout (policy §7 — the mutual never pays more than it holds)", () => {
+describe("scaledPayout (policy §7 — the pool never pays more than it holds)", () => {
   it("pays claims in full when approvals fit the pool", () => {
     expect(scaledPayout(2000, 8000, 20000)).toBe(2000);
   });

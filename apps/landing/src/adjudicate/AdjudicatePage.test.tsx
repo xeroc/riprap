@@ -29,16 +29,16 @@ import {
   type Round,
 } from "@useaccord/sdk";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MUTUALS } from "../mutuals/data";
-import type * as StoreModule from "../mutuals/store";
-import type { LiveMutual, MutualStore } from "../mutuals/store";
-import type { MutualListing } from "../mutuals/types";
-import { fakeMutual } from "../pool/fixtures";
+import { fakePool } from "../pool/fixtures";
+import { POOLS } from "../pools/data";
+import type * as StoreModule from "../pools/store";
+import type { LivePool, PoolStore } from "../pools/store";
+import type { PoolListing } from "../pools/types";
 import { AdjudicatePage } from "./AdjudicatePage";
 
 const { walletState, storeState } = vi.hoisted(() => ({
   walletState: { isConnected: false, account: null as string | null },
-  // the mutuals store the board scans — swapped per test (the store's own
+  // the pools store the board scans — swapped per test (the store's own
   // resolution logic lives in its suite; here it is the seam)
   storeState: { state: "loading" } as { state: string; pools?: unknown[] },
 }));
@@ -75,11 +75,11 @@ vi.mock("@useaccord/sdk", async (importOriginal) => {
     findRoundPda: vi.fn(async () => ["R".repeat(32) as Address, 255]),
   };
 });
-vi.mock("../mutuals/store", async (importOriginal) => {
+vi.mock("../pools/store", async (importOriginal) => {
   const actual = await importOriginal<typeof StoreModule>();
   return {
     ...actual,
-    useMutualStore: () => storeState as unknown as MutualStore,
+    usePoolStore: () => storeState as unknown as PoolStore,
   };
 });
 vi.mock("../shared/rpc", () => ({
@@ -177,15 +177,15 @@ const STAKED = {
 
 /** One live pool fixture: the directory's Blade Pool listing over a decoded
  * mutual whose subaccord matches the dispute fixture (A). */
-const bladeFound = MUTUALS.find((m) => m.slug === "blade-pool");
+const bladeFound = POOLS.find((m) => m.slug === "blade-pool");
 if (bladeFound === undefined) throw new Error("no blade-pool listing in the directory");
-const BLADE_LISTING: MutualListing = bladeFound;
+const BLADE_LISTING: PoolListing = bladeFound;
 
-function livePool(over: Partial<LiveMutual> = {}): LiveMutual {
+function livePool(over: Partial<LivePool> = {}): LivePool {
   return {
     listing: BLADE_LISTING,
     address: MUTUAL_ADDR as Address,
-    account: fakeMutual({ claimNonce: 1n, subaccord: A }),
+    account: fakePool({ claimNonce: 1n, subaccord: A }),
     ...over,
   };
 }
@@ -193,7 +193,7 @@ function livePool(over: Partial<LiveMutual> = {}): LiveMutual {
 const testConfig = getDefaultConfig({ appName: "riprap-test", network: "localnet" });
 
 function renderPage(
-  pools: LiveMutual[] = [livePool()],
+  pools: LivePool[] = [livePool()],
   session = null as null | { dispute: string; round: number },
 ) {
   storeState.state = "ready";
@@ -387,11 +387,15 @@ describe("#/app/adjudicate/:dispute/:round — session shell (spec §2)", () => 
   it("pool without an adjudication pack: the no-policy state", async () => {
     connectedMemberBase();
     roundMock.mockResolvedValue(maybe(roundAccount()));
-    const chairmageddon = MUTUALS.find((m) => m.slug === "chairmageddon");
+    const chairmageddon = POOLS.find((m) => m.slug === "chairmageddon");
     if (chairmageddon === undefined) throw new Error("no chairmageddon listing");
     renderPage([livePool({ listing: chairmageddon })], { dispute: DISPUTE, round: 0 });
 
-    expect(await screen.findByText("No adjudication policy for this pool yet.")).toBeTruthy();
+    // a pack-less pool now resolves its anchored def first (epic
+    // riprap-hs4r) — the no-policy verdict lands after that read refuses
+    expect(
+      await screen.findByText("No adjudication policy for this pool yet.", {}, { timeout: 4000 }),
+    ).toBeTruthy();
     expect(screen.getByText("This session can't run until the pool's policy ships.")).toBeTruthy();
   });
 });

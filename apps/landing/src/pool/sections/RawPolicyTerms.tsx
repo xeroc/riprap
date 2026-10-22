@@ -10,7 +10,7 @@
 import type { Mutual } from "@riprap/hanse";
 import { AddressChip, Button, Card } from "@riprap/ui";
 import { CheckIcon, CopyIcon } from "lucide-react";
-import { type ChangeEvent, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { domainRefHex, hansePreimage, sha256Hex, toHex } from "../domainRef";
 import { useEvidenceDaemonUrl } from "../evidenceServer";
 import { usePolicyDoc } from "../usePolicyDoc";
@@ -18,9 +18,15 @@ import { usePolicyDoc } from "../usePolicyDoc";
 // Kit data law: unknown values render as mono {{PARAM}} placeholders.
 const PARAM = "{{PARAM}}";
 
+/** The YAML machine block is not prose: the panel shows the § body. The
+ *  copy button still takes the full anchored bytes. */
+function displayBody(text: string): string {
+  return text.replace(/^---\r?\n[\s\S]*?\r?\n---[ \t]*\r?\n?/, "");
+}
+
 /** PUT failure → one deadpan line (copy doc). */
 function putFailureLine(status: number): string {
-  if (status === 404) return "The evidence server can't see the mutual yet. Try again in a moment.";
+  if (status === 404) return "The evidence server can't see the pool yet. Try again in a moment.";
   if (status === 400) {
     return "The evidence server rejected the proof — these bytes don't match the on-chain anchor.";
   }
@@ -38,7 +44,7 @@ async function uploadTerms(
   if ((await sha256Hex(bytes)) !== toHex(mutual.policyHash)) {
     return {
       ok: false,
-      line: "This file's hash doesn't match the mutual's policy hash. Nothing was uploaded.",
+      line: "This file's hash doesn't match the pool's policy hash. Nothing was uploaded.",
     };
   }
   const ref = await domainRefHex(mutual.seed, mutual.policyHash);
@@ -56,6 +62,8 @@ async function uploadTerms(
 /** `copy` ⇄ `copied` — the AddressChip settle-safe word swap, applied to the whole document. */
 function useCopyText(): { copied: boolean; copy: (text: string) => void } {
   const [copied, setCopied] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
   return {
     copied,
     copy: (text: string) => {
@@ -63,7 +71,7 @@ function useCopyText(): { copied: boolean; copy: (text: string) => void } {
         ?.writeText(text)
         .then(() => {
           setCopied(true);
-          window.setTimeout(() => setCopied(false), 2000);
+          timer.current = window.setTimeout(() => setCopied(false), 2000);
         })
         .catch((error: unknown) => console.error("terms copy failed", error));
     },
@@ -118,7 +126,7 @@ export function RawPolicyTerms({ mutual }: { mutual: Mutual | null }) {
   return (
     <div className="flex max-w-[42rem] flex-col gap-(--riprap-space-lg)" data-slot="terms">
       <h3 className="tracking-(--riprap-tracking-display) text-ink [font:var(--riprap-display-sm)]">
-        The immutable terms of this mutual.
+        The immutable terms of this pool.
       </h3>
       <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
         Fixed when the pool was created: the on-chain policy hash pins these exact bytes, so they
@@ -150,7 +158,7 @@ export function RawPolicyTerms({ mutual }: { mutual: Mutual | null }) {
           <div className="flex flex-col gap-3">
             <p className="text-muted-foreground [font:var(--riprap-body-sm)]">Not published yet.</p>
             <p className="text-muted-foreground [font:var(--riprap-body-sm)]">
-              The cover terms aren't on the evidence server. Upload the file whose hash the mutual
+              The cover terms aren't on the evidence server. Upload the file whose hash the pool
               pins.
             </p>
             <input
@@ -204,7 +212,7 @@ export function RawPolicyTerms({ mutual }: { mutual: Mutual | null }) {
                 </Button>
               </div>
               <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap p-3 font-mono text-xs leading-relaxed text-ink">
-                {doc.text}
+                {displayBody(doc.text)}
               </pre>
             </div>
           </div>

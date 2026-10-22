@@ -3,9 +3,11 @@ import type * as MotionReact from "motion/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GlyphTile } from "../components/chrome/GlyphTile";
 import { Backstop } from "./Backstop";
+import { ChipIn } from "./ChipIn";
 import { Claim } from "./Claim";
 import { ClaimApproval } from "./ClaimApproval";
 import { ExpansionStrip } from "./ExpansionStrip";
+import { Filed } from "./Filed";
 import { Found } from "./Found";
 import { FundingPool } from "./FundingPool";
 import { Gather } from "./Gather";
@@ -14,9 +16,12 @@ import { HexBackdrop } from "./HexBackdrop";
 import { Join } from "./Join";
 import { HOVER_LOOP_MS, LifecycleStrip } from "./LifecycleStrip";
 import { OnePool } from "./OnePool";
+import { PaysOut } from "./PaysOut";
 import { Renew } from "./Renew";
 import { Return } from "./Return";
 import { Rule } from "./Rule";
+import { Seal } from "./Seal";
+import { Sign } from "./Sign";
 import { Stack } from "./Stack";
 
 // controllable reduced-motion flag — same pattern as chrome.test.tsx
@@ -48,11 +53,16 @@ const GLYPHS = [
   ["claim", Claim],
   ["rule", Rule],
   ["return", Return],
+  ["sign", Sign],
+  ["filed", Filed],
   ["pool", OnePool],
   ["found", Found],
   ["renew", Renew],
   ["backstop", Backstop],
   ["stack", Stack],
+  ["seal", Seal],
+  ["chip-in", ChipIn],
+  ["pays-out", PaysOut],
 ] as const;
 
 describe("glyphs — one concept each, sharp geometry, token colors", () => {
@@ -164,8 +174,81 @@ describe("glyphs — one concept each, sharp geometry, token colors", () => {
     // two levels + the passing block
     expect(container.querySelectorAll('rect[fill="var(--riprap-funds)"]').length).toBe(3);
   });
-});
 
+  it("sign: the terms card with ruled rows; the signature lands in accent, last", () => {
+    const { container } = render(<Sign />);
+    // one outline rect — the terms card; no fills anywhere
+    expect(container.querySelectorAll("rect").length).toBe(1);
+    const rect = container.querySelector("rect");
+    expect(rect?.getAttribute("stroke")).toBe("var(--riprap-diagram-line)");
+    // three ruled rows + the signature baseline
+    const lines = [...container.querySelectorAll("line")];
+    expect(lines.length).toBe(4);
+    for (const l of lines) {
+      expect(l.getAttribute("stroke")).toBe("var(--riprap-diagram-line)");
+    }
+    // exactly one path — the signature, in the accent (crest law: arrives last)
+    const paths = [...container.querySelectorAll("path")];
+    expect(paths.length).toBe(1);
+    expect(paths[0].getAttribute("stroke")).toBe("var(--riprap-accent)");
+  });
+
+  it("filed: the request paper, the pool with its level, one funds arrow between", () => {
+    const { container } = render(<Filed />);
+    // 3 vessel walls + 3 paper rows + the arrow shaft
+    const lines = [...container.querySelectorAll("line")];
+    expect(lines.length).toBe(7);
+    expect(lines.filter((l) => l.getAttribute("stroke") === "var(--riprap-funds)")).toHaveLength(1);
+    // the pool's money (funds level) + the request paper (outline)
+    expect(container.querySelectorAll('rect[fill="var(--riprap-funds)"]').length).toBe(1);
+    expect(container.querySelectorAll("rect").length).toBe(2);
+    // exactly one path — the arrowhead, funds: the claim on the money
+    const paths = [...container.querySelectorAll("path")];
+    expect(paths.length).toBe(1);
+    expect(paths[0].getAttribute("stroke")).toBe("var(--riprap-funds)");
+  });
+  it("seal: the terms card with four ruled rows; the accent seal lands last", () => {
+    const { container } = render(<Seal />);
+    // the card outline + the seal — nothing else
+    const rects = [...container.querySelectorAll("rect")];
+    expect(rects.length).toBe(2);
+    expect(rects[0].getAttribute("stroke")).toBe("var(--riprap-diagram-line)");
+    // four ruled rows, all line color
+    const lines = [...container.querySelectorAll("line")];
+    expect(lines.length).toBe(4);
+    for (const l of lines) {
+      expect(l.getAttribute("stroke")).toBe("var(--riprap-diagram-line)");
+    }
+    // the seal — accent (crest law: the binding mark), overlapping the card's corner
+    const seal = rects.find((r) => r.getAttribute("fill") === "var(--riprap-accent)");
+    expect(seal).toBeTruthy();
+    expect(Number(seal?.getAttribute("x"))).toBeGreaterThan(20 + 56 - 14);
+    expect(container.querySelectorAll("path").length).toBe(0);
+  });
+
+  it("chip-in: the member's stone, the low level, one funds block in flight", () => {
+    const { container } = render(<ChipIn />);
+    // the vessel, shut — 3 walls
+    expect(container.querySelectorAll("line").length).toBe(3);
+    const fills = [...container.querySelectorAll("rect")].map((r) => r.getAttribute("fill"));
+    // one member stone + the level + the traveling fee (funds)
+    expect(fills.filter((f) => f === "var(--riprap-diagram-stone)")).toHaveLength(1);
+    expect(fills.filter((f) => f === "var(--riprap-funds)")).toHaveLength(2);
+  });
+
+  it("pays-out: one door, the ruling square above it, the paid block leaves", () => {
+    const { container } = render(<PaysOut />);
+    // door open: right wall split in two → 4 lines
+    expect(container.querySelectorAll("line").length).toBe(4);
+    // the level + the paid block, both funds
+    expect(container.querySelectorAll('rect[fill="var(--riprap-funds)"]').length).toBe(2);
+    // one deliberation vote square with its check knocked out
+    expect(container.querySelectorAll('rect[fill="var(--riprap-deliberation)"]').length).toBe(1);
+    const paths = [...container.querySelectorAll("path")];
+    expect(paths.length).toBe(1);
+    expect(paths[0].getAttribute("stroke")).toBe("var(--riprap-diagram-canvas)");
+  });
+});
 describe("GlyphTile — concept on a registered plate", () => {
   it("stamps ordinal + plain-word label in mono; carries plate ticks", () => {
     const { container } = render(

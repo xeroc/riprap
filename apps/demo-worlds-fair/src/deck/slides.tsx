@@ -349,11 +349,13 @@ const PRODUCT_STEPS = [
 
 const ProductSlide: FC = () => {
   return (
-    <SlideFrame kicker="the product" headline="Mutuals First, Markets Next">
-      {/* the positioning statement — mutuals are the trusted foundation */}
+    <SlideFrame kicker="the product" headline="One Pool, One Purpose">
+      {/* the positioning statement — the purpose is fixed at creation; mutual
+       * cover is the first template, not the pattern's limit */}
       <div className="max-w-[68ch] text-ink [font:var(--riprap-title-md)]">
-        People pool risk and share the upside transparently. The foundation for a global, composable
-        market of insurance and risk capital.
+        A pool of member money with one purpose, fixed at creation — members chip in, drawn peers
+        adjudicate every payout against it. Mutual cover is the first template; the foundation for a
+        global, composable market of insurance and risk capital.
       </div>
       <div className="flex w-full flex-col gap-8">
         <ol data-slot="lifecycle-strip" className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -550,8 +552,8 @@ export const MarketSlide: FC = () => {
 
 /* 06 — the pilot (re-staged 2026-10-07: aid + bounties at Breakpoint) ------ */
 
-/** The pilot batch, narrowed from the landing's mutuals directory
- * (apps/landing/src/mutuals/data.ts — every number is that file's §5 policy
+/** The pilot batch, narrowed from the landing's pools directory
+ * (apps/landing/src/pools/data.ts — every number is that file's §5 policy
  * / terms tables verbatim; the three hot-drink bounties share one mechanic
  * and ride one row, Blade Pool's devnet/mainnet listings are one pool).
  * Two classes on the same mechanics: mutuals where members cover each
@@ -1139,7 +1141,7 @@ export const SLIDES: SlideDef[] = [
     id: "product",
     label: "the product",
     notes:
-      "35s. One mutual, one risk, a lifetime of its choosing — event pools expire by clock; open-ended mutuals liquidate when members choose. Walk the lifecycle strip: join, gather, rule, claim. Three laws: two exit doors (no discretionary signer); members judge members (Accord — useaccord.xyz — staked jurors, sealed votes, appeals, slashing); an enforced end either way. Status row verbatim if asked: pool built, arbitration on devnet, hanse in build, Tributary on mainnet. Audits gate mainnet capital — that is what the raise funds first.",
+      "35s. One pool, one purpose, a lifetime of its choosing — event pools expire by clock; ongoing pools liquidate when members choose. Walk the lifecycle strip: join, gather, rule, claim. Three laws: two exit doors (no discretionary signer); members judge members (Accord — useaccord.xyz — staked jurors, sealed votes, appeals, slashing); an enforced end either way. Status row verbatim if asked: pool built, arbitration on devnet, hanse in build, Tributary on mainnet. Audits gate mainnet capital — that is what the raise funds first.",
     component: ProductSlide,
   },
   {
@@ -1153,7 +1155,7 @@ export const SLIDES: SlideDef[] = [
     id: "business",
     label: "the business",
     notes:
-      "25s. Revenue-first ladder: 0% take on the pilot (it exists to publish numbers); take-rate on surplus switched on with the second pool — doubles as the organizer revenue-share; operator fees for flagship deployments; at the destination, a rail share on mutuals we do not operate. USDC end to end, no product token. The raise carries a token warrant over staked reserve capital — protection yield — bounded to a fixed share of any future supply with terms published before the round opens; the preferred end state is token-only via MetaDAO — value to the DAO, not the cap table. The warrant is the term we negotiate hardest.",
+      "25s. Revenue-first ladder: 0% take on the pilot (it exists to publish numbers); take-rate on surplus switched on with the second pool — doubles as the organizer revenue-share; operator fees for flagship deployments; at the destination, a rail share on pools we do not operate. USDC end to end, no product token. The raise carries a token warrant over staked reserve capital — protection yield — bounded to a fixed share of any future supply with terms published before the round opens; the preferred end state is token-only via MetaDAO — value to the DAO, not the cap table. The warrant is the term we negotiate hardest.",
     component: BusinessSlide,
   },
   {

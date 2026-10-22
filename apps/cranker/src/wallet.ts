@@ -5,9 +5,8 @@
  * so an unfunded keypair fails loud at boot rather than stalling mid-loop
  * (ported from @useaccord/cranker src/wallet.ts).
  *
- * Pilot note (ADR-0005): claim_payout is authority-gated — run the cranker
- * with the mutual's authority key for the pilot; the wallet module does NOT
- * enforce it, the reconciler skips payouts when it does not hold.
+ * The claim_payout pilot authority gate retired 2026-10-15 (ADR-0005
+ * amendment) — any funded key may crank payouts.
  */
 import { readFileSync } from "node:fs";
 

@@ -128,7 +128,7 @@ The system uses **tone steps + hairlines only**. No drop shadows, no glows, no g
 | `{rounded.xs}` | 2px | Form inputs (optical relief only) |
 | `{rounded.full}` | 9999px | The avatar disc — the only circle |
 
-Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives spec (`meta/primitives/composition.md`: stroke 3, radius 12) — that system is for drawings, not UI chrome.
+Illustration atoms (diagrams, `ClaimFlow` scenes) follow the separate primitives spec (`meta/primitives/composition.md`: stroke 3, radius 12) — that system is for drawings, not UI chrome.
 
 ## Components
 
@@ -156,7 +156,7 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 
 ### Cards
 
-**`tier-card`** — Coverage tier card. Background `{colors.surface-card}`, 1px hairline, radius `{rounded.none}`, padding 32px. Entry fee in `{typography.mono-number-lg}`, max payout in `{typography.mono-number-lg}`, tier name in `{typography.mono-label}`. Numbers are the hero; no illustration inside the card.
+**`tier-card`** — Payout tier card. Background `{colors.surface-card}`, 1px hairline, radius `{rounded.none}`, padding 32px. Entry fee in `{typography.mono-number-lg}`, max payout in `{typography.mono-number-lg}`, tier name in `{typography.mono-label}`. Numbers are the hero; no illustration inside the card.
 
 **`feature-card`** — 3-up grids. Background `{colors.surface-card}`, text `{colors.ink}`, radius `{rounded.none}`, padding 24px, 1px hairline border.
 
@@ -172,7 +172,7 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 
 **`cta-band`** — Pre-footer. Background `{colors.canvas-soft}`, centered display headline in `{typography.display-lg}`, single warm-white CTA. 80px padding, hairline rules above and below.
 
-**`footer`** — Background `{colors.canvas}`, text `{colors.muted}`. 4-column link list, wordmark + "Event mutuals on Solana." line, and the closing fact in mono: `dead on schedule`. 64×48px padding.
+**`footer`** — Background `{colors.canvas}`, text `{colors.muted}`. 4-column link list, wordmark + "Purpose pools on Solana." line (2026-10-20 purpose-pool pass — was "Event mutuals on Solana."; matches the landing footer descriptor), and the closing fact in mono: `dead on schedule`. 64×48px padding.
 
 **`dissolution-band`** — Post-pool end-state only. Background `{colors.canvas-deep}`, the mark in scattered state, `{typography.mono-number}` `$0 remaining`, dissolution line in `{typography.body-sm}`. Used on dead-pool pages — the brand's signature moment; never on evergreen pages.
 
@@ -181,8 +181,8 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 - **Law: settle, not slide.** Elements drop into place and stop. Ease-out, ~160ms. No bounce, no elastic, no glow, no parallax.
 - **Assemble (hero load, pool opens):** the ring's stones drop-settle in clockwise sequence, ~40ms stagger, the harbor-blue newest member last. Position only — no rotation, no scale.
 - **Numbers arrive one at a time.** In worked-example bands each mono figure settles before the next appears.
-- **Dissolve (claims window close, dead-pool pages):** stones scatter off-frame and the composition dereferences. Favicon and print are always the settled state.
-- **Exception — the covered overlay (2026-09-21, Fabian's call):** the one sanctioned departure. The join moment (`CoveredOverlay`, kit) borrows the demo choreography: bounce-in shield, one glow flash at impact (shield halo + headline halo), an ambient hairline ring emission loop while open, confetti in brand tokens (ink/accent/stone/muted), and a blurred fullscreen scrim. The scene runs peril-token diamond → deflection → the ring closes (settle law) → copy. Reduced motion renders the settled composite; everywhere else the settle law above is unchanged and absolute.
+- **Dissolve (request window close, dead-pool pages):** stones scatter off-frame and the composition dereferences. Favicon and print are always the settled state.
+- **Exception — the join overlay (`CoveredOverlay`, 2026-09-21, Fabian's call):** the one sanctioned departure. The join moment borrows the demo choreography: bounce-in shield, one glow flash at impact (shield halo + headline halo), an ambient hairline ring emission loop while open, confetti in brand tokens (ink/accent/stone/muted), and a blurred fullscreen scrim. The scene runs peril-token diamond → deflection → the ring closes (settle law) → copy. Reduced motion renders the settled composite; everywhere else the settle law above is unchanged and absolute.
 
 ## Do's and Don'ts
 
@@ -201,7 +201,7 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 - Don't set grotesque type in uppercase — uppercase belongs to mono stamps only.
 - Don't show knives, blades, injuries, or storm drama in any visual. Type, stones, water, diagrams only.
 - Don't dramatize or joke about the peril anywhere in the UI (messaging guide §Register Guardrails).
-- Don't imply coverage the policy doesn't grant: payout ceilings are stated with caps ("up to $2,000"), the pool's mortality is stated, "insurance" is never used to describe Riprap.
+- Don't imply payouts the policy doesn't grant: payout ceilings are stated with caps ("up to $2,000"), the pool's mortality is stated, "insurance" is never used to describe Riprap.
 
 ## Responsive Behavior
 
@@ -235,7 +235,7 @@ Illustration atoms (diagrams, claim-flow scenes) follow the separate primitives 
 
 ## Known Gaps
 
-- No product UI exists yet — this system covers the marketing site and print/elective surfaces; join/claim/juror screens get added when the app ships (screenshot placeholders in `meta/marketing/README.md`).
+- No product UI exists yet — this system covers the marketing site and print/elective surfaces; join/request/juror screens get added when the app ships (screenshot placeholders in `meta/marketing/README.md`).
 - Semantic success/error tones are provisional desaturated values, not brand-reviewed.
 - Light-mode (paper) inversions are tokenized but untested on a real page.
 - The wordmark skew (-3.5°) and r→a kiss are concept-stage values (`visual-identity.md` open item 1); UI uses the logo SVGs as-is, never re-typesets the wordmark.

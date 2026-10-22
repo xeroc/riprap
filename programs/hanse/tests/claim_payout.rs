@@ -1,6 +1,7 @@
 //! claim_payout tests (EVENT-MUTUAL §2.4/§7 + §8 numbers, bean riprap-6zfr):
 //! the payout crank against the frozen ratio — the claimant never signs;
-//! the pilot pass gate pins the cranker to mutual.authority.
+//! anyone may crank (pilot pass gate retired 2026-10-15 — ADR-0005
+//! amendment).
 
 mod common;
 
@@ -212,14 +213,25 @@ fn exhausted_payout_floors_per_term() {
     );
 }
 
+/// Pilot gate retired 2026-10-15 (ADR-0005 amendment): anyone may crank —
+/// a non-authority key pulls the claimant's §8 payout for them.
 #[test]
-fn non_authority_cranker_reverts() {
+fn non_authority_cranker_pays_claimant() {
     let topup = 20_000_000_000 - 20_000_000;
-    let (mut env, cfg, _wallets, _) = setup_payout_full(1, 1, topup);
+    let (mut env, cfg, wallets, _admin) = setup_payout_full(1, 1, topup);
     let impostor = cranker(&mut env);
-    assert_custom_err(
-        payout_tx(&mut env, &cfg, &impostor, 0, None),
-        hanse::HanseError::Unauthorized,
+    let claimant = &wallets[0];
+    let ata_addr = ata(&claimant.pubkey(), &env.mint);
+    let before = token_amount(&env.svm, &ata_addr);
+    payout_tx(&mut env, &cfg, &impostor, 0, None).unwrap();
+    assert_eq!(
+        token_amount(&env.svm, &ata_addr) - before,
+        2_020_000_000,
+        "§8: the stranger's crank still pays the claimant $2,015"
+    );
+    assert_eq!(
+        read_claim(&env, cfg.seed, 0).status,
+        hanse::state::ClaimStatus::Paid
     );
 }
 

@@ -12,7 +12,7 @@ export default meta;
 export const Default: StoryObj<typeof meta> = {
   args: {
     author: "Fabian Schuh",
-    text: "Riprap is peer-to-peer cover on Solana — any group can start a pool, chip in, and drawn peers settle claims. riprap.xyz",
+    text: "Riprap is peer-to-peer cover on Solana — any group can start a pool, chip in, and drawn peers settle requests. riprap.xyz",
     meta: "forwarded message",
   } satisfies ChatMessageProps,
 };
