@@ -109,7 +109,7 @@ export const POOLS: PoolListing[] = [
     tiers: [{ name: "Flat", fee: 50, cap: 500 }],
     // §5: one confirmed introduction pays up to $50 — the smallest success
     smallestPayout: 50,
-    pubkey: "2pTynfZkG4eGa3QETiuBVnNjiVQjkFmfaxEyGQFcDd1J", // mainnet
+    pubkey: "9rE1Qsu4jK7QH9MKnxoy2RRehP1wMRkTLTcqrE7z35ZG", // mainnet
   },
   {
     name: "Mert of the Year",
