@@ -16,9 +16,10 @@ import {
   type SolanaRpcApi,
 } from "@solana/kit";
 import { describe, expect, test } from "vitest";
+import { isoFromUnixSeconds } from "../../lib/format";
 import { buildClaimView, claimStatusLabel } from "./claim";
 import { buildMemberView } from "./member";
-import { buildMutualView } from "./show";
+import { buildMutualView, renderMutualLines } from "./show";
 
 /**
  * Read builders against decoded fixtures: mutual/member/claim accounts
@@ -68,8 +69,8 @@ function mutualFixture(): Mutual {
   };
 }
 
-function encodedMutual(): string {
-  return getBase64Decoder().decode(getMutualEncoder().encode(mutualFixture()));
+function encodedMutual(mutual: Mutual = mutualFixture()): string {
+  return getBase64Decoder().decode(getMutualEncoder().encode(mutual));
 }
 
 function encodedMember(tier: number, capUsed = 0n): string {
@@ -141,6 +142,68 @@ describe("buildMutualView (hanse:show)", () => {
     expect(view.pool).toBe(POOL);
     expect(view.subaccord).toBe(SUBACCORD);
     expect(view.treasuryBalance).toBe(TREASURY_BALANCE);
+  });
+});
+
+describe("renderMutualLines (hanse:show human dump)", () => {
+  test("settled mutual: every decoded field renders, none hidden", async () => {
+    const view = await buildMutualView(
+      mockRpc({ [MUTUAL_ADDR]: encodedMutual() }),
+      MUTUAL_ADDR,
+      COMMITMENT,
+    );
+    const out = renderMutualLines(view).join("\n");
+
+    // authority + links + SAS juror circle + mints — full addresses, nothing truncated away
+    for (const addr of [MEMBER, POOL, SUBACCORD, DEPOSIT_MINT]) {
+      expect(out).toContain(addr);
+    }
+    // policy hash, hex (list.ts precedent)
+    expect(out).toContain(Buffer.from(new Uint8Array(32).fill(0xab)).toString("hex"));
+    // the three tiers: every contribution and max payout in base units
+    for (const amount of [
+      "10_000_000",
+      "1_000_000_000",
+      "20_000_000",
+      "2_000_000_000",
+      "40_000_000",
+      "4_000_000_000",
+    ]) {
+      expect(out).toContain(amount);
+    }
+    // fixed pull window, windows as ISO, phase, restated seed
+    expect(out).toContain("15_552_000");
+    expect(out).toContain(isoFromUnixSeconds(1_763_174_400n) ?? "");
+    expect(out).toContain(isoFromUnixSeconds(1_793_469_600n) ?? "");
+    expect(out).toMatch(/phase\s*: Settled/);
+    expect(out).toMatch(/seed\s+: 7\b/);
+    // settlement economics + claim counters + nonce + bump + headroom
+    expect(out).toMatch(/ratio_1e9\s*: 661_703_887 \/ 1_000_000_000/);
+    expect(out).toMatch(/obligations\s*: 30_000_000_000 .*225_000_000/);
+    expect(out).toMatch(/claims\s+: 15 filed \/ 15 resolved .*claim nonce 15/);
+    expect(out).toMatch(/bump\s+: 255/);
+    expect(out).toMatch(/padding\s*: 64 reserved bytes/);
+    // derived extras
+    expect(out).toContain(view.treasury);
+    expect(out).toContain("20_000_000_000");
+  });
+
+  test("active mutual: pull closes renders as not-settled, never the 1970 epoch", async () => {
+    const active: Mutual = {
+      ...mutualFixture(),
+      phase: Phase.Active,
+      pullCloseAt: 0n,
+      ratio1e9: 1_000_000_000n,
+    };
+    const view = await buildMutualView(
+      mockRpc({ [MUTUAL_ADDR]: encodedMutual(active) }),
+      MUTUAL_ADDR,
+      COMMITMENT,
+    );
+    const out = renderMutualLines(view).join("\n");
+    expect(out).toMatch(/phase\s*: Active/);
+    expect(out).toContain("— (not settled)");
+    expect(out).not.toContain("1970-01-01");
   });
 });
 

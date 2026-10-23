@@ -1,11 +1,12 @@
 /**
- * `riprap hanse:show` — read-only mutual dump: phase, frozen settlement
- * ratio, obligations + fee refunds, claim counters, the three lifecycle
- * timestamps, pool + subaccord links, and the live treasury balance
- * (pool:show pattern).
+ * `riprap hanse:show` — read-only mutual dump: every decoded field of the
+ * account — authority, pool + subaccord links, the SAS juror circle, mints,
+ * policy hash, the three tiers, windows + pull window, seed, phase,
+ * settlement economics, claim counters, nonce, bump, reserved padding —
+ * plus the derived treasury ATA and its live balance (pool:show pattern).
  */
 import { Flags } from "@oclif/core";
-import { fetchMutual, type Mutual } from "@riprap/hanse";
+import { fetchMutual, type Mutual, Phase } from "@riprap/hanse";
 import { findAssociatedTokenAddress } from "@riprap/pool";
 import type { Address, Commitment, Rpc, SolanaRpcApi } from "@solana/kit";
 import { ChainCommand, chainFlags } from "../../lib/base-command";
@@ -36,14 +37,43 @@ export async function buildMutualView(
   };
 }
 
+/** Human dump of a MutualView — every account field, in account-layout order. */
+export function renderMutualLines(view: MutualView): string[] {
+  const m = view.mutual;
+  return [
+    `discriminator: ${Buffer.from(m.discriminator).toString("hex")}`,
+    `authority    : ${m.authority}`,
+    `pool         : ${view.pool}`,
+    `subaccord    : ${view.subaccord}`,
+    `juror cred   : ${m.jurorCredential}`,
+    `juror schema : ${m.jurorSchema}`,
+    `mints        : deposit ${m.depositMint}${m.feeMint === m.depositMint ? " (fees too)" : ` · fee ${m.feeMint}`}`,
+    `policy hash  : ${Buffer.from(m.policyHash).toString("hex")}`,
+    `tiers        : ${m.tiers.map((t) => `${groupBigInt(t.contribution)} → ${groupBigInt(t.maxPayout)}`).join(" · ")}`,
+    `deposits end : ${isoFromUnixSeconds(m.depositsCloseAt)} · claims end ${isoFromUnixSeconds(m.claimsCloseAt)}`,
+    `pull window  : ${groupBigInt(m.pullWindow)} s · pull closes ${m.pullCloseAt === 0n ? "— (not settled)" : isoFromUnixSeconds(m.pullCloseAt)}`,
+    `phase        : ${Phase[m.phase]}`,
+    `seed         : ${m.seed}`,
+    `ratio_1e9    : ${groupBigInt(m.ratio1e9)} / 1_000_000_000`,
+    `obligations  : ${groupBigInt(m.obligations)} · fee refunds ${groupBigInt(m.feeRefunds)}`,
+    `claims       : ${m.claimsFiled} filed / ${m.claimsResolved} resolved · claim nonce ${m.claimNonce}`,
+    `bump         : ${m.bump}`,
+    `padding      : ${m.padding.length} reserved bytes${m.padding.every((b) => b !== 0) ? " — NON-ZERO" : ""}`,
+    `treasury     : ${view.treasury} — ${groupBigInt(view.treasuryBalance)}`,
+  ];
+}
+
 export default class HanseShow extends ChainCommand {
   static summary = "Mutual account dump + frozen ratio + live treasury balance";
 
   static description =
-    "Reads the mutual account: lifecycle phase, the settlement ratio frozen " +
-    "by settle-pool (1_000_000_000 = full pay), obligations + fee refunds, " +
-    "claims filed/resolved, the deposits/claims/pull deadlines, the pool + " +
-    "subaccord links, and the live treasury balance.";
+    "Reads the mutual account and prints every decoded field: authority, " +
+    "pool + subaccord links, the SAS juror credential/schema, mints, policy " +
+    "hash, the three tiers, the deposits/claims windows + fixed pull " +
+    "window, seed, phase, the settlement ratio frozen by settle-pool " +
+    "(1_000_000_000 = full pay), obligations + fee refunds, claim " +
+    "counters + nonce, bump, reserved padding — plus the derived treasury " +
+    "ATA and its live balance.";
 
   static examples = ["<%= config.bin %> hanse:show --mutual 9xQe…"];
 
@@ -68,18 +98,7 @@ export default class HanseShow extends ChainCommand {
       { ...m, treasury: view.treasury, treasuryBalance: view.treasuryBalance },
       {
         primary: flags.mutual,
-        human: [
-          `phase       : ${m.phase === 0 ? "Active" : m.phase === 1 ? "Settled" : "Dissolved"}`,
-          `pool        : ${view.pool}`,
-          `subaccord   : ${view.subaccord}`,
-          `deposits    : ${m.depositMint === m.feeMint ? m.depositMint : `${m.depositMint} (fee ${m.feeMint})`}`,
-          `ratio_1e9   : ${groupBigInt(m.ratio1e9)} / 1_000_000_000`,
-          `obligations : ${groupBigInt(m.obligations)}  fee refunds: ${groupBigInt(m.feeRefunds)}`,
-          `claims      : ${m.claimsFiled} filed / ${m.claimsResolved} resolved`,
-          `deposits end ${isoFromUnixSeconds(m.depositsCloseAt)} · claims end ${isoFromUnixSeconds(m.claimsCloseAt)}`,
-          `pull closes : ${isoFromUnixSeconds(m.pullCloseAt) ?? "— (not settled)"}`,
-          `treasury    : ${view.treasury} — ${groupBigInt(view.treasuryBalance)}`,
-        ],
+        human: renderMutualLines(view),
       },
     );
   }
