@@ -122,7 +122,7 @@ export const POOLS: PoolListing[] = [
     tiers: [{ name: "Flat", fee: 10, cap: 1000 }],
     // §5: the single $1000 bounty is the only success payment
     smallestPayout: 1000,
-    pubkey: "6X3478Sc77pkFXYTskGoSgm4vpXZjnKVv1SLZyUpkkhT",
+    pubkey: "2pTynfZkG4eGa3QETiuBVnNjiVQjkFmfaxEyGQFcDd1J",
   },
   ////////////////////////////////////////////////////////////////////////
   // DEVNET //////////////////////////////////////////////////////////////
