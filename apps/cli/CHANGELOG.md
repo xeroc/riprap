@@ -1,5 +1,13 @@
 # @riprap/cli
 
+## 0.10.0
+
+### Patch Changes
+
+- [#25](https://github.com/xeroc/riprap/pull/25) [`2895f39`](https://github.com/xeroc/riprap/commit/2895f3945540eed2d912b96f22a04bb0320eb091) Thanks [@xeroc](https://github.com/xeroc)! - `riprap hanse:show` now dumps every decoded field of the Mutual account in its human output, in account-layout order: authority, pool + subaccord links, the SAS juror credential/schema, mints, the policy hash as hex, the three tiers, the deposits/claims windows + fixed pull window, seed, phase, the frozen settlement ratio, obligations + fee refunds, claim counters + nonce, bump, and reserved padding — joining the previously shown subset, plus the derived treasury ATA and live balance. Active mutuals now render `— (not settled)` for the pull close instead of the 1970 epoch date. The `--json` output already carried every field and is unchanged.
+
+- [#18](https://github.com/xeroc/riprap/pull/18) [`a221550`](https://github.com/xeroc/riprap/commit/a221550b918f207d80f8ad400f75879cecd17a08) Thanks [@xeroc](https://github.com/xeroc)! - Review pass on the pilot-gate retirement: the `Unauthorized` error message drops its stale "pilot payout crank gate" clause (the codegen error maps follow), the `claim_payout` instruction doc in `lib.rs` and the CLI build-test titles state the permissionless crank, and the operator runbook (`SETUP.BLADE-POOL.md`) plus both launch scripts no longer describe the payout crank as authority-gated — the authority's only remaining power is subaccord param proposals.
+
 ## 0.9.0
 
 No changes in this release.

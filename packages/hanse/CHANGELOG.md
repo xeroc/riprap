@@ -1,5 +1,15 @@
 # @riprap/hanse
 
+## 0.10.0
+
+### Patch Changes
+
+- [#18](https://github.com/xeroc/riprap/pull/18) [`691ed89`](https://github.com/xeroc/riprap/commit/691ed89ab5ac1eb99ee82ade447803c42ba922d6) Thanks [@xeroc](https://github.com/xeroc)! - Retire the `claim_payout` pilot authority gate (ADR-0005 amendment): the one account constraint is commented out and any key may crank — the payout still lands only in the claimant's canonical ATA. The cranker's mirrored authority skip, the spec §7/§12 wording, and every test asserting the old rejection moved in the same change.
+
+- [#18](https://github.com/xeroc/riprap/pull/18) [`a221550`](https://github.com/xeroc/riprap/commit/a221550b918f207d80f8ad400f75879cecd17a08) Thanks [@xeroc](https://github.com/xeroc)! - Review pass on the pilot-gate retirement: the `Unauthorized` error message drops its stale "pilot payout crank gate" clause (the codegen error maps follow), the `claim_payout` instruction doc in `lib.rs` and the CLI build-test titles state the permissionless crank, and the operator runbook (`SETUP.BLADE-POOL.md`) plus both launch scripts no longer describe the payout crank as authority-gated — the authority's only remaining power is subaccord param proposals.
+- Updated dependencies []:
+  - @riprap/pool@0.10.0
+
 ## 0.9.0
 
 ### Patch Changes

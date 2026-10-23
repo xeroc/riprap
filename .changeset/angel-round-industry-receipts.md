@@ -1,5 +1,0 @@
----
-"@riprap/angel-round": patch
----
-
-Deck re-stage (2026-10-22): the why-now carries named institutional receipts instead of asserted market depth — Lloyds Bank's tokenised-deposit gilt purchase on a public blockchain with its own validator node (LBG press release 2026-01-20), the six-UK-bank shared-ledger sterling pilot (UK Finance), and the GENIUS Act. The vision slide names the settlement intermediaries that collapse (premium finance, custodian, claims desk, paying bank; "fast" renamed "settles instantly"). Two new appendix slides: the industry timeline (2017–22 private-ledger attempts — B3i insolvent '22, AXA fizzy closed '19, Marsh Risk Exchange, BUILDINGBLOCK — against 2025–26 public-rail receipts plus the Everest Group partner-to-scale conclusion and blockchain-in-insurance forecasts with their spread) and the Lloyd's Lab Cohort 17 destination (next-generation ART solicited verbatim; first-loss/tail/pools-stack mapping, modal language). Slide-counter denominator now derived from the slide list (the hand-counted "- 3" had drifted).
