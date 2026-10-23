@@ -1,5 +1,21 @@
 # @riprap/ui
 
+## 0.10.0
+
+### Minor Changes
+
+- [#18](https://github.com/xeroc/riprap/pull/18) [`15db644`](https://github.com/xeroc/riprap/commit/15db64409855032cb3f631421e7b29b608169dac) Thanks [@xeroc](https://github.com/xeroc)! - Three new lane glyphs for the mechanism band's cards (2026-10-21): `seal` — the terms card, written and sealed at creation (the accent binding mark lands last over the corner); `chip-in` — the fee leaves the member's stone and lands in the pool; `pays-out` — the ruling (one deliberation vote) releases the money through the pool's one door. Same grammar as the existing glyphs: 96×96, stroke 3, token colors only, zero rounded corners, deterministic glyph-clock twins for the traveling blocks, static under reduced motion. Spec'd in `meta/primitives/atoms/`; the landing's mechanism cards carry them at 44px beside title and actor.
+
+- [#18](https://github.com/xeroc/riprap/pull/18) [`bf9a3ce`](https://github.com/xeroc/riprap/commit/bf9a3ce24d512db124ffbe20b8667a90879bd505) Thanks [@xeroc](https://github.com/xeroc)! - Reworks the mechanism band into the group-pool flow explainer. `@riprap/ui` gains the `sign` and `filed` glyphs and the `FlowStep` chrome (glyph column, accent mono ordinal, headline, body). The landing's mechanism band renders the two flows directly — founding and drawing, three numbered glyph-stepped rows each, side by side from md up — with the former pool/joining/claiming tabs retired and their copy folded into the flow descriptions.
+
+### Patch Changes
+
+- [#18](https://github.com/xeroc/riprap/pull/18) [`3e195a1`](https://github.com/xeroc/riprap/commit/3e195a1507f0d663f7fccdcec50fa56d7547c3ea) Thanks [@xeroc](https://github.com/xeroc)! - Vocabulary pass (2026-10-21 founder note): customer-facing copy stops using the insurance words claim/claimant/covered/coverage and runs on request/fund/decide — a member files a payout request, the pool funds it, drawn peers decide. Rendered strings swept across the platform sections, pool pages, community pool pages, /app, the payout-request wizard, the juror session, the create wizard (COVERAGE→TIERS and CLAIMS→TERMS screens), llms.txt, and the kit's visible labels/story copy; the member stamp `Covered — {tier}` becomes `Member — {tier}` and the juror checklist heading "Coverage criteria" becomes "Qualifying criteria". Chain-layer and format identifiers (`Claim`, `file_claim`, `riprap-claim/v1`, `claimFlow`, the `#/app/file-claim` route, kit component names) are unchanged by design, and the deployed Breakpoint policy docs keep their pinned wording.
+
+- [#18](https://github.com/xeroc/riprap/pull/18) [`36ef9b6`](https://github.com/xeroc/riprap/commit/36ef9b6509ce3996d8a237c7bd4eb66fb41386e1) Thanks [@xeroc](https://github.com/xeroc)! - Purpose-pool repositioning sweep outside the landing (2026-10-20 pass). The kit's FooterBand default tagline and story samples say "Purpose pools on Solana." (DESIGN.md § CTA/Footer, synced); the cranker's package description says pools, not mutuals; both decks' platform-register lines say purpose pools (mutual cover framed as the first template — proper nouns, market stats, and instance copy untouched). The on-chain `Mutual` vocabulary is unchanged by design.
+
+- [#18](https://github.com/xeroc/riprap/pull/18) [`ac7f54b`](https://github.com/xeroc/riprap/commit/ac7f54b45908afdc72268cfe3fe5fe4ef853a12f) Thanks [@xeroc](https://github.com/xeroc)! - Map the `muted-foreground` Tailwind theme key onto `--riprap-muted` — the utility generated no CSS before (the theme mapped `muted` and `muted-soft` but not `muted-foreground`), so every `text-muted-foreground` element across the surfaces silently inherited ink. Secondary text now renders muted sitewide.
+
 ## 0.9.0
 
 ### Minor Changes
