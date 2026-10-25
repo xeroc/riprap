@@ -396,7 +396,8 @@ pub fn base_dispute(filer: Pubkey, nonce: u64) -> accord::state::Dispute {
         filed_at: 0,
         bump: 255,
         drawn_seats: 0,
-        padding: [0u8; 60],
+        bounty_pool: 0,
+        padding: [0u8; 52],
     }
 }
 

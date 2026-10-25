@@ -1,10 +1,10 @@
 # riprap-h2pd
 title: Bump the accord pin past the ADR-0033 release (H-2 close-out at the source)
-status: open
+status: done
 type: task
 priority: high
 created_at: 2026-09-25T00:00:00Z
-updated_at: 2026-09-25T00:00:00Z
+updated_at: 2026-10-25T00:00:00Z
 parent:
 blocked_by:
 ---
@@ -125,3 +125,39 @@ appellant cost = new-round fee − filer's unit = $30).
 Rust crate pin — bump `programs/hanse/Cargo.toml` `rev` past the release and
 re-run the pin checklist (filing-fee shape now matches; Closed-terminality
 and the real-path refund-exactness test still apply).
+
+## 2026-10-25 — DONE: pin bumped to 25c48b28, checklist re-verified
+
+`programs/hanse/Cargo.toml` `rev` → `25c48b281425f68afe86366ce1a932631695c413`
+(develop + one docs commit; the exact sibling-checkout state). Checklist:
+
+1. **Fee shape** ✅ — `filing_fee()` at the rev is
+   `(min_jury_size + 1) × fee_per_juror`; `create_dispute` keeps the exact
+   `require!(fee == required_fee, FeeMismatch)` and adds a fail-closed
+   `delta == fee` custody guard (fee-on-transfer discharge condition). CPI
+   arg shape unchanged.
+2. **Closed terminality** ✅ — exhaustive grep: no instruction at the rev
+   writes `DisputeState::Closed`; hanse's `{Final, Failed}` set stays
+   exhaustive. Stays on every future bump's checklist (X-2).
+3. **Refund exactness** ✅ at source / ⏳ e2e — the rev's Failed path refunds
+   `fee_paid + bounty_pool` (full tender) and zeroes both; `fee_paid` is
+   never decremented pre-refund. LiteSVM regressions pin hanse's
+   ratio-path; the real redraw-exhaustion spec spun to bean
+   `riprap-e2fa` (residual risk is proportional drift only — the ratio is
+   computed after the float sweep, so a short refund self-corrects).
+4. **Bounty booking** ✅ — `claim.fee_paid` stores the full tender; both
+   Approved and Failed book it into `fee_refunds` (`settle_claim.rs`), and
+   the rev's Approved disposition pays the bounty to jurors from the vault
+   while the mutual compensates the claimant at ratio — consistent.
+
+Layout drift absorbed: `Dispute.bounty_pool` carved from tail padding (all
+prior offsets unchanged) → hanse test fixture + `dispute.ts` regenerated
+(single-file codegen diff). Lockfile: accord 0.3.0, anchor-lang/anchor-spl
+unify to 1.2.0, `five8 1.0.0 → five8_core 1.0.0` edge verified intact.
+Artifacts: `tests/deps/accord.so` rebuilt from the rev (sha256 70e7d96a…,
+v3) + sibling v1 build left in `../accord/target/deploy` for the LiteSVM
+lane; `.surfpool` cleared; AGENTS.md pin row updated. Gates: `cargo build`
+ `anchor build` green, `cargo test` 17/17 suites green (v2 arch ELFs),
+`pnpm -r run build` green, `pnpm lint` 0 errors, TS suites green (one
+parallel-run CLI flake re-verified green standalone), live e2e per the
+completion gate.
