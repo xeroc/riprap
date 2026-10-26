@@ -9,6 +9,7 @@
  */
 import {
   getPoolErrorMessage,
+  POOL_ERROR__BURN_TRACK_CLOSED,
   POOL_ERROR__MATH_OVERFLOW,
   POOL_ERROR__POOL_NOT_LIQUIDATED,
   POOL_ERROR__POOL_NOT_OPEN,
@@ -48,6 +49,10 @@ const codeIndex: Record<number, { name: string; message: string }> = {
   [POOL_ERROR__MATH_OVERFLOW]: {
     name: "MathOverflow",
     message: getPoolErrorMessage(POOL_ERROR__MATH_OVERFLOW),
+  },
+  [POOL_ERROR__BURN_TRACK_CLOSED]: {
+    name: "BurnTrackClosed",
+    message: getPoolErrorMessage(POOL_ERROR__BURN_TRACK_CLOSED),
   },
 };
 

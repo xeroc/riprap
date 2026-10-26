@@ -200,7 +200,7 @@ async function reconcileSettled(
   return await dispatchAction(ctx, config, { kind: "dissolve", mutual: mutual.address });
 }
 
-/** Dissolved: the residual sweep — crank every unsettled, non-zero position. */
+/** Dissolved: the residual sweep — crank every unsettled position. */
 async function reconcileDissolved(
   ctx: CrankContext,
   config: ReconcilerConfig,
@@ -213,9 +213,12 @@ async function reconcileDissolved(
   const depositors = await fetchDepositorsOfPool(ctx.rpc, mutual.data.pool);
   let executed = 0;
   for (const depositor of depositors) {
-    if (depositor.data.settled || depositor.data.totalAmount === 0n) {
-      continue; // already paid out, or burned to 0 by a claim payout (§2.4)
+    if (depositor.data.settled) {
+      continue; // already paid out
     }
+    // Zero-weight depositors (burned out by claim payouts, §2.4) crank to a
+    // 0 payout that marks them settled — pool amendment 2026-10-26 (audit
+    // M-2); the pre-amendment skip existed because their crank reverted.
     executed += await dispatchAction(ctx, config, {
       kind: "pool_crank",
       pool: mutual.data.pool,

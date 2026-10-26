@@ -19,4 +19,6 @@ pub enum PoolError {
     WrongDestination,
     #[msg("Checked math overflowed — the amounts do not fit the accounting")]
     MathOverflow,
+    #[msg("The burn track is closed: its stake rate is zero, so money never entered through it")]
+    BurnTrackClosed,
 }
