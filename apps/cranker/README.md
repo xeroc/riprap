@@ -30,6 +30,10 @@ RIPRAP_CRANKER_ONCE=1 pnpm --filter @riprap/cranker start   # single cycle (cron
 | `RIPRAP_CRANKER_MUTUALS` | all Mutuals | Comma-separated mutual addresses to restrict discovery |
 | `RIPRAP_CRANKER_ONCE` | off | `1` = single cycle then exit |
 
+## Container deployment
+
+`Dockerfile` (build context = repo root) → `ghcr.io/xeroc/riprap-cranker`, built by the *Build Cranker Image* job in the release pipeline (default-branch tags `main.<run_number>`). Deployed on nomad by the sibling `deployment` repo's `riprap-cranker` pulumi project; the stack secrets (`solana_api`, `private_key`) live in vault at `riprap/cranker-{stack}`, rendered as `RIPRAP_RPC_URL`/`RIPRAP_WS_URL` + `/secrets/id.json` (`RIPRAP_CRANKER_KEYPAIR`).
+
 ## Layout
 
 - `src/reconciler.ts` — the lifecycle state machine + poll loop (`reconcileOnce` / `startReconciler`)
