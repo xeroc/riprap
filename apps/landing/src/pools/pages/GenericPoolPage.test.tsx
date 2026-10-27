@@ -242,6 +242,20 @@ describe("parseDefDoc", () => {
     expect(legacy.body).toContain("## 8. End");
     expect(legacy.body).toContain("## 11. Promise");
   });
+
+  it("drops a non-http(s) marketing logo at resolution — the field, never the doc", () => {
+    const swap = (logo: string) =>
+      parseDefDoc(WORKED_DEF.replace(/ {2}logo: .*\n/, `  logo: ${logo}\n`));
+    expect(swap('"javascript:alert(1)"')?.marketing?.logo).toBeUndefined();
+    expect(swap('"data:image/svg+xml;base64,PHN2Zy8+"')?.marketing?.logo).toBeUndefined();
+    expect(swap('"//evil.example/logo.svg"')?.marketing?.logo).toBeUndefined();
+    // the doc and the rest of the marketing block survive
+    const sanitized = swap('"javascript:alert(1)"');
+    expect(sanitized?.name).toBe("Chairmageddon");
+    expect(sanitized?.marketing?.blurb).toContain("Every seat taken");
+    // an honest http(s) logo passes through untouched
+    expect(DEF.marketing?.logo).toBe("https://riprap.xyz/pools/chairmageddon/logo.svg");
+  });
 });
 
 describe("listingFromDef", () => {
@@ -401,6 +415,17 @@ describe("GenericPoolHero", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(
       "One peril. One pool. It ends.",
     );
+  });
+
+  it("renders no logo img when the def's logo failed the http(s) gate", () => {
+    const hostile = parseDefDoc(
+      WORKED_DEF.replace(/ {2}logo: .*\n/, '  logo: "javascript:alert(1)"\n'),
+    ) as RiprapDef;
+    const { container } = renderPage(() => (
+      <GenericPoolHero listing={listingFromDef(hostile, ADDR)} def={hostile} />
+    ));
+    expect(container.querySelector('[data-slot="pool-logo"]')).toBeNull();
+    expect(container.innerHTML).not.toContain("javascript:");
   });
 });
 
