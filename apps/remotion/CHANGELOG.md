@@ -1,5 +1,12 @@
 # @riprap/remotion
 
+## 0.10.0
+
+### Patch Changes
+
+- Updated dependencies [[`15db644`](https://github.com/xeroc/riprap/commit/15db64409855032cb3f631421e7b29b608169dac), [`3e195a1`](https://github.com/xeroc/riprap/commit/3e195a1507f0d663f7fccdcec50fa56d7547c3ea), [`bf9a3ce`](https://github.com/xeroc/riprap/commit/bf9a3ce24d512db124ffbe20b8667a90879bd505), [`36ef9b6`](https://github.com/xeroc/riprap/commit/36ef9b6509ce3996d8a237c7bd4eb66fb41386e1), [`ac7f54b`](https://github.com/xeroc/riprap/commit/ac7f54b45908afdc72268cfe3fe5fe4ef853a12f)]:
+  - @riprap/ui@0.10.0
+
 ## 0.9.0
 
 ### Patch Changes

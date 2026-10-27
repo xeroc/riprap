@@ -1,5 +1,13 @@
 # @riprap/tests
 
+## 0.10.0
+
+### Patch Changes
+
+- Updated dependencies [[`691ed89`](https://github.com/xeroc/riprap/commit/691ed89ab5ac1eb99ee82ade447803c42ba922d6), [`a221550`](https://github.com/xeroc/riprap/commit/a221550b918f207d80f8ad400f75879cecd17a08)]:
+  - @riprap/hanse@0.10.0
+  - @riprap/pool@0.10.0
+
 ## 0.9.0
 
 ### Patch Changes

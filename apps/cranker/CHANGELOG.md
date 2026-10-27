@@ -1,5 +1,16 @@
 # @riprap/cranker
 
+## 0.10.0
+
+### Patch Changes
+
+- [#18](https://github.com/xeroc/riprap/pull/18) [`13c1d5c`](https://github.com/xeroc/riprap/commit/13c1d5cc4da2a85a6f5f96f49b9554ec1ed8effa) Thanks [@xeroc](https://github.com/xeroc)! - Reconciler decision-matrix cleanup for the retired pilot gate: the mutual fixture's dead `authority` override is gone (the encoder pins the field directly) and the reconciler's header state-machine sketch states the permissionless payout crank — a non-authority daemon emits `claim_payout` for settled mutuals inside the pull window.
+
+- [#18](https://github.com/xeroc/riprap/pull/18) [`36ef9b6`](https://github.com/xeroc/riprap/commit/36ef9b6509ce3996d8a237c7bd4eb66fb41386e1) Thanks [@xeroc](https://github.com/xeroc)! - Purpose-pool repositioning sweep outside the landing (2026-10-20 pass). The kit's FooterBand default tagline and story samples say "Purpose pools on Solana." (DESIGN.md § CTA/Footer, synced); the cranker's package description says pools, not mutuals; both decks' platform-register lines say purpose pools (mutual cover framed as the first template — proper nouns, market stats, and instance copy untouched). The on-chain `Mutual` vocabulary is unchanged by design.
+- Updated dependencies [[`691ed89`](https://github.com/xeroc/riprap/commit/691ed89ab5ac1eb99ee82ade447803c42ba922d6), [`a221550`](https://github.com/xeroc/riprap/commit/a221550b918f207d80f8ad400f75879cecd17a08)]:
+  - @riprap/hanse@0.10.0
+  - @riprap/pool@0.10.0
+
 ## 0.9.0
 
 ### Patch Changes
