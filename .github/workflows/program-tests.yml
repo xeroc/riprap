@@ -31,11 +31,12 @@ jobs:
           anchor_version: ${{ steps.versions.outputs.anchor_version }}
           node_version: 20
 
-      # Stage the checked-in SAS binary into target/deploy — the Surfpool
-      # deployment runbook (runbooks/deployment/main.tx) deploys it from there.
-      # accord.so is deployed by the jest harness itself from tests/deps.
-      - name: Stage external binaries (SAS)
-        run: bash tests/deps/stage.sh
+# SAS staging is NOT a workflow step: the run-tests action restores a
+# rust-cache of target/ after this point, and a partial (restore-key) cache
+# hit pre-cleans target/ — wiping anything staged here. Staging runs as the
+# Anchor.toml [hooks] pre-test hook (after the cache restore, before
+# Surfpool evaluates the deployment runbook). accord.so is deployed by the
+# jest harness itself from tests/deps.
 
       # Starts Surfpool (auto-generates + funds ~/.config/solana/id.json), runs
       # the txtx deployment runbook (pool, hanse, SAS), then the jest e2e
@@ -46,6 +47,13 @@ jobs:
           anchor_version: ${{ steps.versions.outputs.anchor_version }}
           program: riprap
           package_manager: pnpm
+
+      # Surfpool writes runbook execution detail (which action failed, why)
+      # only to .surfpool/logs/*.log — stderr carries a bare "Runbook
+      # execution failed". Dump it before the runner evaporates.
+      - name: Dump surfpool logs
+        if: failure()
+        run: 'cat .surfpool/logs/*.log || echo "no .surfpool/logs dir"'
 
       - name: Verify sBPFv3 bytecode
         run: |
