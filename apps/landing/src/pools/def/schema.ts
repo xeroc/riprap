@@ -43,6 +43,13 @@ export interface DefProofSlot {
  * founder call: replaced the mock actuarial odds table). */
 export type DefLogoUrl = string;
 
+/** The logo URL contract — absolute http(s), no whitespace. validate.ts's
+ * bad-marketing/bad-url rule and parseDefDoc's resolution-time sanitize
+ * share this one predicate. */
+export function isHttpUrl(value: string): boolean {
+  return /^https?:\/\/\S+$/.test(value);
+}
+
 /** Optional hero/card marketing copy (milestone D5) — template defaults
  * fill every absent field downstream; all keys optional. */
 export interface DefMarketing {
@@ -456,7 +463,9 @@ function canonicalizeLegacyBody(body: string): string {
 
 /** CAS bytes → a def, or null when the bytes are not canonical
  * riprap-def/v1 (grammar, schema tag, kind enum, or the shape-level pool
- * facts: 1–3 positive tiers, at least one proof slot). */
+ * facts: 1–3 positive tiers, at least one proof slot). The one URL-bearing
+ * field, marketing.logo, is sanitized rather than trusted: a non-http(s)
+ * value drops the field (never the doc). */
 export function parseDefDoc(doc: string): RiprapDef | null {
   let fm: DefFrontmatter;
   let body: string;
@@ -473,5 +482,12 @@ export function parseDefDoc(doc: string): RiprapDef | null {
   if (fm.tiers.length < 1 || fm.tiers.length > 3) return null;
   if (fm.tiers.some((t) => !(t.fee > 0) || !(t.cap > 0))) return null;
   if (fm.proof.length < 1) return null;
+  // untrusted CAS bytes never run validateFrontmatter (that's the wizard's
+  // gate) — the one URL-bearing field is gated here instead, so no def
+  // consumer can render an attacker-chosen scheme
+  if (fm.marketing?.logo !== undefined && !isHttpUrl(fm.marketing.logo)) {
+    const { logo: _hostile, ...marketing } = fm.marketing;
+    fm = { ...fm, marketing };
+  }
   return { ...fm, body };
 }

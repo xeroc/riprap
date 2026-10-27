@@ -101,13 +101,24 @@ impl<'info> Crank<'info> {
 /// Money-weighted share of the remaining treasury: depositor total divided by
 /// all deposits, floored. Rates and stakes never distort it (CONTEXT.md).
 pub(crate) fn payout(treasury_balance: u64, depositor_total: u64, pool_total: u128) -> Result<u64> {
-    // pool_total == 0 with an existing depositor is impossible; checked_div
-    // still guards it (None on zero divisor).
-    let pay = (treasury_balance as u128)
-        .checked_mul(depositor_total as u128)
-        .ok_or(PoolError::MathOverflow)?
+    // Zero-weight terminal (audit M-2 2026-10-24, spec amendment
+    // 2026-10-26): every depositor burned out — e.g. a solvent mutual whose
+    // every member's claim paid past its contribution. There is no residual
+    // split left to divide by: pay 0 and let the crank settle the depositor,
+    // preserving the §8 exactly-once exclusion. Leftover treasury in this
+    // state is the same accepted class as rounding dust.
+    if pool_total == 0 {
+        return Ok(0);
+    }
+    // Local bound for the cast below: depositor totals sum to pool_total,
+    // so one depositor's share can never exceed it — asserted, not assumed.
+    require!(
+        u128::from(depositor_total) <= pool_total,
+        PoolError::MathOverflow
+    );
+    let pay = (u128::from(treasury_balance) * u128::from(depositor_total))
         .checked_div(pool_total)
-        .ok_or(PoolError::MathOverflow)?;
+        .ok_or(PoolError::MathOverflow)?; // unreachable behind the guard; defensive
     // pay <= treasury_balance by construction, always fits u64.
     Ok(pay as u64)
 }
@@ -155,9 +166,19 @@ mod tests {
         assert_eq!(payout(bal, 2, total).unwrap() + payout(bal, 1, total).unwrap(), 1);
     }
 
-    /// Zero total deposits cannot have depositors; guard rather than panic.
+    /// Zero-weight terminal (audit M-2 2026-10-24): pool_total == 0 pays 0
+    /// instead of reverting, so a fully-burned-out pool's depositors can
+    /// still reach their settled terminal.
     #[test]
-    fn zero_pool_total_reverts() {
-        assert!(payout(1, 1, 0).is_err());
+    fn zero_pool_total_pays_zero_terminal() {
+        assert_eq!(payout(1, 1, 0).unwrap(), 0);
+        assert_eq!(payout(9_999_999, 123, 0).unwrap(), 0);
+    }
+
+    /// The local cast bound: depositor_total > pool_total violates the
+    /// depositor-totals-sum invariant and must revert, not truncate.
+    #[test]
+    fn depositor_over_pool_total_reverts() {
+        assert!(payout(100, 101, 100).is_err());
     }
 }

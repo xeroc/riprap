@@ -21,10 +21,6 @@
       }
     }
   },
-  "files": [
-    "dist",
-    "LICENSE"
-  ],
   "type": "module",
   "sideEffects": false,
   "main": "./src/index.ts",

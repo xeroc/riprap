@@ -64,6 +64,19 @@ jobs:
       - name: Check for changeset
         run: pnpm changeset status --since origin/main
 
+  build-cranker-docker:
+    name: Build Cranker Image
+    needs: [tests]
+    permissions:
+      packages: write
+      contents: read
+    uses: ./.github/workflows/build-docker-image.yaml
+    with:
+      registry: ghcr.io
+      package: cranker
+      version: "${{ github.ref_name }}.${{ github.run_number }}"
+      push: ${{ github.event_name != 'pull_request' }}
+
   release:
     name: Version packages
     needs: [tests, program-tests]

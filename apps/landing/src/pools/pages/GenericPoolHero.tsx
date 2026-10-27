@@ -168,6 +168,7 @@ export function PoolHeroOffer({
               alt={`${def.name} — logo`}
               data-slot="pool-logo"
               loading="lazy"
+              referrerPolicy="no-referrer"
               className="max-h-64 w-full border border-hairline bg-ground-soft object-contain p-4"
             />
           </Settle>

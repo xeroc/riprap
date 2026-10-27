@@ -11,7 +11,13 @@
 //
 // Pure module: no UI, no chain, no daemon calls.
 
-import { DEF_SCHEMA, type DefFrontmatter, parseFrontmatter, splitDefDocument } from "./schema";
+import {
+  DEF_SCHEMA,
+  type DefFrontmatter,
+  isHttpUrl,
+  parseFrontmatter,
+  splitDefDocument,
+} from "./schema";
 
 /** One validation failure. `code` is the matrix row; the payload names the
  * offender (milestone §6: "the rejection names the tier"). */
@@ -188,7 +194,7 @@ export function validateFrontmatter(def: DefFrontmatter): DefRejection[] {
         rejections.push({ code: "bad-marketing", field, reason: "empty" });
       }
     }
-    if (marketing.logo !== undefined && !/^https?:\/\/\S+$/.test(marketing.logo)) {
+    if (marketing.logo !== undefined && !isHttpUrl(marketing.logo)) {
       rejections.push({
         code: "bad-marketing",
         field: "logo",

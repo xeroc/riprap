@@ -25,10 +25,10 @@ custom-panic = []
 [dependencies]
 anchor-lang = { version = "1.2.0", features = ["init-if-needed"] }
 anchor-spl = "1.2.0"
-# anchor-lang floor is 1.0.2 (house version, matches anchor-cli 1.0.2), but the
-# pinned accord rev only compiles against 1.1.x (`anchor_lang::__private` moved),
-# so the workspace lockfile unifies anchor-lang/anchor-spl to 1.1.2. Verified:
-# pool + hanse + accord all green on that lock.
+# anchor-lang resolves to 1.2.0 workspace-wide (matches the declared house
+# version and anchor-cli 1.2.0). The old pin (ba91bd8) forced a 1.1.2
+# unification via `anchor_lang::__private`; the 25c48b28 pin declares 1.2.0
+# and the lock unifies cleanly.
 # Cross-repo pin: rev bumps are deliberate — each is a protocol decision, never
 # a floating branch. Local override for sibling-checkout workflows goes in
 # .cargo/config [patch] (e.g. patch accord to a path dependency).
@@ -37,7 +37,7 @@ anchor-spl = "1.2.0"
 # 3.1.x fails E0277. The lock pins that edge; a blind `cargo update` can regress it.
 pool = { path = "../pool", features = ["cpi"] }
 solana-program = "3"
-accord = { git = "https://github.com/xeroc/accord.git", rev = "ba91bd8b8b374091c174909b115688ffb9b231ff", features = [
+accord = { git = "https://github.com/xeroc/accord.git", rev = "25c48b281425f68afe86366ce1a932631695c413", features = [
     "cpi",
 ] }
 

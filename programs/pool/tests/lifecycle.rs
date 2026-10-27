@@ -38,6 +38,7 @@ struct Env {
     treasury: Pubkey,
     ownership_authority: Keypair,
     rights_authority: Keypair,
+    yield_authority: Keypair,
 }
 
 impl Env {
@@ -48,6 +49,7 @@ impl Env {
         let sponsor = Keypair::new();
         let mint_kp = Keypair::new();
         let ownership_authority = Keypair::new();
+        let yield_authority = Keypair::new();
         let rights_authority = Keypair::new();
 
         let mut svm = LiteSVM::new();
@@ -59,6 +61,7 @@ impl Env {
         // Authorities sign transactions; a signer account must exist.
         svm.airdrop(&ownership_authority.pubkey(), 1_000_000_000).unwrap();
         svm.airdrop(&rights_authority.pubkey(), 1_000_000_000).unwrap();
+        svm.airdrop(&yield_authority.pubkey(), 1_000_000_000).unwrap();
 
         // A real SPL mint: system create_account + initialize_mint2.
         send(
@@ -92,7 +95,7 @@ impl Env {
                         yield_rate: 2,
                         ownership_authority: ownership_authority.pubkey(),
                         rights_authority: rights_authority.pubkey(),
-                        yield_authority: Pubkey::new_unique(),
+                        yield_authority: yield_authority.pubkey(),
                     },
                 }
                 .data(),
@@ -120,6 +123,7 @@ impl Env {
             treasury: get_associated_token_address(&pool, &mint_kp.pubkey()),
             ownership_authority,
             rights_authority,
+            yield_authority,
         }
     }
 
@@ -973,5 +977,121 @@ fn event_mutual_8_paid_claimants_get_zero_residual() {
         env.treasury_balance(),
         0,
         "residual split drains the treasury exactly (§8)"
+    );
+}
+
+/// Audit M-1 2026-10-24 (spec amendment 2026-10-26): the yield authority
+/// burns on the yield track — the clamp lands at the yield track's OWN
+/// money (stake 100 / rate 2 = 50), and the rights-funded residual weight
+/// survives. Pre-amendment this burn destroyed the full cross-track total.
+#[test]
+fn burn_scopes_to_the_burning_track_sbf() {
+    let mut env = Env::setup(12);
+    let (o1, a1, _) = env.depositor(150);
+    env.deposit(&o1, &a1, pool::Track::Rights, 100).unwrap(); // stake 100
+    env.deposit(&o1, &a1, pool::Track::Yield, 50).unwrap(); // stake 100
+    assert_eq!(env.pool_state().total_amount, 150);
+
+    let yield_auth = env.yield_authority.insecure_clone();
+    env.burn(&yield_auth, &o1.pubkey(), pool::Track::Yield, 100)
+        .unwrap();
+
+    let d = env.depositor_state(&o1.pubkey());
+    assert_eq!(d.yield_stake, 0, "yield stake fully burned (50 x rate 2)");
+    assert_eq!(d.rights_stake, 100, "rights stake untouched");
+    assert_eq!(d.total_amount, 100, "only yield money left the split");
+    assert_eq!(env.pool_state().total_amount, 100);
+    assert_eq!(env.treasury_balance(), 150, "burn moves no tokens");
+}
+
+/// Audit M-1: a CLOSED track (rate 0) has nothing to burn — its authority
+/// reverts with BurnTrackClosed instead of destroying the residual.
+#[test]
+fn closed_track_burn_reverts_sbf() {
+    let mut env = Env::setup(13);
+    let (o1, a1, _) = env.depositor(5_000_000);
+    env.deposit(&o1, &a1, pool::Track::Rights, 5_000_000).unwrap();
+
+    let ownership = env.ownership_authority.insecure_clone();
+    let res = env.burn(&ownership, &o1.pubkey(), pool::Track::Ownership, 1);
+    assert_custom_err(res, pool::error::PoolError::BurnTrackClosed);
+
+    assert_eq!(env.depositor_state(&o1.pubkey()).total_amount, 5_000_000);
+    assert_eq!(env.pool_state().total_amount, 5_000_000);
+}
+
+/// Audit M-2 2026-10-24 (spec amendment 2026-10-26): the zero-weight
+/// terminal — every depositor burned out (here: one member, paid past its
+/// contribution), treasury still holding the surplus. Pre-amendment every
+/// crank reverted MathOverflow forever; now the crank settles the depositor
+/// for 0 and the leftover treasury rides with rounding dust (no owner).
+#[test]
+fn zero_weight_terminal_crank_pays_zero_and_settles_sbf() {
+    let mut env = Env::setup(14);
+    let (o1, a1, _) = env.depositor(1_000_000);
+    env.deposit(&o1, &a1, pool::Track::Rights, 1_000_000).unwrap();
+
+    // §2.4 pair: spend the payout out, burn the full contribution —
+    // pool_total reaches 0 with the treasury still funded.
+    let rights = env.rights_authority.insecure_clone();
+    let ata = get_associated_token_address(&o1.pubkey(), &env.mint);
+    env.spend(&rights, &ata, 400_000).unwrap();
+    env.burn(&rights, &o1.pubkey(), pool::Track::Rights, 1_000_000)
+        .unwrap();
+    assert_eq!(env.pool_state().total_amount, 0);
+    assert_eq!(env.treasury_balance(), 600_000);
+
+    // Terminal door: liquidate freezes base 600_000.
+    send(
+        &mut env.svm,
+        &[Instruction::new_with_bytes(
+            pool::id(),
+            &pool::instruction::Liquidate {}.data(),
+            pool::accounts::Liquidate {
+                pool: env.pool,
+                ownership_authority: env.ownership_authority.pubkey(),
+                treasury: env.treasury,
+                token_program: spl_token_interface::ID,
+            }
+            .to_account_metas(None),
+        )],
+        &mut [&env.ownership_authority],
+    );
+
+    // The zero-weight crank: pays 0, settles the depositor — no revert.
+    let depositor = Pubkey::find_program_address(
+        &[b"depositor", env.pool.as_ref(), o1.pubkey().as_ref()],
+        &pool::id(),
+    )
+    .0;
+    let destination = get_associated_token_address(&o1.pubkey(), &env.mint);
+    let ix = Instruction::new_with_bytes(
+        pool::id(),
+        &pool::instruction::Crank {}.data(),
+        pool::accounts::Crank {
+            pool: env.pool,
+            cranker: env.payer.pubkey(),
+            depositor,
+            owner: o1.pubkey(),
+            destination,
+            treasury: env.treasury,
+            token_program: spl_token_interface::ID,
+            associated_token_program: spl_associated_token_account_interface::program::ID,
+        }
+        .to_account_metas(None),
+    );
+    send(&mut env.svm, &[ix], &mut [&env.payer]);
+
+    let d = env.depositor_state(&o1.pubkey());
+    assert!(d.settled, "zero-weight depositor reaches its terminal");
+    assert_eq!(
+        token_amount(&env.svm, &destination),
+        400_000,
+        "payout was the spent 400_000; the crank added 0"
+    );
+    assert_eq!(
+        env.treasury_balance(),
+        600_000,
+        "orphan surplus stays in the treasury — accepted dust class"
     );
 }

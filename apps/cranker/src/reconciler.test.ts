@@ -394,7 +394,7 @@ describe("reconcileOnce — Settled", () => {
 });
 
 describe("reconcileOnce — Dissolved", () => {
-  test("liquidated pool → pool_crank per unsettled, non-zero depositor only", async () => {
+  test("liquidated pool → pool_crank per unsettled depositor (zero-weight included)", async () => {
     const rec = recordingDispatch();
     const settledPos = await depositorItem(STRANGER, 5n, true);
     const burnedPos = await depositorItem(MEMBER, 0n, false);
@@ -411,8 +411,13 @@ describe("reconcileOnce — Dissolved", () => {
         rec.dispatch,
       ),
     );
-    expect(executed).toBe(1);
-    expect(rec.actions).toEqual([{ kind: "pool_crank", pool: POOL_A, owner: AUTHORITY }]);
+    // Zero-weight depositors crank to a 0 payout that marks them settled —
+    // pool amendment 2026-10-26 (audit M-2); only `settled` is a skip.
+    expect(executed).toBe(2);
+    expect(rec.actions).toEqual([
+      { kind: "pool_crank", pool: POOL_A, owner: MEMBER },
+      { kind: "pool_crank", pool: POOL_A, owner: AUTHORITY },
+    ]);
   });
 
   test("pool not yet liquidated → nothing", async () => {

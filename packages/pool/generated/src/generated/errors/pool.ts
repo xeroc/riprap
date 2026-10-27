@@ -30,9 +30,12 @@ export const POOL_ERROR__BENEFICIARY_IMMUTABLE = 0x1775; // 6005
 export const POOL_ERROR__WRONG_DESTINATION = 0x1776; // 6006
 /** MathOverflow: Checked math overflowed — the amounts do not fit the accounting */
 export const POOL_ERROR__MATH_OVERFLOW = 0x1777; // 6007
+/** BurnTrackClosed: The burn track is closed: its stake rate is zero, so money never entered through it */
+export const POOL_ERROR__BURN_TRACK_CLOSED = 0x1778; // 6008
 
 export type PoolError =
   | typeof POOL_ERROR__BENEFICIARY_IMMUTABLE
+  | typeof POOL_ERROR__BURN_TRACK_CLOSED
   | typeof POOL_ERROR__MATH_OVERFLOW
   | typeof POOL_ERROR__POOL_NOT_LIQUIDATED
   | typeof POOL_ERROR__POOL_NOT_OPEN
@@ -45,6 +48,7 @@ let poolErrorMessages: Record<PoolError, string> | undefined;
 if (process.env["NODE_ENV"] !== "production") {
   poolErrorMessages = {
     [POOL_ERROR__BENEFICIARY_IMMUTABLE]: `The residual beneficiary was set at first deposit and cannot change`,
+    [POOL_ERROR__BURN_TRACK_CLOSED]: `The burn track is closed: its stake rate is zero, so money never entered through it`,
     [POOL_ERROR__MATH_OVERFLOW]: `Checked math overflowed — the amounts do not fit the accounting`,
     [POOL_ERROR__POOL_NOT_LIQUIDATED]: `The crank only runs after liquidation`,
     [POOL_ERROR__POOL_NOT_OPEN]: `Deposits are refused: the pool is not open`,
