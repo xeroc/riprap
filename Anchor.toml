@@ -27,3 +27,10 @@ wallet = "~/.config/solana/id.json"
 test = "pnpm --filter @riprap/tests test"
 
 [hooks]
+# Stage the checked-in external binaries (SAS) into target/deploy AFTER any
+# cache restore: the CI program-tests job restores a rust-cache of target/
+# inside the run-tests action, and a partial (restore-key) cache hit
+# pre-cleans target/ — wiping anything staged before the action ran. This
+# hook runs at the last safe point (after builds/cache, before Surfpool
+# starts and evaluates the deployment runbook's deploy_sas action).
+pre-test = "bash tests/deps/stage.sh"
