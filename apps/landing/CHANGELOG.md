@@ -1,5 +1,14 @@
 # @riprap/landing
 
+## 0.10.1
+
+### Patch Changes
+
+- [#26](https://github.com/xeroc/riprap/pull/26) [`bb15c3c`](https://github.com/xeroc/riprap/commit/bb15c3c75398e2d94cc818432955aed92ad41cfc) Thanks [@xeroc](https://github.com/xeroc)! - Community-pool defs resolved off the evidence-server CAS now sanitize `marketing.logo` at parse time: a value that isn't an absolute http(s) URL drops the field (never the doc), so the generic hero's `<img>` can never carry an attacker-chosen scheme in user-defined pool content. The hero logo also sends `referrerPolicy="no-referrer"`, matching the policy body's image handling.
+- Updated dependencies [[`8e0774e`](https://github.com/xeroc/riprap/commit/8e0774ebb6517dd7f40763c30ee2dbd1603c108d)]:
+  - @riprap/hanse@0.10.1
+  - @riprap/ui@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes
