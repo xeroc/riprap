@@ -1,5 +1,12 @@
 # @riprap/demo-worlds-fair
 
+## 0.10.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @riprap/ui@0.10.1
+
 ## 0.10.0
 
 ### Patch Changes
