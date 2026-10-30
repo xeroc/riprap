@@ -1,7 +1,10 @@
 /**
  * supporters.mts — the mention watcher (bean riprap-9spw, copy doc §5.6):
  * finds posts on X that mention @riprapxyz and turns them into the front
- * page's supporter discs (`src/supporters.json` — handle, post URL, avatar).
+ * page's supporter discs (`src/supporters.json` — handle, post URL, and a
+ * local avatar: --write downloads each image into `public/pfp/` and the json
+ * carries `/pfp/<handle>.<ext>`, so discs never hotlink pbs.twimg.com —
+ * those URLs die the moment a supporter changes their picture).
  *
  * Backend: TwitterAPI.io (the same provider as the session's twitterapi MCP).
  * Search is a paid endpoint — set TWITTERAPI_IO_KEY (https://twitterapi.io,
@@ -15,8 +18,10 @@
  * Data law (bean): default proposes, --write applies; self-posts and retweets
  * are excluded by the query; zero mentions or an API error leaves the file
  * untouched and exits non-zero. Audit the list before the first --write.
+ * --write also downloads every avatar into public/pfp/ — commit the images
+ * together with the json (they are the deploy's disc images).
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 const HANDLE = "riprapxyz";
@@ -28,6 +33,8 @@ const PAGES = 3; // ≈ up to ~100 posts per run; plenty between deploys
 
 const JSON_PATH = new URL("../src/supporters.json", import.meta.url);
 const ENDPOINT = "https://api.twitterapi.io/twitter/tweet/advanced_search";
+
+const PFP_DIR = new URL("../public/pfp/", import.meta.url);
 
 export type Supporter = { handle: string; url: string; avatar?: string };
 
@@ -43,6 +50,35 @@ export function toSupporter(tweet: Tweet): Supporter | null {
   const avatar = tweet.author?.profilePicture;
   if (avatar) supporter.avatar = avatar;
   return supporter;
+}
+
+/** local disc-image filename: the handle (X handles are [A-Za-z0-9_] —
+ * sanitized anyway, it becomes a filename) + the remote extension, jpg
+ * when the URL has none. Stable per person: a new avatar overwrites. */
+export function pfpName(handle: string, remote: string): string {
+  const safe = handle.replace(/[^A-Za-z0-9_-]/g, "_");
+  const ext = /\.(jpe?g|png|webp|gif)$/i.exec(new URL(remote).pathname)?.[1]?.toLowerCase();
+  return `${safe}.${!ext || ext === "jpeg" ? "jpg" : ext}`;
+}
+
+/** download one remote avatar into public/pfp/ and return its served path;
+ * null = the image is gone (404 on every variant) — the caller drops the
+ * disc to its initials; a network throw keeps the previous avatar. */
+export async function downloadAvatar(handle: string, remote: string): Promise<string | null> {
+  // _normal is 48px — blurry at the 48 CSS-px disc on retina; pbs serves the
+  // same image larger on request, but not every variant exists (the odd .png
+  // 404s upscaled) — fall back to the URL exactly as delivered.
+  const upscale = remote.replace(/_(normal|bigger|mini)(?=\.)/, "_400x400");
+  let response = await fetch(upscale);
+  if (!response.ok && upscale !== remote) response = await fetch(remote);
+  if (!response.ok) {
+    console.error(`  avatar @${handle}: HTTP ${response.status} — keeping previous`);
+    return null;
+  }
+  mkdirSync(PFP_DIR, { recursive: true });
+  const file = pfpName(handle, remote);
+  writeFileSync(new URL(file, PFP_DIR), Buffer.from(await response.arrayBuffer()));
+  return `/pfp/${file}`;
 }
 
 /** merge into the disc row — ONE disc per person: the first occurrence of a
@@ -118,14 +154,37 @@ async function main(): Promise<void> {
   const found = tweets.map(toSupporter).filter((s): s is Supporter => s !== null);
   const merged = mergeSupporters(existing, found);
   list("Found", found);
+
+  let downloaded = 0;
+  if (write) {
+    // every http avatar (fresh from the API or stale in the json) becomes a
+    // local /pfp/ file; 404 = image gone → initials disc, a network throw
+    // keeps that disc's previous avatar
+    for (const s of merged) {
+      if (!s.avatar?.startsWith("http")) continue;
+      try {
+        const local = await downloadAvatar(s.handle, s.avatar);
+        if (local) {
+          s.avatar = local;
+          downloaded += 1;
+        } else {
+          delete s.avatar; // image gone — the mono initials disc takes over
+        }
+      } catch (error) {
+        console.error(`  avatar @${s.handle}: ${String(error)} — keeping previous`);
+      }
+    }
+  }
   list("Merged", merged);
 
   if (!write) {
-    console.log("\nDry run — pass --write to update src/supporters.json.");
+    console.log("\nDry run — pass --write to download avatars into public/pfp/ and update src/supporters.json.");
     return;
   }
   writeFileSync(JSON_PATH, `${JSON.stringify(merged, null, 2)}\n`);
-  console.log(`\nWrote src/supporters.json (${merged.length} supporters). Commit + push deploys it.`);
+  console.log(
+    `\nWrote src/supporters.json (${merged.length} supporters, ${downloaded} avatars in public/pfp/). Commit + push deploys it.`,
+  );
 }
 
 const invokedDirectly =
