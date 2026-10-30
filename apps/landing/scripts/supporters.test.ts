@@ -4,7 +4,7 @@
 // audited run, not here.
 
 import { describe, expect, it } from "vitest";
-import { mergeSupporters, type Supporter, toSupporter } from "./supporters.mts";
+import { mergeSupporters, pfpName, type Supporter, toSupporter } from "./supporters.mts";
 
 describe("toSupporter", () => {
   it("maps a tweet to handle + post URL, avatar only when present", () => {
@@ -27,6 +27,26 @@ describe("toSupporter", () => {
   it("rejects tweets without an id or author — never an invented disc", () => {
     expect(toSupporter({ author: { userName: "alice" } })).toBeNull();
     expect(toSupporter({ id: "789" })).toBeNull();
+  });
+});
+
+describe("pfpName", () => {
+  it("handle + the remote's extension — the local disc image filename", () => {
+    expect(pfpName("alice", "https://pbs.twimg.com/profile_images/1/a_normal.jpg")).toBe(
+      "alice.jpg",
+    );
+    expect(pfpName("ImDenixSol", "https://pbs.twimg.com/profile_images/2/b_normal.png")).toBe(
+      "ImDenixSol.png",
+    );
+  });
+
+  it("jpg when the URL carries no usable extension, jpeg folded to jpg", () => {
+    expect(pfpName("bob", "https://pbs.example/pic")).toBe("bob.jpg");
+    expect(pfpName("carol", "https://pbs.example/pic.jpeg")).toBe("carol.jpg");
+  });
+
+  it("sanitizes the handle — a handle becomes a filename, never a path", () => {
+    expect(pfpName("../evil", "https://pbs.example/x.jpg")).toBe("___evil.jpg");
   });
 });
 

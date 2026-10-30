@@ -23,7 +23,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { fetchSubaccordMaybe, type Subaccord } from "@useaccord/sdk";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { poolBySlug } from "../pools/data";
-import { SUPPORTERS } from "../sections/Supporters";
+import { MAX_SHOWN, SUPPORTERS } from "../sections/Supporters";
 import { sendInstruction, TransactionSendError } from "../shared/transaction";
 import { BreakpointPage } from "./BreakpointPage";
 import { fakePool, POLICY_TIERS } from "./fixtures";
@@ -191,14 +191,16 @@ describe("/2026-breakpoint-blade-pool — ready state (tiers from mutual.tiers, 
     expect(left.querySelector("h1")).not.toBeNull();
 
     // supporters sit where the odds table sat: after the subline, before the
-    // tier picker; the discs are exactly the committed supporters.json
+    // tier picker; first paint shows the committed supporters.json's first
+    // MAX_SHOWN discs — overflow rotates in over time (Supporters.tsx), so
+    // the full list only renders while it fits the row
     const slot = left.querySelector('[data-slot="supporters"]');
     if (SUPPORTERS.length === 0) {
       expect(slot).toBeNull(); // no invented discs (kit data law)
       return;
     }
     expect([...slot!.querySelectorAll("a")].map((a) => a.getAttribute("href"))).toEqual(
-      SUPPORTERS.map((s) => s.url),
+      SUPPORTERS.slice(0, MAX_SHOWN).map((s) => s.url),
     );
     const picker = left.querySelector('[data-slot="tier-picker"]')!;
     expect(slot!.compareDocumentPosition(picker) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(

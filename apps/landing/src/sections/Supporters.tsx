@@ -33,7 +33,7 @@ export const SUPPORTERS = supporters as Supporter[];
  * shows 16 and rotates: every SWAP_EVERY_MS one random disc fades out and a
  * not-yet-shown one fades into its slot (settle fades; motion-reduce swaps
  * instantly). */
-const MAX_SHOWN = 16;
+export const MAX_SHOWN = 16;
 const SWAP_EVERY_MS = 4000;
 const FADE_MS = 160; // --riprap-settle — settle, not slide
 
