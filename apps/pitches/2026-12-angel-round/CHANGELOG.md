@@ -1,5 +1,12 @@
 # @riprap/angel-round
 
+## 0.10.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @riprap/ui@0.10.2
+
 ## 0.10.1
 
 ### Patch Changes
