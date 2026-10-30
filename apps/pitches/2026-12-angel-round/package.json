@@ -1,7 +1,7 @@
 {
   "name": "@riprap/angel-round",
   "private": true,
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "Angel-round deck — copied 2026-10-12 from the World's Fair demo deck (apps/pitches/2026-11-demo-worlds-fair) and restaged from there; @riprap/ui tokens throughout.",
   "type": "module",
   "scripts": {
