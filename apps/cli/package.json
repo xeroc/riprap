@@ -1,6 +1,6 @@
 {
   "name": "@riprap/cli",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "private": true,
   "description": "Riprap operator CLI — thin wrapper over @riprap/pool and @riprap/hanse",
   "type": "module",

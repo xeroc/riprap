@@ -1,5 +1,16 @@
 # @riprap/landing
 
+## 0.10.2
+
+### Patch Changes
+
+- [#29](https://github.com/xeroc/riprap/pull/29) [`c9e9380`](https://github.com/xeroc/riprap/commit/c9e938012b62b4a19f9adfc0f6a9f6fcef1a73b8) Thanks [@xeroc](https://github.com/xeroc)! - Supporter watcher (`scripts/supporters.mts`) no longer hotlinks pbs.twimg.com: `--write` downloads every avatar into `public/pfp/` and `src/supporters.json` carries `/pfp/<handle>.<ext>` paths — those remote URLs die the moment a supporter changes their picture, and `_normal` 48px blur is replaced by the 400px original. Re-found handles refresh their image on every run; existing remote URLs migrate on the next `--write`. Images commit alongside the json.
+  
+  Dead pbs URLs (supporter changed their picture since the last run) fall back to the mono initials disc instead of shipping a broken image.
+- Updated dependencies []:
+  - @riprap/hanse@0.10.2
+  - @riprap/ui@0.10.2
+
 ## 0.10.1
 
 ### Patch Changes
